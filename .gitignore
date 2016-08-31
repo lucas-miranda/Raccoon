@@ -1,0 +1,18 @@
+syntax: glob
+*.suo
+*.csproj.user
+*.contentproj.user
+*.Debug.cachefile
+*.Release.cachefile
+*.db
+*.cachefile
+
+.vs/
+Raccoon/obj
+Raccoon/bin
+Raccoon/data
+Test/obj
+Test/bin
+
+TODO.md
+_UpgradeReport_Files
