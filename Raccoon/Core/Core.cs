@@ -8,8 +8,8 @@ namespace Raccoon {
     internal class Core : Microsoft.Xna.Framework.Game {
         #region Private Members
 
-        private Matrix _screenTransform;
-        private int _fpsCount, _fps;
+        private Matrix _screenTransform = Matrix.Identity;
+        private int _fpsCount = 0, _fps = 0;
         private TimeSpan _lastFpsTime;
 
         #endregion Private Members
@@ -36,6 +36,10 @@ namespace Raccoon {
         public Core(string title, int width, int height, int targetFPS, bool fullscreen) {
             Title = title;
             Window.Title = Title + " | FPS: 0";
+            Content.RootDirectory = "Content";
+            TargetElapsedTime = TimeSpan.FromTicks((long) System.Math.Round(10000000 / (double) targetFPS)); // time between frames
+            Scale = 1f;
+            BackgroundColor = Color.Black;
 
             Graphics = new GraphicsDeviceManager(this);
             Graphics.PreferredBackBufferWidth = width;
@@ -43,11 +47,6 @@ namespace Raccoon {
             Graphics.IsFullScreen = fullscreen;
             Graphics.PreferMultiSampling = false;
             Graphics.ApplyChanges();
-
-            Content.RootDirectory = "Content";
-            TargetElapsedTime = TimeSpan.FromTicks((int) System.Math.Round(10000000 / (double) targetFPS));
-            Scale = 1f;
-            BackgroundColor = Color.Black;
         }
 
         #endregion Constructor
@@ -143,7 +142,7 @@ namespace Raccoon {
             SpriteBatch.End();
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
-            SpriteBatch.DrawString(StdFont, $"Game Time: {Time}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}", new Vector2(3, 2), Color.White);
+            SpriteBatch.DrawString(StdFont, $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}", new Vector2(3, 2), Color.White);
 #endif
 
             SpriteBatch.End();
