@@ -71,6 +71,7 @@
     <Compile Include="Core\Debug.cs" />
     <Compile Include="Core\Definitions\Direction.cs" />
     <Compile Include="Core\Definitions\Extensions.cs" />
+    <Compile Include="Core\Definitions\ImageFlip.cs" />
     <Compile Include="Core\Entity.cs" />
     <Compile Include="Core\Input\Axis.cs" />
     <Compile Include="Core\Input\Button.cs" />
@@ -87,7 +88,6 @@
     <Compile Include="Core\Game.cs" />
     <Compile Include="Graphics\Primitive\Rectangle.cs" />
     <Compile Include="Graphics\Shader.cs" />
-    <Compile Include="Graphics\SpriteBatch.cs" />
     <Compile Include="Graphics\Text.cs" />
     <Compile Include="Graphics\Transition\FadeTransition.cs" />
     <Compile Include="Graphics\Transition\SceneTransition.cs" />

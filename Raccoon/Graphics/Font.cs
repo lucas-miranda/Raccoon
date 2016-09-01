@@ -10,8 +10,12 @@ namespace Raccoon.Graphics {
             if (Game.Instance.IsRunning) {
                 Load();
             } else {
-                Game.Instance.Core.OnLoadContent += new Core.GeneralHandler(() => { Load(); });
+                Game.Instance.Core.OnLoadContent += new Core.GeneralHandler(() => Load());
             }
+        }
+
+        internal Font(SpriteFont spriteFont) {
+            SpriteFont = spriteFont;
         }
 
         #endregion Constructors
@@ -37,7 +41,6 @@ namespace Raccoon.Graphics {
         public Vector2 MeasureText(string text) {
             Microsoft.Xna.Framework.Vector2 dimensions = SpriteFont.MeasureString(text);
             return new Vector2(dimensions.X, dimensions.Y);
-
         }
 
         #endregion Public Methods

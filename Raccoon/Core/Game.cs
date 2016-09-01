@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Raccoon.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Raccoon {
@@ -73,10 +74,9 @@ namespace Raccoon {
         }
 
         public void Exit() {
-            Debug.Write("Exiting... ");
+            Debug.WriteLine("Exiting... ");
             Core.Exit();
             IsRunning = false;
-            Debug.WriteLine("Done");
         }
 
         public void Dispose() {
@@ -89,7 +89,7 @@ namespace Raccoon {
             Core.OnInitialize += new Core.GeneralHandler(scene.Initialize);
             Core.OnLoadContent += new Core.GeneralHandler(scene.LoadContent);
             Core.OnUnloadContent += new Core.GeneralHandler(scene.UnloadContent);
-            Core.OnDraw += new Core.GeneralHandler(scene.Render);
+            Core.OnRender += new Core.GeneralHandler(scene.Render);
             Core.OnUpdate += new Core.TickHandler(scene.Update);
         }
         
@@ -103,8 +103,9 @@ namespace Raccoon {
 
         protected virtual void Dispose(bool disposing) {
             if (!Disposed) {
-                if (disposing)
+                if (disposing) {
                     Core.Dispose();
+                }
 
                 IsRunning = false;
                 Disposed = true;

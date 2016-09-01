@@ -1,8 +1,8 @@
 ﻿namespace Raccoon.Graphics {
     public abstract class SceneTransition : Graphic {
-        public delegate void EventHandler();
-        public event EventHandler OnStart;
-        public event EventHandler OnEnd;
+        public delegate void CallbackHandler();
+        public event CallbackHandler OnStart;
+        public event CallbackHandler OnEnd;
 
         protected SceneTransition(Graphic endGraphic) {
             EndGraphic = endGraphic;
@@ -45,15 +45,13 @@
                     RepeatTimes--;
                 } else {
                     Playing = false;
-                    if (OnEnd != null) {
-                        OnEnd();
-                    }
+                    OnEnd?.Invoke();
                 }
             }
         }
 
-        public override void Draw() {
-            EndGraphic.Draw();
+        public override void Render() {
+            EndGraphic.Render();
         }
 
         public virtual void Play(int repeatTimes = 0) {
@@ -62,8 +60,7 @@
             Time = Reverse ? 1f : 0f;
             ElapsedTime = 0f;
             RepeatTimes = repeatTimes;
-            if (OnStart != null)
-                OnStart();
+            OnStart?.Invoke();
         }
     }
 }

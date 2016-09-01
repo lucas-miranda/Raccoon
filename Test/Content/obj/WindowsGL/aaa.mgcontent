@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <SourceFile>C:/Users/Lucas/Documents/Visual Studio 2015/Projects/Raccoon2D/TestGame/Content/aaa.fx</SourceFile>
+  <SourceFile>C:/Users/Lucas/Documents/Visual Studio 2015/Projects/Raccoon/Test/Content/aaa.fx</SourceFile>
   <SourceTime>2016-03-30T03:36:08-03:00</SourceTime>
-  <DestFile>C:/Users/Lucas/Documents/Visual Studio 2015/Projects/Raccoon2D/TestGame/Content/bin/WindowsGL/aaa.xnb</DestFile>
-  <DestTime>2016-08-30T10:57:57.2458064-03:00</DestTime>
+  <DestFile>C:/Users/Lucas/Documents/Visual Studio 2015/Projects/Raccoon/Test/Content/bin/WindowsGL/aaa.xnb</DestFile>
+  <DestTime>2016-09-01T10:18:17.9960584-03:00</DestTime>
   <Importer>EffectImporter</Importer>
   <ImporterTime>2016-03-30T03:36:08-03:00</ImporterTime>
   <Processor>EffectProcessor</Processor>

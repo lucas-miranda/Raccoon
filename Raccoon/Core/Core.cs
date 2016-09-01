@@ -9,7 +9,7 @@ namespace Raccoon {
         #region Private Members
 
         private Matrix _screenTransform = Matrix.Identity;
-        private int _fpsCount = 0, _fps = 0;
+        private int _fpsCount, _fps;
         private TimeSpan _lastFpsTime;
 
         #endregion Private Members
@@ -26,7 +26,7 @@ namespace Raccoon {
         public event GeneralHandler OnInitialize;
         public event GeneralHandler OnLoadContent;
         public event GeneralHandler OnUnloadContent;
-        public event GeneralHandler OnDraw;
+        public event GeneralHandler OnRender;
         public event TickHandler OnUpdate;
 
         #endregion Public Events
@@ -41,11 +41,13 @@ namespace Raccoon {
             Scale = 1f;
             BackgroundColor = Color.Black;
 
-            Graphics = new GraphicsDeviceManager(this);
-            Graphics.PreferredBackBufferWidth = width;
-            Graphics.PreferredBackBufferHeight = height;
-            Graphics.IsFullScreen = fullscreen;
-            Graphics.PreferMultiSampling = false;
+            Graphics = new GraphicsDeviceManager(this) {
+                PreferredBackBufferWidth = width,
+                PreferredBackBufferHeight = height,
+                IsFullScreen = fullscreen,
+                PreferMultiSampling = false
+            };
+
             Graphics.ApplyChanges();
         }
 
@@ -55,7 +57,7 @@ namespace Raccoon {
 
         public GraphicsDeviceManager Graphics { get; private set; }
         public SpriteBatch SpriteBatch { get; private set; }
-        public SpriteFont StdFont { get; private set; }
+        public Graphics.Font StdFont { get; private set; }
         public TimeSpan Time { get; private set; }
         public int DeltaTime { get; private set; }
         public float Scale { get; set; }
@@ -67,33 +69,33 @@ namespace Raccoon {
         #region Protected Methods
 
         protected override void Initialize() {
-            Debug.Write("Initializing... ");
+            Debug.WriteLine("Initializing... ");
             Matrix.CreateScale(Scale, out _screenTransform);
             OnInitialize?.Invoke();
             OnInitialize = null;
-            Debug.WriteLine("Done");
             base.Initialize();
         }
 
         protected override void LoadContent() {
-            Debug.Write("Loading Content... ");
+            Debug.WriteLine("Loading Content... ");
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+
+            // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
-            StdFont = resourceContentManager.Load<SpriteFont>("Zoomy");
+            StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
+
             //effect = Content.Load<Effect>("Test");
             //effect.CurrentTechnique = effect.Techniques["BasicColorDrawing"];
 
             OnLoadContent?.Invoke();
             OnLoadContent = null;
-            Debug.WriteLine("Done");
             base.LoadContent();
         }
 
         protected override void UnloadContent() {
-            Debug.Write("Unloading Content... ");
+            Debug.WriteLine("Unloading Content... ");
             OnUnloadContent?.Invoke();
             OnUnloadContent = null;
-            Debug.WriteLine("Done");
         }
 
         protected override void Update(GameTime gameTime) {
@@ -124,25 +126,14 @@ namespace Raccoon {
         protected override void Draw(GameTime gameTime) {
             Graphics.GraphicsDevice.Clear(BackgroundColor);
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _screenTransform);
-            /*for (int i = 0; i < effect.CurrentTechnique.Passes.Count; i++) {
-                //EffectPass.Apply will update the device to
-                //begin using the state information defined in the current pass
-                effect.CurrentTechnique.Passes[i].Apply();
 
-                //sampleMesh contains all of the information required to draw
-                //the current mesh
-                /*graphics.GraphicsDevice.DrawIndexedPrimitives(
-                    PrimitiveType.TriangleList, 0, 0,
-                    meshPart.NumVertices, meshPart.StartIndex, meshPart.PrimitiveCount);
-            }*/
-
-            OnDraw?.Invoke();
+            OnRender?.Invoke();
 
 #if DEBUG
             SpriteBatch.End();
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
-            SpriteBatch.DrawString(StdFont, $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}", new Vector2(3, 2), Color.White);
+            SpriteBatch.DrawString(StdFont.SpriteFont, $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}", new Vector2(3, 2), Raccoon.Graphics.Color.White);
 #endif
 
             SpriteBatch.End();

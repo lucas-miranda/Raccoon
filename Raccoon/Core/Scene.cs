@@ -82,11 +82,11 @@ namespace Raccoon {
 
         public virtual void Render() {
             foreach (Graphic g in Graphics) {
-                g.Draw();
+                g.Render();
             }
 
             foreach (Entity o in Objects) {
-                o.Draw();
+                o.Render();
             }
         }
 
