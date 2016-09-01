@@ -34,7 +34,7 @@ namespace Raccoon.Graphics {
         public override void Update(int delta) {
         }
 
-        public override void Draw() {
+        public override void Render() {
             Game.Instance.Core.SpriteBatch.Draw(
                 Texture,
                 Position,
@@ -44,7 +44,7 @@ namespace Raccoon.Graphics {
                 Rotation,
                 Scale,
                 Color,
-                Flipped,
+                (SpriteEffects) Flipped,
                 Layer
             );
         }

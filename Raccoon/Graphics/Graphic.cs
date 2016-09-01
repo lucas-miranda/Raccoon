@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-
-namespace Raccoon.Graphics {
+﻿namespace Raccoon.Graphics {
     public abstract class Graphic {
         #region Private Members
 
@@ -27,6 +25,7 @@ namespace Raccoon.Graphics {
             get {
                 return finalColor;
             }
+
             set {
                 color = value;
                 finalColor = color * opacity;
@@ -37,6 +36,7 @@ namespace Raccoon.Graphics {
             get {
                 return opacity;
             }
+
             set {
                 opacity = Math.Clamp(value, 0, 1);
                 finalColor = color * opacity;
@@ -45,43 +45,42 @@ namespace Raccoon.Graphics {
 
         public bool FlippedBoth {
             get {
-                return (Flipped & SpriteEffects.FlipHorizontally & SpriteEffects.FlipVertically) == (SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically);
+                return Flipped.HasFlag(ImageFlip.Horizontal | ImageFlip.Vertical);
             }
+
             set {
-                Flipped = (value ? SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically : SpriteEffects.None);
+                Flipped = (value ? ImageFlip.Horizontal | ImageFlip.Vertical : ImageFlip.None);
             }
         }
 
         public bool FlippedHorizontally {
             get {
-                return (Flipped & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally;
+                return Flipped.HasFlag(ImageFlip.Horizontal);
             }
+
             set {
-                Flipped |= (value ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                Flipped |= (value ? ImageFlip.Horizontal : ImageFlip.None);
             }
         }
 
         public bool FlippedVertically {
             get {
-                return (Flipped & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
+                return Flipped.HasFlag(ImageFlip.Vertical);
             }
+
             set {
-                Flipped |= (value ? SpriteEffects.FlipVertically : SpriteEffects.None);
+                Flipped |= (value ? ImageFlip.Vertical : ImageFlip.None);
             }
         }
 
-        #endregion
-
-        #region Internal Properties
-
-        internal SpriteEffects Flipped { get; set; }
+        public ImageFlip Flipped { get; set; }
 
         #endregion
 
         #region Public Abstract Methods
 
         public abstract void Update(int delta);
-        public abstract void Draw();
+        public abstract void Render();
 
         #endregion
 

@@ -20,10 +20,6 @@ namespace Raccoon {
     }
 
     public static class DirectionExtensions {
-        public static bool HasFlag(this Direction direction, Direction flag) {
-            return (direction & flag) != Direction.None;
-        }
-
         public static Direction RotateClockwise(this Direction direction) {
             return (Direction) (((int) direction << 1 | ((int) direction >> 3)) & 15);
         }
@@ -40,5 +36,4 @@ namespace Raccoon {
             return new Coordinate((((int) direction >> 1) & 1) - (((int) direction >> 3) & 1), ((int) direction & 1) - (((int) direction >> 2) & 1));
         }*/
     }
-
 }

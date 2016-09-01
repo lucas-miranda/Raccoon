@@ -62,10 +62,10 @@ namespace Raccoon {
             }
         }
 
-        public virtual void Draw() {
+        public virtual void Render() {
             if (Visible) {
                 foreach (Graphic g in Graphics) {
-                    g.Draw();
+                    g.Render();
                 }
             }
         }

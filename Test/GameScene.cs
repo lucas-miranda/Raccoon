@@ -13,6 +13,9 @@ namespace Test {
         Shader shader;
 
         public GameScene() : base() {
+            transition = new FadeTransition(Color.Cyan);
+            AddGraphic(transition);
+
             anim = new Animation<string>("graphics/deathflower", 18, 20);
             anim.Add("idle", "0-6", 0.120f);
             anim.Play("idle");
@@ -29,9 +32,6 @@ namespace Test {
             Axis axis = p1Controller.Axis(XboxController.Label.LeftStick);
             axis.DeadZone = 0.25f;
             p1Controller.Connect();
-
-            transition = new FadeTransition(Color.Cyan);
-            AddGraphic(transition);
 
             font = new Font("m5x7");
             text = new Text("the quick brown fox", font, new Color(0x02dbdbff)) { Position = new Vector2(100, 100), Rotation = 2 };
@@ -67,10 +67,10 @@ namespace Test {
         public override void Render() {
             base.Render();
             //shader.Apply();
-            Debug.DrawText("oie, test msg", new Vector2(50, 50), Color.Blue);
-            text.Draw();
-            text2.Draw();
-            text3.Draw();
+            Debug.DrawString("oie, test msg", new Vector2(50, 50), Color.Blue);
+            text.Render();
+            text2.Render();
+            text3.Render();
         }
     }
 }

@@ -14,14 +14,23 @@
 
         #region Constructors
 
-        public Rectangle(float x, float y, float w, float h) {
+        public Rectangle(float x, float y, float width, float height) {
             X = x;
             Y = y;
-            Width = w;
-            Height = h;
+            Width = width;
+            Height = height;
+        }
+
+        public Rectangle(Point topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
         }
 
         public Rectangle(Point topLeft, Point bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) {
+        }
+
+        public Rectangle(float w, float h) {
+            X = Y = 0;
+            Width = w;
+            Height = h;
         }
 
         #endregion Constructors
@@ -42,7 +51,7 @@
 
         #region Public Methods
 
-        public bool Intersects(Point p) {
+        public bool Contains(Point p) {
             return !(p.X < Left || p.X > Right || p.Y < Top || p.Y > Bottom);
         }
 
@@ -113,7 +122,7 @@
         }
 
         public static bool operator &(Rectangle l, Point r) {
-            return l.Intersects(r);
+            return l.Contains(r);
         }
 
         public static bool operator &(Rectangle l, Rectangle r) {

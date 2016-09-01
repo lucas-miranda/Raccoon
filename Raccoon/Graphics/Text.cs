@@ -16,7 +16,7 @@
         public override void Update(int delta) {
         }
 
-        public override void Draw() {
+        public override void Render() {
             Game.Instance.Core.SpriteBatch.DrawString(
                 Font.SpriteFont, 
                 Value, 
@@ -25,7 +25,7 @@
                 Rotation,
                 Origin,
                 Scale,
-                Flipped,
+                (Microsoft.Xna.Framework.Graphics.SpriteEffects) Flipped,
                 Layer
             );
         }
