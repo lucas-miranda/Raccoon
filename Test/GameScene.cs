@@ -11,6 +11,7 @@ namespace Test {
         Text text, text2, text3;
         Font font;
         Shader shader;
+        Raccoon.Graphics.Primitive.Circle circle;
 
         public GameScene() : base() {
             transition = new FadeTransition(Color.Cyan);
@@ -40,6 +41,10 @@ namespace Test {
 
             shader = new Shader("Test");
             shader.CurrentTechnique = "BasicColorDrawing";
+
+            circle = new Raccoon.Graphics.Primitive.Circle(50, Color.Magenta);
+            circle.Position = new Vector2(50, 50);
+            AddGraphic(circle);
         }
 
         public override void Update(int delta) {

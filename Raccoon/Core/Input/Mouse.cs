@@ -54,10 +54,10 @@ namespace Raccoon.Input {
 
         #region Public Properties
 
-        public Point ScreenPosition { get; private set; }
+        public Vector2 ScreenPosition { get; private set; }
         public int ScreenX { get { return (int) ScreenPosition.X; } }
         public int ScreenY { get { return (int) ScreenPosition.Y; } }
-        public Point GamePosition { get; private set; }
+        public Vector2 GamePosition { get; private set; }
         public int GameX { get { return (int) GamePosition.X; } }
         public int GameY { get { return (int) GamePosition.Y; } }
         public int X { get { return GameX; } }
@@ -83,8 +83,8 @@ namespace Raccoon.Input {
 
         internal void Update(int delta) {
             MouseState state = Microsoft.Xna.Framework.Input.Mouse.GetState();
-            ScreenPosition = new Point(state.X, state.Y);
-            GamePosition = new Point(Math.Clamp(ScreenPosition.X - Game.Instance.X, 0, Game.Instance.ScreenWidth) / Game.Instance.Scale, Math.Clamp(ScreenPosition.Y - Game.Instance.Y, 0, Game.Instance.ScreenHeight) / Game.Instance.Scale);
+            ScreenPosition = new Vector2(state.X, state.Y);
+            GamePosition = new Vector2(Math.Clamp(ScreenPosition.X - Game.Instance.X, 0, Game.Instance.ScreenWidth) / Game.Instance.Scale, Math.Clamp(ScreenPosition.Y - Game.Instance.Y, 0, Game.Instance.ScreenHeight) / Game.Instance.Scale);
 
             buttons[Button.Left] = state.LeftButton;
             buttons[Button.Middle] = state.MiddleButton;
