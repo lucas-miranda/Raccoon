@@ -86,6 +86,7 @@
     <Compile Include="Graphics\Graphic.cs" />
     <Compile Include="Graphics\Image.cs" />
     <Compile Include="Core\Game.cs" />
+    <Compile Include="Graphics\Primitive\Circle.cs" />
     <Compile Include="Graphics\Primitive\Rectangle.cs" />
     <Compile Include="Graphics\Shader.cs" />
     <Compile Include="Graphics\Text.cs" />

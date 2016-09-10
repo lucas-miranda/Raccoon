@@ -136,6 +136,10 @@
             return new Vector2(l.X + v, l.Y + v);
         }
 
+        public static Vector2 operator -(Vector2 l, float v) {
+            return new Vector2(l.X - v, l.Y - v);
+        }
+
         public static Vector2 operator *(Vector2 l, float v) {
             return new Vector2(l.X * v, l.Y * v);
         }
