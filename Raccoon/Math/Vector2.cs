@@ -69,10 +69,6 @@
             return X.GetHashCode() + Y.GetHashCode();
         }
 
-        public Point ToPoint() {
-            return new Point(X, Y);
-        }
-
         public Direction ToDirection() {
             Direction dir = Direction.None;
             if (X > 0)

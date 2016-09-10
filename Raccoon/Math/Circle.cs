@@ -2,20 +2,20 @@
     public struct Circle {
         #region Static Readonly
 
-        public static readonly Circle Empty = new Circle(new Point(0, 0), 0);
+        public static readonly Circle Empty = new Circle(new Vector2(0, 0), 0);
 
         #endregion Static Readonly
 
         #region Public Members
 
-        public Point Center;
+        public Vector2 Center;
         public float Radius;
 
         #endregion Public Members
 
         #region Constructors
 
-        public Circle(Point center, float radius) {
+        public Circle(Vector2 center, float radius) {
             Center = center;
             Radius = radius;
         }
@@ -36,12 +36,12 @@
 
         #region Public Methods
 
-        public bool Contains(Point p) {
-            return (p.ToVector2() - Center.ToVector2()).LengthSquared() <= Radius * Radius;
+        public bool Contains(Vector2 v) {
+            return (v - Center).LengthSquared() <= Radius * Radius;
         }
 
         public bool Intersects(Circle c) {
-            Vector2 centerDist = c.Center.ToVector2() - Center.ToVector2();
+            Vector2 centerDist = c.Center - Center;
             float radiusDiff = Radius - c.Radius;
             return centerDist.X * centerDist.X + centerDist.Y * centerDist.Y <= Math.Abs(radiusDiff * radiusDiff);
         }
@@ -94,7 +94,7 @@
             return !(l.Radius < r.Radius);
         }
 
-        public static bool operator &(Circle l, Point r) {
+        public static bool operator &(Circle l, Vector2 r) {
             return l.Contains(r);
         }
 

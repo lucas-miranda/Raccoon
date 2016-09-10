@@ -93,7 +93,7 @@
     <Compile Include="Graphics\Transition\FadeTransition.cs" />
     <Compile Include="Graphics\Transition\SceneTransition.cs" />
     <Compile Include="Graphics\Transition\SquareTransition.cs" />
-    <Compile Include="Math\Point.cs" />
+    <Compile Include="Math\Circle.cs" />
     <Compile Include="Math\Rectangle.cs" />
     <Compile Include="Math\Size.cs" />
     <Compile Include="Math\Vector2.cs" />

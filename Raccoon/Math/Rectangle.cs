@@ -21,10 +21,10 @@
             Height = height;
         }
 
-        public Rectangle(Point topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
+        public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
         }
 
-        public Rectangle(Point topLeft, Point bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) {
+        public Rectangle(Vector2 topLeft, Vector2 bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) {
         }
 
         public Rectangle(float w, float h) {
@@ -38,21 +38,21 @@
         #region Public Properties
 
         public float Area { get { return System.Math.Abs(Width * Height); } }
-        public Point Position { get { return new Point(X, Y); } set { X = value.X; Y = value.Y; } }
+        public Vector2 Position { get { return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
         public Size Size { get { return new Size(Width, Height); } set { Width = value.Width; Height = value.Height; } }
         public float Left { get { return X; } set { X = value; } }
         public float Top { get { return Y; } set { Y = value; } }
         public float Right { get { return X + Width; } set { Width = value - X; } }
         public float Bottom { get { return Y + Height; } set { Height = value - Y; } }
-        public Point Center { get { return new Point(X + Width / 2, Y + Height / 2); } }
+        public Vector2 Center { get { return new Vector2(X + Width / 2, Y + Height / 2); } }
         public bool IsEmpty { get { return Width == 0 && Height == 0; } }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        public bool Contains(Point p) {
-            return !(p.X < Left || p.X > Right || p.Y < Top || p.Y > Bottom);
+        public bool Contains(Vector2 v) {
+            return !(v.X < Left || v.X > Right || v.Y < Top || v.Y > Bottom);
         }
 
         public bool Intersects(Rectangle r) {
@@ -121,7 +121,7 @@
             return !(l < r);
         }
 
-        public static bool operator &(Rectangle l, Point r) {
+        public static bool operator &(Rectangle l, Vector2 r) {
             return l.Contains(r);
         }
 
