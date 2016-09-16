@@ -13,6 +13,8 @@ Raccoon/bin
 Raccoon/data
 Test/obj
 Test/bin
+Test/Content/bin
+Test/Content/obj
 
 TODO.md
 _UpgradeReport_Files

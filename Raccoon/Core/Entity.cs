@@ -15,6 +15,7 @@ namespace Raccoon {
         public Entity() {
             Name = "Entity";
             Active = Visible = true;
+            Graphics = new List<Graphic>();
         }
 
         #endregion Constructors
@@ -26,8 +27,20 @@ namespace Raccoon {
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public bool Active { get; set; }
         public bool Visible { get; set; }
-        public Graphic Graphic { get { return Graphics[0]; } set { Graphics[0] = value; } }
-        public List<Graphic> Graphics { get; set; }
+        public List<Graphic> Graphics { get; private set; }
+
+        public Graphic Graphic {
+            get {
+                return Graphics.Count > 0 ? Graphics[0] : null;
+            }
+
+            set {
+                if (Graphics.Count == 0)
+                    Graphics.Add(value);
+                else
+                    Graphics[0] = value;
+            }
+        }
 
         public Vector2 Position {
             get { return position; }
@@ -87,7 +100,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"[Entiy '{Name}' X: {X} Y: {Y}]";
+            return $"[Entity '{Name}' X: {X} Y: {Y}]";
         }
 
         #endregion Public Methods

@@ -15,7 +15,7 @@ namespace Test {
 
         public GameScene() : base() {
             transition = new FadeTransition(Color.Cyan);
-            AddGraphic(transition);
+            Add(transition);
 
             anim = new Animation<string>("graphics/deathflower", 18, 20);
             anim.Add("idle", "0-6", 0.120f);
@@ -23,7 +23,7 @@ namespace Test {
             anim.X = Game.Instance.Width / 2;
             anim.Y = Game.Instance.Height / 2;
             anim.Origin = new Vector2(9, 10);
-            AddGraphic(anim);
+            Add(anim);
             //Console.WriteLine($"Angle = 180 | Rad = {MathHelper.ToRadian(180)} | Cos = {Math.Cos(MathHelper.ToRadian(180))}");
 
             p1Controller = new XboxController(0, 0);
@@ -44,7 +44,7 @@ namespace Test {
 
             circle = new Raccoon.Graphics.Primitive.Circle(50, Color.Magenta);
             circle.Position = new Vector2(50, 50);
-            AddGraphic(circle);
+            Add(circle);
         }
 
         public override void Update(int delta) {

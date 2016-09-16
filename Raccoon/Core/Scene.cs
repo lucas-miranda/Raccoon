@@ -21,15 +21,15 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public void AddGraphic(Graphic g) {
+        public void Add(Graphic g) {
             Graphics.Add(g);
         }
 
-        public void AddGraphics(IEnumerable<Graphic> graphics) {
+        public void Add(IEnumerable<Graphic> graphics) {
             Graphics.AddRange(graphics);
         }
 
-        public void AddObject(Entity o) {
+        public void Add(Entity o) {
             Objects.Add(o);
             if (Game.Instance.IsRunning) {
                 foreach (Graphic g in o.Graphics) {
@@ -38,7 +38,7 @@ namespace Raccoon {
             }
         }
 
-        public void AddObjects(IEnumerable<Entity> objects) {
+        public void Add(IEnumerable<Entity> objects) {
             Objects.AddRange(objects);
             if (Game.Instance.IsRunning) {
                 foreach (Entity o in objects) {
