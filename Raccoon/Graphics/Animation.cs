@@ -26,9 +26,7 @@ namespace Raccoon.Graphics {
         public Animation(string path, int frameWidth, int frameHeight) : this() {
             Name = path;
             Size = new Size(frameWidth, frameHeight);
-            if (Game.Instance.IsRunning) {
-                Load();
-            }
+            Load();
         }
 
         #endregion Constructors
@@ -158,6 +156,9 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
+            if (Texture == null)
+                return;
+
             columns = (int) (Texture.Width / Size.Width);
             rows = (int) (Texture.Height / Size.Height);
             UpdateTextureRect();

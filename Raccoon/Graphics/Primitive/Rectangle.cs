@@ -1,17 +1,27 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics.Primitive {
-    public class Rectangle : Image {
+    public class Rectangle : Graphic {
+        #region Private Members
+
+        private Texture2D _texture;
         private bool _filled;
+
+        #endregion Private Members
+
+        #region Constructors
 
         public Rectangle(int width, int height, Color color, bool filled = true) {
             Width = width;
             Height = height;
             Color = color;
             _filled = filled;
-            if (Game.Instance.IsRunning)
-                Load();
+            Load();
         }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public bool Filled {
             get {
@@ -23,7 +33,7 @@ namespace Raccoon.Graphics.Primitive {
                     return;
 
                 if (!_filled)
-                    Texture.Dispose();
+                    _texture.Dispose();
 
                 _filled = value;
                 if (Game.Instance.Core.Graphics != null)
@@ -31,17 +41,31 @@ namespace Raccoon.Graphics.Primitive {
             }
         }
 
+        #endregion Public Properties
+
+        #region Public Methods
+
+        public override void Update(int delta) {
+        }
+
         public override void Render() {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(Texture, new Raccoon.Rectangle(X, Y, Width, Height), Color);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, new Raccoon.Rectangle(X, Y, Width, Height), Color);
             } else {
-                Game.Instance.Core.SpriteBatch.Draw(Texture, Position, Color);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, Color);
             }
         }
 
+        #endregion Public Methods
+
+        #region Internal Methods
+
         internal override void Load() {
+            if (Game.Instance.Core.SpriteBatch == null)
+                return;
+
             if (Filled) {
-                Texture = Game.Instance.Core.SpriteBatch.BlankTexture();
+                _texture = Game.Instance.Core.SpriteBatch.BlankTexture();
             } else {
                 int w = (int) Width, h = (int) Height;
                 Microsoft.Xna.Framework.Color[] data = new Microsoft.Xna.Framework.Color[w * h];
@@ -58,8 +82,10 @@ namespace Raccoon.Graphics.Primitive {
                 }
 
                 unfilledRectTexture.SetData(data);
-                Texture = unfilledRectTexture;
+                _texture = unfilledRectTexture;
             }
         }
+
+        #endregion Internal Methods
     }
 }
