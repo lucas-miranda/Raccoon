@@ -16,9 +16,7 @@ namespace Raccoon.Graphics {
             Name = path;
             FrameSize = new Size(frameWidth, frameHeight);
             FrameCount = System.Math.Max(-1, frameCount);
-            if (Game.Instance.IsRunning) {
-                Load();
-            }
+            Load();
         }
 
         #endregion Contructors
@@ -57,6 +55,9 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
+            if (Texture == null)
+                return;
+
             int texColumns = (int) (Texture.Width / FrameSize.Width);
             int texRows = (int) (Texture.Height / FrameSize.Height);
 

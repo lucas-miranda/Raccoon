@@ -15,6 +15,9 @@
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
+        public Size Size { get; set; }
+        public float Width { get { return Size.Width; } set { Size = new Size(value, Height); } }
+        public float Height { get { return Size.Height; } set { Size = new Size(Width, value); } }
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;

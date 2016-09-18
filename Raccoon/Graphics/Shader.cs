@@ -126,6 +126,9 @@ namespace Raccoon.Graphics {
         }
 
         internal void Load() {
+            if (Game.Instance.Core.SpriteBatch == null)
+                return;
+
             effect = Game.Instance.Core.Content.Load<Effect>(Filename);
             if (currentTechnique.Length > 0) {
                 effect.CurrentTechnique = effect.Techniques[currentTechnique];

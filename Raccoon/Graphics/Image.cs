@@ -8,11 +8,9 @@ namespace Raccoon.Graphics {
             TextureRect = Rectangle.Empty;
         }
 
-        public Image(string path) : this() {
+        public Image(string path) {
             Name = path;
-            if (Game.Instance.IsRunning) {
-                Load();
-            }
+            Load();
         }
 
         #endregion Constructors
@@ -54,6 +52,9 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
         internal override void Load() {
+            if (Game.Instance.Core.SpriteBatch == null)
+                return;
+
             Texture = Game.Instance.Core.Content.Load<Texture2D>(Name);
             TextureRect = new Rectangle(0, 0, Texture.Width, Texture.Height);
         }
