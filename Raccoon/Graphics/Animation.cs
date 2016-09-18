@@ -25,7 +25,7 @@ namespace Raccoon.Graphics {
 
         public Animation(string path, int frameWidth, int frameHeight) : this() {
             Name = path;
-            FrameSize = new Size(frameWidth, frameHeight);
+            Size = new Size(frameWidth, frameHeight);
             if (Game.Instance.IsRunning) {
                 Load();
             }
@@ -35,7 +35,6 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
-        public Size FrameSize { get; private set; }
         public Dictionary<KeyType, Track> Tracks { get; private set; }
         public bool Playing { get; set; }
         public KeyType CurrentKey { get; set; }
@@ -150,7 +149,7 @@ namespace Raccoon.Graphics {
         private void UpdateTextureRect() {
             int x = CurrentTrack.CurrentSpriteID % columns;
             int y = CurrentTrack.CurrentSpriteID / columns;
-            TextureRect = new Rectangle(x * FrameSize.Width, y * FrameSize.Height, FrameSize.Width, FrameSize.Height);
+            TextureRect = new Rectangle(x * Size.Width, y * Size.Height, Size.Width, Size.Height);
         }
 
         #endregion Private Methods
@@ -159,8 +158,8 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
-            columns = (int) (Texture.Width / FrameSize.Width);
-            rows = (int) (Texture.Height / FrameSize.Height);
+            columns = (int) (Texture.Width / Size.Width);
+            rows = (int) (Texture.Height / Size.Height);
             UpdateTextureRect();
         }
 
