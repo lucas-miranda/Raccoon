@@ -19,8 +19,8 @@ namespace Raccoon.Components {
         }
 
         public override void Render() {
-            if (Graphic == null) {
-                Graphic = new Graphics.Primitive.Rectangle((int) Width, (int) Height, Color.Red, false);
+            if (Graphic == null || Size != Graphic.Size) {
+                Graphic = new Graphics.Primitive.Rectangle(Width, Height, Color.Red, false);
             }
 
             Graphic.Position = Position;
