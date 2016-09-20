@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
-using Raccoon.Graphics;
+﻿using Raccoon.Graphics;
+using Raccoon.Components;
+using System.Collections.Generic;
 
 namespace Raccoon {
     public class Entity {
         #region Private Members
 
-        private Vector2 position;
-        private float rotation;
+        private Vector2 _position;
+        private float _rotation;
+        private List<Component> _components;
 
         #endregion Private Members
 
@@ -16,6 +18,7 @@ namespace Raccoon {
             Name = "Entity";
             Active = Visible = true;
             Graphics = new List<Graphic>();
+            _components = new List<Component>();
         }
 
         #endregion Constructors
@@ -35,28 +38,36 @@ namespace Raccoon {
             }
 
             set {
-                if (Graphics.Count == 0)
+                if (Graphics.Count == 0) {
                     Graphics.Add(value);
-                else
+                } else {
                     Graphics[0] = value;
+                }
             }
         }
 
         public Vector2 Position {
-            get { return position; }
-            set {
-                position = value;
+            get {
+                return _position;
+            }
+
+            set
+            {
+                _position = value;
                 foreach (Graphic g in Graphics) {
-                    g.Position = position;
+                    g.Position = _position;
                 }
             }
         }
 
         public float Rotation {
-            get { return rotation; }
+            get {
+                return _rotation;
+            }
+
             set {
-                float alpha = value - rotation;
-                rotation = value;
+                float alpha = value - _rotation;
+                _rotation = value;
                 foreach (Graphic g in Graphics) {
                     g.Rotation = alpha;
                 }
@@ -67,40 +78,63 @@ namespace Raccoon {
 
         #region Public Methods
 
+        public virtual void Initialize() {
+        }
+
         public virtual void Update(int delta) {
-            if (Active) {
-                foreach (Graphic g in Graphics) {
-                    g.Update(delta);
-                }
+            if (!Active) {
+                return;
+            }
+
+            foreach (Component c in _components) {
+                c.Update(delta);
+            }
+
+            foreach (Graphic g in Graphics) {
+                g.Update(delta);
             }
         }
 
         public virtual void Render() {
-            if (Visible) {
-                foreach (Graphic g in Graphics) {
-                    g.Render();
-                }
+            if (!Visible) {
+                return;
+            }
+
+            foreach (Graphic g in Graphics) {
+                g.Render();
             }
         }
 
         public void AddGraphic(Graphic graphic) {
-            if (Graphics == null) {
-                Graphics = new List<Graphic>();
-            }
-
-            Graphic = graphic;
+            Graphics.Add(graphic);
         }
 
         public void AddGraphics(IEnumerable<Graphic> graphics) {
-            if (Graphics == null) {
-                Graphics = new List<Graphic>();
-            }
-
             Graphics.AddRange(graphics);
         }
 
+        public void RemoveGraphic(Graphic graphic) {
+            Graphics.Remove(graphic);
+        }
+
+        public void RemoveGraphics(IEnumerable<Graphic> graphics) {
+            foreach (Graphic g in graphics) {
+                RemoveGraphic(g);
+            }
+        }
+
+        public void AddComponent(Component component) {
+            _components.Add(component);
+            component.Added(this);
+        }
+
+        public void RemoveComponent(Component component) {
+            _components.Remove(component);
+        }
+
+
         public override string ToString() {
-            return $"[Entity '{Name}' X: {X} Y: {Y}]";
+            return $"[Entity '{Name}' | X: {X} Y: {Y}]";
         }
 
         #endregion Public Methods

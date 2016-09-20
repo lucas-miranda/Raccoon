@@ -11,7 +11,7 @@ namespace Raccoon.Graphics.Primitive {
 
         #region Constructors
 
-        public Rectangle(int width, int height, Color color, bool filled = true) {
+        public Rectangle(float width, float height, Color color, bool filled = true) {
             Width = width;
             Height = height;
             Color = color;

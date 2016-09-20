@@ -7,7 +7,7 @@ namespace Raccoon {
 
         public Scene() {
             Graphics = new List<Graphic>();
-            Objects = new List<Entity>();
+            Entities = new List<Entity>();
         }
 
         #endregion
@@ -15,7 +15,7 @@ namespace Raccoon {
         #region Public Properties
 
         public List<Graphic> Graphics { get; protected set; }
-        public List<Entity> Objects { get; protected set; }
+        public List<Entity> Entities { get; protected set; }
 
         #endregion
 
@@ -29,20 +29,20 @@ namespace Raccoon {
             Graphics.AddRange(graphics);
         }
 
-        public void Add(Entity o) {
-            Objects.Add(o);
+        public void Add(Entity e) {
+            Entities.Add(e);
             if (Game.Instance.IsRunning) {
-                foreach (Graphic g in o.Graphics) {
+                foreach (Graphic g in e.Graphics) {
                     g.Load();
                 }
             }
         }
 
         public void Add(IEnumerable<Entity> objects) {
-            Objects.AddRange(objects);
+            Entities.AddRange(objects);
             if (Game.Instance.IsRunning) {
-                foreach (Entity o in objects) {
-                    foreach (Graphic g in o.Graphics) {
+                foreach (Entity e in objects) {
+                    foreach (Graphic g in e.Graphics) {
                         g.Load();
                     }
                 }
@@ -53,16 +53,21 @@ namespace Raccoon {
 
         #region Public Virtual Methods
 
-        public virtual void Initialize() { }
         public virtual void Added() { }
+
+        public virtual void Initialize() {
+            foreach (Entity e in Entities) {
+                e.Initialize();
+            }
+        }
 
         public virtual void LoadContent() {
             foreach (Graphic g in Graphics) {
                 g.Load();
             }
 
-            foreach (Entity o in Objects) {
-                foreach (Graphic g in o.Graphics) {
+            foreach (Entity e in Entities) {
+                foreach (Graphic g in e.Graphics) {
                     g.Load();
                 }
             }
@@ -75,8 +80,8 @@ namespace Raccoon {
                 g.Update(delta);
             }
 
-            foreach (Entity o in Objects) {
-                o.Update(delta);
+            foreach (Entity e in Entities) {
+                e.Update(delta);
             }
         }
 
@@ -85,8 +90,8 @@ namespace Raccoon {
                 g.Render();
             }
 
-            foreach (Entity o in Objects) {
-                o.Render();
+            foreach (Entity e in Entities) {
+                e.Render();
             }
         }
 
