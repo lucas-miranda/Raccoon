@@ -5,6 +5,7 @@ namespace Raccoon {
     public enum ImageFlip {
         None = 0,
         Horizontal,
-        Vertical
+        Vertical,
+        Both = Horizontal | Vertical
     }
 }

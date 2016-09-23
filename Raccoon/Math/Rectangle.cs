@@ -52,11 +52,11 @@
         #region Public Methods
 
         public bool Contains(Vector2 v) {
-            return !(v.X < Left || v.X > Right || v.Y < Top || v.Y > Bottom);
+            return !(v.X <= Left || v.X >= Right || v.Y <= Top || v.Y >= Bottom);
         }
 
         public bool Intersects(Rectangle r) {
-            return !(r.Right < Left || r.Left > Right || r.Top < Top || r.Bottom > Bottom);
+            return !(r.Right <= Left || r.Left >= Right || r.Bottom <= Top || r.Top >= Bottom);
         }
 
         public void Inflate(float w, float h) {

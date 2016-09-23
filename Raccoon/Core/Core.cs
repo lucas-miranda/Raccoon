@@ -83,9 +83,6 @@ namespace Raccoon {
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
             OnUnloadContent += () => resourceContentManager.Unload();
 
-            //effect = Content.Load<Effect>("Test");
-            //effect.CurrentTechnique = effect.Techniques["BasicColorDrawing"];
-
             OnLoadContent?.Invoke();
             OnLoadContent = null;
             base.LoadContent();

@@ -14,13 +14,18 @@ namespace Raccoon.Components {
         public float Width { get { return Size.Width; } set { Size = new Size(value, Size.Height); } }
         public float Height { get { return Size.Height; } set { Size = new Size(Size.Width, value); } }
         public Rectangle Rect { get { return new Rectangle(Position, Size); } }
+        public float Top { get { return Y; } }
+        public float Right { get { return X + Width; } }
+        public float Bottom { get { return Y + Height; } }
+        public float Left { get { return X; } }
 
         public override void Update(int delta) {
         }
 
         public override void Render() {
             if (Graphic == null || Size != Graphic.Size) {
-                Graphic = new Graphics.Primitive.Rectangle(Width, Height, Color.Red, false);
+                Graphic = new Graphics.Primitive.Rectangle(Width, Height, Color, false);
+                Graphic.Layer = Graphic.LayerMax;
             }
 
             Graphic.Position = Position;
