@@ -61,6 +61,7 @@ namespace Raccoon.Graphics {
                 return;
 
             Texture = Game.Instance.Core.Content.Load<Texture2D>(Name);
+            Debug.Assert(Texture != null, $"Texture with name '{Name}' not found.");
             TextureRect = new Rectangle(0, 0, Texture.Width, Texture.Height);
         }
 

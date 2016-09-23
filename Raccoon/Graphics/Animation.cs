@@ -121,12 +121,10 @@ namespace Raccoon.Graphics {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
                 CurrentTrack.CurrentFrameIndex = 0;
-                if (Game.Instance.IsRunning)
-                    UpdateTextureRect();
+                UpdateTextureRect();
             } else if (forceReset) {
                 CurrentTrack.CurrentFrameIndex = 0;
-                if (Game.Instance.IsRunning)
-                    UpdateTextureRect();
+                UpdateTextureRect();
             }
         }
 
@@ -145,6 +143,9 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateTextureRect() {
+            if (Game.Instance.Core.SpriteBatch == null)
+                return;
+
             int x = CurrentTrack.CurrentSpriteID % columns;
             int y = CurrentTrack.CurrentSpriteID / columns;
             TextureRect = new Rectangle(x * Size.Width, y * Size.Height, Size.Width, Size.Height);

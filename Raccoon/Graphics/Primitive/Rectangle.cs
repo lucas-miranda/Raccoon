@@ -50,7 +50,7 @@ namespace Raccoon.Graphics.Primitive {
 
         public override void Render() {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, Color, 0, Vector2.Zero, SpriteEffects.None, LayerDepth);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, Color, Rotation, Origin, (SpriteEffects) Flipped, LayerDepth);
             } else {
                 Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, Color, (SpriteEffects) Flipped, LayerDepth);
             }

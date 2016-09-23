@@ -29,7 +29,7 @@
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public int Layer { get { return (int) (LayerDepth * LayerLimit); } set { LayerDepth = 0.5f + ((float) value / LayerLimit); } }
+        public int Layer { get { return (int) (LayerDepth * LayerLimit); } set { LayerDepth = 0.5f + (Math.Clamp(value, LayerMin, LayerMax) / LayerLimit); } }
         public float LayerDepth { get; set; }
         //public Shader Shader { get; set; }
 

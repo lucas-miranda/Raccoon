@@ -40,9 +40,11 @@ namespace Raccoon {
 
             set {
                 if (Graphics.Count == 0) {
-                    Graphics.Add(value);
+                    AddGraphic(value);
                 } else {
                     Graphics[0] = value;
+                    Graphics[0].Position = Position;
+                    Graphics[0].Layer = Layer;
                 }
             }
         }
@@ -121,10 +123,15 @@ namespace Raccoon {
 
         public void AddGraphic(Graphic graphic) {
             Graphics.Add(graphic);
+            graphic.Position = Position;
+            graphic.Layer = Layer;
         }
 
         public void AddGraphics(IEnumerable<Graphic> graphics) {
             Graphics.AddRange(graphics);
+            foreach (Graphic g in graphics) {
+                g.Position = Position;
+            }
         }
 
         public void RemoveGraphic(Graphic graphic) {

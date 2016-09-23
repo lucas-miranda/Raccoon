@@ -25,10 +25,10 @@ namespace Raccoon.Components {
         public override void Render() {
             if (Graphic == null || Size != Graphic.Size) {
                 Graphic = new Graphics.Primitive.Rectangle(Width, Height, Color, false);
-                Graphic.Layer = Graphic.LayerMax;
             }
 
             Graphic.Position = Position;
+            Graphic.Layer = Entity.Layer + 1;
             Graphic.Render();
         }
     }
