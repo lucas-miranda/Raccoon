@@ -50,10 +50,15 @@ namespace Raccoon.Graphics.Primitive {
 
         public override void Render() {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, new Raccoon.Rectangle(X, Y, Width, Height), Color);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, Color, 0, Vector2.Zero, SpriteEffects.None, LayerDepth);
             } else {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, Color);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, Color, (SpriteEffects) Flipped, LayerDepth);
             }
+        }
+
+        public override void Dispose() {
+            if (_texture != null)
+                _texture.Dispose();
         }
 
         #endregion Public Methods

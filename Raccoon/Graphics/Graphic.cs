@@ -1,10 +1,18 @@
 ﻿namespace Raccoon.Graphics {
     public abstract class Graphic {
+        #region Public Members
+
+        public readonly int LayerMin = -LayerLimit / 2;
+        public readonly int LayerMax = LayerLimit / 2;
+
+        #endregion Public Members
+
         #region Private Members
 
-        private float opacity = 1f;
-        private Color color = Color.White;
-        private Color finalColor = Color.White;
+        private const int LayerLimit = 20000;
+        private float _opacity = 1f;
+        private Color _color = Color.White;
+        private Color _finalColor = Color.White;
 
         #endregion Private Members
 
@@ -21,28 +29,29 @@
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public float Layer { get; set; }
+        public int Layer { get { return (int) (LayerDepth * LayerLimit); } set { LayerDepth = 0.5f + ((float) value / LayerLimit); } }
+        public float LayerDepth { get; set; }
         //public Shader Shader { get; set; }
 
         public Color Color {
             get {
-                return finalColor;
+                return _finalColor;
             }
 
             set {
-                color = value;
-                finalColor = color * opacity;
+                _color = value;
+                _finalColor = _color * _opacity;
             }
         }
 
         public float Opacity {
             get {
-                return opacity;
+                return _opacity;
             }
 
             set {
-                opacity = Math.Clamp(value, 0, 1);
-                finalColor = color * opacity;
+                _opacity = Math.Clamp(value, 0, 1);
+                _finalColor = _color * _opacity;
             }
         }
 
@@ -84,6 +93,7 @@
 
         public abstract void Update(int delta);
         public abstract void Render();
+        public abstract void Dispose();
 
         #endregion
 

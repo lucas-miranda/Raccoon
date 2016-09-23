@@ -9,6 +9,7 @@ namespace Raccoon {
         private Vector2 _position;
         private float _rotation;
         private List<Component> _components;
+        private int _layer;
 
         #endregion Private Members
 
@@ -70,6 +71,19 @@ namespace Raccoon {
                 _rotation = value;
                 foreach (Graphic g in Graphics) {
                     g.Rotation = alpha;
+                }
+            }
+        }
+
+        public int Layer {
+            get {
+                return _layer;
+            }
+
+            set {
+                _layer = value;
+                foreach (Graphic g in Graphics) {
+                    g.Layer = _layer;
                 }
             }
         }

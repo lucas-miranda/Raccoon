@@ -43,8 +43,13 @@ namespace Raccoon.Graphics {
                 Scale,
                 Color,
                 (SpriteEffects) Flipped,
-                Layer
+                LayerDepth
             );
+        }
+
+        public override void Dispose() {
+            if (Texture != null)
+                Texture.Dispose();
         }
 
         #endregion

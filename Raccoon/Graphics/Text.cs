@@ -26,8 +26,11 @@
                 Origin,
                 Scale,
                 (Microsoft.Xna.Framework.Graphics.SpriteEffects) Flipped,
-                Layer
+                LayerDepth
             );
+        }
+
+        public override void Dispose() {
         }
 
         internal override void Load() {

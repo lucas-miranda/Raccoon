@@ -47,8 +47,6 @@ namespace Raccoon {
                 IsFullScreen = fullscreen,
                 PreferMultiSampling = false
             };
-
-            Graphics.ApplyChanges();
         }
 
         #endregion Constructor
@@ -70,7 +68,7 @@ namespace Raccoon {
 
         protected override void Initialize() {
             Debug.WriteLine("Initializing... ");
-            Matrix.CreateScale(Scale, out _screenTransform);
+            Matrix.CreateScale(Scale, Scale, 1, out _screenTransform);
             OnInitialize?.Invoke();
             OnInitialize = null;
             base.Initialize();
@@ -83,6 +81,7 @@ namespace Raccoon {
             // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
+            OnUnloadContent += () => resourceContentManager.Unload();
 
             //effect = Content.Load<Effect>("Test");
             //effect.CurrentTechnique = effect.Techniques["BasicColorDrawing"];
@@ -96,6 +95,8 @@ namespace Raccoon {
             Debug.WriteLine("Unloading Content... ");
             OnUnloadContent?.Invoke();
             OnUnloadContent = null;
+            SpriteBatch.BlankTexture().Dispose();
+            base.UnloadContent();
         }
 
         protected override void Update(GameTime gameTime) {
@@ -125,8 +126,7 @@ namespace Raccoon {
 
         protected override void Draw(GameTime gameTime) {
             Graphics.GraphicsDevice.Clear(BackgroundColor);
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _screenTransform);
-
+            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _screenTransform);
             OnRender?.Invoke();
 
 #if DEBUG
@@ -138,6 +138,13 @@ namespace Raccoon {
 
             SpriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            if (disposing) {
+                Graphics.Dispose();
+            }
         }
 
         #endregion Protected Methods

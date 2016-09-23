@@ -32,7 +32,12 @@ namespace Raccoon.Graphics.Primitive {
         }
 
         public override void Render() {
-            Game.Instance.Core.SpriteBatch.Draw(_texture, Position, Color);
+            Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, Color, (SpriteEffects) Flipped, LayerDepth);
+        }
+
+        public override void Dispose() {
+            if (_texture != null)
+                _texture.Dispose();
         }
 
         #endregion Public Methods

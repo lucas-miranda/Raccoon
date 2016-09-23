@@ -62,5 +62,10 @@
             RepeatTimes = repeatTimes;
             OnStart?.Invoke();
         }
+
+        public override void Dispose() {
+            if (EndGraphic != null)
+                EndGraphic.Dispose();
+        }
     }
 }
