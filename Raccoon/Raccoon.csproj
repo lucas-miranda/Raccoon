@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Core\Components\ColliderComponent.cs" />
     <Compile Include="Core\Components\Colliders\BoxCollider.cs" />
+    <Compile Include="Core\Components\Colliders\GridCollider.cs" />
     <Compile Include="Core\Components\Component.cs" />
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\Coroutine.cs" />

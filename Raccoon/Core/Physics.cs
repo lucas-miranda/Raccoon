@@ -73,6 +73,24 @@ namespace Raccoon {
                     case ColliderType.Box:
                         return boxColl.Rect & (otherColl as BoxCollider).Rect;
 
+                    case ColliderType.Grid:
+                        GridCollider gridColl = otherColl as GridCollider;
+                        if (!(boxColl.Rect & gridColl.Rect)) {
+                            break;
+                        }
+
+                        int startColumn = (int) (boxColl.Left - gridColl.X) / (int) gridColl.TileSize.Width, startRow = (int) (boxColl.Top - gridColl.Y) / (int) gridColl.TileSize.Height;
+                        int endColumn = (int) (boxColl.Right - gridColl.X - 1) / (int) gridColl.TileSize.Width, endRow = (int) (boxColl.Bottom - gridColl.Y - 1) / (int) gridColl.TileSize.Height;
+                        for (int row = startRow; row <= endRow; row++) {
+                            for (int column = startColumn; column <= endColumn; column++) {
+                                if (gridColl.IsCollidable(column, row)) {
+                                    return true;
+                                }
+                            }
+                        }
+
+                        break;
+
                     default:
                         break;
                 }
