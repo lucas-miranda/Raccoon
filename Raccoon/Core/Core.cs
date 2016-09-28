@@ -8,9 +8,11 @@ namespace Raccoon {
     internal class Core : Microsoft.Xna.Framework.Game {
         #region Private Members
 
+        private string _windowTitleDetailed = "{0} | FPS: {1}";
         private Matrix _screenTransform = Matrix.Identity;
         private int _fpsCount, _fps;
         private TimeSpan _lastFpsTime;
+        private RenderTarget2D _mainRenderTarget;
 
         #endregion Private Members
 
@@ -27,6 +29,7 @@ namespace Raccoon {
         public event GeneralHandler OnLoadContent;
         public event GeneralHandler OnUnloadContent;
         public event GeneralHandler OnRender;
+        public event GeneralHandler OnDebugRender;
         public event TickHandler OnUpdate;
 
         #endregion Public Events
@@ -35,7 +38,7 @@ namespace Raccoon {
 
         public Core(string title, int width, int height, int targetFPS, bool fullscreen) {
             Title = title;
-            Window.Title = Title + " | FPS: 0";
+            Window.Title = string.Format(_windowTitleDetailed, Title, 0);
             Content.RootDirectory = "Content";
             TargetElapsedTime = TimeSpan.FromTicks((long) System.Math.Round(10000000 / (double) targetFPS)); // time between frames
             Scale = 1f;
@@ -77,6 +80,7 @@ namespace Raccoon {
         protected override void LoadContent() {
             Debug.WriteLine("Loading Content... ");
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+            _mainRenderTarget = new RenderTarget2D(GraphicsDevice, Game.Instance.Width, Game.Instance.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
             // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
@@ -115,25 +119,36 @@ namespace Raccoon {
                 _lastFpsTime = Time;
                 _fps = _fpsCount;
                 _fpsCount = 0;
-                Window.Title = Title + " | FPS: " + _fps;
+                Window.Title = string.Format(_windowTitleDetailed, Title, _fps);
             }
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime) {
+            // game render
+            GraphicsDevice.SetRenderTarget(_mainRenderTarget);
             Graphics.GraphicsDevice.Clear(BackgroundColor);
-            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _screenTransform);
+            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
             OnRender?.Invoke();
+            SpriteBatch.End();
+            GraphicsDevice.SetRenderTarget(null);
+
+            // draw main render target to screen
+            Graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1f, 0);
+            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _screenTransform);
+            SpriteBatch.Draw(_mainRenderTarget, Microsoft.Xna.Framework.Vector2.Zero);
+            SpriteBatch.End();
 
 #if DEBUG
-            SpriteBatch.End();
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+            // debug render
+            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+            OnDebugRender?.Invoke();
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
-            SpriteBatch.DrawString(StdFont.SpriteFont, $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}", new Vector2(3, 2), Raccoon.Graphics.Color.White);
+            SpriteBatch.DrawString(StdFont.SpriteFont, string.Format("Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount), new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), Raccoon.Graphics.Color.White);
+            SpriteBatch.End();
 #endif
 
-            SpriteBatch.End();
             base.Draw(gameTime);
         }
 

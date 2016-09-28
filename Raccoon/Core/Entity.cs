@@ -121,6 +121,9 @@ namespace Raccoon {
             }
         }
 
+        public virtual void DebugRender() {
+        }
+
         public void AddGraphic(Graphic graphic) {
             Graphics.Add(graphic);
             graphic.Position = Position;

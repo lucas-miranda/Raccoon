@@ -8,5 +8,6 @@
 
         public abstract void Update(int delta);
         public abstract void Render();
+        public abstract void DebugRender();
     }
 }

@@ -95,6 +95,12 @@ namespace Raccoon {
             }
         }
 
+        public virtual void DebugRender() {
+            foreach (Entity e in Entities) {
+                e.DebugRender();
+            }
+        }
+
         #endregion
     }
 }

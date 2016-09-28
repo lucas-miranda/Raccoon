@@ -24,9 +24,15 @@ namespace Raccoon.Components {
             return Physics.Instance.Collides(this, tagName);
         }
 
-        public void Render(Color color) {
-            Color = color;
-            Render();
+        public override void Render() {
+        }
+
+        public void DebugRender(Color color) {
+            if (Color != color) {
+                Color = color;
+            }
+
+            DebugRender();
         }
     }
 }

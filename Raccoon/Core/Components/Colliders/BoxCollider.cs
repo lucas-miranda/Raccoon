@@ -22,12 +22,12 @@ namespace Raccoon.Components {
         public override void Update(int delta) {
         }
 
-        public override void Render() {
+        public override void DebugRender() {
             if (Graphic == null || Size != Graphic.Size) {
-                Graphic = new Graphics.Primitive.Rectangle(Width, Height, Color, false);
+                Graphic = new Graphics.Primitive.Rectangle(Width * Game.Instance.Scale, Height * Game.Instance.Scale, Color, false);
             }
 
-            Graphic.Position = Position;
+            Graphic.Position = Position * Game.Instance.Scale;
             Graphic.Layer = Entity.Layer + 1;
             Graphic.Render();
         }

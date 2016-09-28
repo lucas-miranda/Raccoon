@@ -90,6 +90,7 @@ namespace Raccoon {
             Core.OnLoadContent += new Core.GeneralHandler(scene.LoadContent);
             Core.OnUnloadContent += new Core.GeneralHandler(scene.UnloadContent);
             Core.OnRender += new Core.GeneralHandler(scene.Render);
+            Core.OnDebugRender += new Core.GeneralHandler(scene.DebugRender);
             Core.OnUpdate += new Core.TickHandler(scene.Update);
         }
         
