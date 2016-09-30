@@ -87,6 +87,21 @@
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Graphics\Color.cs" />
     <Compile Include="Util\Math.cs" />
+    <Compile Include="Util\Tiled\TiledAnimation.cs" />
+    <Compile Include="Util\Tiled\TiledData.cs" />
+    <Compile Include="Util\Tiled\TiledImage.cs" />
+    <Compile Include="Util\Tiled\ITiledLayer.cs" />
+    <Compile Include="Util\Tiled\TiledImageLayer.cs" />
+    <Compile Include="Util\Tiled\TiledLayerTile.cs" />
+    <Compile Include="Util\Tiled\TiledMap.cs" />
+    <Compile Include="Util\Tiled\TiledObject.cs" />
+    <Compile Include="Util\Tiled\TiledObjectGroup.cs" />
+    <Compile Include="Util\Tiled\TiledObjectLayer.cs" />
+    <Compile Include="Util\Tiled\TiledProperty.cs" />
+    <Compile Include="Util\Tiled\TiledTerrainType.cs" />
+    <Compile Include="Util\Tiled\TiledTileLayer.cs" />
+    <Compile Include="Util\Tiled\TiledTilesetTile.cs" />
+    <Compile Include="Util\Tiled\TiledTileset.cs" />
     <Compile Include="Util\Time.cs" />
   </ItemGroup>
   <ItemGroup>
