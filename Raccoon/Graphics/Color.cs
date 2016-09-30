@@ -1,4 +1,6 @@
-﻿namespace Raccoon.Graphics {
+﻿using System;
+
+namespace Raccoon.Graphics {
     public struct Color {
         #region Public Static Readonly Members
 
@@ -13,6 +15,12 @@
 
         #endregion
 
+        #region Public Members
+
+        public byte R, G, B, A;
+
+        #endregion Public Members
+
         #region Constructors
 
         public Color(uint hex) {
@@ -20,6 +28,9 @@
             G = (byte) (hex >> 16);
             B = (byte) (hex >> 8);
             A = (byte) hex;
+        }
+
+        public Color(string hex) : this(PrepareString(hex)) {
         }
 
         public Color(byte r, byte g, byte b, byte a = 255) {
@@ -41,13 +52,9 @@
 
         #region Public Properties
 
-        public byte R { get; set; }
-        public byte G { get; set; }
-        public byte B { get; set; }
-        public byte A { get; set; }
         public uint RGBA { get { return ((uint) R << 24) | ((uint) G << 16) | ((uint) B << 8) | A; } }
         public uint ARGB { get { return ((uint) A << 24) | ((uint) R << 16) | ((uint) G << 8) | B; } }
-        public string Hex { get { return string.Format("{0:X2}{1:X2}{2:X2}{3:X2}", R, G, B, A); } }
+        public string Hex { get { return string.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", R, G, B, A); } }
 
         #endregion Public Properties
 
@@ -70,6 +77,24 @@
         }
 
         #endregion Public Static Methods
+
+        #region Private Static Methods
+
+        private static uint PrepareString(string hex) {
+            if (hex[0] == '#') {
+                hex = hex.Substring(1);
+            }
+
+            if (hex.Length < 8) {
+                hex += "FF";
+            } else if (hex.Length > 8) {
+                hex = hex.Substring(0, 8);
+            }
+
+            return Convert.ToUInt32(hex, 16);
+        }
+
+        #endregion
 
         #region Public Methods
 
