@@ -3,7 +3,7 @@
 namespace Raccoon.Components {
     public class GridCollider : ColliderComponent {
         private bool[,] _data;
-        private bool _debug_forceGraphicUpdate, _debug_renderOnlyCollidables;
+        private bool _debug_forceGraphicUpdate;
         private Size _tileSize;
 
         public GridCollider(Size tileSize, int columns, int rows, string tagName) : base(ColliderType.Grid, tagName) {

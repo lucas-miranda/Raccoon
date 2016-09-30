@@ -8,7 +8,7 @@ namespace Raccoon {
     internal class Core : Microsoft.Xna.Framework.Game {
         #region Private Members
 
-        private string _windowTitleDetailed = "{0} | FPS: {1}";
+        private string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private Matrix _screenTransform = Matrix.Identity;
         private int _fpsCount, _fps;
         private TimeSpan _lastFpsTime;
@@ -38,7 +38,7 @@ namespace Raccoon {
 
         public Core(string title, int width, int height, int targetFPS, bool fullscreen) {
             Title = title;
-            Window.Title = string.Format(_windowTitleDetailed, Title, 0);
+            Window.Title = string.Format(_windowTitleDetailed, Title, 0, GC.GetTotalMemory(false) / 1048576f);
             Content.RootDirectory = "Content";
             TargetElapsedTime = TimeSpan.FromTicks((long) System.Math.Round(10000000 / (double) targetFPS)); // time between frames
             Scale = 1f;
@@ -119,7 +119,7 @@ namespace Raccoon {
                 _lastFpsTime = Time;
                 _fps = _fpsCount;
                 _fpsCount = 0;
-                Window.Title = string.Format(_windowTitleDetailed, Title, _fps);
+                Window.Title = string.Format(_windowTitleDetailed, Title, _fps, GC.GetTotalMemory(false) / 1048576f);
             }
 
             base.Update(gameTime);

@@ -23,7 +23,7 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            if (Graphic == null || Size != Graphic.Size) {
+            if (Graphic == null || Size * Game.Instance.Scale != Graphic.Size) {
                 Graphic = new Graphics.Primitive.Rectangle(Width * Game.Instance.Scale, Height * Game.Instance.Scale, Color, false);
             }
 
