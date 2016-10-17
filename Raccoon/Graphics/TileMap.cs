@@ -3,11 +3,20 @@ using System.Text.RegularExpressions;
 
 namespace Raccoon.Graphics {
     public class TileMap : Graphic {
-        private const uint FlippedHorizontallyFlag = 0x80000000, FlippedVerticallyFlag = 0x40000000, FlippedDiagonallyFlag = 0x20000000;
-        private readonly Regex GidRegex = new Regex(@"(\d+)");
+        #region Private Static Members
+
+        private static readonly Regex GidRegex = new Regex(@"(\d+)");
+
+        #endregion Private Static Members
+
+        #region Private Members
 
         private int _tileSetRows, _tileSetColumns;
         private int[][] _data;
+
+        #endregion Private Members
+
+        #region Constructors
 
         public TileMap(string filename, Size tileSize) {
             Name = filename;
@@ -16,12 +25,24 @@ namespace Raccoon.Graphics {
             Load();
         }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         public Size TileSize { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public Rectangle Clip { get; set; }
 
+        #endregion Public Properties
+
+        #region Internal properties
+
         internal Texture2D Texture { get; set; }
+
+        #endregion Internal properties
+
+        #region Public Methods
 
         public override void Update(int delta) {
         }
@@ -37,15 +58,15 @@ namespace Raccoon.Graphics {
                     }
 
                     SpriteEffects flipped = SpriteEffects.None;
-                    if ((gid & FlippedHorizontallyFlag) != 0) {
+                    if ((gid & Tiled.TiledTile.FlippedHorizontallyFlag) != 0) {
                         flipped |= SpriteEffects.FlipHorizontally;
                     }
 
-                    if ((gid & FlippedVerticallyFlag) != 0) {
+                    if ((gid & Tiled.TiledTile.FlippedVerticallyFlag) != 0) {
                         flipped |= SpriteEffects.FlipVertically;
                     }
 
-                    gid &= (int) ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedDiagonallyFlag); // clear flags
+                    gid &= (int) ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag); // clear flags
                     
                     Game.Instance.Core.SpriteBatch.Draw(
                         Texture,
@@ -116,12 +137,12 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTile(int x, int y, int gid) {
-            CheckBounds(x, y);
+            StretchToFit(x, y);
             _data[y][x] = gid;
         }
 
         public bool ExistsTile(int x, int y) {
-            return y < _data.Length && x < _data[y].Length;
+            return y >= 0 && y < _data.Length && x >= 0 && x < _data[y].Length;
         }
 
         public override void Dispose() {
@@ -129,7 +150,11 @@ namespace Raccoon.Graphics {
                 Texture.Dispose();
         }
 
-        private void CheckBounds(int x, int y) {
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private void StretchToFit(int x, int y) {
             if (_data.Length <= y) {
                 int[][] currentData = _data;
                 _data = new int[y + 1][];
@@ -151,6 +176,52 @@ namespace Raccoon.Graphics {
             }
         }
 
+        private void ShrinkTo(int columns, int rows) {
+            if (columns > Columns || rows > Rows) {
+                InflateTo(columns, rows);
+                return;
+            }
+
+            int[][] newData = new int[rows][];
+            for (int row = 0; row < rows; row++) {
+                if (_data[row].Length > columns) {
+                    newData[row] = new int[columns];
+                    _data[row].CopyTo(newData[row], rows);
+                } else {
+                    _data[row] = newData[row];
+                }
+            }
+        }
+
+        private void InflateTo(int columns, int rows) {
+            if (columns < Columns || rows < Rows) {
+                ShrinkTo(columns, rows);
+                return;
+            }
+
+            Rows = rows;
+            int[][] currentData = _data;
+            _data = new int[Rows][];
+            currentData.CopyTo(_data, 0);
+            for (int row = currentData.Length; row < Rows; row++) {
+                _data[row] = new int[0];
+            }
+
+            Columns = columns;
+            for (int row = 0; row < Rows; row++) {
+                int[] currentRowData = _data[row];
+                _data[row] = new int[Columns];
+                currentRowData.CopyTo(_data[row], 0);
+                for (int column = currentRowData.Length; column < Columns; column++) {
+                    _data[row][column] = 0;
+                }
+            }
+        }
+
+        #endregion Private Methods
+
+        #region Internal Methods
+
         internal override void Load() {
             if (Game.Instance.Core.SpriteBatch == null)
                 return;
@@ -160,5 +231,7 @@ namespace Raccoon.Graphics {
             _tileSetColumns =  Texture.Width / (int) TileSize.Width;
             _tileSetRows =  Texture.Height / (int) TileSize.Height;
         }
+
+        #endregion Internal Methods
     }
 }
