@@ -42,6 +42,13 @@ namespace Raccoon.Tiled {
             if (e != null) {
                 Image = new TiledImage(tsxPath, e);
             }
+
+            e = tileElement["properties"];
+            if (e != null) {
+                foreach (XmlElement propertyElement in e) {
+                    Properties.Add(propertyElement.GetAttribute("name"), new TiledProperty(propertyElement));
+                }
+            }
         }
 
         public int Id { get; private set; }

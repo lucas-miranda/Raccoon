@@ -1,35 +1,43 @@
-﻿using System;
+﻿using Raccoon.Graphics;
+using System;
 using System.Xml;
 
 namespace Raccoon.Tiled {
     public enum TiledPropertyType {
-        String = 0,
-        Int,
+        Bool = 0,
+        Color,
         Float,
-        Bool
+        File,
+        Int,
+        String
     }
 
     public class TiledProperty {
         public TiledProperty(XmlElement e) {
             Name = e.GetAttribute("name");
             Type = e.HasAttribute("type") ? (TiledPropertyType) Enum.Parse(typeof(TiledPropertyType), e.GetAttribute("type"), true) : TiledPropertyType.String;
-            string value = e.HasAttribute("value") ? e.GetAttribute("value") : e.InnerText;
+            string strValue = e.HasAttribute("value") ? e.GetAttribute("value") : e.InnerText;
             switch (Type) {
-                case TiledPropertyType.Int:
-                    Value = int.Parse(value);
+                case TiledPropertyType.Bool:
+                    Value = bool.Parse(strValue);
+                    break;
+
+                case TiledPropertyType.Color:
+                    Value = new Color(strValue);
                     break;
 
                 case TiledPropertyType.Float:
-                    Value = float.Parse(value);
+                    Value = float.Parse(strValue);
                     break;
 
-                case TiledPropertyType.Bool:
-                    Value = bool.Parse(value);
+                case TiledPropertyType.Int:
+                    Value = int.Parse(strValue);
                     break;
 
                 case TiledPropertyType.String:
+                case TiledPropertyType.File:
                 default:
-                    Value = value;
+                    Value = strValue;
                     break;
             }
         }
@@ -38,36 +46,28 @@ namespace Raccoon.Tiled {
         public TiledPropertyType Type { get; private set; }
         public object Value { get; private set; }
 
-        public string GetString() {
-            return (string) Value;
+        public bool GetBool() {
+            return (bool) Value;
         }
 
-        public void SetString(string value) {
-            Value = value;
-        }
-
-        public int GetInt() {
-            return (int) Value;
-        }
-
-        public void SetInt(int value) {
-            Value = value;
+        public Color GetColor() {
+            return (Color) Value;
         }
 
         public float GetFloat() {
             return (float) Value;
         }
 
-        public void SetFloat(float value) {
-            Value = value;
+        public string GetFilename() {
+            return GetString();
         }
 
-        public bool GetBool() {
-            return (bool) Value;
+        public int GetInt() {
+            return (int) Value;
         }
 
-        public void SetBool(bool value) {
-            Value = value;
+        public string GetString() {
+            return (string) Value;
         }
     }
 }

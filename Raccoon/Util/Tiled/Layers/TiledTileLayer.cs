@@ -5,7 +5,7 @@ using System.Xml;
 namespace Raccoon.Tiled {
     public class TiledTileLayer : ITiledLayer {
         private readonly Regex GidRegex = new Regex(@"(\d+)");
-        private TiledLayerTile[][] _tiles;
+        private TiledTile[][] _tiles;
 
         public TiledTileLayer(XmlElement layerElement) {
             Name = layerElement.GetAttribute("name");
@@ -24,11 +24,11 @@ namespace Raccoon.Tiled {
             }
 
             // start tiles data
-            _tiles = new TiledLayerTile[Rows][];
+            _tiles = new TiledTile[Rows][];
             for (int row = 0; row < Rows; row++) {
-                TiledLayerTile[] tilesRow = _tiles[row] = new TiledLayerTile[Columns];
+                TiledTile[] tilesRow = _tiles[row] = new TiledTile[Columns];
                 for (int column = 0; column < Columns; column++) {
-                    tilesRow[column] = new TiledLayerTile(0);
+                    tilesRow[column] = new TiledTile(0);
                 }
             }
 
@@ -40,9 +40,9 @@ namespace Raccoon.Tiled {
                     case TiledEncoding.CSV:
                         int x = 0, y = 0;
                         foreach (Match m in GidRegex.Matches(data.Content)) {
-                            int gid = (int) uint.Parse(m.Value);
+                            uint gid = uint.Parse(m.Value);
                             if (gid > 0) {
-                                _tiles[y][x] = new TiledLayerTile(gid);
+                                _tiles[y][x] = new TiledTile(gid);
                             }
 
                             x++;
@@ -75,7 +75,7 @@ namespace Raccoon.Tiled {
         public Vector2 Offset { get; private set; }
         public Dictionary<string, TiledProperty> Properties { get; private set; }
 
-        public TiledLayerTile? this[int x, int y] {
+        public TiledTile this[int x, int y] {
             get {
                 return _tiles[y][x];
             }

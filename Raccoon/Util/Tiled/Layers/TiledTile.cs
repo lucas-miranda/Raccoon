@@ -1,12 +1,12 @@
 ﻿namespace Raccoon.Tiled {
-    public struct TiledLayerTile {
+    public struct TiledTile {
         public const uint FlippedHorizontallyFlag = 0x80000000, FlippedVerticallyFlag = 0x40000000, FlippedDiagonallyFlag = 0x20000000;
 
         public int Gid;
         public ImageFlip Flipped;
         public bool FlippedDiagonally;
 
-        public TiledLayerTile(int gid) {
+        public TiledTile(uint gid) {
             Flipped = ImageFlip.None;
             if ((gid & FlippedHorizontallyFlag) == FlippedHorizontallyFlag) {
                 Flipped |= ImageFlip.Horizontal;
@@ -21,6 +21,6 @@
         }
 
         public bool FlippedHorizontally { get { return Flipped.HasFlag(ImageFlip.Horizontal); } }
-        public bool FlippedVertically { get { return Flipped.HasFlag(ImageFlip.Horizontal); } }
+        public bool FlippedVertically { get { return Flipped.HasFlag(ImageFlip.Vertical); } }
     }
 }

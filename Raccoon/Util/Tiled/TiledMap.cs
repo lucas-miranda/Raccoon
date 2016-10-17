@@ -34,7 +34,7 @@ namespace Raccoon.Tiled {
 
         public TiledMap(string filename) {
             Properties = new Dictionary<string, TiledProperty>();
-            Tilesets = new Dictionary<int, TiledTileset>();
+            Tilesets = new List<TiledTileset>();
             Layers = new List<ITiledLayer>();
             _xmlDoc = new XmlDocument();
             FullFilename = filename;
@@ -59,7 +59,7 @@ namespace Raccoon.Tiled {
         public TiledStaggerAxis StaggerAxis { get; private set; }
         public TiledStaggerIndex StaggerIndex { get; private set; }
         public Dictionary<string, TiledProperty> Properties { get; private set; }
-        public Dictionary<int, TiledTileset> Tilesets { get; private set; }
+        public List<TiledTileset> Tilesets { get; private set; }
         public List<ITiledLayer> Layers { get; private set; }
 
         private void Load() {
@@ -99,7 +99,7 @@ namespace Raccoon.Tiled {
             // tilesets
             foreach (XmlElement tilesetElement in _rootElement.GetElementsByTagName("tileset")) {
                 TiledTileset tileset = !tilesetElement.HasAttribute("source") ? new TiledTileset(Path, tilesetElement) : new TiledTileset(Path + tilesetElement.GetAttribute("source"), int.Parse(tilesetElement.GetAttribute("firstgid")));
-                Tilesets.Add(tileset.FirstGid, tileset);
+                Tilesets.Add(tileset);
             }
 
             // layers

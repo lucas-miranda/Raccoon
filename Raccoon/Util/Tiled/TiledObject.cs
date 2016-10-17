@@ -17,7 +17,7 @@ namespace Raccoon.Tiled {
             Id = int.Parse(objectElement.GetAttribute("id"));
             Name = objectElement.GetAttribute("name");
             Type = objectElement.GetAttribute("type");
-            Visible = objectElement.HasAttribute("visible") ? bool.Parse(objectElement.GetAttribute("visible")) : true;
+            Visible = objectElement.HasAttribute("visible") ? (int.Parse(objectElement.GetAttribute("visible")) == 1) : true;
             Position = new Vector2(float.Parse(objectElement.GetAttribute("x"), System.Globalization.CultureInfo.InvariantCulture), float.Parse(objectElement.GetAttribute("y"), System.Globalization.CultureInfo.InvariantCulture));
             Rotation = objectElement.HasAttribute("rotation") ? float.Parse(objectElement.GetAttribute("rotation"), System.Globalization.CultureInfo.InvariantCulture) : 0f;
 
@@ -64,10 +64,10 @@ namespace Raccoon.Tiled {
                 }
             } else {
                 Shape = TiledObjectShape.Box;
-                Points.Add(Position);
-                Points.Add(Position + new Vector2(Width, 0));
-                Points.Add(Position + new Vector2(Width, Height));
-                Points.Add(Position + new Vector2(0, Height));
+                Points.Add(new Vector2(0, 0));
+                Points.Add(new Vector2(Width, 0));
+                Points.Add(new Vector2(Width, Height));
+                Points.Add(new Vector2(0, Height));
             }
         }
 
