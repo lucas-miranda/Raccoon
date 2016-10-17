@@ -92,7 +92,7 @@
     <Compile Include="Util\Tiled\TiledImage.cs" />
     <Compile Include="Util\Tiled\Layers\ITiledLayer.cs" />
     <Compile Include="Util\Tiled\Layers\TiledImageLayer.cs" />
-    <Compile Include="Util\Tiled\Layers\TiledLayerTile.cs" />
+    <Compile Include="Util\Tiled\Layers\TiledTile.cs" />
     <Compile Include="Util\Tiled\TiledMap.cs" />
     <Compile Include="Util\Tiled\TiledObject.cs" />
     <Compile Include="Util\Tiled\TiledObjectGroup.cs" />
