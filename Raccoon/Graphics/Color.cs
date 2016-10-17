@@ -23,14 +23,33 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
-        public Color(uint hex) {
-            R = (byte) (hex >> 24);
-            G = (byte) (hex >> 16);
-            B = (byte) (hex >> 8);
-            A = (byte) hex;
+        public Color(string hex) {
+            R = G = B = A = 255;
+
+            if (hex[0] == '#') {
+                hex = hex.Substring(1);
+            }
+
+            if (hex.Length >= 3 && hex.Length <= 4) { // RGB or RGBA
+                R = Convert.ToByte(string.Concat(hex[0], hex[0]), 16);
+                G = Convert.ToByte(string.Concat(hex[1], hex[1]), 16);
+                B = Convert.ToByte(string.Concat(hex[2], hex[2]), 16);
+
+                if (hex.Length == 4) {
+                    A = Convert.ToByte(string.Concat(hex[3], hex[3]), 16);
+                }
+            } else if (hex.Length >= 6 && hex.Length <= 8) { // RRGGBB or RRGGBBAA
+                R = Convert.ToByte(hex.Substring(0, 2), 16);
+                G = Convert.ToByte(hex.Substring(2, 2), 16);
+                B = Convert.ToByte(hex.Substring(4, 2), 16);
+
+                if (hex.Length == 8) {
+                    A = Convert.ToByte(hex.Substring(6, 2), 16);
+                }
+            }
         }
 
-        public Color(string hex) : this(PrepareString(hex)) {
+        public Color(uint hex) : this(hex.ToString("X")) {
         }
 
         public Color(byte r, byte g, byte b, byte a = 255) {
@@ -73,28 +92,10 @@ namespace Raccoon.Graphics {
         }
 
         public static Color Lerp(Color start, Color end, float t) {
-            return new Color(start.R + (end.R - start.R) * t, start.G + (end.G - start.G) * t, start.B + (end.B - start.B) * t, start.A + (end.A - start.A) * t);
+            return new Color(Math.Lerp(start.R, end.R, t), Math.Lerp(start.G, end.G, t), Math.Lerp(start.B, end.B, t), Math.Lerp(start.A, end.A, t));
         }
 
         #endregion Public Static Methods
-
-        #region Private Static Methods
-
-        private static uint PrepareString(string hex) {
-            if (hex[0] == '#') {
-                hex = hex.Substring(1);
-            }
-
-            if (hex.Length < 8) {
-                hex += "FF";
-            } else if (hex.Length > 8) {
-                hex = hex.Substring(0, 8);
-            }
-
-            return Convert.ToUInt32(hex, 16);
-        }
-
-        #endregion
 
         #region Public Methods
 
