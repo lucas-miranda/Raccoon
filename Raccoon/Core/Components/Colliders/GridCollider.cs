@@ -3,7 +3,7 @@
 namespace Raccoon.Components {
     public class GridCollider : ColliderComponent {
         private bool[,] _data;
-        private bool _debug_forceGraphicUpdate;
+        private bool _graphicNeedUpdate;
         private Size _tileSize;
 
         public GridCollider(Size tileSize, int columns, int rows, string tagName) : base(ColliderType.Grid, tagName) {
@@ -36,7 +36,7 @@ namespace Raccoon.Components {
 
             set {
                 _tileSize = value;
-                _debug_forceGraphicUpdate = true;
+                _graphicNeedUpdate = true;
             }
         }
 
@@ -44,13 +44,14 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            if (_debug_forceGraphicUpdate) {
-                if (Graphic != null) {
-                    Graphic.Dispose();
+            if (_graphicNeedUpdate) {
+                if (Graphic == null) {
+                    Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
+                } else {
+                    (Graphic as Graphics.Primitives.Rectangle).Size = new Size(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1);
                 }
 
-                Graphic = new Graphics.Primitive.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
-                _debug_forceGraphicUpdate = false;
+                _graphicNeedUpdate = false;
             }
 
             for (int y = 0; y < Rows; y++) {

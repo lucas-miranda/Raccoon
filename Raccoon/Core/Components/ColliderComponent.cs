@@ -20,19 +20,19 @@ namespace Raccoon.Components {
         protected Graphic Graphic { get; set; }
         protected Color Color { get; set; }
 
-        public bool Collides(string tagName) {
-            return Physics.Instance.Collides(this, tagName);
+        public override void Update(int delta) {
         }
 
         public override void Render() {
         }
 
         public void DebugRender(Color color) {
-            if (Color != color) {
-                Color = color;
-            }
-
+            Color = color;
             DebugRender();
+        }
+
+        public bool Collides(string tagName) {
+            return Physics.Instance.Collides(this, tagName);
         }
     }
 }

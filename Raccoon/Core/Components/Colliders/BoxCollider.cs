@@ -2,6 +2,8 @@
 
 namespace Raccoon.Components {
     public class BoxCollider : ColliderComponent {
+        private Size _size;
+
         public BoxCollider(float width, float height, string tagName) : base(ColliderType.Box, tagName) {
             Size = new Size(width, height);
         }
@@ -10,7 +12,6 @@ namespace Raccoon.Components {
         public Vector2 Position { get { return Entity.Position - Origin; } }
         public float X { get { return Position.X; } }
         public float Y { get { return Position.Y; } }
-        public Size Size { get; set; }
         public float Width { get { return Size.Width; } set { Size = new Size(value, Size.Height); } }
         public float Height { get { return Size.Height; } set { Size = new Size(Size.Width, value); } }
         public Rectangle Rect { get { return new Rectangle(Position, Size); } }
@@ -19,12 +20,22 @@ namespace Raccoon.Components {
         public float Bottom { get { return Y + Height; } }
         public float Left { get { return X; } }
 
-        public override void Update(int delta) {
+        public Size Size {
+            get {
+                return _size;
+            }
+
+            set {
+                _size = value;
+                if (Graphic != null) {
+                    (Graphic as Graphics.Primitives.Rectangle).Size = new Size(value.Width * Game.Instance.Scale, value.Height * Game.Instance.Scale);
+                }
+            }
         }
 
         public override void DebugRender() {
-            if (Graphic == null || Size * Game.Instance.Scale != Graphic.Size) {
-                Graphic = new Graphics.Primitive.Rectangle(Width * Game.Instance.Scale, Height * Game.Instance.Scale, Color, false);
+            if (Graphic == null) {
+                Graphic = new Graphics.Primitives.Rectangle(Width * Game.Instance.Scale, Height * Game.Instance.Scale, Color, false);
             }
 
             Graphic.Position = Position * Game.Instance.Scale;
