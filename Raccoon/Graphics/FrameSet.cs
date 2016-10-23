@@ -1,20 +1,20 @@
 ﻿using System.Collections.Generic;
 
 namespace Raccoon.Graphics {
-    class FrameSet : Image {
+    public class FrameSet : Image {
         #region Private Members
 
-        private List<Rectangle> frames;
-        private int currentId, columns, rows;
+        private List<Rectangle> _frames;
+        private int _currentFrame, _columns, _rows;
 
         #endregion Private Members
 
         #region Contructors
 
-        public FrameSet(string path, int frameWidth, int frameHeight, int frameCount = -1) {
-            frames = new List<Rectangle>();
-            Name = path;
-            FrameSize = new Size(frameWidth, frameHeight);
+        public FrameSet(string filename, Size frameSize, int frameCount = -1) {
+            _frames = new List<Rectangle>();
+            Name = filename;
+            FrameSize = frameSize;
             FrameCount = System.Math.Max(-1, frameCount);
             Load();
         }
@@ -26,10 +26,13 @@ namespace Raccoon.Graphics {
         public Size FrameSize { get; private set; } 
         public int FrameCount { get; private set; }
 
-        public int CurrentId {
-            get { return currentId; }
+        public int CurrentFrame {
+            get {
+                return _currentFrame;
+            }
+
             set {
-                currentId = value;
+                _currentFrame = value;
                 UpdateTextureRect();
             }
         }
@@ -46,7 +49,7 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateTextureRect() {
-            TextureRect = new Rectangle((CurrentId % columns) * FrameSize.Width, CurrentId / columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
+            ClippingRegion = new Rectangle((CurrentFrame % _columns) * FrameSize.Width, CurrentFrame / _columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
         }
 
         #endregion Private Methods
@@ -55,19 +58,20 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
-            if (Texture == null)
+            if (Texture == null) {
                 return;
+            }
 
             int texColumns = (int) (Texture.Width / FrameSize.Width);
             int texRows = (int) (Texture.Height / FrameSize.Height);
 
             if (FrameCount == -1) {
                 FrameCount = texColumns * texRows;
-                columns = texColumns;
-                rows = texRows;
+                _columns = texColumns;
+                _rows = texRows;
             } else {
-                columns = System.Math.Min(texColumns, FrameCount);
-                rows = (int) System.Math.Ceiling((double) (FrameCount / texColumns));
+                _columns = System.Math.Min(texColumns, FrameCount);
+                _rows = (int) System.Math.Ceiling((double) (FrameCount / texColumns));
             }
 
             UpdateTextureRect();

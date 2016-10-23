@@ -5,11 +5,11 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public Image() {
-            TextureRect = Rectangle.Empty;
+            ClippingRegion = Rectangle.Empty;
         }
 
-        public Image(string path) {
-            Name = path;
+        public Image(string filename) {
+            Name = filename;
             Load();
         }
 
@@ -17,7 +17,7 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
-        public Rectangle TextureRect { get; set; }
+        public Rectangle ClippingRegion { get; set; }
 
         #endregion Public Propeties
 
@@ -37,19 +37,20 @@ namespace Raccoon.Graphics {
                 Texture,
                 Position,
                 null,
-                TextureRect,
+                ClippingRegion,
                 Origin,
                 Rotation,
                 Scale,
-                Color,
+                FinalColor,
                 (SpriteEffects) Flipped,
                 LayerDepth
             );
         }
 
         public override void Dispose() {
-            if (Texture != null)
+            if (Texture != null) {
                 Texture.Dispose();
+            }
         }
 
         #endregion
@@ -57,12 +58,13 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
         internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null)
+            if (Game.Instance.Core.SpriteBatch == null) {
                 return;
+            }
 
             Texture = Game.Instance.Core.Content.Load<Texture2D>(Name);
             Debug.Assert(Texture != null, $"Texture with name '{Name}' not found.");
-            TextureRect = new Rectangle(0, 0, Texture.Width, Texture.Height);
+            ClippingRegion = new Rectangle(0, 0, Texture.Width, Texture.Height);
         }
 
         #endregion Internal Methods

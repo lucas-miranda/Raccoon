@@ -76,7 +76,7 @@ namespace Raccoon.Graphics {
                         null,
                         0,
                         null,
-                        Color,
+                        FinalColor,
                         flipped,
                         LayerDepth
                     );

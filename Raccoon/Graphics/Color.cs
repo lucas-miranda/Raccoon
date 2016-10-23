@@ -49,7 +49,7 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public Color(uint hex) : this(hex.ToString("X")) {
+        public Color(uint hex) : this(hex.ToString("X8")) {
         }
 
         public Color(byte r, byte g, byte b, byte a = 255) {

@@ -148,7 +148,7 @@ namespace Raccoon.Graphics {
 
             int x = CurrentTrack.CurrentSpriteID % columns;
             int y = CurrentTrack.CurrentSpriteID / columns;
-            TextureRect = new Rectangle(x * Size.Width, y * Size.Height, Size.Width, Size.Height);
+            ClippingRegion = new Rectangle(x * Size.Width, y * Size.Height, Size.Width, Size.Height);
         }
 
         #endregion Private Methods

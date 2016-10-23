@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
-namespace Raccoon.Graphics.Primitive {
+namespace Raccoon.Graphics.Primitives {
     public class Rectangle : Graphic {
         #region Private Members
 
@@ -12,8 +12,7 @@ namespace Raccoon.Graphics.Primitive {
         #region Constructors
 
         public Rectangle(float width, float height, Color color, bool filled = true) {
-            Width = width;
-            Height = height;
+            Size = new Size(width, height);
             Color = color;
             _filled = filled;
             Load();
@@ -23,42 +22,58 @@ namespace Raccoon.Graphics.Primitive {
 
         #region Public Properties
 
+        public new Size Size {
+            get {
+                return base.Size;
+            }
+
+            set {
+                base.Size = new Size(Math.Max(0, value.Width), Math.Max(0, value.Height));
+                if (!Filled) {
+                    if (_texture != null) {
+                        _texture.Dispose();
+                    }
+
+                    NeedsReload = true;
+                }
+            }
+        }
+        
         public bool Filled {
             get {
                 return _filled;
             }
 
             set {
-                if (value == _filled)
+                if (value == _filled) {
                     return;
+                }
 
-                if (!_filled)
+                if (!_filled) {
                     _texture.Dispose();
+                }
 
                 _filled = value;
-                if (Game.Instance.Core.Graphics != null)
-                    Load();
+                NeedsReload = true;
             }
         }
 
         #endregion Public Properties
 
         #region Public Methods
-
-        public override void Update(int delta) {
-        }
-
+        
         public override void Render() {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, Color, Rotation, Origin, (SpriteEffects) Flipped, LayerDepth);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, FinalColor, Rotation, Origin, (SpriteEffects) Flipped, LayerDepth);
             } else {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, Color, (SpriteEffects) Flipped, LayerDepth);
+                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
             }
         }
 
         public override void Dispose() {
-            if (_texture != null)
+            if (_texture != null) {
                 _texture.Dispose();
+            }
         }
 
         #endregion Public Methods
@@ -66,8 +81,9 @@ namespace Raccoon.Graphics.Primitive {
         #region Internal Methods
 
         internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null)
+            if (Game.Instance.Core.SpriteBatch == null) {
                 return;
+            }
 
             if (Filled) {
                 _texture = Game.Instance.Core.SpriteBatch.BlankTexture();

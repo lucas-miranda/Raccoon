@@ -5,7 +5,7 @@
     }
 
     public class FadeTransition : SceneTransition {
-        public FadeTransition(Color color) : base(new Primitive.Rectangle(Game.Instance.Width, Game.Instance.Height, color)) {
+        public FadeTransition(Color color) : base(new Primitives.Rectangle(Game.Instance.Width, Game.Instance.Height, color)) {
             Type = Fade.In;
         }
 

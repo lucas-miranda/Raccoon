@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
-namespace Raccoon.Graphics.Primitive {
+namespace Raccoon.Graphics.Primitives {
     public class Circle : Graphic {
         #region Private Members
 
@@ -12,7 +12,7 @@ namespace Raccoon.Graphics.Primitive {
 
         public Circle(int radius, Color color) {
             Radius = radius;
-            Width = Height = Radius * 2;
+            Size = new Size(Radius * 2);
             Color = color;
             Load();
         }
@@ -21,23 +21,21 @@ namespace Raccoon.Graphics.Primitive {
 
         #region Public Properties
 
-        public Vector2 Center { get { return Position + Radius; } set { Position = value - Radius; } }
+        public Vector2 Center { get { return Position + Radius - Origin; } set { Position = value - Radius + Origin; } }
         public int Radius { get; private set; }
 
         #endregion Public Properties
 
         #region Public Methods
-
-        public override void Update(int delta) {
-        }
-
+        
         public override void Render() {
-            Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, Color, (SpriteEffects) Flipped, LayerDepth);
+            Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
         }
 
         public override void Dispose() {
-            if (_texture != null)
+            if (_texture != null) {
                 _texture.Dispose();
+            }
         }
 
         #endregion Public Methods
@@ -45,8 +43,9 @@ namespace Raccoon.Graphics.Primitive {
         #region Internal Methods
 
         internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null)
+            if (Game.Instance.Core.SpriteBatch == null) {
                 return;
+            }
 
             int w = (int) Width, h = (int) Height;
             Microsoft.Xna.Framework.Color[] data = new Microsoft.Xna.Framework.Color[(w + 1) * (h + 1)];

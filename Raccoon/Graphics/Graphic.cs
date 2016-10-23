@@ -12,35 +12,34 @@
         private const int LayerLimit = 20000;
         private float _opacity = 1f;
         private Color _color = Color.White;
-        private Color _finalColor = Color.White;
 
         #endregion Private Members
 
         #region Public Properties
 
         public string Name { get; set; }
-        
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
-        public Size Size { get; set; }
-        public float Width { get { return Size.Width; } set { Size = new Size(value, Height); } }
-        public float Height { get { return Size.Height; } set { Size = new Size(Width, value); } }
+        public Size Size { get; protected set; }
+        public float Width { get { return Size.Width; } }
+        public float Height { get { return Size.Height; } }
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
         public int Layer { get { return (int) (LayerDepth * LayerLimit); } set { LayerDepth = 0.5f + (Math.Clamp(value, LayerMin, LayerMax) / LayerLimit); } }
         public float LayerDepth { get; set; }
+        public Color FinalColor { get; set; } = Color.White;
         //public Shader Shader { get; set; }
 
         public Color Color {
             get {
-                return _finalColor;
+                return _color;
             }
 
             set {
-                _color = value;
-                _finalColor = _color * _opacity;
+                _color = new Color(value.R, value.G, value.B);
+                FinalColor = _color * Opacity;
             }
         }
 
@@ -51,7 +50,7 @@
 
             set {
                 _opacity = Math.Clamp(value, 0, 1);
-                _finalColor = _color * _opacity;
+                FinalColor = Color * _opacity;
             }
         }
 
@@ -89,9 +88,21 @@
 
         #endregion
 
+        #region Protected Properties
+
+        protected bool NeedsReload { get; set; }
+
+        #endregion
+
         #region Public Abstract Methods
 
-        public abstract void Update(int delta);
+        public virtual void Update(int delta) {
+            if (NeedsReload) {
+                Load();
+                NeedsReload = false;
+            }
+        }
+
         public abstract void Render();
         public abstract void Dispose();
 
