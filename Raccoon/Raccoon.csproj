@@ -61,6 +61,7 @@
     <Compile Include="Core\Physics.cs" />
     <Compile Include="Core\Routine.cs" />
     <Compile Include="Graphics\Animation.cs" />
+    <Compile Include="Graphics\Atlas.cs" />
     <Compile Include="Graphics\Font.cs" />
     <Compile Include="Graphics\FrameSet.cs" />
     <Compile Include="Graphics\Graphic.cs" />
