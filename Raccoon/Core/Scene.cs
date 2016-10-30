@@ -53,23 +53,15 @@ namespace Raccoon {
 
         #region Public Virtual Methods
 
-        public virtual void Added() { }
+        public virtual void OnAdded() { }
 
-        public virtual void Initialize() {
-            foreach (Entity e in Entities) {
-                e.Initialize();
-            }
-        }
-
-        public virtual void LoadContent() {
+        public virtual void Start() {
             foreach (Graphic g in Graphics) {
                 g.Load();
             }
 
             foreach (Entity e in Entities) {
-                foreach (Graphic g in e.Graphics) {
-                    g.Load();
-                }
+                e.Start();
             }
         }
 

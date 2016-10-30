@@ -18,18 +18,17 @@ namespace Raccoon {
 
         #region Public Delegates
 
-        public delegate void GeneralHandler();
         public delegate void TickHandler(int delta);
 
         #endregion Public Delegates
 
         #region Public Events
 
-        public event GeneralHandler OnInitialize;
-        public event GeneralHandler OnLoadContent;
-        public event GeneralHandler OnUnloadContent;
-        public event GeneralHandler OnRender;
-        public event GeneralHandler OnDebugRender;
+        public event Action OnLoadContent;
+        public event Action OnStart;
+        public event Action OnUnloadContent;
+        public event Action OnRender;
+        public event Action OnDebugRender;
         public event TickHandler OnUpdate;
 
         #endregion Public Events
@@ -71,31 +70,31 @@ namespace Raccoon {
         #region Protected Methods
 
         protected override void Initialize() {
-            Debug.WriteLine("Initializing... ");
             Matrix.CreateScale(Scale, Scale, 1, out _screenTransform);
-            OnInitialize?.Invoke();
-            OnInitialize = null;
             base.Initialize();
         }
 
         protected override void LoadContent() {
-            Debug.WriteLine("Loading Content... ");
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             _mainRenderTarget = new RenderTarget2D(GraphicsDevice, Game.Instance.Width, Game.Instance.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
             // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
-            OnUnloadContent += () => resourceContentManager.Unload();
+            OnUnloadContent += resourceContentManager.Unload;
+
             IsContentManagerReady = true;
 
             OnLoadContent?.Invoke();
             OnLoadContent = null;
+
+            OnStart?.Invoke();
+            OnStart = null;
+
             base.LoadContent();
         }
 
         protected override void UnloadContent() {
-            Debug.WriteLine("Unloading Content... ");
             OnUnloadContent?.Invoke();
             OnUnloadContent = null;
             Raccoon.Graphics.Texture.White.Dispose();

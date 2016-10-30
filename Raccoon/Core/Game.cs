@@ -67,7 +67,7 @@ namespace Raccoon {
         #region Public Methods
 
         public void Start(string startScene) {
-            Debug.WriteLine("Raccoon started!");
+            Debug.WriteLine("| Raccoon started |");
             IsRunning = true;
             Scene = Scenes[startScene];
             Core.Run();
@@ -85,16 +85,15 @@ namespace Raccoon {
 
         public void AddScene(Scene scene, string customName = "") {
             Scenes.Add((customName.Length > 0 ? customName : scene.GetType().Name), scene);
-            scene.Added();
-            Core.OnInitialize += new Core.GeneralHandler(scene.Initialize);
-            Core.OnLoadContent += new Core.GeneralHandler(scene.LoadContent);
-            Core.OnUnloadContent += new Core.GeneralHandler(scene.UnloadContent);
-            Core.OnRender += new Core.GeneralHandler(scene.Render);
-            Core.OnDebugRender += new Core.GeneralHandler(scene.DebugRender);
-            Core.OnUpdate += new Core.TickHandler(scene.Update);
+            scene.OnAdded();
+            Core.OnStart += scene.Start;
+            Core.OnUnloadContent += scene.UnloadContent;
+            Core.OnRender += scene.Render;
+            Core.OnDebugRender += scene.DebugRender;
+            Core.OnUpdate += scene.Update;
         }
         
-        public void SwitchToScene(string sceneName) {
+        public void SwitchScene(string sceneName) {
             Scene = Scenes[sceneName];
         }
 

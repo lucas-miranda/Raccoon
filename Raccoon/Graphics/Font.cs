@@ -7,10 +7,10 @@ namespace Raccoon.Graphics {
 
         public Font(string name) {
             Name = name;
-            if (Game.Instance.IsRunning) {
+            if (Game.Instance.Core.IsContentManagerReady) {
                 Load();
             } else {
-                Game.Instance.Core.OnLoadContent += new Core.GeneralHandler(() => Load());
+                Game.Instance.Core.OnLoadContent += Load;
             }
         }
 
