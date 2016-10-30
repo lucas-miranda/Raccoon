@@ -106,13 +106,13 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
-      <HintPath>Lib\MonoGame.Framework.dll</HintPath>
+      <HintPath>Lib\MonoGame\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK">
-      <HintPath>Lib\OpenTK.dll</HintPath>
+      <HintPath>Lib\MonoGame\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="NVorbis">
-      <HintPath>Lib\NVorbis.dll</HintPath>
+      <HintPath>Lib\MonoGame\NVorbis.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -129,6 +129,5 @@
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
