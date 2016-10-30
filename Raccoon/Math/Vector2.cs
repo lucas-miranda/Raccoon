@@ -116,6 +116,10 @@
             return new Vector2(l.X + r.X, l.Y + r.Y);
         }
 
+        public static Rectangle operator +(Vector2 l, Rectangle r) {
+            return r + l;
+        }
+
         public static Vector2 operator -(Vector2 l, Vector2 r) {
             return l + (-r);
         }

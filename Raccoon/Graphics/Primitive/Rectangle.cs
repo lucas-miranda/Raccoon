@@ -4,7 +4,6 @@ namespace Raccoon.Graphics.Primitives {
     public class Rectangle : Graphic {
         #region Private Members
 
-        private Texture2D _texture;
         private bool _filled;
 
         #endregion Private Members
@@ -28,10 +27,10 @@ namespace Raccoon.Graphics.Primitives {
             }
 
             set {
-                base.Size = new Size(Math.Max(0, value.Width), Math.Max(0, value.Height));
+                base.Size = value;
                 if (!Filled) {
-                    if (_texture != null) {
-                        _texture.Dispose();
+                    if (Texture != null) {
+                        Texture.Dispose();
                     }
 
                     NeedsReload = true;
@@ -50,7 +49,7 @@ namespace Raccoon.Graphics.Primitives {
                 }
 
                 if (!_filled) {
-                    _texture.Dispose();
+                    Texture.Dispose();
                 }
 
                 _filled = value;
@@ -58,21 +57,23 @@ namespace Raccoon.Graphics.Primitives {
             }
         }
 
+        public Texture Texture { get; set; }
+
         #endregion Public Properties
 
         #region Public Methods
-        
+
         public override void Render() {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, FinalColor, Rotation, Origin, (SpriteEffects) Flipped, LayerDepth);
+                Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, new Microsoft.Xna.Framework.Rectangle((int) X, (int) Y, (int) Width, (int) Height), null, FinalColor, Rotation, Origin, (SpriteEffects) Flipped, LayerDepth);
             } else {
-                Game.Instance.Core.SpriteBatch.Draw(_texture, Position, null, null, Origin, Rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
+                Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, Position, null, null, Origin, Rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
             }
         }
 
         public override void Dispose() {
-            if (_texture != null) {
-                _texture.Dispose();
+            if (Texture != null) {
+                Texture.Dispose();
             }
         }
 
@@ -86,24 +87,26 @@ namespace Raccoon.Graphics.Primitives {
             }
 
             if (Filled) {
-                _texture = Game.Instance.Core.SpriteBatch.BlankTexture();
+                Texture = Texture.White;
             } else {
                 int w = (int) Width, h = (int) Height;
-                Microsoft.Xna.Framework.Color[] data = new Microsoft.Xna.Framework.Color[w * h];
-                Texture2D unfilledRectTexture = new Texture2D(Game.Instance.Core.GraphicsDevice, w, h);
+                Color[] data = new Color[w * h];
+                Texture unfilledRectTexture = new Texture(w, h);
 
+                // left & right columns
                 for (int x = 0; x < Width; x++) {
-                    data[x] = Microsoft.Xna.Framework.Color.White;
-                    data[x + (h - 1) * w] = Microsoft.Xna.Framework.Color.White;
+                    data[x] = Color.White;
+                    data[x + (h - 1) * w] = Color.White;
                 }
 
+                // top & bottom rows
                 for (int y = 1; y < Height - 1; y++) {
-                    data[y * w] = Microsoft.Xna.Framework.Color.White;
-                    data[w - 1 + y * w] = Microsoft.Xna.Framework.Color.White;
+                    data[y * w] = Color.White;
+                    data[w - 1 + y * w] = Color.White;
                 }
 
                 unfilledRectTexture.SetData(data);
-                _texture = unfilledRectTexture;
+                Texture = unfilledRectTexture;
             }
         }
 

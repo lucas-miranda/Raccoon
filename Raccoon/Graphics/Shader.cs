@@ -7,10 +7,10 @@ namespace Raccoon.Graphics {
         
         public Shader(string filename) {
             Filename = filename;
-            if (Game.Instance.IsRunning) {
+            if (Game.Instance.Core.IsContentManagerReady) {
                 Load();
             } else {
-                Game.Instance.Core.OnLoadContent += new Core.GeneralHandler(Load);
+                Game.Instance.Core.OnLoadContent += Load;
             }
         }
 
@@ -122,7 +122,7 @@ namespace Raccoon.Graphics {
         }*/
 
         public void SetParameter(string name, Image value) {
-            effect.Parameters[name].SetValue(value.Texture);
+            effect.Parameters[name].SetValue(value.Texture.XNATexture);
         }
 
         internal void Load() {

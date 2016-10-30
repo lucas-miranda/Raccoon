@@ -110,7 +110,7 @@
 
         #region Internal Abstract Methods
 
-        internal abstract void Load();
+        internal virtual void Load() { }
 
         #endregion
     }

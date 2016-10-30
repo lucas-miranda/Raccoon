@@ -129,6 +129,10 @@
             return l.Intersects(r);
         }
 
+        public static Rectangle operator +(Rectangle l, Vector2 r) {
+            return new Rectangle(l.X + r.X, l.Y + r.Y, l.Width, l.Height);
+        }
+
         #endregion Operators
     }
 }

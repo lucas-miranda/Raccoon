@@ -12,7 +12,7 @@ namespace Raccoon.Graphics {
 
         #region Private Members
 
-        private int columns, rows;
+        private int _columns, _rows;
 
         #endregion Private Members
 
@@ -20,12 +20,18 @@ namespace Raccoon.Graphics {
 
         public Animation() {
             Tracks = new Dictionary<KeyType, Track>();
-            Playing = false;
         }
 
-        public Animation(string path, int frameWidth, int frameHeight) : this() {
-            Name = path;
-            Size = new Size(frameWidth, frameHeight);
+        public Animation(string filename, Size frameSize) : this() {
+            Size = frameSize;
+            Texture = new Texture(filename);
+            Load();
+        }
+
+        public Animation(AtlasSubTexture subTexture, Size frameSize) : this() {
+            Size = frameSize;
+            Texture = subTexture.Texture;
+            SourceRegion = subTexture.Region;
             Load();
         }
 
@@ -34,8 +40,8 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public Dictionary<KeyType, Track> Tracks { get; private set; }
-        public bool Playing { get; set; }
-        public KeyType CurrentKey { get; set; }
+        public bool Playing { get; private set; }
+        public KeyType CurrentKey { get; private set; }
         public Track CurrentTrack { get; private set; }
         public int ElapsedTime { get; private set; }
 
@@ -52,10 +58,10 @@ namespace Raccoon.Graphics {
                 ElapsedTime = 0;
                 if (CurrentTrack.CurrentFrameIndex + 1 < CurrentTrack.Frames.Length) {
                     CurrentTrack.CurrentFrameIndex++;
-                    UpdateTextureRect();
+                    UpdateClippingRegion();
                 } else if (CurrentTrack.IsLooping) {
                     CurrentTrack.CurrentFrameIndex = 0;
-                    UpdateTextureRect();
+                    UpdateClippingRegion();
                 } else {
                     Pause();
                 }
@@ -115,16 +121,16 @@ namespace Raccoon.Graphics {
             Tracks.Add(key, new Track(frameList.ToArray(), durations));
         }
 
-        public void Play(KeyType key, bool forceReset = false) {
+        public void Play(KeyType key, bool forceReset = true) {
             Playing = true;
-            if (CurrentKey == null || !CurrentKey.Equals(key)) {
+            if (CurrentTrack == null || !CurrentKey.Equals(key)) {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
                 CurrentTrack.CurrentFrameIndex = 0;
-                UpdateTextureRect();
+                UpdateClippingRegion();
             } else if (forceReset) {
                 CurrentTrack.CurrentFrameIndex = 0;
-                UpdateTextureRect();
+                UpdateClippingRegion();
             }
         }
 
@@ -135,20 +141,19 @@ namespace Raccoon.Graphics {
         public void Stop() {
             Pause();
             CurrentTrack.CurrentFrameIndex = 0;
-            UpdateTextureRect();
+            UpdateClippingRegion();
         }
 
         #endregion Public Methods
 
         #region Private Methods
 
-        private void UpdateTextureRect() {
-            if (Game.Instance.Core.SpriteBatch == null)
+        private void UpdateClippingRegion() {
+            if (_columns == 0 || _rows == 0) {
                 return;
+            }
 
-            int x = CurrentTrack.CurrentSpriteID % columns;
-            int y = CurrentTrack.CurrentSpriteID / columns;
-            ClippingRegion = new Rectangle(x * Size.Width, y * Size.Height, Size.Width, Size.Height);
+            ClippingRegion = new Rectangle((CurrentTrack.CurrentSpriteID % _columns) * Size.Width, (CurrentTrack.CurrentSpriteID / _columns) * Size.Height, Size.Width, Size.Height);
         }
 
         #endregion Private Methods
@@ -157,12 +162,12 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
-            if (Texture == null)
+            if (!Game.Instance.Core.IsContentManagerReady) {
                 return;
+            }
 
-            columns = (int) (Texture.Width / Size.Width);
-            rows = (int) (Texture.Height / Size.Height);
-            UpdateTextureRect();
+            _columns = (int) (SourceRegion.Width / Size.Width);
+            _rows = (int) (SourceRegion.Height / Size.Height);
         }
 
         #endregion Internal Methods
@@ -182,8 +187,10 @@ namespace Raccoon.Graphics {
             public int[] Frames { get; private set; }
             public int[] Durations { get; private set; }
             public float Duration { get { return Durations[CurrentFrameIndex]; } }
-            //public float ElapsedTime { get; set; } // TODO: maybe I don't need to save time on each Track
+            //public float ElapsedTime { get; set; } // maybe I don't need to save time on each Track
             public int CurrentFrameIndex { get; set; }
+            public bool IsLooping { get; set; }
+
             public int CurrentSpriteID {
                 get { return Frames[CurrentFrameIndex]; }
                 set {
@@ -193,7 +200,6 @@ namespace Raccoon.Graphics {
                     }
                 }
             }
-            public bool IsLooping { get; set; }
         }
 
         #endregion Public Class Track

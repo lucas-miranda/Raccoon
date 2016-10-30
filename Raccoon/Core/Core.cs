@@ -64,6 +64,7 @@ namespace Raccoon {
         public float Scale { get; set; }
         public Color BackgroundColor { get; set; }
         public string Title { get; set; }
+        public bool IsContentManagerReady { get; private set; }
 
         #endregion Public Properties
 
@@ -86,6 +87,7 @@ namespace Raccoon {
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
             OnUnloadContent += () => resourceContentManager.Unload();
+            IsContentManagerReady = true;
 
             OnLoadContent?.Invoke();
             OnLoadContent = null;
@@ -96,7 +98,8 @@ namespace Raccoon {
             Debug.WriteLine("Unloading Content... ");
             OnUnloadContent?.Invoke();
             OnUnloadContent = null;
-            SpriteBatch.BlankTexture().Dispose();
+            Raccoon.Graphics.Texture.White.Dispose();
+            Raccoon.Graphics.Texture.Black.Dispose();
             base.UnloadContent();
         }
 

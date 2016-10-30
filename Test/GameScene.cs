@@ -11,13 +11,14 @@ namespace Test {
         Text text, text2, text3;
         Font font;
         Shader shader;
-        Raccoon.Graphics.Primitive.Circle circle;
+        Raccoon.Graphics.Primitives.Circle circle;
+        Raccoon.Graphics.Primitives.Rectangle rectangle;
 
         public GameScene() : base() {
             transition = new FadeTransition(Color.Cyan);
             Add(transition);
 
-            anim = new Animation<string>("graphics/deathflower", 18, 20);
+            anim = new Animation<string>("graphics/deathflower", new Size(18, 20));
             anim.Add("idle", "0-6", 0.120f);
             anim.Play("idle");
             anim.X = Game.Instance.Width / 2;
@@ -42,9 +43,13 @@ namespace Test {
             shader = new Shader("Test");
             shader.CurrentTechnique = "BasicColorDrawing";
 
-            circle = new Raccoon.Graphics.Primitive.Circle(50, Color.Magenta);
+            circle = new Raccoon.Graphics.Primitives.Circle(50, Color.Magenta);
             circle.Position = new Vector2(50, 50);
             Add(circle);
+
+            rectangle = new Raccoon.Graphics.Primitives.Rectangle(50, 25, Color.Cyan, false);
+            rectangle.Position = new Vector2(25, 25);
+            Add(rectangle);
         }
 
         public override void Update(int delta) {

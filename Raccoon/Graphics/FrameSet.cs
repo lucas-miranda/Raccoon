@@ -1,21 +1,26 @@
-﻿using System.Collections.Generic;
-
-namespace Raccoon.Graphics {
+﻿namespace Raccoon.Graphics {
     public class FrameSet : Image {
         #region Private Members
 
-        private List<Rectangle> _frames;
-        private int _currentFrame, _columns, _rows;
+        private int _currentFrame;
 
         #endregion Private Members
 
         #region Contructors
 
-        public FrameSet(string filename, Size frameSize, int frameCount = -1) {
-            _frames = new List<Rectangle>();
-            Name = filename;
+        private FrameSet(Size frameSize, int frameCount = -1) {
             FrameSize = frameSize;
             FrameCount = System.Math.Max(-1, frameCount);
+        }
+
+        public FrameSet(string filename, Size frameSize, int frameCount = -1) : this(frameSize, frameCount) {
+            Texture = new Texture(filename);
+            Load();
+        }
+
+        public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount = -1) : this(frameSize, frameCount) {
+            Texture = subTexture.Texture;
+            SourceRegion = subTexture.Region;
             Load();
         }
 
@@ -23,6 +28,8 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
+        public int Columns { get; private set; }
+        public int Rows { get; private set; }
         public Size FrameSize { get; private set; } 
         public int FrameCount { get; private set; }
 
@@ -32,24 +39,21 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                _currentFrame = value;
-                UpdateTextureRect();
+                _currentFrame = (int) Math.Clamp(value, 0, FrameCount - 1);
+                UpdateClippingRegion();
             }
         }
 
         #endregion Public Properties
 
-        #region Public Methods
-
-        public override void Update(int delta) {
-        }
-
-        #endregion Public Methods
-
         #region Private Methods
+        
+        private void UpdateClippingRegion() {
+            if (Columns == 0 || Rows == 0) {
+                return;
+            }
 
-        private void UpdateTextureRect() {
-            ClippingRegion = new Rectangle((CurrentFrame % _columns) * FrameSize.Width, CurrentFrame / _columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
+            ClippingRegion = new Rectangle((CurrentFrame % Columns) * FrameSize.Width, CurrentFrame / Columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
         }
 
         #endregion Private Methods
@@ -58,23 +62,23 @@ namespace Raccoon.Graphics {
 
         internal override void Load() {
             base.Load();
-            if (Texture == null) {
+            if (!Game.Instance.Core.IsContentManagerReady) {
                 return;
             }
 
-            int texColumns = (int) (Texture.Width / FrameSize.Width);
-            int texRows = (int) (Texture.Height / FrameSize.Height);
+            int texColumns = (int) (SourceRegion.Width / FrameSize.Width);
+            int texRows = (int) (SourceRegion.Height / FrameSize.Height);
 
             if (FrameCount == -1) {
                 FrameCount = texColumns * texRows;
-                _columns = texColumns;
-                _rows = texRows;
+                Columns = texColumns;
+                Rows = texRows;
             } else {
-                _columns = System.Math.Min(texColumns, FrameCount);
-                _rows = (int) System.Math.Ceiling((double) (FrameCount / texColumns));
+                Columns = System.Math.Min(texColumns, FrameCount);
+                Rows = (int) System.Math.Ceiling((double) (FrameCount / texColumns));
             }
 
-            UpdateTextureRect();
+            UpdateClippingRegion();
         }
 
         #endregion Internal Methods
