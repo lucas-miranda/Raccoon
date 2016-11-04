@@ -33,6 +33,9 @@
             Height = h;
         }
 
+        public Rectangle(Size size) : this(size.Width, size.Height) {
+        }
+
         #endregion Constructors
 
         #region Public Properties
@@ -48,6 +51,21 @@
         public bool IsEmpty { get { return Width == 0 && Height == 0; } }
 
         #endregion Public Properties
+
+        #region Static Public Methods
+
+        public static Rectangle Union(Rectangle a, Rectangle b) {
+            return new Rectangle(
+                new Vector2(a.Left < b.Left ? a.Left : b.Left, a.Top < b.Top ? a.Top : b.Top),
+                new Vector2(a.Right > b.Right ? a.Right : b.Right, a.Bottom > b.Bottom ? a.Bottom : b.Bottom)
+            );
+        }
+
+        public static bool Intersect(Rectangle a, Rectangle b) {
+            return a.Intersects(b);
+        }
+
+        #endregion Static Public Methods
 
         #region Public Methods
 
@@ -127,6 +145,10 @@
 
         public static bool operator &(Rectangle l, Rectangle r) {
             return l.Intersects(r);
+        }
+
+        public static Rectangle operator |(Rectangle l, Rectangle r) {
+            return Union(l, r);
         }
 
         public static Rectangle operator +(Rectangle l, Vector2 r) {

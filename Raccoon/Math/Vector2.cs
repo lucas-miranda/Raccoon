@@ -31,6 +31,8 @@
         public Vector2(float xy) : this(xy, xy) {
         }
 
+        internal Vector2(Microsoft.Xna.Framework.Vector2 vec2) : this(vec2.X, vec2.Y) { }
+
         #endregion Constructors
 
         #region Public Static Methods

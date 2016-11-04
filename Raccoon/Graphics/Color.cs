@@ -68,7 +68,6 @@ namespace Raccoon.Graphics {
 
         #endregion Constructors
 
-
         #region Public Properties
 
         public uint RGBA { get { return ((uint) R << 24) | ((uint) G << 16) | ((uint) B << 8) | A; } }
