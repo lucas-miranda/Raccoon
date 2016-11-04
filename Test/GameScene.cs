@@ -1,11 +1,11 @@
 ﻿using Raccoon;
 using Raccoon.Graphics;
-using Raccoon.Graphics.Transition;
+using Raccoon.Graphics.Transitions;
 using Raccoon.Input;
 
 namespace Test {
     class GameScene : Scene {
-        Animation<string> anim;
+        Animation anim;
         Controller p1Controller;
         SceneTransition transition;
         Text text, text2, text3;
@@ -14,12 +14,15 @@ namespace Test {
         Raccoon.Graphics.Primitives.Circle circle;
         Raccoon.Graphics.Primitives.Rectangle rectangle;
 
-        public GameScene() : base() {
+        public override void Start() {
+            base.Start();
+
             transition = new FadeTransition(Color.Cyan);
             Add(transition);
 
-            anim = new Animation<string>("graphics/deathflower", new Size(18, 20));
-            anim.Add("idle", "0-6", 0.120f);
+            anim = new Animation("graphics/deathflower", new Size(18, 20));
+            //anim.Add("idle", "0-6", 120);
+            anim.Add("idle", new[] { 0, 1, 2, 3, 4, 5, 6 }, 120);
             anim.Play("idle");
             anim.X = Game.Instance.Width / 2;
             anim.Y = Game.Instance.Height / 2;
@@ -41,7 +44,7 @@ namespace Test {
             text3 = new Text("the lazy dog", font, new Color(0x02db6eff)) { Position = new Vector2(175, 75), Rotation = 3 };
 
             shader = new Shader("Test");
-            shader.CurrentTechnique = "BasicColorDrawing";
+            shader.CurrentTechniqueName = "BasicColorDrawing";
 
             circle = new Raccoon.Graphics.Primitives.Circle(50, Color.Magenta);
             circle.Position = new Vector2(50, 50);
@@ -50,6 +53,14 @@ namespace Test {
             rectangle = new Raccoon.Graphics.Primitives.Rectangle(50, 25, Color.Cyan, false);
             rectangle.Position = new Vector2(25, 25);
             Add(rectangle);
+
+            Atlas atlas = new Atlas("graphics/atlas", "Content/graphics/atlas.json");
+            /*Image img1 = new Image(atlas["Sprite-0022"]);
+            Add(img1);*/
+
+            Animation anim2 = new Animation(atlas["Sprite-0022"] as AtlasAnimation);
+            anim2.Play("Walking");
+            Add(anim2);
         }
 
         public override void Update(int delta) {
