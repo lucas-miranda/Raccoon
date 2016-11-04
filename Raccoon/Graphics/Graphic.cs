@@ -86,15 +86,15 @@
 
         public ImageFlip Flipped { get; set; }
 
-        #endregion
+        #endregion Public Properties
 
         #region Protected Properties
 
         protected bool NeedsReload { get; set; }
 
-        #endregion
+        #endregion Protected Properties
 
-        #region Public Abstract Methods
+        #region Public Virtual Methods
 
         public virtual void Update(int delta) {
             if (NeedsReload) {
@@ -103,15 +103,19 @@
             }
         }
 
+        #endregion Public Virtual Methods
+
+        #region Public Abstract Methods
+
         public abstract void Render();
         public abstract void Dispose();
 
-        #endregion
+        #endregion Public Abstract Methods
 
-        #region Internal Abstract Methods
+        #region Protected Methods
 
-        internal virtual void Load() { }
+        protected virtual void Load() { }
 
-        #endregion
+        #endregion Protected Methods
     }
 }

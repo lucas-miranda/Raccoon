@@ -94,11 +94,7 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public virtual void Start() {
-            foreach (Graphic g in Graphics) {
-                g.Load();
-            }
-        }
+        public virtual void Start() { }
 
         public virtual void Update(int delta) {
             if (!Active) {

@@ -24,7 +24,6 @@ namespace Raccoon {
 
         #region Public Events
 
-        public event Action OnLoadContent;
         public event Action OnStart;
         public event Action OnUnloadContent;
         public event Action OnRender;
@@ -63,7 +62,6 @@ namespace Raccoon {
         public float Scale { get; set; }
         public Color BackgroundColor { get; set; }
         public string Title { get; set; }
-        public bool IsContentManagerReady { get; private set; }
 
         #endregion Public Properties
 
@@ -83,11 +81,6 @@ namespace Raccoon {
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
             OnUnloadContent += resourceContentManager.Unload;
 
-            IsContentManagerReady = true;
-
-            OnLoadContent?.Invoke();
-            OnLoadContent = null;
-
             OnStart?.Invoke();
             OnStart = null;
 
@@ -95,10 +88,11 @@ namespace Raccoon {
         }
 
         protected override void UnloadContent() {
-            OnUnloadContent?.Invoke();
-            OnUnloadContent = null;
             Raccoon.Graphics.Texture.White.Dispose();
             Raccoon.Graphics.Texture.Black.Dispose();
+            OnUnloadContent?.Invoke();
+            OnUnloadContent = null;
+            Content.Unload();
             base.UnloadContent();
         }
 

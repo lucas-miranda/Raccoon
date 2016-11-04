@@ -60,22 +60,24 @@
     <Compile Include="Core\Input\XboxController.cs" />
     <Compile Include="Core\Physics.cs" />
     <Compile Include="Core\Routine.cs" />
-    <Compile Include="Graphics\Animation.cs" />
-    <Compile Include="Graphics\Atlas.cs" />
+    <Compile Include="Graphics\Drawables\Animation.cs" />
+    <Compile Include="Graphics\Atlas\Atlas.cs" />
+    <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />
+    <Compile Include="Graphics\Atlas\AtlasSubTexture.cs" />
     <Compile Include="Graphics\Font.cs" />
-    <Compile Include="Graphics\FrameSet.cs" />
+    <Compile Include="Graphics\Drawables\FrameSet.cs" />
     <Compile Include="Graphics\Graphic.cs" />
-    <Compile Include="Graphics\Image.cs" />
+    <Compile Include="Graphics\Drawables\Image.cs" />
     <Compile Include="Core\Game.cs" />
-    <Compile Include="Graphics\Primitive\Circle.cs" />
-    <Compile Include="Graphics\Primitive\Rectangle.cs" />
+    <Compile Include="Graphics\Drawables\Primitives\Circle.cs" />
+    <Compile Include="Graphics\Drawables\Primitives\Rectangle.cs" />
     <Compile Include="Graphics\Shader.cs" />
-    <Compile Include="Graphics\Text.cs" />
+    <Compile Include="Graphics\Drawables\Text.cs" />
     <Compile Include="Graphics\Texture.cs" />
-    <Compile Include="Graphics\TileMap.cs" />
-    <Compile Include="Graphics\Transition\FadeTransition.cs" />
-    <Compile Include="Graphics\Transition\SceneTransition.cs" />
-    <Compile Include="Graphics\Transition\SquareTransition.cs" />
+    <Compile Include="Graphics\Drawables\TileMap.cs" />
+    <Compile Include="Graphics\Drawables\Transitions\FadeTransition.cs" />
+    <Compile Include="Graphics\Drawables\Transitions\SceneTransition.cs" />
+    <Compile Include="Graphics\Drawables\Transitions\SquareTransition.cs" />
     <Compile Include="Math\Circle.cs" />
     <Compile Include="Math\Rectangle.cs" />
     <Compile Include="Math\Size.cs" />
@@ -115,6 +117,9 @@
     </Reference>
     <Reference Include="NVorbis">
       <HintPath>Lib\MonoGame\NVorbis.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Lib\Newtonsoft.Json\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />

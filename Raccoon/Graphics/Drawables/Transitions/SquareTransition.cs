@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Graphics.Transition {
+﻿namespace Raccoon.Graphics.Transitions {
     /*public class SquareTransition : SceneTransition {
         public SquareTransition() : base() {
 

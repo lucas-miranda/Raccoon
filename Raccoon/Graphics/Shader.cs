@@ -1,79 +1,85 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Raccoon.Graphics {
     public class Shader {
-        private Effect effect;
-        private string currentTechnique;
-        
+        #region Private Members
+
+        private Effect _effect;
+        private string _currentTechniqueName;
+
+        #endregion Private Members
+
+        #region Constructors
+
         public Shader(string filename) {
-            Filename = filename;
-            if (Game.Instance.Core.IsContentManagerReady) {
-                Load();
-            } else {
-                Game.Instance.Core.OnLoadContent += Load;
-            }
+            Load(filename);
         }
 
-        public string Filename { get; private set; }
-        public int TechniqueCount { get { return effect.Techniques.Count; } }
+        #endregion Constructors
 
-        public string CurrentTechnique {
+        #region Public Properties
+
+        public int TechniqueCount { get { return _effect.Techniques.Count; } }
+
+        public string CurrentTechniqueName {
             get {
-                return currentTechnique;
+                return _currentTechniqueName;
             }
             set {
-                currentTechnique = value;
-                if (Game.Instance.IsRunning) {
-                    effect.CurrentTechnique = effect.Techniques[currentTechnique];
-                }
+                _currentTechniqueName = value;
+                _effect.CurrentTechnique = _effect.Techniques[_currentTechniqueName];
             }
         }
 
-        public void Apply(int id = -1) {
-            EffectPassCollection passes = effect.CurrentTechnique.Passes;
-            if (id < 0) {
-                for (id = 0; id < passes.Count; id++) {
-                    passes[id].Apply();
-                }
-            } else {
-                passes[id].Apply();
+        #endregion Public Properties
+
+        #region Public Methods
+
+        public void Apply() {
+            foreach (EffectPass pass in _effect.CurrentTechnique.Passes) {
+                pass.Apply();
             }
         }
 
-        public void SetCurrentTechniqueId(int id) {
-            effect.CurrentTechnique = effect.Techniques[id];
+        public void Apply(int id) {
+            _effect.CurrentTechnique.Passes[id].Apply();
+        }
+
+        public void SetCurrentTechnique(int id) {
+            _effect.CurrentTechnique = _effect.Techniques[id];
         }
 
         public bool GetParameterBoolean(string name) {
-            return effect.Parameters[name].GetValueBoolean();
+            return _effect.Parameters[name].GetValueBoolean();
         }
 
         public void SetParameter(string name, bool value) {
-            effect.Parameters[name].SetValue(value);
+            _effect.Parameters[name].SetValue(value);
         }
 
-        public float GetParameterSingle(string name) {
-            return effect.Parameters[name].GetValueSingle();
+        public float GetParameterFloat(string name) {
+            return _effect.Parameters[name].GetValueSingle();
         }
 
         public void SetParameter(string name, float value) {
-            effect.Parameters[name].SetValue(value);
+            _effect.Parameters[name].SetValue(value);
         }
 
-        public float[] GetParameterSingleArray(string name) {
-            return effect.Parameters[name].GetValueSingleArray();
+        public float[] GetParameterFloatArray(string name) {
+            return _effect.Parameters[name].GetValueSingleArray();
         }
 
         public void SetParameter(string name, float[] value) {
-            effect.Parameters[name].SetValue(value);
+            _effect.Parameters[name].SetValue(value);
         }
 
         public int GetParameterInteger(string name) {
-            return effect.Parameters[name].GetValueInt32();
+            return _effect.Parameters[name].GetValueInt32();
         }
 
         public void SetParameter(string name, int value) {
-            effect.Parameters[name].SetValue(value);
+            _effect.Parameters[name].SetValue(value);
         }
 
         /*public void SetParameter(string name, Microsoft.Xna.Framework.Matrix value) {
@@ -89,22 +95,21 @@ namespace Raccoon.Graphics {
         }*/
 
         public Vector2 GetParameterVector2(string name) {
-            Microsoft.Xna.Framework.Vector2 vec2 = effect.Parameters[name].GetValueVector2();
-            return new Vector2(vec2.X, vec2.Y);
+            return new Vector2(_effect.Parameters[name].GetValueVector2());
         }
 
         public void SetParameter(string name, Vector2 value) {
-            effect.Parameters[name].SetValue(value);
+            _effect.Parameters[name].SetValue(value);
         }
 
         public Vector2[] GetParameterVector2Array(string name) {
-            Microsoft.Xna.Framework.Vector2[] vec2 = effect.Parameters[name].GetValueVector2Array();
-            Vector2[] v = new Vector2[vec2.Length];
-            for (int i = 0; i < vec2.Length; i++) {
-                v[i] = new Vector2(vec2[i].X, vec2[i].Y);
+            Microsoft.Xna.Framework.Vector2[] xnaVec2Arr = _effect.Parameters[name].GetValueVector2Array();
+            Vector2[] vec2Arr = new Vector2[xnaVec2Arr.Length];
+            for (int i = 0; i < xnaVec2Arr.Length; i++) {
+                vec2Arr[i] = new Vector2(xnaVec2Arr[i]);
             }
 
-            return v;
+            return vec2Arr;
         }
 
         public void SetParameter(string name, Vector2[] value) {
@@ -113,28 +118,33 @@ namespace Raccoon.Graphics {
                 vec2[i] = value[i];
             }
 
-            effect.Parameters[name].SetValue(vec2);
+            _effect.Parameters[name].SetValue(vec2);
         }
 
-        /*public Texture GetParameterTexture(string name) {
-            Microsoft.Xna.Framework.Vector2 tex = effect.Parameters[name].GetValueTexture2D();
-            return (Texture) tex;
-        }*/
-
-        public void SetParameter(string name, Image value) {
-            effect.Parameters[name].SetValue(value.Texture.XNATexture);
+        public Texture GetParameterTexture(string name) {
+            return new Texture(_effect.Parameters[name].GetValueTexture2D());
         }
 
-        internal void Load() {
-            if (Game.Instance.Core.SpriteBatch == null)
-                return;
+        public void SetParameter(string name, Texture value) {
+            _effect.Parameters[name].SetValue(value.XNATexture);
+        }
 
-            effect = Game.Instance.Core.Content.Load<Effect>(Filename);
-            if (currentTechnique.Length > 0) {
-                effect.CurrentTechnique = effect.Techniques[currentTechnique];
-            } else {
-                currentTechnique = effect.Techniques[0].Name;
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected void Load(string filename) {
+            if (Game.Instance.Core.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Shader needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
+            }
+
+            _effect = Game.Instance.Core.Content.Load<Effect>(filename);
+            if (_effect == null) throw new NullReferenceException($"Shader '{filename}' not found");
+            if (_effect.Techniques.Count > 0) {
+                _currentTechniqueName = _effect.Techniques[0].Name;
             }
         }
+
+        #endregion Protected Methods
     }
 }

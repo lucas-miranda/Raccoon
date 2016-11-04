@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Graphics {
+﻿namespace Raccoon.Graphics.Transitions {
     public abstract class SceneTransition : Graphic {
         public delegate void CallbackHandler();
         public event CallbackHandler OnStart;
@@ -64,8 +64,9 @@
         }
 
         public override void Dispose() {
-            if (EndGraphic != null)
+            if (EndGraphic != null) {
                 EndGraphic.Dispose();
+            }
         }
     }
 }

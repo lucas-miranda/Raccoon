@@ -46,26 +46,10 @@
 
         #endregion Public Properties
 
-        #region Private Methods
-        
-        private void UpdateClippingRegion() {
-            if (Columns == 0 || Rows == 0) {
-                return;
-            }
+        #region Protected Methods
 
-            ClippingRegion = new Rectangle((CurrentFrame % Columns) * FrameSize.Width, CurrentFrame / Columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
-        }
-
-        #endregion Private Methods
-
-        #region Internal Methods
-
-        internal override void Load() {
+        protected override void Load() {
             base.Load();
-            if (!Game.Instance.Core.IsContentManagerReady) {
-                return;
-            }
-
             int texColumns = (int) (SourceRegion.Width / FrameSize.Width);
             int texRows = (int) (SourceRegion.Height / FrameSize.Height);
 
@@ -81,6 +65,14 @@
             UpdateClippingRegion();
         }
 
-        #endregion Internal Methods
+        #endregion Protected Methods
+
+        #region Private Methods
+
+        private void UpdateClippingRegion() {
+            ClippingRegion = new Rectangle((CurrentFrame % Columns) * FrameSize.Width, CurrentFrame / Columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
+        }
+
+        #endregion Private Methods
     }
 }

@@ -13,9 +13,6 @@
         public string Value { get; set; }
         public new Color Color { get; set; }
 
-        public override void Update(int delta) {
-        }
-
         public override void Render() {
             Game.Instance.Core.SpriteBatch.DrawString(
                 Font.SpriteFont, 
@@ -31,9 +28,6 @@
         }
 
         public override void Dispose() {
-        }
-
-        internal override void Load() {
         }
     }
 }

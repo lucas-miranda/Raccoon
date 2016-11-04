@@ -57,7 +57,7 @@ namespace Raccoon.Graphics.Primitives {
             }
         }
 
-        public Texture Texture { get; set; }
+        public Texture Texture { get; private set; }
 
         #endregion Public Properties
 
@@ -79,11 +79,11 @@ namespace Raccoon.Graphics.Primitives {
 
         #endregion Public Methods
 
-        #region Internal Methods
+        #region Protected Methods
 
-        internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null) {
-                return;
+        protected override void Load() {
+            if (Game.Instance.Core.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Rectangle needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
             if (Filled) {
@@ -110,6 +110,6 @@ namespace Raccoon.Graphics.Primitives {
             }
         }
 
-        #endregion Internal Methods
+        #endregion Protected Methods
     }
 }

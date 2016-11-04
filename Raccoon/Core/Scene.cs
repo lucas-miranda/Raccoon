@@ -31,22 +31,10 @@ namespace Raccoon {
 
         public void Add(Entity e) {
             Entities.Add(e);
-            if (Game.Instance.IsRunning) {
-                foreach (Graphic g in e.Graphics) {
-                    g.Load();
-                }
-            }
         }
 
         public void Add(IEnumerable<Entity> objects) {
             Entities.AddRange(objects);
-            if (Game.Instance.IsRunning) {
-                foreach (Entity e in objects) {
-                    foreach (Graphic g in e.Graphics) {
-                        g.Load();
-                    }
-                }
-            }
         }
 
         #endregion Public Methods
@@ -56,16 +44,22 @@ namespace Raccoon {
         public virtual void OnAdded() { }
 
         public virtual void Start() {
-            foreach (Graphic g in Graphics) {
-                g.Load();
-            }
-
             foreach (Entity e in Entities) {
                 e.Start();
             }
         }
 
-        public virtual void UnloadContent() { }
+        public virtual void UnloadContent() {
+            foreach (Graphic g in Graphics) {
+                g.Dispose();
+            }
+
+            foreach (Entity e in Entities) {
+                foreach (Graphic g in e.Graphics) {
+                    g.Dispose();
+                }
+            }
+        }
 
         public virtual void Update(int delta) {
             foreach (Graphic g in Graphics) {

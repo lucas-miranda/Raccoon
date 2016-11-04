@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Graphics.Transition {
+﻿namespace Raccoon.Graphics.Transitions {
     public enum Fade {
         In,
         Out
@@ -37,10 +37,6 @@
                     break;
             }
             base.Play(repeatTimes);
-        }
-
-        internal override void Load() {
-            EndGraphic.Load();
         }
     }
 }

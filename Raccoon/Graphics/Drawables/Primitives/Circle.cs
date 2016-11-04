@@ -17,7 +17,7 @@ namespace Raccoon.Graphics.Primitives {
 
         public Vector2 Center { get { return Position + Radius - Origin; } set { Position = value - Radius + Origin; } }
         public int Radius { get; private set; }
-        public Texture Texture { get; set; }
+        public Texture Texture { get; private set; }
 
         #endregion Public Properties
 
@@ -35,11 +35,11 @@ namespace Raccoon.Graphics.Primitives {
 
         #endregion Public Methods
 
-        #region Internal Methods
+        #region Protected Methods
 
-        internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null) {
-                return;
+        protected override void Load() {
+            if (Game.Instance.Core.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Circle needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
             int w = (int) Width, h = (int) Height;
@@ -70,6 +70,6 @@ namespace Raccoon.Graphics.Primitives {
             Texture = circleTexture;
         }
 
-        #endregion Internal Methods
+        #endregion Protected Methods
     }
 }

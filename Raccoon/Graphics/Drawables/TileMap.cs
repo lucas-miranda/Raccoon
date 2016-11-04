@@ -19,9 +19,9 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public TileMap(string filename, Size tileSize) {
-            Name = filename;
             TileSize = tileSize;
             _data = new int[0][];
+            Texture = new Texture(filename);
             Load();
         }
 
@@ -33,12 +33,7 @@ namespace Raccoon.Graphics {
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public Rectangle Clip { get; set; }
-
-        #endregion Public Properties
-
-        #region Internal properties
-
-        internal Texture2D Texture { get; set; }
+        public Texture Texture { get; set; }
 
         #endregion Internal properties
 
@@ -69,7 +64,7 @@ namespace Raccoon.Graphics {
                     gid &= (int) ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag); // clear flags
                     
                     Game.Instance.Core.SpriteBatch.Draw(
-                        Texture,
+                        Texture.XNATexture,
                         Position + new Vector2(x * TileSize.Width, y * TileSize.Height),
                         null,
                         new Microsoft.Xna.Framework.Rectangle((gid - (gid / _tileSetColumns) * _tileSetColumns) * (int) TileSize.Width, (gid / _tileSetColumns) * (int) TileSize.Height, (int) TileSize.Width, (int) TileSize.Height),
@@ -152,6 +147,15 @@ namespace Raccoon.Graphics {
 
         #endregion Public Methods
 
+        #region Protected Methods
+
+        protected override void Load() {
+            _tileSetColumns = Texture.Width / (int) TileSize.Width;
+            _tileSetRows = Texture.Height / (int) TileSize.Height;
+        }
+
+        #endregion Protected Methods
+
         #region Private Methods
 
         private void StretchToFit(int x, int y) {
@@ -219,19 +223,5 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Private Methods
-
-        #region Internal Methods
-
-        internal override void Load() {
-            if (Game.Instance.Core.SpriteBatch == null)
-                return;
-
-            Texture = Game.Instance.Core.Content.Load<Texture2D>(Name);
-            Debug.Assert(Texture != null, $"Texture with name '{Name}' not found.");
-            _tileSetColumns =  Texture.Width / (int) TileSize.Width;
-            _tileSetRows =  Texture.Height / (int) TileSize.Height;
-        }
-
-        #endregion Internal Methods
     }
 }

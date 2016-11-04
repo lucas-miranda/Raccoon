@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Raccoon.Graphics {
@@ -6,7 +7,7 @@ namespace Raccoon.Graphics {
         #region Private Readonly
 
         private readonly Regex FrameRegex = new Regex(@"(\d+)-(\d+)|(\d+)");
-        private readonly Regex DurationRegex = new Regex(@"(\d+\.\d+)");
+        private readonly Regex DurationRegex = new Regex(@"(\d+)");
 
         #endregion Private Readonly
 
@@ -23,15 +24,36 @@ namespace Raccoon.Graphics {
         }
 
         public Animation(string filename, Size frameSize) : this() {
-            Size = frameSize;
             Texture = new Texture(filename);
+            ClippingRegion = new Rectangle(frameSize);
             Load();
         }
 
         public Animation(AtlasSubTexture subTexture, Size frameSize) : this() {
-            Size = frameSize;
             Texture = subTexture.Texture;
             SourceRegion = subTexture.Region;
+            ClippingRegion = new Rectangle(frameSize);
+            Load();
+        }
+
+        public Animation(AtlasAnimation animTexture) : this() {
+            if (typeof(KeyType) != typeof(string)) {
+                throw new NotSupportedException("KeyType " + typeof(KeyType) + " doesn't support AtlasAnimationTexture, switch to KeyType string");
+            }
+
+            Texture = animTexture.Texture;
+            SourceRegion = animTexture.Region;
+            ClippingRegion = new Rectangle(animTexture.FrameSize);
+            foreach (KeyValuePair<string, List<AtlasAnimationFrame>> anim in animTexture) {
+                string frames = "", durations = "";
+                foreach (AtlasAnimationFrame frame in anim.Value) {
+                    frames += frame.Id + " ";
+                    durations += frame.Duration + " ";
+                }
+
+                Add((KeyType)(object) anim.Key, frames, durations);
+            }
+
             Load();
         }
 
@@ -67,59 +89,6 @@ namespace Raccoon.Graphics {
                 }
             }
         }
-        
-        public void Add(KeyType key, string frames, string durations) {
-            List<int> durationList = new List<int>();
-            foreach (Match m in DurationRegex.Matches(durations)) {
-                durationList.Add((int) (float.Parse(m.Groups[1].Value) * 1000));
-            }
-
-            if (durationList.Count == 0)
-                return;
-
-            List<int> frameList = new List<int>();
-            int captureID = 0;
-            foreach (Match m in FrameRegex.Matches(frames)) {
-                if (m.Groups[3].Length > 0) {
-                    frameList.Add(int.Parse(m.Groups[3].Value));
-                    if (captureID == durationList.Count)
-                        durationList.Add(durationList[durationList.Count - 1]);
-                    captureID++;
-                } else {
-                    int d = durationList[captureID];
-                    durationList.RemoveAt(captureID);
-                    for (int i = int.Parse(m.Groups[1].Value); i <= int.Parse(m.Groups[2].Value); i++) {
-                        frameList.Add(i);
-                        durationList.Insert(captureID, d);
-                        captureID++;
-                    }
-                }
-            }
-
-            if (frameList.Count == 0)
-                return;
-
-            Tracks.Add(key, new Track(frameList.ToArray(), durationList.ToArray()));
-        }
-
-        public void Add(KeyType key, string frames, float duration) {
-            List<int> frameList = new List<int>();
-            foreach (Match m in FrameRegex.Matches(frames)) {
-                if (m.Groups[3].Length > 0) {
-                    frameList.Add(int.Parse(m.Groups[3].Value));
-                } else {
-                    for (int i = int.Parse(m.Groups[1].Value); i <= int.Parse(m.Groups[2].Value); i++)
-                        frameList.Add(i);
-                }
-            }
-
-            int[] durations = new int[frameList.Count];
-            int d = (int) (duration * 1000);
-            for (int i = 0; i < frameList.Count; i++)
-                durations.SetValue(d, i);
-
-            Tracks.Add(key, new Track(frameList.ToArray(), durations));
-        }
 
         public void Play(KeyType key, bool forceReset = true) {
             Playing = true;
@@ -144,33 +113,100 @@ namespace Raccoon.Graphics {
             UpdateClippingRegion();
         }
 
-        #endregion Public Methods
+        public void Add(KeyType key, string frames, string durations) {
+            List<int> durationList = new List<int>();
+            foreach (Match m in DurationRegex.Matches(durations)) {
+                durationList.Add(int.Parse(m.Groups[1].Value));
+            }
 
-        #region Private Methods
-
-        private void UpdateClippingRegion() {
-            if (_columns == 0 || _rows == 0) {
+            if (durationList.Count == 0) {
                 return;
             }
 
-            ClippingRegion = new Rectangle((CurrentTrack.CurrentSpriteID % _columns) * Size.Width, (CurrentTrack.CurrentSpriteID / _columns) * Size.Height, Size.Width, Size.Height);
+            List<int> frameList = new List<int>();
+            int captureID = 0;
+            foreach (Match m in FrameRegex.Matches(frames)) {
+                if (m.Groups[3].Length > 0) {
+                    frameList.Add(int.Parse(m.Groups[3].Value));
+                    if (captureID == durationList.Count)
+                        durationList.Add(durationList[durationList.Count - 1]);
+                    captureID++;
+                } else {
+                    int d = durationList[captureID];
+                    durationList.RemoveAt(captureID);
+                    for (int i = int.Parse(m.Groups[1].Value); i <= int.Parse(m.Groups[2].Value); i++) {
+                        frameList.Add(i);
+                        durationList.Insert(captureID, d);
+                        captureID++;
+                    }
+                }
+            }
+
+            if (frameList.Count == 0) {
+                return;
+            }
+
+            Tracks.Add(key, new Track(frameList.ToArray(), durationList.ToArray()));
         }
 
-        #endregion Private Methods
-
-        #region Internal Methods
-
-        internal override void Load() {
-            base.Load();
-            if (!Game.Instance.Core.IsContentManagerReady) {
-                return;
+        public void Add(KeyType key, string frames, int duration) {
+            List<int> frameList = new List<int>();
+            foreach (Match m in FrameRegex.Matches(frames)) {
+                if (m.Groups[3].Length > 0) {
+                    frameList.Add(int.Parse(m.Groups[3].Value));
+                } else {
+                    for (int i = int.Parse(m.Groups[1].Value); i <= int.Parse(m.Groups[2].Value); i++)
+                        frameList.Add(i);
+                }
             }
 
+            int[] durations = new int[frameList.Count];
+            for (int i = 0; i < frameList.Count; i++) {
+                durations.SetValue(duration, i);
+            }
+
+            Tracks.Add(key, new Track(frameList.ToArray(), durations));
+        }
+
+        public void Add(KeyType key, ICollection<int> frames, ICollection<int> durations) {
+            int[] frameList = new int[frames.Count];
+            frames.CopyTo(frameList, 0);
+            int[] durationList = new int[durations.Count];
+            durations.CopyTo(durationList, 0);
+            Tracks.Add(key, new Track(frameList, durationList));
+        }
+
+        public void Add(KeyType key, ICollection<int> frames, int duration) {
+            int[] frameList = new int[frames.Count];
+            frames.CopyTo(frameList, 0);
+
+            int[] durations = new int[frameList.Length];
+            for (int i = 0; i < frameList.Length; i++) {
+                durations.SetValue(duration, i);
+            }
+
+            Tracks.Add(key, new Track(frameList, durations));
+        }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Load() {
+            base.Load();
             _columns = (int) (SourceRegion.Width / Size.Width);
             _rows = (int) (SourceRegion.Height / Size.Height);
         }
 
-        #endregion Internal Methods
+        #endregion Protected Methods
+
+        #region Private Methods
+
+        private void UpdateClippingRegion() {
+            ClippingRegion = new Rectangle((CurrentTrack.CurrentSpriteID % _columns) * Size.Width, (CurrentTrack.CurrentSpriteID / _columns) * Size.Height, Size.Width, Size.Height);
+        }
+
+        #endregion Private Methods
 
         #region Public Class Track
 
@@ -186,8 +222,8 @@ namespace Raccoon.Graphics {
 
             public int[] Frames { get; private set; }
             public int[] Durations { get; private set; }
-            public float Duration { get { return Durations[CurrentFrameIndex]; } }
-            //public float ElapsedTime { get; set; } // maybe I don't need to save time on each Track
+            public int Duration { get { return Durations[CurrentFrameIndex]; } }
+            //public int ElapsedTime { get; set; } // maybe I don't need to save time on each Track
             public int CurrentFrameIndex { get; set; }
             public bool IsLooping { get; set; }
 
@@ -203,5 +239,16 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Public Class Track
+    }
+
+    public class Animation : Animation<string> {
+        #region Constructors
+
+        public Animation() : base() { }
+        public Animation(string filename, Size frameSize) : base(filename, frameSize) { }
+        public Animation(AtlasSubTexture subTexture, Size frameSize) : base(subTexture, frameSize) { }
+        public Animation(AtlasAnimation animTexture) : base(animTexture) { }
+
+        #endregion Constructors
     }
 }
