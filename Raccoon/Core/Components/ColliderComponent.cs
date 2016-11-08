@@ -19,6 +19,18 @@ namespace Raccoon.Components {
 
         protected ColliderComponent(ColliderType type, Enum tag) : this(type, tag.ToString()) { }
 
+        public Vector2 Origin { get; set; }
+        public Vector2 Position { get { return Entity.Position - Origin; } }
+        public float X { get { return Position.X; } }
+        public float Y { get { return Position.Y; } }
+        public Size Size { get; protected set; }
+        public float Width { get { return Size.Width; } }
+        public float Height { get { return Size.Height; } }
+        public float Top { get { return Y; } }
+        public float Right { get { return X + Width; } }
+        public float Bottom { get { return Y + Height; } }
+        public float Left { get { return X; } }
+        public Rectangle Rect { get { return new Rectangle(Position, Size); } }
         public ColliderType Type { get; private set; }
         protected Graphic Graphic { get; set; }
         protected Color Color { get; set; }

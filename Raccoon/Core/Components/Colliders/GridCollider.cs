@@ -11,6 +11,7 @@ namespace Raccoon.Components {
             TileSize = tileSize;
             Columns = columns;
             Rows = rows;
+            Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
             _data = new bool[Rows, Columns];
             for (int y = 0; y < Rows; y++) {
                 for (int x = 0; x < Columns; x++) {
@@ -22,16 +23,8 @@ namespace Raccoon.Components {
         public GridCollider(Size tileSize, int columns, int rows, Enum tag) : this(tileSize, columns, rows, tag.ToString()) { }
 
 
-        public Vector2 Origin { get; set; }
-        public Vector2 Position { get { return Entity.Position - Origin; } }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
-        public float X { get { return Position.X; } }
-        public float Y { get { return Position.Y; } }
-        public Size Size { get { return new Size(TileSize.Width * Columns, TileSize.Height * Rows); } }
-        public float Width { get { return Size.Width; } }
-        public float Height { get { return Size.Height; } }
-        public Rectangle Rect { get { return new Rectangle(Position, Size); } }
 
         public Size TileSize {
             get {
@@ -41,6 +34,7 @@ namespace Raccoon.Components {
             set {
                 _tileSize = value;
                 _graphicNeedUpdate = true;
+                Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
             }
         }
 
