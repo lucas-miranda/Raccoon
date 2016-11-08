@@ -23,12 +23,20 @@
         public static float Clamp(float value, float min, float max) {
             return Microsoft.Xna.Framework.MathHelper.Clamp(value, min, max);
         }
-        
+
+        public static int Clamp(int value, int min, int max) {
+            return Microsoft.Xna.Framework.MathHelper.Clamp(value, min, max);
+        }
+
         public static float Lerp(float start, float end, float t) {
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }
 
         public static float Abs(float n) {
+            return System.Math.Abs(n);
+        }
+
+        public static int Abs(int n) {
             return System.Math.Abs(n);
         }
 
@@ -44,7 +52,15 @@
             return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
         }
 
+        public static int Min(int n1, int n2) {
+            return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
+        }
+
         public static float Max(float n1, float n2) {
+            return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
+        }
+
+        public static int Max(int n1, int n2) {
             return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
         }
     }

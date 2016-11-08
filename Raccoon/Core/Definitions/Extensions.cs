@@ -1,6 +1,11 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿namespace Raccoon {
+    public static class Extensions {
+        #region String
 
-namespace Raccoon {
-    
+        public static bool IsEmpty(this string str) {
+            return str.Length == 0;
+        }
+
+        #endregion String
+    }
 }
