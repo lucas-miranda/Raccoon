@@ -1,6 +1,6 @@
-﻿using Raccoon.Graphics;
+﻿using System.Collections.Generic;
+using Raccoon.Graphics;
 using Raccoon.Components;
-using System.Collections.Generic;
 
 namespace Raccoon {
     public class Entity {
@@ -32,6 +32,8 @@ namespace Raccoon {
         public bool Active { get; set; }
         public bool Visible { get; set; }
         public List<Graphic> Graphics { get; private set; }
+        public Scene Scene { get; private set; }
+        public uint Timer { get; private set; }
 
         public Graphic Graphic {
             get {
@@ -94,9 +96,18 @@ namespace Raccoon {
 
         #region Public Methods
 
+        public virtual void OnAdded(Scene scene) {
+            Scene = scene;
+        }
+
+        public virtual void OnRemoved() { }
         public virtual void Start() { }
 
+        public virtual void BeforeUpdate() { }
+
         public virtual void Update(int delta) {
+            Timer += (uint) delta;
+
             if (!Active) {
                 return;
             }
@@ -109,6 +120,8 @@ namespace Raccoon {
                 g.Update(delta);
             }
         }
+
+        public virtual void LateUpdate() { }
 
         public virtual void Render() {
             if (!Visible) {
@@ -155,6 +168,15 @@ namespace Raccoon {
             _components.Remove(component);
         }
 
+        public T GetComponent<T>() where T : Component {
+            foreach (Component c in _components) {
+                if (c is T) {
+                    return c as T;
+                }
+            }
+
+            return null;
+        }
 
         public override string ToString() {
             return $"[Entity '{Name}' | X: {X} Y: {Y}]";

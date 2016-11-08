@@ -3,6 +3,12 @@ using Raccoon.Graphics;
 
 namespace Raccoon {
     public class Scene {
+        #region Private Members
+
+        private bool _started;
+
+        #endregion Private Members
+
         #region Constructor
 
         public Scene() {
@@ -21,20 +27,48 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public void Add(Graphic g) {
-            Graphics.Add(g);
+        public void Add(Graphic graphic) {
+            Graphics.Add(graphic);
         }
 
         public void Add(IEnumerable<Graphic> graphics) {
             Graphics.AddRange(graphics);
         }
 
-        public void Add(Entity e) {
-            Entities.Add(e);
+        public void Add(Entity entity) {
+            Entities.Add(entity);
+            entity.OnAdded(this);
+        }
+        
+        public void Add(IEnumerable<Entity> entities) {
+            Entities.AddRange(entities);
+            foreach (Entity e in entities) {
+                e.OnAdded(this);
+            }
         }
 
-        public void Add(IEnumerable<Entity> objects) {
-            Entities.AddRange(objects);
+        public void Remove(Graphic graphic) {
+            Graphics.Remove(graphic);
+        }
+
+        public void Remove(IEnumerable<Graphic> graphics) {
+            foreach (Graphic g in graphics) {
+                Graphics.Remove(g);
+            }
+        }
+
+        public void Remove(Entity entity) {
+            if (Entities.Remove(entity)) {
+                entity.OnRemoved();
+            }
+        }
+
+        public void Remove(IEnumerable<Entity> entities) {
+            foreach (Entity e in entities) {
+                if (Entities.Remove(e)) {
+                    e.OnRemoved();
+                }
+            }
         }
 
         #endregion Public Methods
@@ -49,6 +83,17 @@ namespace Raccoon {
             }
         }
 
+        public virtual void Begin() {
+            if (!_started) {
+                _started = true;
+                Start();
+            }
+        }
+
+        public virtual void End() {
+
+        }
+
         public virtual void UnloadContent() {
             foreach (Graphic g in Graphics) {
                 g.Dispose();
@@ -61,6 +106,12 @@ namespace Raccoon {
             }
         }
 
+        public virtual void BeforeUpdate() {
+            foreach (Entity e in Entities) {
+                e.BeforeUpdate();
+            }
+        }
+
         public virtual void Update(int delta) {
             foreach (Graphic g in Graphics) {
                 g.Update(delta);
@@ -68,6 +119,12 @@ namespace Raccoon {
 
             foreach (Entity e in Entities) {
                 e.Update(delta);
+            }
+        }
+
+        public virtual void LateUpdate() {
+            foreach (Entity e in Entities) {
+                e.LateUpdate();
             }
         }
 

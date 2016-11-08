@@ -24,10 +24,7 @@ namespace Raccoon {
 
         #region Public Events
 
-        public event Action OnStart;
-        public event Action OnUnloadContent;
-        public event Action OnRender;
-        public event Action OnDebugRender;
+        public event Action OnBegin, OnExit, OnUnloadContent, OnBeforeUpdate, OnLateUpdate, OnRender, OnDebugRender;
         public event TickHandler OnUpdate;
 
         #endregion Public Events
@@ -65,6 +62,15 @@ namespace Raccoon {
 
         #endregion Public Properties
 
+        #region Public Methods
+
+        public void ClearCallbacks() {
+            OnBegin = OnExit = OnUnloadContent = OnBeforeUpdate = OnLateUpdate = OnRender = OnDebugRender = null;
+            OnUpdate = null;
+        }
+
+        #endregion Public Methods
+
         #region Protected Methods
 
         protected override void Initialize() {
@@ -81,8 +87,8 @@ namespace Raccoon {
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
             OnUnloadContent += resourceContentManager.Unload;
 
-            OnStart?.Invoke();
-            OnStart = null;
+            OnBegin?.Invoke();
+            OnBegin = null;
 
             base.LoadContent();
         }
@@ -107,7 +113,9 @@ namespace Raccoon {
             // updates
             Input.Mouse.Instance.Update(delta);
             Coroutine.Instance.Update(delta);
+            OnBeforeUpdate?.Invoke();
             OnUpdate?.Invoke(delta);
+            OnLateUpdate?.Invoke();
             
             // fps
             _fpsCount++;
