@@ -1,4 +1,5 @@
 ﻿using Raccoon.Graphics;
+using System;
 
 namespace Raccoon.Components {
     public class GridCollider : ColliderComponent {
@@ -6,7 +7,7 @@ namespace Raccoon.Components {
         private bool _graphicNeedUpdate;
         private Size _tileSize;
 
-        public GridCollider(Size tileSize, int columns, int rows, string tagName) : base(ColliderType.Grid, tagName) {
+        public GridCollider(Size tileSize, int columns, int rows, string tag) : base(ColliderType.Grid, tag) {
             TileSize = tileSize;
             Columns = columns;
             Rows = rows;
@@ -17,6 +18,9 @@ namespace Raccoon.Components {
                 }
             }
         }
+
+        public GridCollider(Size tileSize, int columns, int rows, Enum tag) : this(tileSize, columns, rows, tag.ToString()) { }
+
 
         public Vector2 Origin { get; set; }
         public Vector2 Position { get { return Entity.Position - Origin; } }

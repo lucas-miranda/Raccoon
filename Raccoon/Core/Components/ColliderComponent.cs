@@ -1,4 +1,5 @@
 ﻿using Raccoon.Graphics;
+using System;
 
 namespace Raccoon.Components {
     public enum ColliderType {
@@ -10,11 +11,13 @@ namespace Raccoon.Components {
     }
 
     public abstract class ColliderComponent : Component {
-        protected ColliderComponent(ColliderType type, string tagName) {
+        protected ColliderComponent(ColliderType type, string tag) {
             Type = type;
             Color = Color.Red;
-            Physics.Instance.AddCollider(tagName, this);
+            Physics.Instance.AddCollider(this, tag);
         }
+
+        protected ColliderComponent(ColliderType type, Enum tag) : this(type, tag.ToString()) { }
 
         public ColliderType Type { get; private set; }
         protected Graphic Graphic { get; set; }
@@ -31,8 +34,12 @@ namespace Raccoon.Components {
             DebugRender();
         }
 
-        public bool Collides(string tagName) {
-            return Physics.Instance.Collides(this, tagName);
+        public bool Collides(string tag) {
+            return Physics.Instance.Collides(this, tag);
+        }
+
+        public bool Collides(Enum tag) {
+            return Physics.Instance.Collides(this, tag);
         }
     }
 }

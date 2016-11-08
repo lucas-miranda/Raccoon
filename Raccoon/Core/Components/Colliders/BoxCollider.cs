@@ -1,12 +1,15 @@
 ﻿using Raccoon.Graphics;
+using System;
 
 namespace Raccoon.Components {
     public class BoxCollider : ColliderComponent {
         private Size _size;
 
-        public BoxCollider(float width, float height, string tagName) : base(ColliderType.Box, tagName) {
+        public BoxCollider(float width, float height, string tag) : base(ColliderType.Box, tag) {
             Size = new Size(width, height);
         }
+
+        public BoxCollider(float width, float height, Enum tag) : this(width, height, tag.ToString()) { }
 
         public Vector2 Origin { get; set; }
         public Vector2 Position { get { return Entity.Position - Origin; } }
