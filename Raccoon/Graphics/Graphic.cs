@@ -70,7 +70,11 @@
             }
 
             set {
-                Flipped |= (value ? ImageFlip.Horizontal : ImageFlip.None);
+                if (value) {
+                    Flipped |= ImageFlip.Horizontal;
+                } else {
+                    Flipped &= ~ImageFlip.Horizontal;
+                }
             }
         }
 
@@ -80,7 +84,11 @@
             }
 
             set {
-                Flipped |= (value ? ImageFlip.Vertical : ImageFlip.None);
+                if (value) {
+                    Flipped |= ImageFlip.Vertical;
+                } else {
+                    Flipped &= ~ImageFlip.Vertical;
+                }
             }
         }
 
