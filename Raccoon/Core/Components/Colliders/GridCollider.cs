@@ -2,12 +2,12 @@
 using System;
 
 namespace Raccoon.Components {
-    public class GridCollider : ColliderComponent {
+    public class GridCollider : Collider {
         private bool[,] _data;
         private bool _graphicNeedUpdate;
         private Size _tileSize;
 
-        public GridCollider(Size tileSize, int columns, int rows, string tag) : base(ColliderType.Grid, tag) {
+        public GridCollider(Size tileSize, int columns, int rows, string tag) : base(tag) {
             TileSize = tileSize;
             Columns = columns;
             Rows = rows;
@@ -21,7 +21,6 @@ namespace Raccoon.Components {
         }
 
         public GridCollider(Size tileSize, int columns, int rows, Enum tag) : this(tileSize, columns, rows, tag.ToString()) { }
-
 
         public int Columns { get; private set; }
         public int Rows { get; private set; }
@@ -38,8 +37,7 @@ namespace Raccoon.Components {
             }
         }
 
-        public override void Update(int delta) {
-        }
+        public override void Update(int delta) { }
 
         public override void DebugRender() {
             if (_graphicNeedUpdate) {

@@ -2,8 +2,8 @@
 using System;
 
 namespace Raccoon.Components {
-    public class BoxCollider : ColliderComponent {
-        public BoxCollider(float width, float height, string tag) : base(ColliderType.Box, tag) {
+    public class BoxCollider : Collider {
+        public BoxCollider(float width, float height, string tag) : base(tag) {
             Size = new Size(width, height);
         }
 
