@@ -43,7 +43,7 @@
         public bool Intersects(Circle c) {
             Vector2 centerDist = c.Center - Center;
             float radiusDiff = Radius - c.Radius;
-            return centerDist.X * centerDist.X + centerDist.Y * centerDist.Y <= Math.Abs(radiusDiff * radiusDiff);
+            return centerDist.X * centerDist.X + centerDist.Y * centerDist.Y <= System.Math.Abs(radiusDiff * radiusDiff);
         }
 
         public override bool Equals(object obj) {

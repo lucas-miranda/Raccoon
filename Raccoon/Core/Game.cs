@@ -66,8 +66,8 @@ namespace Raccoon {
 
             set {
                 Core.Scale = value;
-                Width = (int) Math.Ceil(ScreenWidth / Scale);
-                Height = (int) Math.Ceil(ScreenHeight / Scale);
+                Width = (int) System.Math.Ceiling(ScreenWidth / Scale);
+                Height = (int) System.Math.Ceiling(ScreenHeight / Scale);
             }
         }
 

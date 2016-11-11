@@ -32,20 +32,19 @@
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }
 
-        public static float Abs(float n) {
-            return System.Math.Abs(n);
+        public static float Approach(float start, float end, float amount) {
+            return start < end ? Min(start + amount, end) : Max(start - amount, end);
         }
 
-        public static int Abs(int n) {
-            return System.Math.Abs(n);
+        public static int Approach(int start, int end, int amount) {
+            return start < end ? Min(start + amount, end) : Max(start - amount, end);
         }
 
-        public static float Ceil(float n) {
-            return (float) System.Math.Ceiling(n);
+        public static Vector2 Approach(Vector2 start, Vector2 end, Vector2 amount) {
+            return new Vector2(Approach(start.X, end.X, amount.X), Approach(start.Y, end.Y, amount.Y));
         }
-
-        public static float Floor(float n) {
-            return (float) System.Math.Floor(n);
+        public static Vector2 Abs(Vector2 vec) {
+            return new Vector2(System.Math.Abs(vec.X), System.Math.Abs(vec.Y));
         }
 
         public static float Min(float n1, float n2) {
