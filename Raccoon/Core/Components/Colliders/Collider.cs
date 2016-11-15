@@ -5,12 +5,12 @@ using System.Collections.Generic;
 namespace Raccoon.Components {
     public abstract class Collider : Component {
         protected Collider(string tag) {
-            Color = Color.Red;
-            Physics.Instance.AddCollider(this, tag);
+            Tag = tag;
         }
 
         protected Collider(Enum tag) : this(tag.ToString()) { }
 
+        public string Tag { get; protected set; }
         public Vector2 Origin { get; set; }
         public Vector2 Position { get { return Entity.Position - Origin; } }
         public float X { get { return Position.X; } }
@@ -23,12 +23,21 @@ namespace Raccoon.Components {
         public float Bottom { get { return Y + Height - Origin.Y; } }
         public float Left { get { return X - Origin.X; } }
         public Rectangle Rect { get { return new Rectangle(Position, Size); } }
+        
         protected Graphic Graphic { get; set; }
-        protected Color Color { get; set; }
+        protected Color Color { get; set; } = Color.Red;
+
+        public override void OnAdded(Entity entity) {
+            base.OnAdded(entity);
+            if (Entity.Scene != null) {
+                Physics.Instance.AddCollider(this, Tag);
+            }
+        }
 
         public override void Update(int delta) { }
         public override void Render() { }
 
+        [System.Diagnostics.Conditional("DEBUG")]
         public void DebugRender(Color color) {
             Color = color;
             DebugRender();

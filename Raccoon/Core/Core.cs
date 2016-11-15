@@ -138,6 +138,10 @@ namespace Raccoon {
             SpriteBatch.End();
             GraphicsDevice.SetRenderTarget(null);
 
+#if DEBUG
+            GraphicsMetrics metrics = GraphicsDevice.Metrics;
+#endif
+
             // draw main render target to screen
             Graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1f, 0);
             SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _screenTransform);
@@ -146,11 +150,12 @@ namespace Raccoon {
 
 #if DEBUG
             // debug render
-            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-            OnDebugRender?.Invoke();
-            GraphicsMetrics metrics = GraphicsDevice.Metrics;
-            SpriteBatch.DrawString(StdFont.SpriteFont, string.Format("Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount), new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), Raccoon.Graphics.Color.White);
-            SpriteBatch.End();
+            if (Game.Instance.DebugMode) {
+                SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                OnDebugRender?.Invoke();
+                SpriteBatch.DrawString(StdFont.SpriteFont, string.Format("Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount), new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), Raccoon.Graphics.Color.White);
+                SpriteBatch.End();
+            }
 #endif
 
             base.Draw(gameTime);

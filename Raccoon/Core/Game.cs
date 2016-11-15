@@ -16,6 +16,12 @@ namespace Raccoon {
 
         #endregion Public Events
 
+        #region Private Members
+
+        private bool _debugMode;
+
+        #endregion Private Members
+
         #region Constructor
 
         public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFPS = 60, bool fullscreen = false) {
@@ -47,6 +53,7 @@ namespace Raccoon {
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
         public bool IsFixedTimeStep { get { return Core.IsFixedTimeStep; } }
+        public string Title { get { return Core.Title; } set { Core.Title = value; } }
         public string ContentDirectory { get { return Core.Content.RootDirectory; } set { Core.Content.RootDirectory = value; } }
         public int DeltaTime { get { return Core.DeltaTime; } }
         public int X { get { return Core.Window.Position.X; } }
@@ -55,7 +62,6 @@ namespace Raccoon {
         public int Height { get; private set; }
         public int ScreenWidth { get { return Core.Graphics.PreferredBackBufferWidth; } }
         public int ScreenHeight { get { return Core.Graphics.PreferredBackBufferHeight; } }
-        public string Title { get { return Core.Title; } set { Core.Title = value; } }
         public Dictionary<string, Scene> Scenes { get; private set; }
         public Scene Scene { get; private set; }
 
@@ -65,11 +71,21 @@ namespace Raccoon {
             }
 
             set {
+                if (IsRunning) {
+                    return;
+                }
+
                 Core.Scale = value;
                 Width = (int) System.Math.Ceiling(ScreenWidth / Scale);
                 Height = (int) System.Math.Ceiling(ScreenHeight / Scale);
             }
         }
+
+#if DEBUG
+        public bool DebugMode { get { return _debugMode; } set { _debugMode = value; } }
+#else
+        public bool DebugMode { get { return false; } }
+#endif
 
         #endregion
 
@@ -192,16 +208,19 @@ namespace Raccoon {
             Core.OnUpdate += Scene.Update;
             Core.OnLateUpdate += Scene.LateUpdate;
             Core.OnRender += Scene.Render;
+
+#if DEBUG
             Core.OnDebugRender += Scene.DebugRender;
+#endif
         }
 
         public void SwitchScene<T>() where T : Scene {
             SwitchScene(typeof(T).Name.Replace("Scene", ""));
         }
 
-        #endregion
+#endregion
 
-        #region Protected Methods
+#region Protected Methods
 
         protected void Update(int delta) {
             OnUpdate?.Invoke(delta);
@@ -222,6 +241,6 @@ namespace Raccoon {
             }
         }
 
-        #endregion
+#endregion
     }
 }

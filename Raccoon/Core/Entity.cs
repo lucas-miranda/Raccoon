@@ -31,6 +31,7 @@ namespace Raccoon {
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public bool Active { get; set; }
         public bool Visible { get; set; }
+        public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public List<Graphic> Graphics { get; private set; }
         public Scene Scene { get; private set; }
         public uint Timer { get; private set; }
@@ -98,6 +99,12 @@ namespace Raccoon {
 
         public virtual void OnAdded(Scene scene) {
             Scene = scene;
+            foreach (Component c in _components) {
+                Collider coll = c as Collider;
+                if (coll != null) {
+                    Physics.Instance.AddCollider(coll, coll.Tag);
+                }
+            }
         }
 
         public virtual void OnRemoved() { }
@@ -113,6 +120,10 @@ namespace Raccoon {
             }
 
             foreach (Component c in _components) {
+                if (!c.Enabled) {
+                    continue;
+                }
+
                 c.Update(delta);
             }
 
@@ -133,7 +144,13 @@ namespace Raccoon {
             }
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
         public virtual void DebugRender() {
+            if (Game.Instance.DebugMode) {
+                foreach (Component c in _components) {
+                    c.DebugRender();
+                }
+            }
         }
 
         public void AddGraphic(Graphic graphic) {
@@ -161,7 +178,7 @@ namespace Raccoon {
 
         public void AddComponent(Component component) {
             _components.Add(component);
-            component.Added(this);
+            component.OnAdded(this);
         }
 
         public void RemoveComponent(Component component) {

@@ -18,6 +18,10 @@ namespace Raccoon.Components {
                     _data[y, x] = false;
                 }
             }
+
+#if DEBUG
+            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
+#endif
         }
 
         public GridCollider(Size tileSize, int columns, int rows, Enum tag) : this(tileSize, columns, rows, tag.ToString()) { }
@@ -32,8 +36,10 @@ namespace Raccoon.Components {
 
             set {
                 _tileSize = value;
-                _graphicNeedUpdate = true;
                 Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
+#if DEBUG
+                _graphicNeedUpdate = true;
+#endif
             }
         }
 
@@ -41,12 +47,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             if (_graphicNeedUpdate) {
-                if (Graphic == null) {
-                    Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
-                } else {
-                    (Graphic as Graphics.Primitives.Rectangle).Size = new Size(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1);
-                }
-
+                (Graphic as Graphics.Primitives.Rectangle).Size = new Size(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1);
                 _graphicNeedUpdate = false;
             }
 
