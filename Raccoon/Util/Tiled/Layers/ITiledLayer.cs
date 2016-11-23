@@ -8,7 +8,6 @@ namespace Raccoon.Tiled {
     }
 
     public interface ITiledLayer {
-        TiledLayerType Type { get; }
         string Name { get; }
         float Opacity { get; }
         bool Visible { get; }

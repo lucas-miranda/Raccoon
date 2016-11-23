@@ -6,7 +6,7 @@ namespace Raccoon.Tiled {
         private TiledTileset() {
             Properties = new Dictionary<string, TiledProperty>();
             TerrainTypes = new List<TiledTerrainType>();
-            Tiles = new Dictionary<int, TiledTilesetTile>();
+            Tiles = new Dictionary<uint, TiledTilesetTile>();
         }
 
         public TiledTileset(string tsxFilename, int firstGid) : this() {
@@ -38,7 +38,7 @@ namespace Raccoon.Tiled {
         public Vector2 Offset { get; private set; }
         public TiledImage SpriteSheet { get; private set; }
         public Dictionary<string, TiledProperty> Properties { get; private set; }
-        public Dictionary<int, TiledTilesetTile> Tiles { get; private set; }
+        public Dictionary<uint, TiledTilesetTile> Tiles { get; private set; }
         public List<TiledTerrainType> TerrainTypes { get; private set; }
 
         private void Load(XmlElement tilesetElement) {
@@ -78,7 +78,7 @@ namespace Raccoon.Tiled {
             }
 
             foreach (XmlElement tileElement in tilesetElement.GetElementsByTagName("tile")) {
-                Tiles.Add(int.Parse(tileElement.GetAttribute("id")), new TiledTilesetTile(Path, tileElement));
+                Tiles.Add(uint.Parse(tileElement.GetAttribute("id")), new TiledTilesetTile(Path, tileElement));
             }
         }
     }

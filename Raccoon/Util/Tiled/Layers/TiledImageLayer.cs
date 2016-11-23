@@ -2,7 +2,7 @@
 using System.Xml;
 
 namespace Raccoon.Tiled {
-    internal class TiledImageLayer : ITiledLayer {
+    public class TiledImageLayer : ITiledLayer {
         public TiledImageLayer(string tmxPath, XmlElement layerElement) {
             Name = layerElement.GetAttribute("name");
             Opacity = layerElement.HasAttribute("opacity") ? float.Parse(layerElement.GetAttribute("opacity"), System.Globalization.CultureInfo.InvariantCulture) : 1f;
@@ -23,7 +23,6 @@ namespace Raccoon.Tiled {
             }
         }
 
-        public TiledLayerType Type { get { return TiledLayerType.Image; } }
         public string Name { get; private set; }
         public float Opacity { get; private set; }
         public bool Visible { get; private set; }

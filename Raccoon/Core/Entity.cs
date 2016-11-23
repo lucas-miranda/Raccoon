@@ -176,6 +176,10 @@ namespace Raccoon {
             }
         }
 
+        public void ClearGraphics() {
+            Graphics.Clear();
+        }
+
         public void AddComponent(Component component) {
             _components.Add(component);
             component.OnAdded(this);
@@ -193,6 +197,10 @@ namespace Raccoon {
             }
 
             return null;
+        }
+
+        public void ClearComponents() {
+            _components.Clear();
         }
 
         public override string ToString() {

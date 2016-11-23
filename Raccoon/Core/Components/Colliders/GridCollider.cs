@@ -21,6 +21,7 @@ namespace Raccoon.Components {
 
 #if DEBUG
             Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
+            _graphicNeedUpdate = false;
 #endif
         }
 
@@ -42,8 +43,6 @@ namespace Raccoon.Components {
 #endif
             }
         }
-
-        public override void Update(int delta) { }
 
         public override void DebugRender() {
             if (_graphicNeedUpdate) {

@@ -55,6 +55,10 @@
             return new Rectangle(0, 0, Width, Height);
         }
 
+        public Vector2 ToVector2() {
+            return new Vector2(Width, Height);
+        }
+
         public override string ToString() {
             return $"[Size | Width: {Width}, Height: {Height}]";
         }

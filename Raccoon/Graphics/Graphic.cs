@@ -27,7 +27,7 @@
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public int Layer { get { return (int) (LayerDepth * LayerLimit); } set { LayerDepth = 0.5f + (Math.Clamp(value, LayerMin, LayerMax) / LayerLimit); } }
+        public int Layer { get { return (int) (LayerDepth * LayerLimit) - LayerMax; } set { LayerDepth = 0.5f + (Util.Math.Clamp(value, LayerMin, LayerMax) / (float) LayerLimit); } }
         public float LayerDepth { get; set; }
         public Color FinalColor { get; set; } = Color.White;
         //public Shader Shader { get; set; }

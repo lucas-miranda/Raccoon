@@ -34,7 +34,12 @@ namespace Raccoon.Components {
             }
         }
 
-        public override void Update(int delta) { }
+        public override void Update(int delta) {
+#if DEBUG
+            Graphic.Update(delta);
+#endif
+        }
+
         public override void Render() { }
 
         [System.Diagnostics.Conditional("DEBUG")]

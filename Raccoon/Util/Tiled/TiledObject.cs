@@ -81,6 +81,7 @@ namespace Raccoon.Tiled {
         public Size Size { get; private set; }
         public float Width { get { return Size.Width; } }
         public float Height { get { return Size.Height; } }
+        public Vector2 Center { get { return (Size / 2).ToVector2(); } }
         public float Rotation { get; private set; }
         public int? Gid { get; private set; }
         public TiledObjectShape Shape { get; private set; }

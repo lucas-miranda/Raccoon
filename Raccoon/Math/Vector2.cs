@@ -28,8 +28,9 @@
             Y = y;
         }
 
-        public Vector2(float xy) : this(xy, xy) {
-        }
+        public Vector2(float xy) : this(xy, xy) { }
+
+        public Vector2(Size size) : this(size.Width, size.Height) { }
 
         internal Vector2(Microsoft.Xna.Framework.Vector2 vec2) : this(vec2.X, vec2.Y) { }
 
@@ -118,12 +119,20 @@
             return new Vector2(l.X + r.X, l.Y + r.Y);
         }
 
+        public static Vector2 operator +(Vector2 l, Size r) {
+            return new Vector2(l.X + r.Width, l.Y + r.Height);
+        }
+
         public static Rectangle operator +(Vector2 l, Rectangle r) {
             return r + l;
         }
 
         public static Vector2 operator -(Vector2 l, Vector2 r) {
             return l + (-r);
+        }
+
+        public static Vector2 operator -(Vector2 l, Size r) {
+            return new Vector2(l.X - r.Width, l.Y - r.Height);
         }
 
         public static Vector2 operator *(Vector2 l, Vector2 r) {
@@ -138,20 +147,40 @@
             return new Vector2(l.X + v, l.Y + v);
         }
 
+        public static Vector2 operator +(Vector2 l, double v) {
+            return new Vector2((float) (l.X + v), (float) (l.Y + v));
+        }
+        
         public static Vector2 operator -(Vector2 l, float v) {
             return new Vector2(l.X - v, l.Y - v);
         }
 
+        public static Vector2 operator -(Vector2 l, double v) {
+            return new Vector2((float) (l.X - v), (float) (l.Y - v));
+        }
+        
         public static Vector2 operator *(Vector2 l, float v) {
             return new Vector2(l.X * v, l.Y * v);
+        }
+
+        public static Vector2 operator *(Vector2 l, double v) {
+            return new Vector2((float) (l.X * v), (float)  (l.Y * v));
         }
 
         public static Vector2 operator *(float v, Vector2 l) {
             return l * v;
         }
 
+        public static Vector2 operator *(double v, Vector2 l) {
+            return l * v;
+        }
+
         public static Vector2 operator /(Vector2 l, float v) {
             return new Vector2(l.X / v, l.Y / v);
+        }
+
+        public static Vector2 operator /(Vector2 l, double v) {
+            return new Vector2((float) (l.X / v), (float) (l.Y / v));
         }
 
         #endregion Operators

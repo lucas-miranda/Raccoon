@@ -12,7 +12,7 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private int _tileSetRows, _tileSetColumns;
-        private int[][] _data;
+        private uint[][] _data = new uint[0][];
 
         #endregion Private Members
 
@@ -20,7 +20,6 @@ namespace Raccoon.Graphics {
 
         public TileMap(string filename, Size tileSize) {
             TileSize = tileSize;
-            _data = new int[0][];
             Texture = new Texture(filename);
             Load();
         }
@@ -47,8 +46,8 @@ namespace Raccoon.Graphics {
             Rectangle clip = Clip.IsEmpty ? new Rectangle(0, 0, Columns - 1, Rows - 1) : Clip;
             for (int y = (int) clip.Top; y <= (int) clip.Bottom; y++) {
                 for (int x = (int) clip.Left; x < _data[y].Length && x <= (int) clip.Right; x++) {
-                    int gid = _data[y][x];
-                    if (gid < 0) {
+                    uint gid = _data[y][x];
+                    if (gid == 0) {
                         continue;
                     }
 
@@ -61,13 +60,12 @@ namespace Raccoon.Graphics {
                         flipped |= SpriteEffects.FlipVertically;
                     }
 
-                    gid &= (int) ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag); // clear flags
-                    
+                    int id = (int) (gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag)) - 1; // clear flags
                     Game.Instance.Core.SpriteBatch.Draw(
                         Texture.XNATexture,
                         Position + new Vector2(x * TileSize.Width, y * TileSize.Height),
                         null,
-                        new Microsoft.Xna.Framework.Rectangle((gid - (gid / _tileSetColumns) * _tileSetColumns) * (int) TileSize.Width, (gid / _tileSetColumns) * (int) TileSize.Height, (int) TileSize.Width, (int) TileSize.Height),
+                        new Microsoft.Xna.Framework.Rectangle((id - (id / _tileSetColumns) * _tileSetColumns) * (int) TileSize.Width, (id / _tileSetColumns) * (int) TileSize.Height, (int) TileSize.Width, (int) TileSize.Height),
                         null,
                         0,
                         null,
@@ -79,7 +77,7 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public void SetData(int[][] data) {
+        public void SetData(uint[][] data) {
             _data = data;
             int greaterRowSize = 0;
             for (int row = 0; row < _data.Length; row++) {
@@ -92,11 +90,11 @@ namespace Raccoon.Graphics {
             Rows = data.Length;
         }
 
-        public void SetData(int[,] data) {
+        public void SetData(uint[,] data) {
             int columns = data.GetLength(1);
-            int[][] newData = new int[data.GetLength(0)][];
+            uint[][] newData = new uint[data.GetLength(0)][];
             for (int row = 0; row < newData.Length; row++) {
-                newData[row] = new int[columns];
+                newData[row] = new uint[columns];
                 for (int column = 0; column < columns; column++) {
                     newData[row][column] = data[row, column];
                 }
@@ -108,14 +106,14 @@ namespace Raccoon.Graphics {
         }
 
         public void SetData(string csv, int columns, int rows) {
-            int[][] newData = new int[rows][];
+            uint[][] newData = new uint[rows][];
             for (int row = 0; row < newData.Length; row++) {
-                newData[row] = new int[columns];
+                newData[row] = new uint[columns];
             }
 
             int x = 0, y = 0;
             foreach (Match m in GidRegex.Matches(csv)) {
-                newData[y][x] = int.Parse(m.Value) - 1;
+                newData[y][x] = uint.Parse(m.Value);
                 x++;
                 if (x == columns) {
                     x = 0;
@@ -131,9 +129,13 @@ namespace Raccoon.Graphics {
             Rows = rows;
         }
 
-        public void SetTile(int x, int y, int gid) {
+        public void SetTile(int x, int y, uint gid) {
             StretchToFit(x, y);
             _data[y][x] = gid;
+        }
+
+        public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
+            SetTile(x, y, id | (flipped.HasFlag(ImageFlip.Horizontal) ? Tiled.TiledTile.FlippedHorizontallyFlag : 0) | (flipped.HasFlag(ImageFlip.Vertical) ? Tiled.TiledTile.FlippedVerticallyFlag : 0) | (flippedDiagonally ? Tiled.TiledTile.FlippedDiagonallyFlag : 0));
         }
 
         public bool ExistsTile(int x, int y) {
@@ -160,18 +162,18 @@ namespace Raccoon.Graphics {
 
         private void StretchToFit(int x, int y) {
             if (_data.Length <= y) {
-                int[][] currentData = _data;
-                _data = new int[y + 1][];
+                uint[][] currentData = _data;
+                _data = new uint[y + 1][];
                 currentData.CopyTo(_data, 0);
                 Rows = y + 1;
                 for (int row = currentData.Length; row < Rows; row++) {
-                    _data[row] = new int[0];
+                    _data[row] = new uint[0];
                 }
             }
 
             if (_data[y].Length <= x) {
-                int[] currentRowData = _data[y];
-                _data[y] = new int[x + 1];
+                uint[] currentRowData = _data[y];
+                _data[y] = new uint[x + 1];
                 currentRowData.CopyTo(_data[y], 0);
                 Columns = x + 1;
                 for (int column = currentRowData.Length; column < Columns; column++) {
@@ -186,10 +188,10 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            int[][] newData = new int[rows][];
+            uint[][] newData = new uint[rows][];
             for (int row = 0; row < rows; row++) {
                 if (_data[row].Length > columns) {
-                    newData[row] = new int[columns];
+                    newData[row] = new uint[columns];
                     _data[row].CopyTo(newData[row], rows);
                 } else {
                     _data[row] = newData[row];
@@ -204,17 +206,17 @@ namespace Raccoon.Graphics {
             }
 
             Rows = rows;
-            int[][] currentData = _data;
-            _data = new int[Rows][];
+            uint[][] currentData = _data;
+            _data = new uint[Rows][];
             currentData.CopyTo(_data, 0);
             for (int row = currentData.Length; row < Rows; row++) {
-                _data[row] = new int[0];
+                _data[row] = new uint[0];
             }
 
             Columns = columns;
             for (int row = 0; row < Rows; row++) {
-                int[] currentRowData = _data[row];
-                _data[row] = new int[Columns];
+                uint[] currentRowData = _data[row];
+                _data[row] = new uint[Columns];
                 currentRowData.CopyTo(_data[row], 0);
                 for (int column = currentRowData.Length; column < Columns; column++) {
                     _data[row][column] = 0;

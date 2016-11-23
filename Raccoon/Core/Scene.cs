@@ -22,6 +22,7 @@ namespace Raccoon {
 
         public List<Graphic> Graphics { get; protected set; }
         public List<Entity> Entities { get; protected set; }
+        public uint Timer { get; private set; }
 
         #endregion
 
@@ -38,12 +39,18 @@ namespace Raccoon {
         public void Add(Entity entity) {
             Entities.Add(entity);
             entity.OnAdded(this);
+            if (_started) {
+                entity.Start();
+            }
         }
         
         public void Add(IEnumerable<Entity> entities) {
             Entities.AddRange(entities);
             foreach (Entity e in entities) {
                 e.OnAdded(this);
+                if (_started) {
+                    e.Start();
+                }
             }
         }
 
@@ -113,6 +120,8 @@ namespace Raccoon {
         }
 
         public virtual void Update(int delta) {
+            Timer += (uint) delta;
+
             foreach (Graphic g in Graphics) {
                 g.Update(delta);
             }

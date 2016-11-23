@@ -66,7 +66,6 @@ namespace Raccoon.Tiled {
             }
         }
 
-        public TiledLayerType Type { get { return TiledLayerType.Tile; } }
         public string Name { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
@@ -74,6 +73,12 @@ namespace Raccoon.Tiled {
         public bool Visible { get; private set; }
         public Vector2 Offset { get; private set; }
         public Dictionary<string, TiledProperty> Properties { get; private set; }
+
+        public TiledTile[] this[int y] {
+            get {
+                return _tiles[y];
+            }
+        }
 
         public TiledTile this[int x, int y] {
             get {
