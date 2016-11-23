@@ -107,6 +107,7 @@
     <Compile Include="Util\Tiled\Tileset\TiledTilesetTile.cs" />
     <Compile Include="Util\Tiled\Tileset\TiledTileset.cs" />
     <Compile Include="Util\Time.cs" />
+    <Compile Include="Util\Tween\Ease.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
