@@ -4,7 +4,7 @@ namespace Raccoon {
     public static class Routine {
         public static IEnumerator Wait(float seconds) {
             int elapsedTime = 0;
-            int miliseconds = (int) (seconds * Time.SecToMili);
+            int miliseconds = (int) (seconds * Util.Time.SecToMili);
             while (elapsedTime < miliseconds) {
                 elapsedTime += Game.Instance.DeltaTime;
                 yield return 0;

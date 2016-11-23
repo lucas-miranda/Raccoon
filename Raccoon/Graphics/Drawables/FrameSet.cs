@@ -39,7 +39,7 @@
             }
 
             set {
-                _currentFrame = (int) Math.Clamp(value, 0, FrameCount - 1);
+                _currentFrame = (int) Util.Math.Clamp(value, 0, FrameCount - 1);
                 UpdateClippingRegion();
             }
         }

@@ -21,7 +21,7 @@
             if (!Playing)
                 return;
 
-            float deltaSec = delta * Raccoon.Time.MiliToSec;
+            float deltaSec = delta * Util.Time.MiliToSec;
             ElapsedTime += deltaSec;
             if (Reverse) {
                 Time -= deltaSec;

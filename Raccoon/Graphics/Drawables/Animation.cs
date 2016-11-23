@@ -245,7 +245,7 @@ namespace Raccoon.Graphics {
 
             public int[] Frames { get; private set; }
             public int[] Durations { get; private set; }
-            public int CurrentFrameIndex { get { return _currentFrameIndex; } set { _currentFrameIndex = Math.Clamp(value, 0, Frames.Length - 1); } }
+            public int CurrentFrameIndex { get { return _currentFrameIndex; } set { _currentFrameIndex = Util.Math.Clamp(value, 0, Frames.Length - 1); } }
             public int CurrentFrameDuration { get { return Durations[CurrentFrameIndex]; } }
             public int CurrentSpriteID { get { return Frames[CurrentFrameIndex]; } }
             public int RepeatTimes { get; set; }

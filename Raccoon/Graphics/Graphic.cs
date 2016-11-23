@@ -49,7 +49,7 @@
             }
 
             set {
-                _opacity = Math.Clamp(value, 0, 1);
+                _opacity = Util.Math.Clamp(value, 0, 1);
                 FinalColor = Color * _opacity;
             }
         }

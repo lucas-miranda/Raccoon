@@ -60,10 +60,10 @@ namespace Raccoon.Graphics {
         }
 
         public Color(float r, float g, float b, float a = 1f) {
-            R = (byte) Math.Clamp(r * 255, byte.MinValue, byte.MaxValue);
-            G = (byte) Math.Clamp(g * 255, byte.MinValue, byte.MaxValue);
-            B = (byte) Math.Clamp(b * 255, byte.MinValue, byte.MaxValue);
-            A = (byte) Math.Clamp(a * 255, byte.MinValue, byte.MaxValue);
+            R = (byte) Util.Math.Clamp(r * 255, byte.MinValue, byte.MaxValue);
+            G = (byte) Util.Math.Clamp(g * 255, byte.MinValue, byte.MaxValue);
+            B = (byte) Util.Math.Clamp(b * 255, byte.MinValue, byte.MaxValue);
+            A = (byte) Util.Math.Clamp(a * 255, byte.MinValue, byte.MaxValue);
         }
 
         #endregion Constructors
@@ -91,7 +91,7 @@ namespace Raccoon.Graphics {
         }
 
         public static Color Lerp(Color start, Color end, float t) {
-            return new Color(Math.Lerp(start.R, end.R, t), Math.Lerp(start.G, end.G, t), Math.Lerp(start.B, end.B, t), Math.Lerp(start.A, end.A, t));
+            return new Color(Util.Math.Lerp(start.R, end.R, t), Util.Math.Lerp(start.G, end.G, t), Util.Math.Lerp(start.B, end.B, t), Util.Math.Lerp(start.A, end.A, t));
         }
 
         #endregion Public Static Methods

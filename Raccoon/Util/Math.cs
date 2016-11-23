@@ -1,6 +1,9 @@
-﻿namespace Raccoon {
+﻿namespace Raccoon.Util {
     public static class Math {
         public const float PI = Microsoft.Xna.Framework.MathHelper.Pi;
+        public const float HalfPI = PI / 2;
+        public const float ThirdPI = PI / 3;
+        public const float FourthPI = PI / 4;
         public static readonly float RadToDeg = 180.0f / PI;
         public static readonly float DegToRad = PI / 180.0f;
 
@@ -10,6 +13,18 @@
 
         public static float ToDegrees(float rad) {
             return rad * RadToDeg;
+        }
+
+        public static float Sin(float deg) {
+            return (float) System.Math.Sin(deg * DegToRad);
+        }
+
+        public static float Cos(float deg) {
+            return (float) System.Math.Cos(deg * DegToRad);
+        }
+
+        public static float Tan(float deg) {
+            return (float) System.Math.Tan(deg * DegToRad);
         }
 
         public static float Angle(float x1, float y1, float x2, float y2) {
@@ -61,6 +76,10 @@
 
         public static int Max(int n1, int n2) {
             return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
+        }
+
+        public static float Distance(float from, float to) {
+            return System.Math.Abs(to - from);
         }
     }
 }

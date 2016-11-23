@@ -25,7 +25,7 @@
         #region Public Properties
 
         public float Diameter { get { return Radius * 2; } }
-        public float Circumference { get { return 2 * Math.PI * Radius; } }
+        public float Circumference { get { return 2 * Util.Math.PI * Radius; } }
         public float Top { get { return Center.Y - Radius; } }
         public float Right { get { return Center.X + Radius; } }
         public float Bottom { get { return Center.Y + Radius; } }
