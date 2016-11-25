@@ -90,6 +90,7 @@ namespace Raccoon {
             OnBegin?.Invoke();
             OnBegin = null;
 
+            Util.Tween.Tweener.Instance.Start();
             base.LoadContent();
         }
 
@@ -113,6 +114,7 @@ namespace Raccoon {
             // updates
             Input.Mouse.Instance.Update(delta);
             Coroutine.Instance.Update(delta);
+            Util.Tween.Tweener.Instance.Update(delta);
             OnBeforeUpdate?.Invoke();
             OnUpdate?.Invoke(delta);
             OnLateUpdate?.Invoke();
