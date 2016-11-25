@@ -309,7 +309,7 @@ namespace Raccoon.Graphics {
 
             public Track PingPong() {
                 IsPingPong = true;
-                RepeatTimes = 1;
+                if (RepeatTimes == 0) RepeatTimes = 1;
                 return this;
             }
 

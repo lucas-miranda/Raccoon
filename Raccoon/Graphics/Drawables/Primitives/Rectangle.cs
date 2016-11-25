@@ -21,6 +21,19 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Properties
 
+        public Texture Texture { get; private set; }
+
+        public Raccoon.Rectangle Rect {
+            get {
+                return new Raccoon.Rectangle(Position, Size);
+            }
+
+            set {
+                Position = value.Position;
+                Size = value.Size;
+            }
+        }
+
         public new Size Size {
             get {
                 return base.Size;
@@ -56,8 +69,6 @@ namespace Raccoon.Graphics.Primitives {
                 NeedsReload = true;
             }
         }
-
-        public Texture Texture { get; private set; }
 
         #endregion Public Properties
 

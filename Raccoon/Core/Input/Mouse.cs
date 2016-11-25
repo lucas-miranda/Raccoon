@@ -84,7 +84,7 @@ namespace Raccoon.Input {
         internal void Update(int delta) {
             MouseState state = Microsoft.Xna.Framework.Input.Mouse.GetState();
             ScreenPosition = new Vector2(state.X, state.Y);
-            GamePosition = new Vector2(Util.Math.Clamp(ScreenPosition.X - Game.Instance.X, 0, Game.Instance.ScreenWidth) / Game.Instance.Scale, Util.Math.Clamp(ScreenPosition.Y - Game.Instance.Y, 0, Game.Instance.ScreenHeight) / Game.Instance.Scale);
+            GamePosition = new Vector2(Util.Math.Clamp(ScreenPosition.X - Game.Instance.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(ScreenPosition.Y - Game.Instance.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
 
             buttons[Button.Left] = state.LeftButton;
             buttons[Button.Middle] = state.MiddleButton;
