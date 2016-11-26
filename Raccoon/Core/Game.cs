@@ -58,6 +58,9 @@ namespace Raccoon {
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
         public bool IsFixedTimeStep { get { return Core.IsFixedTimeStep; } }
+        public bool VSync { get { return Core.Graphics.SynchronizeWithVerticalRetrace; } set { Core.Graphics.SynchronizeWithVerticalRetrace = value; } }
+        public bool IsFullscreen { get { return Core.Graphics.IsFullScreen; } set { Core.Graphics.IsFullScreen = value; } }
+        public bool IsMouseVisible { get { return Core.IsMouseVisible; } set { Core.IsMouseVisible = value; } }
         public string Title { get { return Core.Title; } set { Core.Title = value; } }
         public string ContentDirectory { get { return Core.Content.RootDirectory; } set { Core.Content.RootDirectory = value; } }
         public int DeltaTime { get { return Core.DeltaTime; } }
@@ -225,9 +228,13 @@ namespace Raccoon {
             SwitchScene(typeof(T).Name.Replace("Scene", ""));
         }
 
+        public void ToggleFullscreen() {
+            Core.Graphics.ToggleFullScreen();
+        }
+
 #endregion
 
-#region Protected Methods
+        #region Protected Methods
 
         protected void Update(int delta) {
             OnUpdate?.Invoke(delta);
@@ -248,6 +255,6 @@ namespace Raccoon {
             }
         }
 
-#endregion
+        #endregion
     }
 }
