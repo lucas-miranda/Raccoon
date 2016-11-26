@@ -9,8 +9,9 @@ namespace Raccoon {
         #region Private Members
 
         private string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
-        private Matrix _screenTransform = Matrix.Identity;
+        private Matrix _screenTransform = Matrix.Identity, _debugScreenTransform = Matrix.Identity, _scaleTransform = Matrix.Identity;
         private int _fpsCount, _fps;
+        private float _scale;
         private TimeSpan _lastFpsTime;
         private RenderTarget2D _mainRenderTarget;
 
@@ -56,9 +57,21 @@ namespace Raccoon {
         public Graphics.Font StdFont { get; private set; }
         public TimeSpan Time { get; private set; }
         public int DeltaTime { get; private set; }
-        public float Scale { get; set; }
         public Color BackgroundColor { get; set; }
         public string Title { get; set; }
+        public Matrix ScreenTransform { get { return _screenTransform; } set { _screenTransform = value; } }
+        public Matrix ScreenDebugTransform { get { return _debugScreenTransform; } set { _debugScreenTransform = value; } }
+
+        public float Scale {
+            get {
+                return _scale;
+            }
+
+            set {
+                _scale = value;
+                _scaleTransform = Matrix.CreateScale(_scale, _scale, 1);
+            }
+        }
 
         #endregion Public Properties
 
@@ -74,7 +87,6 @@ namespace Raccoon {
         #region Protected Methods
 
         protected override void Initialize() {
-            Matrix.CreateScale(Scale, Scale, 1, out _screenTransform);
             base.Initialize();
         }
 
@@ -105,8 +117,12 @@ namespace Raccoon {
 
         protected override void Update(GameTime gameTime) {
             Time = gameTime.TotalGameTime;
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+
+#if DEBUG
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) {
                 Exit();
+            }
+#endif
 
             int delta = gameTime.ElapsedGameTime.Milliseconds;
             DeltaTime = delta;
@@ -135,7 +151,7 @@ namespace Raccoon {
             // game render
             GraphicsDevice.SetRenderTarget(_mainRenderTarget);
             Graphics.GraphicsDevice.Clear(BackgroundColor);
-            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenTransform);
             OnRender?.Invoke();
             SpriteBatch.End();
             GraphicsDevice.SetRenderTarget(null);
@@ -146,16 +162,16 @@ namespace Raccoon {
 
             // draw main render target to screen
             Graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1f, 0);
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _screenTransform);
+            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _scaleTransform);
             SpriteBatch.Draw(_mainRenderTarget, Microsoft.Xna.Framework.Vector2.Zero);
             SpriteBatch.End();
 
 #if DEBUG
             // debug render
             if (Game.Instance.DebugMode) {
-                SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenDebugTransform);
                 OnDebugRender?.Invoke();
-                SpriteBatch.DrawString(StdFont.SpriteFont, string.Format("Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount), new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), Raccoon.Graphics.Color.White);
+                Debug.DrawString(false, new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
                 SpriteBatch.End();
             }
 #endif

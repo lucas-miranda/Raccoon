@@ -39,12 +39,16 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public override void Update(int delta) {
+            if (Game.Instance.Scene != null) {
+                Camera camera = Game.Instance.Scene.Camera;
+                Clip = new Rectangle(System.Math.Max(0, (int) System.Math.Floor(camera.X / TileSize.Width)), System.Math.Max(0, (int) System.Math.Floor(camera.Y / TileSize.Height)), System.Math.Min(Columns - 1, (int) System.Math.Floor(camera.Width / TileSize.Width)), System.Math.Min(Rows - 1, (int) System.Math.Floor(camera.Height / TileSize.Height)));
+            }
         }
 
         public override void Render() {
             // TODO: draw tiles using vertices
             Rectangle clip = Clip.IsEmpty ? new Rectangle(0, 0, Columns - 1, Rows - 1) : Clip;
-            for (int y = (int) clip.Top; y <= (int) clip.Bottom; y++) {
+            for (int y = (int) clip.Top; y < _data.Length && y <= (int) clip.Bottom; y++) {
                 for (int x = (int) clip.Left; x < _data[y].Length && x <= (int) clip.Right; x++) {
                     uint gid = _data[y][x];
                     if (gid == 0) {

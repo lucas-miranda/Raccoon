@@ -20,7 +20,7 @@ namespace Raccoon.Components {
             }
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1, Color, false);
+            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false);
             _graphicNeedUpdate = false;
 #endif
         }
@@ -45,17 +45,21 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            if (_graphicNeedUpdate) {
-                (Graphic as Graphics.Primitives.Rectangle).Size = new Size(TileSize.Width * Game.Instance.Scale + 1, TileSize.Height * Game.Instance.Scale + 1);
+            Size graphicSize = new Size((float) Math.Floor(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1), (float) Math.Floor(TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1));
+            if (_graphicNeedUpdate || Graphic.Size != graphicSize) {
+                (Graphic as Graphics.Primitives.Rectangle).Size = graphicSize;
                 _graphicNeedUpdate = false;
             }
 
-            for (int y = 0; y < Rows; y++) {
-                for (int x = 0; x < Columns; x++) {
+
+            Scene scene = Game.Instance.Scene;
+            Rectangle clip = scene == null ? new Rectangle(0, 0, Rows, Columns) : new Rectangle(Math.Max(0, (int) Math.Floor(scene.Camera.X / TileSize.Width)), Math.Max(0, (int) Math.Floor(scene.Camera.Y / TileSize.Height)), Math.Min(Columns - 1, (int) Math.Floor(scene.Camera.Width / TileSize.Width)), Math.Min(Rows - 1, (int) Math.Floor(scene.Camera.Height / TileSize.Height)));
+            for (int y = (int) clip.Top; y < _data.GetLength(0) && y <= (int) clip.Bottom; y++) {
+                for (int x = (int) clip.Left; x < _data.GetLength(1) && x <= (int) clip.Right; x++) {
                     if (!_data[y, x])
                         continue;
 
-                    Graphic.Position = Position * Game.Instance.Scale + new Vector2(x * TileSize.Width * Game.Instance.Scale, y * TileSize.Height * Game.Instance.Scale);
+                    Graphic.Position = Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + new Vector2(x * TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, y * TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom);
                     Graphic.Color = Color;
                     Graphic.Layer = Entity.Layer + (_data[y, x] ? 2 : 1);
                     Graphic.Render();

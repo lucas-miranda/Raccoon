@@ -88,23 +88,23 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, Graphics.Color color, string message) {
-            Game.Instance.Core.SpriteBatch.DrawString(Game.Instance.Core.StdFont.SpriteFont, message, position, color);
+        public static void DrawString(bool allowCameraScroll, Vector2 position, Graphics.Color color, string message) {
+            Game.Instance.Core.SpriteBatch.DrawString(Game.Instance.Core.StdFont.SpriteFont, message, (!allowCameraScroll && Game.Instance.Scene != null ? Game.Instance.Scene.Camera.Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + position : position * Game.Instance.Scene.Camera.Zoom), color);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, string message) {
-            DrawString(position, Graphics.Color.White, message);
+        public static void DrawString(bool allowCameraScroll, Vector2 position, string message) {
+            DrawString(allowCameraScroll, position, Graphics.Color.White, message);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, Graphics.Color color, string format, params object[] args) {
-            DrawString(position, color, string.Format(format, args));
+        public static void DrawString(bool allowCameraScroll, Vector2 position, Graphics.Color color, string format, params object[] args) {
+            DrawString(allowCameraScroll, position, color, string.Format(format, args));
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, string format, params object[] args) {
-            DrawString(position, Graphics.Color.White, format, args);
+        public static void DrawString(bool allowCameraScroll, Vector2 position, string format, params object[] args) {
+            DrawString(allowCameraScroll, position, Graphics.Color.White, format, args);
         }
 
         [Conditional("DEBUG")]

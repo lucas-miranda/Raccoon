@@ -14,6 +14,7 @@ namespace Raccoon {
         public Scene() {
             Graphics = new List<Graphic>();
             Entities = new List<Entity>();
+            Camera = new Camera();
         }
 
         #endregion
@@ -23,6 +24,7 @@ namespace Raccoon {
         public List<Graphic> Graphics { get; protected set; }
         public List<Entity> Entities { get; protected set; }
         public uint Timer { get; private set; }
+        public Camera Camera { get; set; }
 
         #endregion
 

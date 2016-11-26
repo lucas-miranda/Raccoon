@@ -25,15 +25,15 @@ namespace Raccoon {
         #region Constructor
 
         public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFPS = 60, bool fullscreen = false) {
-            Instance = this;
             Console.Title = "Raccoon Debug";
-            Scenes = new Dictionary<string, Scene>();
-            ScreenWidth = width;
-            ScreenHeight = height;
-            IsRunning = false;
             Core = new Core(title, width, height, targetFPS, fullscreen);
             Core.OnUpdate += Update;
             Core.OnRender += Render;
+            Scenes = new Dictionary<string, Scene>();
+            Width = width;
+            Height = height;
+            IsRunning = false;
+            Instance = this;
         }
 
         ~Game() {
@@ -58,12 +58,10 @@ namespace Raccoon {
         public int DeltaTime { get { return Core.DeltaTime; } }
         public int X { get { return Core.Window.Position.X; } }
         public int Y { get { return Core.Window.Position.Y; } }
-        public int ScreenWidth { get; private set; }
-        public int ScreenHeight { get; private set; }
-        public int WindowWidth { get { return Core.Graphics.PreferredBackBufferWidth; } }
-        public int WindowHeight { get { return Core.Graphics.PreferredBackBufferHeight; } }
-        public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
-        public Size WindowSize { get { return new Size(WindowWidth, WindowHeight); } }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int ScreenWidth { get { return Core.Graphics.PreferredBackBufferWidth; } }
+        public int ScreenHeight { get { return Core.Graphics.PreferredBackBufferHeight; } }
         public Dictionary<string, Scene> Scenes { get; private set; }
         public Scene Scene { get; private set; }
 
@@ -78,8 +76,8 @@ namespace Raccoon {
                 }
 
                 Core.Scale = value;
-                ScreenWidth = (int) Math.Ceiling(WindowWidth / Scale);
-                ScreenHeight = (int) Math.Ceiling(WindowHeight / Scale);
+                Width = (int) System.Math.Ceiling(ScreenWidth / Scale);
+                Height = (int) System.Math.Ceiling(ScreenHeight / Scale);
             }
         }
 

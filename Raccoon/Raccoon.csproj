@@ -41,6 +41,7 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Colliders\Collider.cs" />
     <Compile Include="Core\Components\Colliders\BoxCollider.cs" />
     <Compile Include="Core\Components\Colliders\GridCollider.cs" />

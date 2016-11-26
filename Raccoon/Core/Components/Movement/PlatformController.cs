@@ -170,7 +170,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            Debug.DrawString(new Vector2(5, 30), @"- Platform Movement -
+            Debug.DrawString(false, new Vector2(5, 30), @"- Platform Movement -
 Axis: {0}
 Speed: {1}
 OnGround: {2}, OnAir: {3}
