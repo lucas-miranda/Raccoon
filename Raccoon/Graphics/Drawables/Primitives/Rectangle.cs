@@ -27,14 +27,15 @@ namespace Raccoon.Graphics.Primitives {
             }
 
             set {
-                base.Size = value;
-                if (!Filled) {
+                if (!Filled && Size != value) {
                     if (Texture != null) {
                         Texture.Dispose();
                     }
 
                     NeedsReload = true;
                 }
+
+                base.Size = value;
             }
         }
         

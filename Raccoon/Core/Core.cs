@@ -32,7 +32,7 @@ namespace Raccoon {
 
         #region Constructor
 
-        public Core(string title, int width, int height, int targetFPS, bool fullscreen) {
+        public Core(string title, int width, int height, int targetFPS, bool fullscreen, bool vsync) {
             Title = title;
             Window.Title = string.Format(_windowTitleDetailed, Title, 0, GC.GetTotalMemory(false) / 1048576f);
             Content.RootDirectory = "Content";
@@ -44,7 +44,8 @@ namespace Raccoon {
                 PreferredBackBufferWidth = width,
                 PreferredBackBufferHeight = height,
                 IsFullScreen = fullscreen,
-                PreferMultiSampling = false
+                PreferMultiSampling = false,
+                SynchronizeWithVerticalRetrace = vsync
             };
         }
 
@@ -92,7 +93,7 @@ namespace Raccoon {
 
         protected override void LoadContent() {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
-            _mainRenderTarget = new RenderTarget2D(GraphicsDevice, Game.Instance.Width, Game.Instance.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
+            _mainRenderTarget = new RenderTarget2D(GraphicsDevice, Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
 
             // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
