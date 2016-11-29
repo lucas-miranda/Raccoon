@@ -1,63 +1,47 @@
-﻿using Microsoft.Xna.Framework.Input;
-
-namespace Raccoon.Input {
+﻿namespace Raccoon.Input {
     public class Button {
-        public Button() {
-            Key = Key.None;
-            JoystickId = -1;
-            Pressed = Down = false;
-            Released = true;
-        }
+        private bool _forceState;
 
-        public Button(Key key) : this() {
+        public Button() { }
+
+        public Button(Key key) {
             Key = key;
         }
 
-        public Button(int joystickId) : this() {
+        public Button(int joystickId, int joystickButtonId) {
             JoystickId = joystickId;
+            JoystickButtonId = joystickButtonId;
         }
 
-        public Key Key { get; private set; }
-        public int JoystickId { get; private set; }
-        public bool Down { get; protected set; }
-        public bool Pressed { get; protected set; }
-        public bool Released { get; protected set; }
+        public Key Key { get; set; } = Key.None;
+        public int JoystickId { get; set; } = -1;
+        public int JoystickButtonId { get; set; } = -1;
+        public bool IsDown { get; protected set; }
+        public bool IsPressed { get; protected set; }
+        public bool IsReleased { get; protected set; } = true;
 
-        internal void UpdateKeys(KeyboardState keyboardState) {
-            Update(keyboardState[(Keys) Key] == KeyState.Down);
-        }
-
-        internal void UpdateJoys(JoystickState joystickState) {
-            if (JoystickId < 0)
-                return;
-
-            Update(joystickState.Buttons[JoystickId] == ButtonState.Pressed);
-        }
-
-        internal void Update(bool down) {
-            if (down) {
-                if (Released) {
-                    Pressed = Down = true;
-                    Released = false;
-                } else if (Pressed) {
-                    Pressed = false;
+        public virtual void Update() {
+            if (_forceState || (Key != Key.None && Input.IsKeyDown(Key)) || (JoystickId > -1 && Input.IsJoyButtonDown(JoystickId, JoystickButtonId))) {
+                if (IsReleased) {
+                    IsPressed = IsDown = true;
+                    IsReleased = false;
+                } else if (IsPressed) {
+                    IsPressed = false;
                 }
             } else {
-                if (!Released) {
-                    Released = true;
-                    Pressed = Down = false;
+                if (!IsReleased) {
+                    IsReleased = true;
+                    IsPressed = IsDown = false;
                 }
             }
         }
 
-        public void SetState(bool down, bool pressed, bool released) {
-            Down = down;
-            Pressed = pressed;
-            Released = released;
+        public void ForceState(bool pressed) {
+            _forceState = pressed;
         }
 
         public override string ToString() {
-            return $"[Button | Key: {Key} |{(Released ? " Released" : " ") + (Pressed ? " Pressed" : "") + (Down ? " Down" : "")}]";
+            return $"[Button |" + (Key != Key.None ? $" Key: {Key}" : " ") + (JoystickId != -1 && JoystickButtonId != -1 ? $" JoystickId: {JoystickId} JoystickButtonId: {JoystickButtonId}" : "") + $" |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
         }
     }
 }

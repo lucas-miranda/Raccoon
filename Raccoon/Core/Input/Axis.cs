@@ -1,65 +1,91 @@
-﻿using Microsoft.Xna.Framework.Input;
-
-namespace Raccoon.Input {
+﻿namespace Raccoon.Input {
     public class Axis {
-        private bool usingButtons;
-        
-        public Axis(float deadzone = 0f) {
+        private float _forceX, _forceY;
+        private bool _forceState;
+
+        public Axis(float deadzone = 0.1f) {
             DeadZone = deadzone;
-            JoystickId = null;
-            usingButtons = false;
         }
 
-        public Axis(Button up, Button right, Button down, Button left) : this() {
+        public Axis(Button up, Button right, Button down, Button left) {
             Up = up;
             Right = right;
             Down = down;
             Left = left;
-            usingButtons = true;
         }
 
-        public Axis(int[] joystickId, float deadzone = 0f) : this(deadzone) {
+        public Axis(int joystickId, int joystickHorizontalAxisId, int joystickVerticalAxisId, float deadzone = 0.1f) : this(deadzone) {
             JoystickId = joystickId;
+            JoystickAxesIds = new int[] { joystickHorizontalAxisId, joystickVerticalAxisId };
         }
 
-        public int[] JoystickId { get; private set; }
-        public float X { get; private set; }
-        public float Y { get; private set; }
-        public float DeadZone { get; set; }
-        public Button Up { get; protected set; }
-        public Button Right { get; protected set; }
-        public Button Down { get; protected set; }
-        public Button Left { get; protected set; }
+        public int JoystickId { get; set; } = -1;
+        public int[] JoystickAxesIds { get; set; }
+        public float X { get; protected set; }
+        public float Y { get; protected set; }
+        public float DeadZone { get; set; } = 0.1f;
+        public Button Up { get; set; }
+        public Button Right { get; set; }
+        public Button Down { get; set; }
+        public Button Left { get; set; }
+        public Vector2 Value { get { return new Vector2(X, Y); } }
 
-        internal void UpdateKeys(KeyboardState keyboardState) {
-            if (!usingButtons)
-                return;
+        public virtual void Update() {
+            X = Y = 0;
 
-            Up.UpdateKeys(keyboardState);
-            Right.UpdateKeys(keyboardState);
-            Down.UpdateKeys(keyboardState);
-            Left.UpdateKeys(keyboardState);
-            Update((Right.Down ? 1 : 0) + (Left.Down ? -1 : 0), (Up.Down ? 1 : 0) + (Down.Down ? -1 : 0));
-        }
+            if (_forceState) {
+                X = _forceX;
+                Y = _forceY;
+            } else {
+                // buttons
+                if (Left != null) {
+                    Left.Update();
+                    if (Left.IsDown) {
+                        X = -1;
+                    }
+                }
 
-        internal void UpdateJoys(JoystickState joystickState) {
-            if (JoystickId == null)
-                return;
+                if (Right != null) {
+                    Right.Update();
+                    if (Right.IsDown) {
+                        X += 1;
+                    }
+                }
 
-            Update(joystickState.Axes[JoystickId[0]], joystickState.Axes[JoystickId[1]]);
-        }
+                if (Up != null) {
+                    Up.Update();
+                    if (Up.IsDown) {
+                        Y = -1;
+                    }
+                }
 
-        internal void Update(float x, float y) {
-            if (DeadZone > 0) {
-                Vector2 axisVector = new Vector2(x, y);
-                if (axisVector.LengthSquared() < DeadZone * DeadZone) {
-                    x = 0;
-                    y = 0;
+                if (Down != null) {
+                    Down.Update();
+                    if (Down.IsDown) {
+                        Y += 1;
+                    }
+                }
+
+                // joystick axes
+                if (JoystickId > -1) {
+                    X += Input.JoyAxisValue(JoystickId, JoystickAxesIds[0]);
+                    Y += Input.JoyAxisValue(JoystickId, JoystickAxesIds[1]);
                 }
             }
 
-            X = x;
-            Y = y;
+            // deadzone
+            if (DeadZone > 0 && Value.LengthSquared() <= DeadZone * DeadZone) {
+                X = Y = 0;
+            }
+
+            X = Util.Math.Clamp(X, -1, 1);
+            Y = Util.Math.Clamp(Y, -1, 1);
+        }
+
+        public void ForceState(float x, float y) {
+            _forceState = true;
+            _forceX = x;
+            _forceY = y;
         }
 
         public override string ToString() {

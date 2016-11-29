@@ -129,12 +129,12 @@ namespace Raccoon {
             DeltaTime = delta;
 
             // updates
-            Input.Mouse.Instance.Update(delta);
+            Input.Input.Instance.Update(delta);
             Coroutine.Instance.Update(delta);
-            Util.Tween.Tweener.Instance.Update(delta);
             OnBeforeUpdate?.Invoke();
             OnUpdate?.Invoke(delta);
             OnLateUpdate?.Invoke();
+            Util.Tween.Tweener.Instance.Update(delta);
             
             // fps
             _fpsCount++;

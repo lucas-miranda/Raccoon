@@ -58,9 +58,11 @@
     <Compile Include="Core\Entity.cs" />
     <Compile Include="Core\Input\Axis.cs" />
     <Compile Include="Core\Input\Button.cs" />
+    <Compile Include="Core\Input\Input.cs" />
     <Compile Include="Core\Input\Key.cs" />
     <Compile Include="Core\Input\Controller.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
+    <Compile Include="Core\Input\Trigger.cs" />
     <Compile Include="Core\Input\XboxController.cs" />
     <Compile Include="Core\Physics.cs" />
     <Compile Include="Core\Routine.cs" />

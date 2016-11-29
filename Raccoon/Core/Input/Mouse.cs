@@ -17,22 +17,24 @@ namespace Raccoon.Input {
 
         #region Private Static Members
 
-        private static Mouse instance;
+        private static readonly Mouse _instance = new Mouse();
 
         #endregion Private Static Members
 
         #region Private Members
 
-        private Dictionary<Button, ButtonState> buttons;
+        private Dictionary<Button, ButtonState> _buttonsState, _buttonsLastState;
 
         #endregion Private Members
 
         #region Constructors
 
         private Mouse() {
-            buttons = new Dictionary<Button, ButtonState>();
+            _buttonsState = new Dictionary<Button, ButtonState>();
+            _buttonsLastState = new Dictionary<Button, ButtonState>();
             foreach (Button id in System.Enum.GetValues(typeof(Button))) {
-                buttons[id] = ButtonState.Released;
+                _buttonsState[id] = ButtonState.Released;
+                _buttonsLastState[id] = ButtonState.Released;
             }
         }
 
@@ -40,60 +42,57 @@ namespace Raccoon.Input {
 
         #region Public Static Properties
 
-        public static Mouse Instance {
-            get {
-                if (instance == null) {
-                    instance = new Mouse();
-                }
-
-                return instance;
-            }
-        }
-
-        #endregion Public Static Properties
-
-        #region Public Properties
-
-        public Vector2 ScreenPosition { get; private set; }
-        public int ScreenX { get { return (int) ScreenPosition.X; } }
-        public int ScreenY { get { return (int) ScreenPosition.Y; } }
-        public Vector2 GamePosition { get; private set; }
-        public int GameX { get { return (int) GamePosition.X; } }
-        public int GameY { get { return (int) GamePosition.Y; } }
-        public int X { get { return GameX; } }
-        public int Y { get { return GameY; } }
-        public int ScrollWheel { get; private set; }
-        public int ScrollWheelDelta { get; private set; }
+        public static Mouse Instance { get { return _instance; } }
+        public static Vector2 ScreenPosition { get; private set; }
+        public static Vector2 Position { get; private set; }
+        public static float ScreenX { get { return ScreenPosition.X; } }
+        public static float ScreenY { get { return ScreenPosition.Y; } }
+        public static float X { get { return Position.X; } }
+        public static float Y { get { return Position.Y; } }
+        public static int ScrollWheel { get; private set; }
+        public static int ScrollWheelDelta { get; private set; }
 
         #endregion Public Properties
 
-        #region Public Methods
+        #region Public Static Methods
 
-        public bool IsButtonDown(Button button) {
-            return buttons[button] == ButtonState.Pressed;
+        public static bool IsButtonPressed(Button button) {
+            return _instance._buttonsLastState[button] == ButtonState.Released && _instance._buttonsState[button] == ButtonState.Pressed;
         }
 
-        public bool IsButtonReleased(Button button) {
-            return buttons[button] == ButtonState.Released;
+        public static bool IsButtonDown(Button button) {
+            return _instance._buttonsState[button] == ButtonState.Pressed;
+        }
+
+        public static bool IsButtonReleased(Button button) {
+            return _instance._buttonsState[button] == ButtonState.Released;
         }
 
         #endregion Public Methods
 
-        #region Internal Methods
+        #region Public Methods
 
-        internal void Update(int delta) {
-            MouseState state = Microsoft.Xna.Framework.Input.Mouse.GetState();
-            ScreenPosition = new Vector2(state.X, state.Y);
-            GamePosition = new Vector2(Util.Math.Clamp(ScreenPosition.X - Game.Instance.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(ScreenPosition.Y - Game.Instance.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+        public void Update() {
+            MouseState mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
 
-            buttons[Button.Left] = state.LeftButton;
-            buttons[Button.Middle] = state.MiddleButton;
-            buttons[Button.Right] = state.RightButton;
-            buttons[Button.M4] = state.XButton1;
-            buttons[Button.M5] = state.XButton2;
+            // positions
+            ScreenPosition = new Vector2(mouseState.X, mouseState.Y);
+            Position = new Vector2(Util.Math.Clamp(mouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(mouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
 
-            ScrollWheelDelta = state.ScrollWheelValue - ScrollWheel;
-            ScrollWheel = state.ScrollWheelValue;
+            // buttons
+            foreach (KeyValuePair<Button, ButtonState> button in _buttonsState) {
+                _buttonsLastState[button.Key] = button.Value;
+            }
+
+            _buttonsState[Button.Left] = mouseState.LeftButton;
+            _buttonsState[Button.Middle] = mouseState.MiddleButton;
+            _buttonsState[Button.Right] = mouseState.RightButton;
+            _buttonsState[Button.M4] = mouseState.XButton1;
+            _buttonsState[Button.M5] = mouseState.XButton2;
+
+            // scroll
+            ScrollWheelDelta = mouseState.ScrollWheelValue - ScrollWheel;
+            ScrollWheel = mouseState.ScrollWheelValue;
         }
 
         #endregion Internal Methods

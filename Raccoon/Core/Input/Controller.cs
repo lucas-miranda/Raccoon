@@ -1,139 +1,105 @@
 ﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace Raccoon.Input {
-    public enum PlayStationLabel {
+    /*public enum PlayStationLabel {
         Triangle, Square, Circle, Cross,
         L1, R1, L2, R2, L3, R3,
         LeftStick, RightStick, DUp, DRight, DDown, DLeft,
         Select, Start, PS
-    }
-
-    public enum ControllerType {
-        None,
-        Keyboard,
-        Xbox,
-        PlayStation
-    }
+    }*/
 
     public class Controller {
-        private bool connected;
-        protected static Dictionary<int, Controller> controllers;
-        protected Dictionary<string, Axis> axes;
-        protected Dictionary<string, Button> buttons;
+        public event Action OnConnected, OnDisconnected;
 
-        public delegate void EventHandler();
-        public event EventHandler OnConnected;
-        public event EventHandler OnDisconnected;
+        private static int _nextAutoId;
 
-        static Controller() {
-            controllers = new Dictionary<int, Controller>();
-        }
+        private bool _wasConnected;
 
-        protected Controller(ControllerType type, int id) {
-            axes = new Dictionary<string, Axis>();
-            buttons = new Dictionary<string, Button>();
+        public Controller(int id) {
+            Axes = new Dictionary<string, Axis>();
+            Buttons = new Dictionary<string, Button>();
             Id = id;
-
-            if (controllers.ContainsKey(Id)) {
-                controllers[Id].Disconnect();
-            }
-
-            controllers[Id] = this;
-            Type = type;
+            _nextAutoId = id + 1;
         }
 
-        public Controller(int id) : this(ControllerType.Keyboard, id) {
-        }
+        public Controller() : this(_nextAutoId) { }
         
-        public ControllerType Type { get; protected set; }
         public int Id { get; protected set; }
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
+        public bool IsConnected { get { return Input.IsJoystickConnected(Id); } }
 
-        public bool Connected {
-            get { return connected; }
-            protected set {
-                connected = value;
-                if (connected) {
-                    if (OnConnected != null)
-                        OnConnected();
-                } else {
-                    if (OnDisconnected != null)
-                        OnDisconnected();
-                }
-            }
-        }
-
-        public static Controller Get(int id) {
-            return controllers[id];
-        }
+        protected Dictionary<string, Axis> Axes { get; set; }
+        protected Dictionary<string, Button> Buttons { get; set; }
         
-        public virtual void Update(int delta) {
-            if (!Enabled)
+        public virtual void Update() {
+            // connection events
+            if (!_wasConnected && IsConnected) {
+                OnConnected?.Invoke();
+            } else if (_wasConnected && !IsConnected) {
+                OnDisconnected?.Invoke();
+            }
+
+            _wasConnected = IsConnected;
+
+            if (!Enabled || !IsConnected) {
                 return;
-
-            KeyboardState state = Keyboard.GetState();
-            foreach (KeyValuePair<string, Axis> axis in axes) {
-                axis.Value.UpdateKeys(state);
             }
 
-            foreach (KeyValuePair<string, Button> btn in buttons) {
-                btn.Value.UpdateKeys(state);
-            }
-        }
-
-        public void Connect() {
-            if (Connected)
-                return;
-
-            if (controllers.ContainsKey(Id)) {
-                controllers[Id].Disconnect();
+            foreach (Button btn in Buttons.Values) {
+                btn.Update();
             }
 
-            controllers[Id] = this;
-            Enabled = true;
-            Connected = true;
-        }
-
-        public void Disconnect() {
-            Enabled = false;
-            Connected = false;
+            foreach (Axis axis in Axes.Values) {
+                axis.Update();
+            }
         }
 
         public Axis Axis(string label) {
-            return axes[label];
+            return Axes[label];
         }
 
-        public Axis Axis(System.Enum label) {
-            return axes[label.ToString()];
+        public Axis Axis(Enum label) {
+            return Axes[label.ToString()];
         }
 
         public Button Button(string label) {
-            return buttons[label];
+            return Buttons[label];
         }
 
-        public Button Button(System.Enum label) {
-            return buttons[label.ToString()];
+        public Button Button(Enum label) {
+            return Buttons[label.ToString()];
         }
 
         public void AddButton(string label, Button button) {
-            buttons[label] = button;
+            Buttons.Add(label, button);
         }
 
-        public void AddButton(System.Enum label, Button button) {
-            buttons[label.ToString()] = button;
+        public void AddButton(Enum label, Button button) {
+            AddButton(label.ToString(), button);
         }
 
         public void AddAxis(string label, Axis axis) {
-            axes[label] = axis;
+            Axes.Add(label, axis);
         }
 
-        public void AddAxis(System.Enum label, Axis axis) {
-            axes[label.ToString()] = axis;
+        public void AddAxis(Enum label, Axis axis) {
+            AddAxis(label.ToString(), axis);
         }
 
         public override string ToString() {
-            return $"[Controller | Id: {Id}, Connected? {Connected}]";
+            string s = $"[Controller | Id: {Id}, Connected? {IsConnected} ";
+            s += "| Axes:";
+            foreach (KeyValuePair<string, Axis> axis in Axes) {
+                s += " " + axis.Key + ": " + axis.Value;
+            }
+
+            s += "| Buttons:";
+            foreach (KeyValuePair<string, Button> button in Buttons) {
+                s += " " + button.Key + ": " + button.Value;
+            }
+
+            return s + "]";
         }
     }
 }
