@@ -69,6 +69,10 @@ namespace Raccoon.Util.Tween {
             _tweens.Add(tween);
         }
 
+        public void Remove(Tween tween) {
+            _tweens.Remove(tween);
+        }
+
         public void Play(Tween tween, bool forceReset = true) {
             if (!_tweens.Contains(tween)) {
                 _tweens.Add(tween);

@@ -289,6 +289,7 @@ namespace Raccoon.Graphics {
                         _onEnd?.Invoke();
                     } else {
                         HasEnded = true;
+                        _onEnd?.Invoke();
                         return;
                     }
                 } else {

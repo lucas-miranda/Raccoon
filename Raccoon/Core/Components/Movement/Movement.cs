@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Raccoon.Components {
     public abstract class Movement : Component {
         private float _moveUpdateTime;
-        private Vector2 _axis, _nextAxis;
+        private Vector2 _nextAxis;
     
         public Movement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) {
             CollisionTags = new List<string>();
@@ -19,7 +19,8 @@ namespace Raccoon.Components {
         public Vector2 MaxSpeed { get; set; }
         public Vector2 TargetSpeed { get; protected set; }
         public Vector2 Acceleration { get; set; }
-        public Vector2 Axis { get { return CanMove ? _axis : Vector2.Zero; } set { _axis = value; } }
+        public Vector2 Axis { get; set; }
+        public Vector2 LastAxis { get; protected set; }
         public float DragForce { get; set; } = 2f;
         public bool HorizontalAxisSnap { get; set; }
         public bool VerticalAxisSnap { get; set; }
@@ -29,14 +30,15 @@ namespace Raccoon.Components {
         protected List<string> CollisionTags { get; private set; }
         protected float MoveHorizontalBuffer { get; set; }
         protected float MoveVerticalBuffer { get; set; }
-        protected Vector2 LastAxis { get; set; }
 
         public override void Update(int delta) {
             Axis = _nextAxis;
-            _moveUpdateTime += delta;
-            while (_moveUpdateTime >= Physics.MinUpdateInterval) {
-                OnMoveUpdate(Physics.MinUpdateInterval / 1000f);
-                _moveUpdateTime -= Physics.MinUpdateInterval;
+            if (CanMove) {
+                _moveUpdateTime += delta;
+                while (_moveUpdateTime >= Physics.MinUpdateInterval) {
+                    OnMoveUpdate(Physics.MinUpdateInterval / 1000f);
+                    _moveUpdateTime -= Physics.MinUpdateInterval;
+                }
             }
 
             _nextAxis = Vector2.Zero;

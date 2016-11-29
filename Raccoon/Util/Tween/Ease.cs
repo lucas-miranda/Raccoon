@@ -63,7 +63,7 @@
         }
 
         public static float SineInOut(float t) {
-            return (float) (-.5 * System.Math.Cos(t * Math.PI) + .5);
+            return (float) (t == 1 ? 1 : -.5 * System.Math.Cos(t * Math.PI) + .5);
         }
 
         public static float ExpoIn(float t) {

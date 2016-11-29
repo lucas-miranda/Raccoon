@@ -168,7 +168,7 @@ namespace Raccoon.Components {
             OnJumpStart?.Invoke();
         }
 
-        public override void DebugRender() {
+        /*public override void DebugRender() {
             base.DebugRender();
             Debug.DrawString(false, new Vector2(5, 30), @"- Platform Movement -
 Axis: {0}
@@ -180,6 +180,6 @@ Jumps: {7}, MaxJumps: {8}
 JumpHeight: {9}
 JumpDistanceBuffer: {10}
 NextJumpReady: {11}, RequestedJump: {12}", Axis, Speed, OnGround, OnAir, CanJump, IsJumping, IsFalling, Jumps, MaxJumps, JumpHeight, _jumpDistanceBuffer, _nextJumpReady, _requestedJump);
-        }
+        }*/
     }
 }

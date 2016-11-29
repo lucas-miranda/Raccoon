@@ -81,7 +81,7 @@ namespace Raccoon.Util.Tween {
             }
 
             Timer += (uint) delta;
-            Time = Timer / (float) Duration;
+            Time = Math.Clamp(Timer / (float) Duration, 0, 1);
 
             foreach (Lerper lerp in _lerpers.Values) {
                 lerp.Interpolate(IsReverse ? 1 - Time : Time);
