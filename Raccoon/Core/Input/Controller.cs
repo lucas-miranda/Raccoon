@@ -12,22 +12,19 @@ namespace Raccoon.Input {
     public class Controller {
         public event Action OnConnected, OnDisconnected;
 
-        private static int _nextAutoId;
-
         private bool _wasConnected;
 
-        public Controller(int id) {
+        public Controller(int joyId) {
             Axes = new Dictionary<string, Axis>();
             Buttons = new Dictionary<string, Button>();
-            Id = id;
-            _nextAutoId = id + 1;
+            JoyId = joyId;
         }
 
-        public Controller() : this(_nextAutoId) { }
+        public Controller() : this(-1) { }
         
-        public int Id { get; protected set; }
+        public int JoyId { get; set; }
         public bool Enabled { get; set; } = true;
-        public bool IsConnected { get { return Input.IsJoystickConnected(Id); } }
+        public bool IsConnected { get { return JoyId <= -1 || Input.IsJoystickConnected(JoyId); } }
 
         protected Dictionary<string, Axis> Axes { get; set; }
         protected Dictionary<string, Button> Buttons { get; set; }
@@ -88,7 +85,7 @@ namespace Raccoon.Input {
         }
 
         public override string ToString() {
-            string s = $"[Controller | Id: {Id}, Connected? {IsConnected} ";
+            string s = $"[Controller | Id: {JoyId}, Connected? {IsConnected} ";
             s += "| Axes:";
             foreach (KeyValuePair<string, Axis> axis in Axes) {
                 s += " " + axis.Key + ": " + axis.Value;
