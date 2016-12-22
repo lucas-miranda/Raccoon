@@ -1,0 +1,31 @@
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>Raccoon Cross Platform Desktop Project</Name>
+    <Description>A Raccoon game project for Windows, Mac and Linux using MonoGame with OpenGL.</Description>
+    <ProjectType>CSharp</ProjectType>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <ProjectSubType>
+    </ProjectSubType>
+    <SortOrder>43300</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>RaccoonGame</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Icon>__previewLogo.png</Icon>
+    <PreviewImage>__previewLogo.png</PreviewImage>
+  </TemplateData>
+  <TemplateContent>
+    <Project TargetFileName="RaccoonDesktopGLApplication.csproj" File="RaccoonDesktopGLApplication.csproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" TargetFileName="$projectname$.cs">MyGame.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="GameplayScene.cs">GameplayScene.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="false" TargetFileName="icon.ico">icon.ico</ProjectItem>
+      <Folder Name="Properties" TargetFolderName="Properties">
+        <ProjectItem ReplaceParameters="true" TargetFileName="AssemblyInfo.cs">AssemblyInfo.cs</ProjectItem>
+      </Folder>
+      <Folder Name="Content" TargetFolderName="Content">
+        <ProjectItem ReplaceParameters="true" TargetFileName="Content.mgcb">Content.mgcb</ProjectItem>
+      </Folder>
+    </Project>
+  </TemplateContent>
+</VSTemplate>
