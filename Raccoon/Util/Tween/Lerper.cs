@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 
+using Raccoon.Graphics;
+
 namespace Raccoon.Util.Tween {
     #region Base Lerper
 
@@ -94,4 +96,21 @@ namespace Raccoon.Util.Tween {
     }
 
     #endregion Rectangle Lerper
+
+    #region Color Lerper
+
+    public class ColorLerper : Lerper {
+        public ColorLerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+
+        public new Color From { get { return (Color) base.From; } set { base.From = value; } }
+        public new Color To { get { return (Color) base.To; } set { base.To = value; } }
+        public new Color Value { get { return (Color) base.Value; } set { base.Value = value; } }
+
+        public override void Interpolate(float t) {
+            t = Easing(t);
+            Value = new Color((byte) Math.Approach(From.R, To.R, (To.R - From.R) * t), (byte) Math.Approach(From.G, To.G, (To.G - From.G) * t), (byte) Math.Approach(From.B, To.B, (To.B - From.B) * t));
+        }
+    }
+
+    #endregion Color Lerper
 }

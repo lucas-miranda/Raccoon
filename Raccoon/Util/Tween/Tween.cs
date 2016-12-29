@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.Collections.Generic;
 
+using Raccoon.Graphics;
+
 namespace Raccoon.Util.Tween {
     public class Tween {
         #region Private Static Members
@@ -42,6 +44,7 @@ namespace Raccoon.Util.Tween {
             LerpersAvailable.Add(typeof(Vector2), typeof(Vector2Lerper).GetConstructor(types));
             LerpersAvailable.Add(typeof(Size), typeof(SizeLerper).GetConstructor(types));
             LerpersAvailable.Add(typeof(Rectangle), typeof(RectangleLerper).GetConstructor(types));
+            LerpersAvailable.Add(typeof(Color), typeof(ColorLerper).GetConstructor(types));
         }
 
         #endregion Static

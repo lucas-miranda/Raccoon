@@ -11,7 +11,7 @@ namespace Raccoon.Util.Tween {
 
         #region Private Members
 
-        private List<Tween> _tweens, _toRemove;
+        private List<Tween> _tweens, _toAdd, _toRemove;
 
         #endregion Private Members
 
@@ -19,6 +19,7 @@ namespace Raccoon.Util.Tween {
 
         private Tweener() {
             _tweens = new List<Tween>();
+            _toAdd = new List<Tween>();
             _toRemove = new List<Tween>();
         }
 
@@ -49,6 +50,11 @@ namespace Raccoon.Util.Tween {
         }
 
         public void Update(int delta) {
+            if (_toAdd.Count > 0) {
+                _tweens.AddRange(_toAdd);
+                _toAdd.Clear();
+            }
+
             foreach (Tween tween in _tweens) {
                 tween.Update(delta);
                 if (tween.HasEnded) {
@@ -66,11 +72,11 @@ namespace Raccoon.Util.Tween {
         }
 
         public void Add(Tween tween) {
-            _tweens.Add(tween);
+            _toAdd.Add(tween);
         }
 
         public void Remove(Tween tween) {
-            _tweens.Remove(tween);
+            _toRemove.Add(tween);
         }
 
         public void Play(Tween tween, bool forceReset = true) {
