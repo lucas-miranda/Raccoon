@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Collections\BinaryHeap.cs" />
+    <Compile Include="Collections\PriorityQueue.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Colliders\CircleCollider.cs" />
     <Compile Include="Core\Components\Colliders\Collider.cs" />
