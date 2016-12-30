@@ -23,4 +23,5 @@ Starting a New Project
 License
 =========
 Raccoon is under [MIT License](/LICENSE).
+
 [MonoGame License](https://github.com/MonoGame/MonoGame/blob/develop/LICENSE.txt).
