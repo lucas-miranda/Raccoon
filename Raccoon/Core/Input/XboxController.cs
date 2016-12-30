@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 
-namespace Raccoon.Input {
+namespace Raccoon {
     public class XboxController : Controller {
         public enum Label {
             A, B, X, Y,

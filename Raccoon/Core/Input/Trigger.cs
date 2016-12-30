@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Input {
+﻿namespace Raccoon {
     public class Trigger : Button {
         public Trigger(Key key) : base(key) { } 
         public Trigger(int joystickId, int joystickTriggerAxisId) : base(joystickId, joystickTriggerAxisId) { }

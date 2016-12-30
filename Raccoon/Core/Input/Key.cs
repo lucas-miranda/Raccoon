@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Input;
 
-namespace Raccoon.Input {
+namespace Raccoon {
     public enum Key {
         None = Keys.None,
         Backspace = Keys.Back,

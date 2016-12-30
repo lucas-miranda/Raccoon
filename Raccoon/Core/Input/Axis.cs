@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Input {
+﻿namespace Raccoon {
     public class Axis {
         private float _forceX, _forceY;
         private bool _forceState;

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 
 namespace Raccoon {
@@ -120,7 +119,7 @@ namespace Raccoon {
             Time = gameTime.TotalGameTime;
 
 #if DEBUG
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) {
+            if (Input.IsKeyPressed(Key.Escape)) {
                 Exit();
             }
 #endif
@@ -129,7 +128,7 @@ namespace Raccoon {
             DeltaTime = delta;
 
             // updates
-            Input.Input.Instance.Update(delta);
+            Input.Instance.Update(delta);
             Coroutine.Instance.Update(delta);
             OnBeforeUpdate?.Invoke();
             OnUpdate?.Invoke(delta);
