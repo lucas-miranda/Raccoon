@@ -5,6 +5,8 @@ using Raccoon.Graphics;
 
 namespace Raccoon.Components {
     public abstract class Collider : Component {
+        protected Collider() { }
+
         protected Collider(params string[] tags) {
             Tags.AddRange(tags);
         }

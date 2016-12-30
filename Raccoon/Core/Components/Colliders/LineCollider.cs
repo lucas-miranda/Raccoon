@@ -4,12 +4,20 @@ namespace Raccoon.Components {
     public class LineCollider : Collider {
         #region Constructors
 
+        public LineCollider(Vector2 from, Vector2 to) : base() {
+            Initialize(from, to);
+        }
+
         public LineCollider(Vector2 from, Vector2 to, params string[] tags) : base(tags) {
             Initialize(from, to);
         }
 
         public LineCollider(Vector2 from, Vector2 to, params Enum[] tags) : base(tags) {
             Initialize(from, to);
+        }
+
+        public LineCollider(Vector2 length) : base() {
+            Initialize(Vector2.Zero, length);
         }
 
         public LineCollider(Vector2 length, params string[] tags) : base(tags) {

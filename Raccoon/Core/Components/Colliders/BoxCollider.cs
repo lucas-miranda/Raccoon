@@ -6,6 +6,10 @@ namespace Raccoon.Components {
     public class BoxCollider : Collider {
         #region Constructors
 
+        public BoxCollider(float width, float height) : base() {
+            Initialize(width, height);
+        }
+
         public BoxCollider(float width, float height, params string[] tags) : base(tags) {
             Initialize(width, height);
         }
