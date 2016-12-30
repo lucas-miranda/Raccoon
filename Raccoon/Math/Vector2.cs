@@ -37,9 +37,13 @@
         #endregion Constructors
 
         #region Public Static Methods
+        
+        public static float Dot(Vector2 a, Vector2 b) {
+            return a.Dot(b);
+        }
 
-        public static Vector2 Normalize(Vector2 v) {
-            return v / v.Length();
+        public static float Cross(Vector2 a, Vector2 b) {
+            return a.Cross(b);
         }
 
         #endregion Public Static Methods
@@ -55,9 +59,31 @@
         }
 
         public void Normalize() {
-            float n = 1 / Length();
+            if (X == 0 && Y == 0) {
+                return;
+            }
+
+            float n = 1f / Length();
             X *= n;
             Y *= n;
+        }
+
+        public Vector2 Normalized() {
+            Vector2 v = new Vector2(this);
+            v.Normalize();
+            return v;
+        }
+
+        public Vector2 Perpendicular() {
+            return new Vector2(-Y, X);
+        }
+
+        public float Dot(Vector2 other) {
+            return X * other.X + Y * other.Y;
+        }
+
+        public float Cross(Vector2 other) {
+            return X * other.Y - Y * other.X;
         }
 
         public override bool Equals(object obj) {
@@ -88,7 +114,7 @@
         }
 
         public override string ToString() {
-            return $"[Vector2 | X: {X}, Y: {Y}]";
+            return $"[X: {X}, Y: {Y}]";
         }
 
         #endregion Public Methods
