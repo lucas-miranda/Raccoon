@@ -72,6 +72,8 @@
     <Compile Include="Graphics\Atlas\Atlas.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />
     <Compile Include="Graphics\Atlas\AtlasSubTexture.cs" />
+    <Compile Include="Graphics\Drawables\Primitives\Polygon.cs" />
+    <Compile Include="Graphics\Drawables\Primitives\Line.cs" />
     <Compile Include="Graphics\Font.cs" />
     <Compile Include="Graphics\Drawables\FrameSet.cs" />
     <Compile Include="Graphics\Drawables\Graphic.cs" />
