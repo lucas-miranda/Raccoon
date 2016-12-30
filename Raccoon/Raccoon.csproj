@@ -87,6 +87,8 @@
     <Compile Include="Graphics\Drawables\Transitions\SceneTransition.cs" />
     <Compile Include="Graphics\Drawables\Transitions\SquareTransition.cs" />
     <Compile Include="Math\Circle.cs" />
+    <Compile Include="Math\Line.cs" />
+    <Compile Include="Math\Polygon.cs" />
     <Compile Include="Math\Rectangle.cs" />
     <Compile Include="Math\Size.cs" />
     <Compile Include="Math\Vector2.cs" />
