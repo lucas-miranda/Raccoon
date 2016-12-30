@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using System;
 using System.Text.RegularExpressions;
+
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
     public class TileMap : Graphic {
@@ -11,8 +13,9 @@ namespace Raccoon.Graphics {
 
         #region Private Members
 
-        private int _tileSetRows, _tileSetColumns;
-        private uint[][] _data = new uint[0][];
+        private int _tileSetRows, _tileSetColumns, _triangleCount;
+        private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[0];
+        private Vector2 _texSpriteCount;
 
         #endregion Private Members
 
@@ -31,67 +34,85 @@ namespace Raccoon.Graphics {
         public Size TileSize { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
-        public Rectangle Clip { get; set; }
-        public Texture Texture { get; set; }
+        public Texture Texture { get; private set; }
+        public new float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
+        public new float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
 
-        #endregion Internal properties
+        public new Vector2 Position {
+            get {
+                return base.Position;
+            }
 
-        #region Public Methods
+            set {
+                Microsoft.Xna.Framework.Vector3 displacement = new Microsoft.Xna.Framework.Vector3(value.X - X, value.Y - Y, 0);
+                base.Position = value;
 
-        public override void Update(int delta) {
-            if (Game.Instance.Scene != null) {
-                Camera camera = Game.Instance.Scene.Camera;
-                Clip = new Rectangle(System.Math.Max(0, (int) System.Math.Floor(camera.X / TileSize.Width)), System.Math.Max(0, (int) System.Math.Floor(camera.Y / TileSize.Height)), System.Math.Min(Columns - 1, (int) System.Math.Floor(camera.Width / TileSize.Width)), System.Math.Min(Rows - 1, (int) System.Math.Floor(camera.Height / TileSize.Height)));
+                for (int i = 0; i < _vertices.Length; i++) {
+                    _vertices[i].Position += displacement;
+                }
             }
         }
 
-        public override void Render() {
-            // TODO: draw tiles using vertices
-            Rectangle clip = Clip.IsEmpty ? new Rectangle(0, 0, Columns - 1, Rows - 1) : Clip;
-            for (int y = (int) clip.Top; y < _data.Length && y <= (int) clip.Bottom; y++) {
-                for (int x = (int) clip.Left; x < _data[y].Length && x <= (int) clip.Right; x++) {
-                    uint gid = _data[y][x];
-                    if (gid == 0) {
-                        continue;
-                    }
+        #endregion Public Properties
 
-                    SpriteEffects flipped = SpriteEffects.None;
-                    if ((gid & Tiled.TiledTile.FlippedHorizontallyFlag) != 0) {
-                        flipped |= SpriteEffects.FlipHorizontally;
-                    }
+        #region Public Methods
+        
+        public override void Render(Vector2 position, float rotation) {
+            Game.Instance.Core.BasicEffect.TextureEnabled = true;
+            Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
+            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
+            Game.Instance.Core.BasicEffect.Texture = null;
+            Game.Instance.Core.BasicEffect.TextureEnabled = false;
+        }
 
-                    if ((gid & Tiled.TiledTile.FlippedVerticallyFlag) != 0) {
-                        flipped |= SpriteEffects.FlipVertically;
-                    }
+        public override void DebugRender() {
+            for (int row = 0; row <= Rows; row++) {
+                Debug.DrawLine(Position + new Vector2(0, row * TileSize.Height), Position + new Vector2(Columns * TileSize.Width, row * TileSize.Height), new Color(0x919191FF));
+            }
 
-                    int id = (int) (gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag)) - 1; // clear flags
-                    Game.Instance.Core.SpriteBatch.Draw(
-                        Texture.XNATexture,
-                        Position + new Vector2(x * TileSize.Width, y * TileSize.Height),
-                        null,
-                        new Microsoft.Xna.Framework.Rectangle((id - (id / _tileSetColumns) * _tileSetColumns) * (int) TileSize.Width, (id / _tileSetColumns) * (int) TileSize.Height, (int) TileSize.Width, (int) TileSize.Height),
-                        null,
-                        0,
-                        null,
-                        FinalColor,
-                        flipped,
-                        LayerDepth
-                    );
+            for (int column = 0; column <= Columns; column++) {
+                Debug.DrawLine(Position + new Vector2(column * TileSize.Width, 0), Position + new Vector2(column * TileSize.Width, Rows * TileSize.Height), new Color(0x919191FF));
+            }
+        }
+
+        public void Setup(int columns, int rows) {
+            Columns = columns;
+            Rows = rows;
+            Size = new Size(Columns * TileSize.Width, Rows * TileSize.Height);
+
+            if (columns * rows * 6 != _vertices.Length) {
+                VertexPositionColorTexture[] newVertices = new VertexPositionColorTexture[Columns * Rows * 6];
+                if (newVertices.Length > _vertices.Length) {
+                    _vertices.CopyTo(newVertices, 0);
+                } else {
+                    for (int i = 0; i < newVertices.Length; i++) {
+                        newVertices[i] = _vertices[i];
+                    }
                 }
+
+                _vertices = newVertices;
+                _triangleCount = Columns * Rows * 2;
             }
         }
 
         public void SetData(uint[][] data) {
-            _data = data;
             int greaterRowSize = 0;
-            for (int row = 0; row < _data.Length; row++) {
-                if (greaterRowSize < _data[row].Length) {
-                    greaterRowSize = _data[row].Length;
+            for (int row = 0; row < data.Length; row++) {
+                if (data[row].Length > greaterRowSize) {
+                    greaterRowSize = data[row].Length;
                 }
             }
 
-            Columns = greaterRowSize;
-            Rows = data.Length;
+            Setup(greaterRowSize, data.Length);
+
+            Microsoft.Xna.Framework.Vector3 displacement = new Microsoft.Xna.Framework.Vector3(X, Y, 0);
+            Vector2 texSpriteCount = new Vector2((int) (Texture.Width / TileSize.Width), (int) (Texture.Height / TileSize.Height));
+            for (int y = 0; y < data.Length; y++) {
+                for (int x = 0; x < data[y].Length; x++) {
+                    SetTile(x, y, data[y][x]);
+                }
+            }
         }
 
         public void SetData(uint[,] data) {
@@ -104,9 +125,7 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            _data = newData;
-            Columns = columns;
-            Rows = newData.Length;
+            SetData(newData);
         }
 
         public void SetData(string csv, int columns, int rows) {
@@ -128,27 +147,112 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            _data = newData;
-            Columns = columns;
-            Rows = rows;
+            SetData(newData);
         }
 
         public void SetTile(int x, int y, uint gid) {
-            StretchToFit(x, y);
-            _data[y][x] = gid;
+            if (!ExistsTile(x, y)) throw new ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
+
+            if (gid == 0) {
+                return;
+            }
+
+            Microsoft.Xna.Framework.Vector3 displacement = new Microsoft.Xna.Framework.Vector3(X, Y, 0);
+
+            bool isAntiDiagonally = (gid & Tiled.TiledTile.FlippedDiagonallyFlag) != 0;
+
+            ImageFlip flip = ImageFlip.None;
+            if ((gid & Tiled.TiledTile.FlippedHorizontallyFlag) != 0) {
+                flip |= ImageFlip.Horizontal;
+            }
+
+            if ((gid & Tiled.TiledTile.FlippedVerticallyFlag) != 0) {
+                flip |= ImageFlip.Vertical;
+            }
+
+            int id = (int) (gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag)) - 1; // clear flags
+            int tileId = (y * Columns + x) * 6, texRow = id / (int) _texSpriteCount.X;
+            Vector2 texTopLeft = new Vector2(id - texRow * (int) _texSpriteCount.X, texRow);
+
+            _vertices[tileId] = new VertexPositionColorTexture(displacement + new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, LayerDepth), Color, texTopLeft / _texSpriteCount);
+            _vertices[tileId + 1] = new VertexPositionColorTexture(displacement + new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, LayerDepth), Color, (texTopLeft + Vector2.Right) / _texSpriteCount);
+            _vertices[tileId + 2] = new VertexPositionColorTexture(displacement + new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, LayerDepth), Color, (texTopLeft + Vector2.DownRight) / _texSpriteCount);
+
+            _vertices[tileId + 3] = _vertices[tileId + 2];
+            _vertices[tileId + 4] = new VertexPositionColorTexture(displacement + new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, LayerDepth), Color, (texTopLeft + Vector2.Down) / _texSpriteCount);
+            _vertices[tileId + 5] = _vertices[tileId];
+
+            if (isAntiDiagonally) {
+                VertexPositionColorTexture tmp;
+                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, TileSize.Height, 0);
+                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, -TileSize.Height, 0);
+
+                tmp = _vertices[tileId + 4];
+                _vertices[tileId + 4] = _vertices[tileId + 1];
+                _vertices[tileId + 1] = tmp;
+            }
+
+            if (flip.HasFlag(ImageFlip.Horizontal)) {
+                VertexPositionColorTexture tmp;
+
+                _vertices[tileId].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, 0, 0);
+                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, 0, 0);
+
+                tmp = _vertices[tileId + 1];
+                _vertices[tileId + 1] = _vertices[tileId];
+                _vertices[tileId + 5] = _vertices[tileId] = tmp;
+
+                _vertices[tileId + 2].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, 0, 0);
+                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, 0, 0);
+
+                tmp = _vertices[tileId + 4];
+                _vertices[tileId + 4] = _vertices[tileId + 2];
+                _vertices[tileId + 3] = _vertices[tileId + 2] = tmp;
+            }
+
+            if (flip.HasFlag(ImageFlip.Vertical)) {
+                VertexPositionColorTexture tmp;
+
+                _vertices[tileId].Position += new Microsoft.Xna.Framework.Vector3(0, TileSize.Height, 0);
+                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(0, -TileSize.Height, 0);
+
+                tmp = _vertices[tileId + 4];
+                _vertices[tileId + 4] = _vertices[tileId];
+                _vertices[tileId + 5] = _vertices[tileId] = tmp;
+
+                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(0, TileSize.Height, 0);
+                _vertices[tileId + 2].Position += new Microsoft.Xna.Framework.Vector3(0, -TileSize.Height, 0);
+
+                tmp = _vertices[tileId + 2];
+                _vertices[tileId + 3] = _vertices[tileId + 2] = _vertices[tileId + 1];
+                _vertices[tileId + 1] = tmp;
+            }
         }
 
         public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
-            SetTile(x, y, id | (flipped.HasFlag(ImageFlip.Horizontal) ? Tiled.TiledTile.FlippedHorizontallyFlag : 0) | (flipped.HasFlag(ImageFlip.Vertical) ? Tiled.TiledTile.FlippedVerticallyFlag : 0) | (flippedDiagonally ? Tiled.TiledTile.FlippedDiagonallyFlag : 0));
+            if (flippedDiagonally) {
+                id |= Tiled.TiledTile.FlippedDiagonallyFlag;
+            }
+
+            if (flipped.HasFlag(ImageFlip.Horizontal)) {
+                id |= Tiled.TiledTile.FlippedHorizontallyFlag;
+            }
+
+            if (flipped.HasFlag(ImageFlip.Vertical)) {
+                id |= Tiled.TiledTile.FlippedVerticallyFlag;
+            }
+
+            SetTile(x, y, id);
         }
 
         public bool ExistsTile(int x, int y) {
-            return y >= 0 && y < _data.Length && x >= 0 && x < _data[y].Length;
+            return !(x < 0 || x >= Columns || y < 0 || y >= Rows);
         }
 
         public override void Dispose() {
-            if (Texture != null)
+            if (Texture != null) {
                 Texture.Dispose();
+            }
         }
 
         #endregion Public Methods
@@ -158,76 +262,9 @@ namespace Raccoon.Graphics {
         protected override void Load() {
             _tileSetColumns = Texture.Width / (int) TileSize.Width;
             _tileSetRows = Texture.Height / (int) TileSize.Height;
+            _texSpriteCount = new Vector2((int) (Texture.Width / TileSize.Width), (int) (Texture.Height / TileSize.Height));
         }
 
         #endregion Protected Methods
-
-        #region Private Methods
-
-        private void StretchToFit(int x, int y) {
-            if (_data.Length <= y) {
-                uint[][] currentData = _data;
-                _data = new uint[y + 1][];
-                currentData.CopyTo(_data, 0);
-                Rows = y + 1;
-                for (int row = currentData.Length; row < Rows; row++) {
-                    _data[row] = new uint[0];
-                }
-            }
-
-            if (_data[y].Length <= x) {
-                uint[] currentRowData = _data[y];
-                _data[y] = new uint[x + 1];
-                currentRowData.CopyTo(_data[y], 0);
-                Columns = x + 1;
-                for (int column = currentRowData.Length; column < Columns; column++) {
-                    _data[y][column] = 0;
-                }
-            }
-        }
-
-        private void ShrinkTo(int columns, int rows) {
-            if (columns > Columns || rows > Rows) {
-                InflateTo(columns, rows);
-                return;
-            }
-
-            uint[][] newData = new uint[rows][];
-            for (int row = 0; row < rows; row++) {
-                if (_data[row].Length > columns) {
-                    newData[row] = new uint[columns];
-                    _data[row].CopyTo(newData[row], rows);
-                } else {
-                    _data[row] = newData[row];
-                }
-            }
-        }
-
-        private void InflateTo(int columns, int rows) {
-            if (columns < Columns || rows < Rows) {
-                ShrinkTo(columns, rows);
-                return;
-            }
-
-            Rows = rows;
-            uint[][] currentData = _data;
-            _data = new uint[Rows][];
-            currentData.CopyTo(_data, 0);
-            for (int row = currentData.Length; row < Rows; row++) {
-                _data[row] = new uint[0];
-            }
-
-            Columns = columns;
-            for (int row = 0; row < Rows; row++) {
-                uint[] currentRowData = _data[row];
-                _data[row] = new uint[Columns];
-                currentRowData.CopyTo(_data[row], 0);
-                for (int column = currentRowData.Length; column < Columns; column++) {
-                    _data[row][column] = 0;
-                }
-            }
-        }
-
-        #endregion Private Methods
     }
 }

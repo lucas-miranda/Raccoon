@@ -13,13 +13,13 @@
         public string Value { get; set; }
         public new Color Color { get; set; }
 
-        public override void Render() {
+        public override void Render(Vector2 position, float rotation) {
             Game.Instance.Core.SpriteBatch.DrawString(
                 Font.SpriteFont, 
                 Value, 
-                Position, 
+                position, 
                 Color,
-                Rotation,
+                rotation * Util.Math.DegToRad,
                 Origin,
                 Scale,
                 (Microsoft.Xna.Framework.Graphics.SpriteEffects) Flipped,

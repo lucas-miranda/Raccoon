@@ -50,8 +50,8 @@
             }
         }
 
-        public override void Render() {
-            EndGraphic.Render();
+        public override void Render(Vector2 position, float rotation) {
+            EndGraphic.Render(position, rotation);
         }
 
         public virtual void Play(int repeatTimes = 0) {

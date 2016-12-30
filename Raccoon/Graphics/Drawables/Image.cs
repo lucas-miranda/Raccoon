@@ -7,6 +7,8 @@ namespace Raccoon.Graphics {
 
         private Texture _texture;
         private Rectangle _sourceRegion, _clippingRegion;
+        private Size _destinationSize;
+        private bool _customDestinationSize;
 
         #endregion Private Members
 
@@ -79,10 +81,24 @@ namespace Raccoon.Graphics {
 
             set {
                 if (value.Left < 0 || value.Top < 0 || value.Right > _sourceRegion.Width || value.Bottom > _sourceRegion.Height)
-                    throw new ArgumentOutOfRangeException("ClippingRegion", value, "Value must be within source region size");
+                    throw new ArgumentOutOfRangeException("ClippingRegion", value, "Value must be within source region bounds");
 
                 _clippingRegion = value;
                 Size = _clippingRegion.Size;
+                if (!_customDestinationSize) {
+                    _destinationSize = Size;
+                }
+            }
+        }
+
+        public Size DestinationSize {
+            get {
+                return _destinationSize;
+            }
+
+            set {
+                _destinationSize = value;
+                _customDestinationSize = true;
             }
         }
 
@@ -90,14 +106,14 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
         
-        public override void Render() {
+        public override void Render(Vector2 position, float rotation) {
             Game.Instance.Core.SpriteBatch.Draw(
                 Texture.XNATexture,
-                Position,
                 null,
+                new Microsoft.Xna.Framework.Rectangle((int) position.X, (int) position.Y, (int) DestinationSize.Width, (int) DestinationSize.Height),
                 SourceRegion.Position + ClippingRegion,
-                Origin,
-                Rotation,
+                new Microsoft.Xna.Framework.Vector2((int) Origin.X, (int) Origin.Y),
+                rotation * Util.Math.DegToRad,
                 Scale,
                 FinalColor,
                 (SpriteEffects) Flipped,
@@ -110,7 +126,11 @@ namespace Raccoon.Graphics {
                 Texture.Dispose();
             }
         }
-        
+
+        public override string ToString() {
+            return $"[Image | Position: {Position}, Texture: {Texture}]";
+        }
+
         #endregion
     }
 }

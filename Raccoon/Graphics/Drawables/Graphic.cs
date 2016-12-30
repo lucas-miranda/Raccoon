@@ -7,9 +7,14 @@
 
         #endregion Public Members
 
+        #region Protected Members
+
+        protected const int LayerLimit = 20000;
+
+        #endregion Protected Members
+
         #region Private Members
 
-        private const int LayerLimit = 20000;
         private float _opacity = 1f;
         private Color _color = Color.White;
 
@@ -18,6 +23,7 @@
         #region Public Properties
 
         public string Name { get; set; }
+        public bool Visible { get; set; } = true;
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -27,7 +33,7 @@
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public int Layer { get { return (int) (LayerDepth * LayerLimit) - LayerMax; } set { LayerDepth = 0.5f + (Util.Math.Clamp(value, LayerMin, LayerMax) / (float) LayerLimit); } }
+        public int Layer { get { return (int) System.Math.Round((LayerDepth * LayerLimit) - LayerMax); } set { LayerDepth = (float) (value + LayerMax) / LayerLimit; } }
         public float LayerDepth { get; set; }
         public Color FinalColor { get; set; } = Color.White;
         //public Shader Shader { get; set; }
@@ -102,6 +108,14 @@
 
         #endregion Protected Properties
 
+        #region Public Methods
+
+        public void Render() {
+            Render(Position, Rotation);
+        }
+
+        #endregion Public Methods
+
         #region Public Virtual Methods
 
         public virtual void Update(int delta) {
@@ -115,10 +129,16 @@
 
         #region Public Abstract Methods
 
-        public abstract void Render();
+        public abstract void Render(Vector2 position, float rotation);
         public abstract void Dispose();
 
         #endregion Public Abstract Methods
+
+        #region Public Virtual Methods
+
+        public virtual void DebugRender() { }
+
+        #endregion Public Virtual Methods
 
         #region Protected Methods
 

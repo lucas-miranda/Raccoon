@@ -23,8 +23,8 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
         
-        public override void Render() {
-            Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, Position, null, null, Origin, Rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
+        public override void Render(Vector2 position, float rotation) {
+            Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, position, null, null, Origin, rotation, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
         }
 
         public override void Dispose() {

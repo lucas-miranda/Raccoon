@@ -7,7 +7,7 @@ namespace Raccoon.Graphics {
     public class Atlas {
         #region Private Static Members
 
-        private static readonly Regex FrameNameRegex = new Regex(@"(.+) (\d+)? (.+)");
+        private static readonly Regex FrameNameRegex = new Regex(@"(.+) (\d+)? (.*)");
 
         #endregion Private Static Members
 
