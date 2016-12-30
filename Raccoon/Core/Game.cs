@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Raccoon.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Raccoon {
@@ -11,14 +12,14 @@ namespace Raccoon {
 
         #region Public Events
 
-        public event TickHandler OnUpdate;
-        public event Action OnRender;
+        public event TickHandler OnUpdate = delegate { };
+        public event Action OnRender = delegate { };
 
         #endregion Public Events
 
         #region Private Members
 
-        private bool _debugMode;
+        private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
 
         #endregion Private Members
 
@@ -26,15 +27,22 @@ namespace Raccoon {
 
         public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFPS = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
-            Console.Title = "Raccoon Debug";
-            Scenes = new Dictionary<string, Scene>();
+#if DEBUG
+            try {
+                Console.Title = "Raccoon Debug";
+            } catch { }
+#else
+            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs args) => {
+                Exception e = (Exception) args.ExceptionObject;
+                System.IO.File.WriteAllText($"error-{DateTime.Now.ToString("MMddyy-HHmmss")}.txt", $"{DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
+            };
+#endif
             ScreenWidth = width;
             ScreenHeight = height;
             IsRunning = false;
             Core = new Core(title, width, height, targetFPS, fullscreen, vsync);
-            Core.OnUpdate += Update;
-            Core.OnRender += Render;
-            Scenes = new Dictionary<string, Scene>();
+            Core.OnUpdate += OnUpdate;
+            Core.OnRender += OnRender;
             ScreenWidth = width;
             ScreenHeight = height;
             IsRunning = false;
@@ -72,8 +80,9 @@ namespace Raccoon {
         public int WindowHeight { get { return Core.Graphics.PreferredBackBufferHeight; } }
         public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
         public Size WindowSize { get { return new Size(WindowWidth, WindowHeight); } }
-        public Dictionary<string, Scene> Scenes { get; private set; }
+        public Vector2 ScreenCenter { get { return new Vector2(ScreenWidth / 2, ScreenHeight / 2); } }
         public Scene Scene { get; private set; }
+        public Font StdFont { get { return Core.StdFont; } }
 
         public float Scale {
             get {
@@ -92,7 +101,7 @@ namespace Raccoon {
         }
 
 #if DEBUG
-        public bool DebugMode { get { return _debugMode; } set { _debugMode = value; } }
+        public bool DebugMode { get; set; }
 #else
         public bool DebugMode { get { return false; } }
 #endif
@@ -114,8 +123,8 @@ namespace Raccoon {
         }
 
         public void Start(string startScene) {
-            if (!Scenes.ContainsKey(startScene)) {
-                throw new KeyNotFoundException($"Scene '{startScene}' not found");
+            if (!_scenes.ContainsKey(startScene)) {
+                throw new ArgumentException($"Scene '{startScene}' not found", "startScene");
             }
 
             SwitchScene(startScene);
@@ -138,7 +147,7 @@ namespace Raccoon {
 
         public void AddScene(Scene scene, string name = "") {
             name = !name.IsEmpty() ? name : scene.GetType().Name.Replace("Scene", "");
-            Scenes.Add(name, scene);
+            _scenes.Add(name, scene);
             scene.OnAdded();
 
             if (Scene == null) {
@@ -148,7 +157,7 @@ namespace Raccoon {
 
         public void RemoveScene(string name) {
             Scene scene;
-            if (!Scenes.TryGetValue(name, out scene)) {
+            if (!_scenes.TryGetValue(name, out scene)) {
                 return;
             }
 
@@ -158,12 +167,12 @@ namespace Raccoon {
                 Scene = null;
             }
 
-            Scenes.Remove(name);
+            _scenes.Remove(name);
         }
 
         public void RemoveScene(Scene scene) {
             string name = "";
-            foreach (KeyValuePair<string, Scene> s in Scenes) {
+            foreach (KeyValuePair<string, Scene> s in _scenes) {
                 if (s.Value == scene) {
                     name = s.Key;
                     break;
@@ -186,16 +195,16 @@ namespace Raccoon {
                 Scene = null;
             }
 
-            foreach (Scene scene in Scenes.Values) {
+            foreach (Scene scene in _scenes.Values) {
                 scene.UnloadContent();
             }
 
-            Scenes.Clear();
+            _scenes.Clear();
         }
 
         public void SwitchScene(string name) {
-            if (!Scenes.ContainsKey(name)) {
-                throw new KeyNotFoundException($"Scene '{name}' not found");
+            if (!_scenes.ContainsKey(name)) {
+                throw new ArgumentException($"Scene '{name}' not found", "name");
             }
 
             if (Scene != null) {
@@ -203,10 +212,10 @@ namespace Raccoon {
             }
 
             Core.ClearCallbacks();
-            Core.OnUpdate += Update;
-            Core.OnRender += Render;
+            Core.OnUpdate += OnUpdate;
+            Core.OnRender += OnRender;
 
-            Scene = Scenes[name];
+            Scene = _scenes[name];
             if (Core.SpriteBatch != null) {
                 Scene.Begin();
             } else {
@@ -232,18 +241,10 @@ namespace Raccoon {
             Core.Graphics.ToggleFullScreen();
         }
 
-#endregion
+        #endregion
 
         #region Protected Methods
-
-        protected void Update(int delta) {
-            OnUpdate?.Invoke(delta);
-        }
-
-        protected void Render() {
-            OnRender?.Invoke();
-        }
-
+        
         protected virtual void Dispose(bool disposing) {
             if (!Disposed) {
                 if (disposing) {

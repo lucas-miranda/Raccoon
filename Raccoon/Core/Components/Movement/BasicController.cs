@@ -35,7 +35,7 @@ namespace Raccoon.Components {
                     MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, dist);
                 } else {
                     while (System.Math.Abs(MoveHorizontalBuffer) >= 1) {
-                        if (Collider.Collides(x + hDir, y, CollisionTags)) {
+                        if (Collider.Collides(new Vector2(x + hDir, y), CollisionTags)) {
                             OnCollide(new Vector2(hDir, 0));
                             MoveHorizontalBuffer = 0;
                             break;
@@ -59,7 +59,7 @@ namespace Raccoon.Components {
                     MoveVerticalBuffer = Math.Approach(MoveVerticalBuffer, 0, dist);
                 } else {
                     while (System.Math.Abs(MoveVerticalBuffer) >= 1) {
-                        if (Collider.Collides(x, y + vDir, CollisionTags)) {
+                        if (Collider.Collides(new Vector2(x, y + vDir), CollisionTags)) {
                             OnCollide(new Vector2(0, vDir));
                             MoveVerticalBuffer = 0;
                             break;

@@ -1,16 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Diagnostics;
+using System.Collections.Generic;
+
 using Raccoon.Graphics;
 using Raccoon.Components;
 
 namespace Raccoon {
     public class Entity {
+        #region Public Delegates
+
+        public Action OnRemoved = delegate { };
+
+        #endregion Public Delegates
+
         #region Private Members
-
-        private Vector2 _position;
-        private float _rotation;
+        
         private List<Component> _components;
-        private int _layer;
-
+        private List<Graphic> _graphicsToAdd, _graphicsToRemove;
+        private List<Component> _componentsToAdd, _componentsToRemove;
+        
         #endregion Private Members
 
         #region Constructors
@@ -18,8 +26,21 @@ namespace Raccoon {
         public Entity() {
             Name = "Entity";
             Active = Visible = true;
+
             Graphics = new List<Graphic>();
+            _graphicsToAdd = new List<Graphic>();
+            _graphicsToRemove = new List<Graphic>();
+
             _components = new List<Component>();
+            _componentsToAdd = new List<Component>();
+            _componentsToRemove = new List<Component>();
+
+            OnRemoved += () => {
+                Enabled = false;
+                Scene = null;
+                ClearComponents();
+                ClearGraphics();
+            };
         }
 
         #endregion Constructors
@@ -27,14 +48,17 @@ namespace Raccoon {
         #region Public Properties
 
         public string Name { get; set; }
-        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
-        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public bool Active { get; set; }
         public bool Visible { get; set; }
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
+        public Vector2 Position { get; set; }
+        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
+        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
+        public float Rotation { get; set; }
+        public int Layer { get; set; }
+        public uint Timer { get; private set; }
         public List<Graphic> Graphics { get; private set; }
         public Scene Scene { get; private set; }
-        public uint Timer { get; private set; }
 
         public Graphic Graphic {
             get {
@@ -42,54 +66,12 @@ namespace Raccoon {
             }
 
             set {
-                if (Graphics.Count == 0) {
-                    AddGraphic(value);
-                } else {
+                if (Graphics.Count > 0) {
                     Graphics[0] = value;
-                    Graphics[0].Position = Position;
-                    Graphics[0].Layer = Layer;
+                    return;
                 }
-            }
-        }
 
-        public Vector2 Position {
-            get {
-                return _position;
-            }
-
-            set
-            {
-                _position = value;
-                foreach (Graphic g in Graphics) {
-                    g.Position = _position;
-                }
-            }
-        }
-
-        public float Rotation {
-            get {
-                return _rotation;
-            }
-
-            set {
-                float alpha = value - _rotation;
-                _rotation = value;
-                foreach (Graphic g in Graphics) {
-                    g.Rotation = alpha;
-                }
-            }
-        }
-
-        public int Layer {
-            get {
-                return _layer;
-            }
-
-            set {
-                _layer = value;
-                foreach (Graphic g in Graphics) {
-                    g.Layer = _layer;
-                }
+                Add(value);
             }
         }
 
@@ -102,15 +84,67 @@ namespace Raccoon {
             foreach (Component c in _components) {
                 Collider coll = c as Collider;
                 if (coll != null) {
-                    Physics.Instance.AddCollider(coll, coll.Tag);
+                    Physics.Instance.AddCollider(coll, coll.Tags);
                 }
             }
         }
 
-        public virtual void OnRemoved() { }
         public virtual void Start() { }
 
-        public virtual void BeforeUpdate() { }
+        public virtual void BeforeUpdate() {
+            // check graphics Layer
+            if (Graphics.Count > 1) {
+                int previousLayer = Graphics[0].Layer;
+                for (int i = 1; i < Graphics.Count; i++) {
+                    if (previousLayer > Graphics[i].Layer) {
+                        _graphicsToAdd.Add(Graphics[i - 1]);
+                        Graphics.RemoveAt(i - 1);
+                        i--;
+                    }
+
+                    previousLayer = Graphics[i].Layer;
+                }
+            }
+
+            if (_graphicsToAdd.Count > 0) {
+                foreach (Graphic g in _graphicsToAdd) {
+                    int index = 0;
+                    for (int i = Graphics.Count - 1; i >= 0; i--) {
+                        if (Graphics[i].Layer <= g.Layer) {
+                            index = i + 1;
+                            break;
+                        }
+                    }
+
+                    Graphics.Insert(index, g);
+                }
+
+                _graphicsToAdd.Clear();
+            }
+
+            if (_graphicsToRemove.Count > 0) {
+                Graphics.RemoveAll(p => _graphicsToRemove.Contains(p));
+                _graphicsToRemove.Clear();
+            }
+
+            if (_componentsToAdd.Count > 0) {
+                foreach (Component c in _componentsToAdd) {
+                    c.OnAdded(this);
+                }
+
+                _componentsToAdd.Clear();
+            }
+
+            if (_componentsToRemove.Count > 0) {
+                foreach (Component c in _componentsToRemove) {
+                    if (_components.Contains(c)) {
+                        c.OnRemoved();
+                    }
+                }
+
+                _componentsToRemove.Clear();
+            }
+        }
 
         public virtual void Update(int delta) {
             Timer += (uint) delta;
@@ -128,6 +162,10 @@ namespace Raccoon {
             }
 
             foreach (Graphic g in Graphics) {
+                if (!g.Visible) {
+                    continue;
+                }
+
                 g.Update(delta);
             }
         }
@@ -139,54 +177,59 @@ namespace Raccoon {
                 return;
             }
 
+            int index = 0;
             foreach (Graphic g in Graphics) {
-                g.Render();
-            }
-        }
-
-        [System.Diagnostics.Conditional("DEBUG")]
-        public virtual void DebugRender() {
-            if (Game.Instance.DebugMode) {
-                foreach (Component c in _components) {
-                    c.DebugRender();
+                if (!g.Visible) {
+                    continue;
                 }
+
+                g.Layer = Layer + index;
+                g.Render(Position + g.Position, Rotation + g.Rotation);
+                index++;
             }
         }
 
-        public void AddGraphic(Graphic graphic) {
-            Graphics.Add(graphic);
-            graphic.Position = Position;
-            graphic.Layer = Layer;
-        }
+        [Conditional("DEBUG")]
+        public virtual void DebugRender() {
+            foreach (Graphic g in Graphics) {
+                if (!g.Visible) {
+                    continue;
+                }
 
-        public void AddGraphics(IEnumerable<Graphic> graphics) {
-            Graphics.AddRange(graphics);
-            foreach (Graphic g in graphics) {
-                g.Position = Position;
+                g.DebugRender();
+            }
+
+            foreach (Component c in _components) {
+                if (!c.Enabled) {
+                    continue;
+                }
+
+                c.DebugRender();
             }
         }
 
-        public void RemoveGraphic(Graphic graphic) {
-            Graphics.Remove(graphic);
+        public void Add(Graphic graphic) {
+            _graphicsToAdd.Add(graphic);
         }
 
-        public void RemoveGraphics(IEnumerable<Graphic> graphics) {
-            foreach (Graphic g in graphics) {
-                RemoveGraphic(g);
-            }
+        public void Add(IEnumerable<Graphic> graphics) {
+            _graphicsToAdd.AddRange(graphics);
         }
 
-        public void ClearGraphics() {
-            Graphics.Clear();
-        }
-
-        public void AddComponent(Component component) {
-            _components.Add(component);
+        public void Add(Component component) {
             component.OnAdded(this);
         }
 
-        public void RemoveComponent(Component component) {
-            _components.Remove(component);
+        public void Remove(Graphic graphic) {
+            _graphicsToRemove.Add(graphic);
+        }
+
+        public void Remove(IEnumerable<Graphic> graphics) {
+            _graphicsToRemove.AddRange(graphics);
+        }
+
+        public void Remove(Component component) {
+            _componentsToRemove.Add(component);
         }
 
         public T GetComponent<T>() where T : Component {
@@ -199,7 +242,34 @@ namespace Raccoon {
             return null;
         }
 
+        public List<T> GetComponents<T>() where T : Component {
+            List<T> components = new List<T>();
+            foreach (Component c in _components) {
+                if (c is T) {
+                    components.Add(c as T);
+                }
+            }
+
+            return components;
+        }
+
+        public void RemoveComponents<T>() {
+            foreach (Component c in _components) {
+                if (c is T) {
+                    _componentsToRemove.Add(c);
+                }
+            }
+        }
+
+        public void ClearGraphics() {
+            Graphics.Clear();
+        }
+
         public void ClearComponents() {
+            foreach (Component c in _components) {
+                c.OnRemoved();
+            }
+
             _components.Clear();
         }
 

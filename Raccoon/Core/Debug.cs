@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Diagnostics;
+using Raccoon.Graphics;
 
 namespace Raccoon {
     public static class Debug {
@@ -88,33 +89,76 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, Graphics.Color color, string message) {
-            Game.Instance.Core.SpriteBatch.DrawString(Game.Instance.Core.StdFont.SpriteFont, message, (!allowCameraScroll && Game.Instance.Scene != null ? Game.Instance.Scene.Camera.Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + position : position * Game.Instance.Scene.Camera.Zoom), color);
+        public static void DrawString(bool allowCameraScroll, Vector2 position, Color color, string message) {
+            Game.Instance.Core.SpriteBatch.DrawString(Game.Instance.Core.StdFont.SpriteFont, message, (!allowCameraScroll && Game.Instance.Scene != null ? Game.Instance.Scene.Camera.Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + position : position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), color);
         }
 
         [Conditional("DEBUG")]
         public static void DrawString(bool allowCameraScroll, Vector2 position, string message) {
-            DrawString(allowCameraScroll, position, Graphics.Color.White, message);
+            DrawString(allowCameraScroll, position, Color.White, message);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, Graphics.Color color, string format, params object[] args) {
+        public static void DrawString(bool allowCameraScroll, Vector2 position, Color color, string format, params object[] args) {
             DrawString(allowCameraScroll, position, color, string.Format(format, args));
         }
 
         [Conditional("DEBUG")]
         public static void DrawString(bool allowCameraScroll, Vector2 position, string format, params object[] args) {
-            DrawString(allowCameraScroll, position, Graphics.Color.White, format, args);
+            DrawString(allowCameraScroll, position, Color.White, format, args);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(Vector2 from, Vector2 to, Color color) {
+            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
+                new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(from.X, from.Y, 0), color),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(to.X, to.Y, 0), color)
+                }, 0, 1);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(Vector2 from, Vector2 to) {
+            DrawLine(from, to, Color.Red);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(float x1, float y1, float x2, float y2, Color color) {
+            DrawLine(new Vector2(x1, y1), new Vector2(x2, y2), color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(float x1, float y1, float x2, float y2) {
+            DrawLine(x1, y1, x2, y2, Color.Red);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Rectangle rectangle, Color color) {
+            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
+                new Microsoft.Xna.Framework.Graphics.VertexPositionColor[5] {
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Top, 0), color),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Right, rectangle.Top, 0), color),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Right, rectangle.Bottom, 0), color),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Bottom, 0), color),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Top, 0), color)
+                }, 0, 4);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Rectangle rectangle) {
+            DrawRectangle(rectangle, Color.Red);
         }
 
         [Conditional("DEBUG")]
         public static void Log(string message) {
             if (LogFileWriter == null) {
-                LogFileWriter = new StreamWriter(Directory.GetCurrentDirectory() + "/log-" + DateTime.Now.ToString("MMddyyyy-HHmmss") + ".txt");
-                LogFileWriter.WriteLine(DateTime.Now.ToString() + "  Log file created");
+                LogFileWriter = new StreamWriter(string.Format("{0}/log-{1}.txt", Directory.GetCurrentDirectory(), DateTime.Now.ToString("MMddyy-HHmmss")));
+                LogFileWriter.WriteLine($"{DateTime.Now.ToString()}  Log file created");
             }
 
-            LogFileWriter.WriteLine(DateTime.Now.ToString() + "  " + new string(' ', IndentSize * IndentLevel) + message);
+            LogFileWriter.WriteLine($"{DateTime.Now.ToString()}  {new string(' ', IndentSize * IndentLevel)}{message}");
             LogFileWriter.Flush();
         }
 

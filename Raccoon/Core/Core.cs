@@ -1,7 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace Raccoon {
     internal class Core : Microsoft.Xna.Framework.Game {
@@ -16,16 +17,10 @@ namespace Raccoon {
 
         #endregion Private Members
 
-        #region Public Delegates
-
-        public delegate void TickHandler(int delta);
-
-        #endregion Public Delegates
-
         #region Public Events
 
         public event Action OnBegin, OnExit, OnUnloadContent, OnBeforeUpdate, OnLateUpdate, OnRender, OnDebugRender;
-        public event TickHandler OnUpdate;
+        public event Game.TickHandler OnUpdate;
 
         #endregion Public Events
 
@@ -33,9 +28,15 @@ namespace Raccoon {
 
         public Core(string title, int width, int height, int targetFPS, bool fullscreen, bool vsync) {
             Title = title;
+
+#if DEBUG
             Window.Title = string.Format(_windowTitleDetailed, Title, 0, GC.GetTotalMemory(false) / 1048576f);
+#else
+            Window.Title = Title;
+#endif
+
             Content.RootDirectory = "Content";
-            TargetElapsedTime = TimeSpan.FromTicks((long) System.Math.Round(10000000 / (double) targetFPS)); // time between frames
+            TargetElapsedTime = TimeSpan.FromTicks((long) Math.Round(10000000 / (double) targetFPS)); // time between frames
             Scale = 1f;
             BackgroundColor = Color.Black;
 
@@ -59,8 +60,9 @@ namespace Raccoon {
         public int DeltaTime { get; private set; }
         public Color BackgroundColor { get; set; }
         public string Title { get; set; }
-        public Matrix ScreenTransform { get { return _screenTransform; } set { _screenTransform = value; } }
+        public Matrix ScreenTransform { get { return _screenTransform; } set { _screenTransform = BasicEffect.View = value; } }
         public Matrix ScreenDebugTransform { get { return _debugScreenTransform; } set { _debugScreenTransform = value; } }
+        public BasicEffect BasicEffect { get; set; }
 
         public float Scale {
             get {
@@ -97,9 +99,16 @@ namespace Raccoon {
             // default content
             ResourceContentManager resourceContentManager = new ResourceContentManager(Services, Resource.ResourceManager);
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
+            BasicEffect = new BasicEffect(GraphicsDevice) {
+                VertexColorEnabled = true,
+                World = Matrix.CreateLookAt(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 0f), Vector3.Up),
+                Projection = Matrix.CreateOrthographicOffCenter(0, Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, 0, 1f, 0f)
+            };
+
             OnUnloadContent += resourceContentManager.Unload;
 
-            OnBegin?.Invoke();
+            // scene OnBegin
+            OnBegin.Invoke();
             OnBegin = null;
 
             Util.Tween.Tweener.Instance.Start();
@@ -109,7 +118,7 @@ namespace Raccoon {
         protected override void UnloadContent() {
             Raccoon.Graphics.Texture.White.Dispose();
             Raccoon.Graphics.Texture.Black.Dispose();
-            OnUnloadContent?.Invoke();
+            OnUnloadContent.Invoke();
             OnUnloadContent = null;
             Content.Unload();
             base.UnloadContent();
@@ -129,10 +138,10 @@ namespace Raccoon {
 
             // updates
             Input.Instance.Update(delta);
+            OnBeforeUpdate.Invoke();
+            OnUpdate.Invoke(delta);
             Coroutine.Instance.Update(delta);
-            OnBeforeUpdate?.Invoke();
-            OnUpdate?.Invoke(delta);
-            OnLateUpdate?.Invoke();
+            OnLateUpdate.Invoke();
             Util.Tween.Tweener.Instance.Update(delta);
             
             // fps
@@ -141,7 +150,9 @@ namespace Raccoon {
                 _lastFpsTime = Time;
                 _fps = _fpsCount;
                 _fpsCount = 0;
+#if DEBUG
                 Window.Title = string.Format(_windowTitleDetailed, Title, _fps, GC.GetTotalMemory(false) / 1048576f);
+#endif
             }
 
             base.Update(gameTime);
@@ -151,8 +162,8 @@ namespace Raccoon {
             // game render
             GraphicsDevice.SetRenderTarget(_mainRenderTarget);
             Graphics.GraphicsDevice.Clear(BackgroundColor);
-            SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenTransform);
-            OnRender?.Invoke();
+            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null, ScreenTransform);
+            OnRender.Invoke();
             SpriteBatch.End();
             GraphicsDevice.SetRenderTarget(null);
 
@@ -169,8 +180,8 @@ namespace Raccoon {
 #if DEBUG
             // debug render
             if (Game.Instance.DebugMode) {
-                SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenDebugTransform);
-                OnDebugRender?.Invoke();
+                SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenDebugTransform);
+                OnDebugRender.Invoke();
                 Debug.DrawString(false, new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
                 SpriteBatch.End();
             }

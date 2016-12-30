@@ -1,16 +1,21 @@
-﻿using Raccoon.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
+
+using Raccoon.Graphics;
 
 namespace Raccoon.Components {
     public abstract class Collider : Component {
-        protected Collider(string tag) {
-            Tag = tag;
+        protected Collider(params string[] tags) {
+            Tags.AddRange(tags);
         }
 
-        protected Collider(Enum tag) : this(tag.ToString()) { }
+        protected Collider(params Enum[] tags) {
+            foreach (Enum e in tags) {
+                Tags.Add(e.ToString());
+            }
+        }
 
-        public string Tag { get; protected set; }
+        public List<string> Tags { get; private set; } = new List<string>();
         public Vector2 Origin { get; set; }
         public Vector2 Position { get { return Entity.Position - Origin; } }
         public float X { get { return Position.X; } }
@@ -29,9 +34,13 @@ namespace Raccoon.Components {
 
         public override void OnAdded(Entity entity) {
             base.OnAdded(entity);
-            if (Entity.Scene != null) {
-                Physics.Instance.AddCollider(this, Tag);
+            if (Entity.Scene != null && Tags.Count > 0) {
+                Physics.Instance.AddCollider(this, Tags);
             }
+        }
+
+        public override void OnRemoved() {
+            Physics.Instance.RemoveCollider(this, Tags);
         }
 
         public override void Update(int delta) {
@@ -48,20 +57,30 @@ namespace Raccoon.Components {
             DebugRender();
         }
 
+        #region Collides [Single Tag] [Single Output]
+
         public bool Collides(Vector2 position, string tag) {
             return Physics.Instance.Collides(position, this, tag);
         }
 
         public bool Collides(Vector2 position, Enum tag) {
-            return Physics.Instance.Collides(position, this, tag);
+            return Collides(position, tag.ToString());
         }
 
-        public bool Collides(int x, int y, string tag) {
-            return Physics.Instance.Collides(x, y, this, tag);
+        public bool Collides(Vector2 position, string tag, out Collider collidedCollider) {
+            return Physics.Instance.Collides(position, this, tag, out collidedCollider);
         }
 
-        public bool Collides(int x, int y, Enum tag) {
-            return Physics.Instance.Collides(x, y, this, tag);
+        public bool Collides(Vector2 position, Enum tag, out Collider collidedCollider) {
+            return Collides(position, tag.ToString(), out collidedCollider);
+        }
+
+        public bool Collides(Vector2 position, string tag, out Entity collidedEntity) {
+            return Physics.Instance.Collides(position, this, tag, out collidedEntity);
+        }
+
+        public bool Collides(Vector2 position, Enum tag, out Entity collidedEntity) {
+            return Collides(position, tag.ToString(), out collidedEntity);
         }
 
         public bool Collides(string tag) {
@@ -69,23 +88,107 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(Enum tag) {
-            return Physics.Instance.Collides(this, tag);
+            return Collides(tag.ToString());
         }
+
+        public bool Collides(string tag, out Collider collidedCollider) {
+            return Physics.Instance.Collides(this, tag, out collidedCollider);
+        }
+
+        public bool Collides(Enum tag, out Collider collidedCollider) {
+            return Collides(tag.ToString(), out collidedCollider);
+        }
+
+        public bool Collides(string tag, out Entity collidedEntity) {
+            return Physics.Instance.Collides(this, tag, out collidedEntity);
+        }
+
+        public bool Collides(Enum tag, out Entity collidedEntity) {
+            return Collides(tag.ToString(), out collidedEntity);
+        }
+
+        #endregion Collides [Single Tag] [Single Output]
+
+        #region Collides [Single Tag] [Multiple Output]
+
+        public bool Collides(Vector2 position, string tag, out List<Collider> collidedColliders) {
+            return Physics.Instance.Collides(position, this, tag, out collidedColliders);
+        }
+
+        public bool Collides(Vector2 position, Enum tag, out List<Collider> collidedColliders) {
+            return Collides(position, tag.ToString(), out collidedColliders);
+        }
+
+        public bool Collides(Vector2 position, string tag, out List<Entity> collidedEntities) {
+            return Physics.Instance.Collides(position, this, tag, out collidedEntities);
+        }
+
+        public bool Collides(Vector2 position, Enum tag, out List<Entity> collidedEntities) {
+            return Collides(position, tag.ToString(), out collidedEntities);
+        }
+
+        public bool Collides(string tag, out List<Collider> collidedColliders) {
+            return Physics.Instance.Collides(this, tag, out collidedColliders);
+        }
+
+        public bool Collides(Enum tag, out List<Collider> collidedColliders) {
+            return Collides(tag.ToString(), out collidedColliders);
+        }
+
+        public bool Collides(string tag, out List<Entity> collidedEntities) {
+            return Physics.Instance.Collides(this, tag, out collidedEntities);
+        }
+
+        public bool Collides(Enum tag, out List<Entity> collidedEntities) {
+            return Collides(tag.ToString(), out collidedEntities);
+        }
+
+        #endregion Collides [Single Tag] [Multiple Output]
+
+        #region Collides [Multiple Tag] [Single Output]
 
         public bool Collides(Vector2 position, IEnumerable<string> tags) {
             return Physics.Instance.Collides(position, this, tags);
         }
 
         public bool Collides(Vector2 position, IEnumerable<Enum> tags) {
-            return Physics.Instance.Collides(position, this, tags);
+            foreach (Enum tag in tags) {
+                if (Collides(position, tag)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public bool Collides(int x, int y, IEnumerable<string> tags) {
-            return Physics.Instance.Collides(x, y, this, tags);
+        public bool Collides(Vector2 position, IEnumerable<string> tags, out Collider collidedCollider) {
+            return Physics.Instance.Collides(position, this, tags, out collidedCollider);
         }
 
-        public bool Collides(int x, int y, IEnumerable<Enum> tags) {
-            return Physics.Instance.Collides(x, y, this, tags);
+        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out Collider collidedCollider) {
+            foreach (Enum tag in tags) {
+                if (Collides(position, tag, out collidedCollider)) {
+                    return true;
+                }
+            }
+
+            collidedCollider = null;
+            return false;
+        }
+
+        public bool Collides(Vector2 position, IEnumerable<string> tags, out Entity collidedEntity) {
+            return Physics.Instance.Collides(position, this, tags, out collidedEntity);
+        }
+
+        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out Entity collidedEntity) {
+            foreach (Enum tag in tags) {
+                if (Collides(position, tag, out collidedEntity)) {
+                    return true;
+                }
+            }
+
+            collidedEntity = null;
+            return false;
         }
 
         public bool Collides(IEnumerable<string> tags) {
@@ -93,7 +196,113 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(IEnumerable<Enum> tags) {
-            return Physics.Instance.Collides(this, tags);
+            foreach (Enum tag in tags) {
+                if (Collides(tag)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
+
+        public bool Collides(IEnumerable<string> tags, out Collider collidedCollider) {
+            return Physics.Instance.Collides(this, tags, out collidedCollider);
+        }
+
+        public bool Collides(IEnumerable<Enum> tags, out Collider collidedCollider) {
+            foreach (Enum tag in tags) {
+                if (Collides(tag, out collidedCollider)) {
+                    return true;
+                }
+            }
+
+            collidedCollider = null;
+            return false;
+        }
+
+        public bool Collides(IEnumerable<string> tags, out Entity collidedEntity) {
+            return Physics.Instance.Collides(this, tags, out collidedEntity);
+        }
+
+        public bool Collides(IEnumerable<Enum> tags, out Entity collidedEntity) {
+            foreach (Enum tag in tags) {
+                if (Collides(tag, out collidedEntity)) {
+                    return true;
+                }
+            }
+
+            collidedEntity = null;
+            return false;
+        }
+
+        #endregion Collides [Multiple Tag] [Single Output]
+
+        #region Collides [Multiple Tag] [Multiple Output]
+
+        public bool Collides(Vector2 position, IEnumerable<string> tags, out List<Collider> collidedColliders) {
+            return Physics.Instance.Collides(position, this, tags, out collidedColliders);
+        }
+
+        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out List<Collider> collidedColliders) {
+            collidedColliders = new List<Collider>();
+            foreach (Enum tag in tags) {
+                List<Collider> collidedTagColliders = new List<Collider>();
+                if (Collides(position, tag, out collidedTagColliders)) {
+                    collidedColliders.AddRange(collidedTagColliders);
+                }
+            }
+
+            return collidedColliders.Count > 0;
+        }
+
+        public bool Collides(Vector2 position, IEnumerable<string> tags, out List<Entity> collidedEntities) {
+            return Physics.Instance.Collides(position, this, tags, out collidedEntities);
+        }
+
+        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out List<Entity> collidedEntities) {
+            collidedEntities = new List<Entity>();
+            foreach (Enum tag in tags) {
+                List<Entity> collidedTagEntities = new List<Entity>();
+                if (Collides(position, tag, out collidedTagEntities)) {
+                    collidedEntities.AddRange(collidedTagEntities);
+                }
+            }
+
+            return collidedEntities.Count > 0;
+        }
+
+        public bool Collides(IEnumerable<string> tags, out List<Collider> collidedColliders) {
+            return Physics.Instance.Collides(this, tags, out collidedColliders);
+        }
+
+        public bool Collides(IEnumerable<Enum> tags, out List<Collider> collidedColliders) {
+            collidedColliders = new List<Collider>();
+            foreach (Enum tag in tags) {
+                List<Collider> collidedTagColliders = new List<Collider>();
+                if (Collides(tag, out collidedTagColliders)) {
+                    collidedColliders.AddRange(collidedTagColliders);
+                }
+            }
+
+            return collidedColliders.Count > 0;
+        }
+
+        public bool Collides(IEnumerable<string> tags, out List<Entity> collidedEntities) {
+            return Physics.Instance.Collides(this, tags, out collidedEntities);
+        }
+
+        public bool Collides(IEnumerable<Enum> tags, out List<Entity> collidedEntities) {
+            collidedEntities = new List<Entity>();
+            foreach (Enum tag in tags) {
+                List<Entity> collidedTagEntities = new List<Entity>();
+                if (Collides(tag, out collidedTagEntities)) {
+                    collidedEntities.AddRange(collidedTagEntities);
+                }
+            }
+
+            return collidedEntities.Count > 0;
+        }
+
+        #endregion Collides [Multiple Tag] [Multiple Output]
     }
 }

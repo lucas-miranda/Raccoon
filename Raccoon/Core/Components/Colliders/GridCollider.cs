@@ -1,31 +1,30 @@
-﻿using Raccoon.Graphics;
-using System;
+﻿using System;
+
+using Raccoon.Graphics;
 
 namespace Raccoon.Components {
     public class GridCollider : Collider {
+        #region Private Members
+
         private bool[,] _data;
         private bool _graphicNeedUpdate;
         private Size _tileSize;
 
-        public GridCollider(Size tileSize, int columns, int rows, string tag) : base(tag) {
-            TileSize = tileSize;
-            Columns = columns;
-            Rows = rows;
-            Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
-            _data = new bool[Rows, Columns];
-            for (int y = 0; y < Rows; y++) {
-                for (int x = 0; x < Columns; x++) {
-                    _data[y, x] = false;
-                }
-            }
+        #endregion Private Members
 
-#if DEBUG
-            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false);
-            _graphicNeedUpdate = false;
-#endif
+        #region Constructors
+
+        public GridCollider(Size tileSize, int columns, int rows, params string[] tags) : base(tags) {
+            Initialize(tileSize, columns, rows);
         }
 
-        public GridCollider(Size tileSize, int columns, int rows, Enum tag) : this(tileSize, columns, rows, tag.ToString()) { }
+        public GridCollider(Size tileSize, int columns, int rows, params Enum[] tags) : base(tags) {
+            Initialize(tileSize, columns, rows);
+        }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public int Columns { get; private set; }
         public int Rows { get; private set; }
@@ -43,6 +42,10 @@ namespace Raccoon.Components {
 #endif
             }
         }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         public override void DebugRender() {
             Size graphicSize = new Size((float) Math.Floor(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1), (float) Math.Floor(TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1));
@@ -81,5 +84,29 @@ namespace Raccoon.Components {
 
             _data[y, x] = collidable;
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private void Initialize(Size tileSize, int columns, int rows) {
+            TileSize = tileSize;
+            Columns = columns;
+            Rows = rows;
+            Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
+            _data = new bool[Rows, Columns];
+            for (int y = 0; y < Rows; y++) {
+                for (int x = 0; x < Columns; x++) {
+                    _data[y, x] = false;
+                }
+            }
+
+#if DEBUG
+            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false);
+            _graphicNeedUpdate = false;
+#endif
+        }
+
+        #endregion Private Methods
     }
 }
