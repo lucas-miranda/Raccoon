@@ -41,6 +41,8 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Audio\Music.cs" />
+    <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Colliders\Collider.cs" />
     <Compile Include="Core\Components\Colliders\BoxCollider.cs" />
