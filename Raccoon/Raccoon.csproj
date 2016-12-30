@@ -97,6 +97,8 @@
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Graphics\Color.cs" />
     <Compile Include="Util\Math.cs" />
+    <Compile Include="Util\Random.cs" />
+    <Compile Include="Util\Range.cs" />
     <Compile Include="Util\Tiled\Tileset\TiledAnimation.cs" />
     <Compile Include="Util\Tiled\TiledData.cs" />
     <Compile Include="Util\Tiled\TiledImage.cs" />
