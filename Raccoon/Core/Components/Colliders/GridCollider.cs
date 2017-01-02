@@ -60,9 +60,8 @@ namespace Raccoon.Components {
 
 
             Scene scene = Game.Instance.Scene;
-            Rectangle clip = scene == null ? new Rectangle(0, 0, Rows, Columns) : new Rectangle(Math.Max(0, (int) Math.Floor(scene.Camera.X / TileSize.Width)), Math.Max(0, (int) Math.Floor(scene.Camera.Y / TileSize.Height)), Math.Min(Columns - 1, (int) Math.Floor(scene.Camera.Width / TileSize.Width)), Math.Min(Rows - 1, (int) Math.Floor(scene.Camera.Height / TileSize.Height)));
-            for (int y = (int) clip.Top; y < _data.GetLength(0) && y <= (int) clip.Bottom; y++) {
-                for (int x = (int) clip.Left; x < _data.GetLength(1) && x <= (int) clip.Right; x++) {
+            for (int y = 0; y < _data.GetLength(0); y++) {
+                for (int x = 0; x < _data.GetLength(1); x++) {
                     if (!_data[y, x])
                         continue;
 

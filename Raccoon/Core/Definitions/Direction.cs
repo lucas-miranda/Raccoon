@@ -28,6 +28,10 @@ namespace Raccoon {
             return (Direction) (((int) direction >> 1 | ((int) direction << 3)) & 15);
         }
 
+        public static Direction Opposite(this Direction direction) {
+            return (Direction) ((((int) direction << 2) & 15) | ((int) direction >> 2));
+        }
+
         public static Vector2 ToVector2(this Direction direction) {
             return new Vector2((((int) direction >> 1) & 1) - (((int) direction >> 3) & 1), ((int) direction & 1) - (((int) direction >> 2) & 1));
         }

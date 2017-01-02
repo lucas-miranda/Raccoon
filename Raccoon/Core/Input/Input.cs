@@ -45,6 +45,10 @@ namespace Raccoon {
             return _instance._keyboardState[(Keys) key] == KeyState.Down;
         }
 
+        public static bool IsKeyReleased(Key key) {
+            return _instance._keyboardPreviousState[(Keys) key] == KeyState.Down && _instance._keyboardState[(Keys) key] == KeyState.Up;
+        }
+
         public static bool IsKeyUp(Key key) {
             return _instance._keyboardState[(Keys) key] == KeyState.Up;
         }
@@ -55,6 +59,10 @@ namespace Raccoon {
 
         public static bool IsJoyButtonDown(int joystickId, int buttonId) {
             return _instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
+        }
+
+        public static bool IsJoyButtonReleased(int joystickId, int buttonId) {
+            return _instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Pressed && (!_instance._joysticksState.ContainsKey(joystickId) || _instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released);
         }
 
         public static bool IsJoyButtonUp(int joystickId, int buttonId) {
@@ -75,6 +83,10 @@ namespace Raccoon {
 
         public static bool IsMouseButtonDown(MouseButton button) {
             return _instance._mouseButtonsState[button] == ButtonState.Pressed;
+        }
+
+        public static bool IsMouseButtonReleased(MouseButton button) {
+            return _instance._mouseButtonsLastState[button] == ButtonState.Pressed && _instance._mouseButtonsState[button] == ButtonState.Released;
         }
 
         public static bool IsMouseButtonUp(MouseButton button) {

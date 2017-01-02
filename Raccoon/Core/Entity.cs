@@ -16,7 +16,7 @@ namespace Raccoon {
         #region Private Members
         
         private List<Component> _components;
-        private List<Graphic> _graphicsToAdd, _graphicsToRemove;
+        private List<Graphic> _graphicsToAdd;
         private List<Component> _componentsToAdd, _componentsToRemove;
         
         #endregion Private Members
@@ -29,7 +29,6 @@ namespace Raccoon {
 
             Graphics = new List<Graphic>();
             _graphicsToAdd = new List<Graphic>();
-            _graphicsToRemove = new List<Graphic>();
 
             _components = new List<Component>();
             _componentsToAdd = new List<Component>();
@@ -122,14 +121,9 @@ namespace Raccoon {
                 _graphicsToAdd.Clear();
             }
 
-            if (_graphicsToRemove.Count > 0) {
-                Graphics.RemoveAll(p => _graphicsToRemove.Contains(p));
-                _graphicsToRemove.Clear();
-            }
-
             if (_componentsToAdd.Count > 0) {
                 foreach (Component c in _componentsToAdd) {
-                    c.OnAdded(this);
+                    _components.Add(c);
                 }
 
                 _componentsToAdd.Clear();
@@ -139,6 +133,7 @@ namespace Raccoon {
                 foreach (Component c in _componentsToRemove) {
                     if (_components.Contains(c)) {
                         c.OnRemoved();
+                        _components.Remove(c);
                     }
                 }
 
@@ -209,23 +204,44 @@ namespace Raccoon {
         }
 
         public void Add(Graphic graphic) {
-            _graphicsToAdd.Add(graphic);
+            int index = 0;
+            for (int i = Graphics.Count - 1; i >= 0; i--) {
+                if (Graphics[i].Layer <= graphic.Layer) {
+                    index = i + 1;
+                    break;
+                }
+            }
+
+            Graphics.Insert(index, graphic);
         }
 
         public void Add(IEnumerable<Graphic> graphics) {
-            _graphicsToAdd.AddRange(graphics);
+            foreach (Graphic g in graphics) {
+                int index = 0;
+                for (int i = Graphics.Count - 1; i >= 0; i--) {
+                    if (Graphics[i].Layer <= g.Layer) {
+                        index = i + 1;
+                        break;
+                    }
+                }
+
+                Graphics.Insert(index, g);
+            }
         }
 
         public void Add(Component component) {
             component.OnAdded(this);
+            _componentsToAdd.Add(component);
         }
 
         public void Remove(Graphic graphic) {
-            _graphicsToRemove.Add(graphic);
+            Graphics.Remove(graphic);
         }
 
         public void Remove(IEnumerable<Graphic> graphics) {
-            _graphicsToRemove.AddRange(graphics);
+            foreach (Graphic g in graphics) {
+                Graphics.Remove(g);
+            }
         }
 
         public void Remove(Component component) {

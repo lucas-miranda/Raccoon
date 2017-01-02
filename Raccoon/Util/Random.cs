@@ -1,4 +1,6 @@
-﻿using Raccoon.Graphics;
+﻿using System.Collections.Generic;
+
+using Raccoon.Graphics;
 
 namespace Raccoon.Util {
     public class Random {
@@ -56,6 +58,19 @@ namespace Raccoon.Util {
 
         public static Direction Direction() {
             return (Direction) (1 << Integer(0, 3));
+        }
+
+        public static T Choose<T>(ICollection<T> list) where T : class {
+            int i = Integer(0, Math.Max(0, list.Count - 1));
+            foreach (T item in list) {
+                if (i == 0) {
+                    return item;
+                }
+
+                i--;
+            }
+
+            return default(T);
         }
 
         public static void SetSeed(int seed) {

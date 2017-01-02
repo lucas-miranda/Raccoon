@@ -16,6 +16,7 @@ namespace Raccoon.Graphics {
         private int _tileSetRows, _tileSetColumns, _triangleCount;
         private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[0];
         private Vector2 _texSpriteCount;
+        private Microsoft.Xna.Framework.Matrix _lastWorldMatrix;
 
         #endregion Private Members
 
@@ -60,20 +61,27 @@ namespace Raccoon.Graphics {
         public override void Render(Vector2 position, float rotation) {
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
+            _lastWorldMatrix = Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(new Microsoft.Xna.Framework.Vector3(position.X, position.Y, 0f)) * worldMatrix;
             Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
             Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
             Game.Instance.Core.BasicEffect.Texture = null;
             Game.Instance.Core.BasicEffect.TextureEnabled = false;
         }
 
         public override void DebugRender() {
+            Microsoft.Xna.Framework.Matrix worldMatrix = Game.Instance.Core.BasicEffect.World;
+            Game.Instance.Core.BasicEffect.World = _lastWorldMatrix;
+
             for (int row = 0; row <= Rows; row++) {
-                Debug.DrawLine(Position + new Vector2(0, row * TileSize.Height), Position + new Vector2(Columns * TileSize.Width, row * TileSize.Height), new Color(0x919191FF));
+                Debug.DrawLine(Position + new Vector2(0, row * TileSize.Height), Position + new Vector2(Columns * TileSize.Width, row * TileSize.Height), row == 0 || row == Rows ? new Color(0xccccccff) : new Color(0x4c4c4cff));
             }
 
             for (int column = 0; column <= Columns; column++) {
-                Debug.DrawLine(Position + new Vector2(column * TileSize.Width, 0), Position + new Vector2(column * TileSize.Width, Rows * TileSize.Height), new Color(0x919191FF));
+                Debug.DrawLine(Position + new Vector2(column * TileSize.Width, 0), Position + new Vector2(column * TileSize.Width, Rows * TileSize.Height), column == 0 || column == Columns ? new Color(0xccccccff) : new Color(0x4c4c4cff));
             }
+
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
         }
 
         public void Setup(int columns, int rows) {

@@ -101,7 +101,7 @@ namespace Raccoon {
             StdFont = new Graphics.Font(resourceContentManager.Load<SpriteFont>("Zoomy"));
             BasicEffect = new BasicEffect(GraphicsDevice) {
                 VertexColorEnabled = true,
-                World = Matrix.CreateLookAt(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 0f), Vector3.Up),
+                World = Matrix.Identity,
                 Projection = Matrix.CreateOrthographicOffCenter(0, Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, 0, 1f, 0f)
             };
 
@@ -162,7 +162,7 @@ namespace Raccoon {
             // game render
             GraphicsDevice.SetRenderTarget(_mainRenderTarget);
             Graphics.GraphicsDevice.Clear(BackgroundColor);
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null, ScreenTransform);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenTransform);
             OnRender.Invoke();
             SpriteBatch.End();
             GraphicsDevice.SetRenderTarget(null);
@@ -173,16 +173,16 @@ namespace Raccoon {
 
             // draw main render target to screen
             Graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1f, 0);
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _scaleTransform);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, null, null, null, _scaleTransform);
             SpriteBatch.Draw(_mainRenderTarget, Microsoft.Xna.Framework.Vector2.Zero);
             SpriteBatch.End();
 
 #if DEBUG
             // debug render
             if (Game.Instance.DebugMode) {
-                SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenDebugTransform);
-                OnDebugRender.Invoke();
+                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, ScreenDebugTransform);
                 Debug.DrawString(false, new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
+                OnDebugRender.Invoke();
                 SpriteBatch.End();
             }
 #endif
