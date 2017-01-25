@@ -193,12 +193,20 @@
             return new Vector2((float) (l.X * v), (float)  (l.Y * v));
         }
 
+        public static Vector2 operator *(Vector2 l, Size s) {
+            return new Vector2(l.X * s.Width, l.Y * s.Height);
+        }
+
         public static Vector2 operator *(float v, Vector2 l) {
             return l * v;
         }
 
         public static Vector2 operator *(double v, Vector2 l) {
             return l * v;
+        }
+
+        public static Vector2 operator /(Vector2 l, Size s) {
+            return new Vector2(l.X / s.Width, l.Y / s.Height);
         }
 
         public static Vector2 operator /(Vector2 l, float v) {

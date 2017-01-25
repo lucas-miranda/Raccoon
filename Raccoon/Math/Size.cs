@@ -99,12 +99,28 @@
             return new Size(l.Width - r.Width, l.Height - r.Height);
         }
 
+        public static Size operator *(Size l, Size r) {
+            return new Size(l.Width * r.Width, l.Height * r.Height);
+        }
+
         public static Size operator *(Size l, float n) {
             return new Size(l.Width * n, l.Height * n);
         }
 
+        public static Size operator *(Size l, Vector2 v) {
+            return new Size(l.Width * v.X, l.Height * v.Y);
+        }
+
+        public static Size operator /(Size l, Size r) {
+            return new Size(l.Width / r.Width, l.Height / r.Height);
+        }
+
         public static Size operator /(Size l, float n) {
             return new Size(l.Width / n, l.Height / n);
+        }
+
+        public static Size operator /(Size l, Vector2 v) {
+            return new Size(l.Width / v.X, l.Height / v.Y);
         }
 
         #endregion Operators
