@@ -1,5 +1,6 @@
-﻿using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework.Input;
 
 namespace Raccoon {
     public enum MouseButton {
@@ -16,6 +17,7 @@ namespace Raccoon {
         private Dictionary<int, JoystickState> _joysticksState, _joysticksPreviousState;
         private KeyboardState _keyboardState, _keyboardPreviousState;
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState, _mouseButtonsLastState;
+        private Dictionary<Key, string> _specialKeysToString = new Dictionary<Key, string>();
 
         private Input() {
             // joystick
@@ -29,6 +31,9 @@ namespace Raccoon {
                 _mouseButtonsState[id] = ButtonState.Released;
                 _mouseButtonsLastState[id] = ButtonState.Released;
             }
+
+            // keys to string
+            _specialKeysToString[Key.Space] = " ";
         }
 
         public static Input Instance { get { return _instance; } }
@@ -36,6 +41,8 @@ namespace Raccoon {
         public static Vector2 MousePosition { get; private set; }
         public static int MouseScrollWheel { get; private set; }
         public static int MouseScrollWheelDelta { get; private set; }
+        public static string KeyboardText { get; private set; } = "";
+        public static Key[] PressedKeys { get; private set; } = new Key[0];
 
         public static bool IsKeyPressed(Key key) {
             return _instance._keyboardPreviousState[(Keys) key] == KeyState.Up && _instance._keyboardState[(Keys) key] == KeyState.Down;
@@ -94,6 +101,10 @@ namespace Raccoon {
         }
 
         public void Update(int delta) {
+            if (!Game.Instance.HasFocus) {
+                return;
+            }
+
             // joystick states
             _joysticksPreviousState.Clear();
             int id = 0;
@@ -120,6 +131,36 @@ namespace Raccoon {
             _keyboardPreviousState = _keyboardState;
             _keyboardState = Keyboard.GetState();
 
+            if (KeyboardText.Length > 0) {
+                KeyboardText = "";
+            }
+
+            Keys[] _xnaPressedKeys = _keyboardState.GetPressedKeys();
+            PressedKeys = new Key[_xnaPressedKeys.Length];
+            for (int i = 0; i < _xnaPressedKeys.Length; i++) {
+                PressedKeys[i] = (Key) _xnaPressedKeys[i];
+            }
+
+            if (PressedKeys.Length > 0) {
+                foreach (Key key in PressedKeys) {
+                    string str = "";
+                    if (_specialKeysToString.ContainsKey(key)) {
+                        str = _specialKeysToString[key];
+                    } else if ((int) key >= 48 && (int) key <= 90) {
+                        str = key.ToString();
+                        if ((int) key <= 57) {
+                            str = str.Remove(0, 1);
+                        } else if ((int) key >= 65) {
+                            str = str.ToLower();
+                        }
+                    } else {
+                        continue;
+                    }
+
+                    KeyboardText += str;
+                }
+            }
+
             // mouse
             MouseState XNAMouseState = Mouse.GetState();
 
@@ -129,6 +170,13 @@ namespace Raccoon {
             // buttons
             foreach (KeyValuePair<MouseButton, ButtonState> button in _mouseButtonsState) {
                 _mouseButtonsLastState[button.Key] = button.Value;
+            }
+
+            // ignore out of screen mouse interactions
+            if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
+                _mouseButtonsState[MouseButton.Left] = _mouseButtonsState[MouseButton.Middle] = _mouseButtonsState[MouseButton.Right] = _mouseButtonsState[MouseButton.M4] = _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
+                MouseScrollWheelDelta = MouseScrollWheel = 0;
+                return;
             }
 
             _mouseButtonsState[MouseButton.Left] = XNAMouseState.LeftButton;
