@@ -9,6 +9,8 @@ namespace Raccoon.Graphics {
 
         private static readonly Regex FrameNameRegex = new Regex(@"(.+) (\d+)? (.*)");
 
+        private static Dictionary<string, Atlas> _bank = new Dictionary<string, Atlas>();
+
         #endregion Private Static Members
 
         #region Private Members
@@ -106,5 +108,21 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Public Properties
+
+        #region Public Static Methods
+
+        public static void Register(string name, string imageFilename, string jsonFilename) {
+            _bank.Add(name, new Atlas(imageFilename, jsonFilename));
+        }
+
+        public static Atlas Retrieve(string name) {
+            return _bank[name];
+        }
+
+        public static AtlasSubTexture Retrieve(string name, string subName) {
+            return _bank[name][subName];
+        }
+
+        #endregion Public Static Methods
     }
 }
