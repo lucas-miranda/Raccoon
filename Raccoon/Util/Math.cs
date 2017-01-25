@@ -61,6 +61,10 @@ namespace Raccoon.Util {
             return new Vector2(Clamp(value.X, min.X, max.X), Clamp(value.Y, min.Y, max.Y));
         }
 
+        public static Vector2 Clamp(Vector2 value, Rectangle rect) {
+            return Clamp(value, rect.Position, new Vector2(rect.Right, rect.Bottom));
+        }
+
         public static float Lerp(float start, float end, float t) {
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }
@@ -88,12 +92,28 @@ namespace Raccoon.Util {
             return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
         }
 
+        public static Vector2 Min(Vector2 v1, Vector2 v2) {
+            return new Vector2(Min(v1.X, v2.X), Min(v1.Y, v2.Y));
+        }
+
+        public static Size Min(Size s1, Size s2) {
+            return new Size(Min(s1.Width, s2.Width), Min(s1.Height, s2.Height));
+        }
+
         public static float Max(float n1, float n2) {
             return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
         }
 
         public static int Max(int n1, int n2) {
             return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
+        }
+
+        public static Vector2 Max(Vector2 v1, Vector2 v2) {
+            return new Vector2(Max(v1.X, v2.X), Max(v1.Y, v2.Y));
+        }
+
+        public static Size Max(Size s1, Size s2) {
+            return new Size(Max(s1.Width, s2.Width), Max(s1.Height, s2.Height));
         }
 
         public static float Distance(float from, float to) {
