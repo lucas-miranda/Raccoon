@@ -21,6 +21,7 @@ namespace Raccoon.Util.Tween {
         #region Private Members
 
         private Dictionary<PropertyInfo, Lerper> _lerpers;
+        private bool _startReverse;
 
         #endregion Private Members
 
@@ -61,7 +62,7 @@ namespace Raccoon.Util.Tween {
 
         #region Public Properties
 
-        public object Subject { get; private set; }
+        public object Subject { get; set; }
         public uint Timer { get; private set; }
         public int Duration { get; private set; }
         public int RepeatTimes { get; set; } = 1;
@@ -115,9 +116,10 @@ namespace Raccoon.Util.Tween {
             Timer = 0;
             TimesPlayed = 0;
             Time = 0;
+            IsReverse = _startReverse;
 
             foreach (Lerper lerp in _lerpers.Values) {
-                lerp.Initialize();
+                lerp.Begin();
             }
         }
 
@@ -194,16 +196,19 @@ namespace Raccoon.Util.Tween {
 
         public Tween PingPong() {
             IsPingPong = true;
+            RepeatTimes *= 2;
             return this;
         }
 
         public Tween Reverse() {
             IsReverse = true;
+            _startReverse = true;
             return this;
         }
 
         public Tween Forward() {
             IsForward = true;
+            _startReverse = false;
             return this;
         }
 

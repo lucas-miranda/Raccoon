@@ -23,8 +23,12 @@ namespace Raccoon.Util.Tween {
         public object To { get; set; }
         public object Value { get { return Property.GetValue(Owner); } set { Property.SetValue(Owner, value); } }
 
-        public virtual void Initialize() {
+        public virtual void Begin() {
             Value = From;
+        }
+
+        public virtual void End() {
+            Value = To;
         }
 
         public abstract void Interpolate(float t);
@@ -108,7 +112,7 @@ namespace Raccoon.Util.Tween {
 
         public override void Interpolate(float t) {
             t = Easing(t);
-            Value = new Color((byte) Math.Approach(From.R, To.R, (To.R - From.R) * t), (byte) Math.Approach(From.G, To.G, (To.G - From.G) * t), (byte) Math.Approach(From.B, To.B, (To.B - From.B) * t));
+            Value = new Color((byte) (From.R + (To.R - From.R) * t), (byte) (From.G + (To.G - From.G) * t), (byte) (From.B + (To.B - From.B) * t));
         }
     }
 
