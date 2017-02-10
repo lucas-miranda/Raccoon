@@ -20,6 +20,7 @@ namespace Raccoon {
         public float Right { get { return X + Width; } }
         public float Bottom { get { return Y + Height; } }
         public bool UseBounds { get; set; }
+        public bool ClampValues { get; set; } = true;
         public Rectangle Bounds { get; set; }
         public Vector2 Center { get { return Position + Game.Instance.ScreenSize / (2 * _zoom); } set { Position = value - Game.Instance.ScreenSize / (2 * _zoom); } }
 
@@ -29,11 +30,16 @@ namespace Raccoon {
             }
 
             set {
-                value = new Vector2((float) Math.Round(value.X), (float) Math.Round(value.Y));
+                if (ClampValues) {
+                    value = new Vector2((float) Math.Round(value.X), (float) Math.Round(value.Y));
+                }
+
                 _position = !UseBounds ? value : Util.Math.Clamp(value, Bounds.Position, new Vector2(Bounds.Right - Width, Bounds.Bottom - Height));
-                Game.Instance.Core.ScreenTransform = Transform = Matrix.CreateTranslation(-_position.X, -_position.Y, 0) * Matrix.CreateScale(Zoom, Zoom, 1);
+                Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
+                Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
+
 #if DEBUG
-                Game.Instance.Core.ScreenDebugTransform = Matrix.CreateTranslation(-_position.X * Game.Instance.Scale * _zoom, -_position.Y * Game.Instance.Scale * _zoom, 0);
+                Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * _zoom, -Y * Game.Instance.Scale * _zoom, 0);
 #endif
             }
         }
@@ -45,14 +51,14 @@ namespace Raccoon {
 
             set {
                 _zoom = value;
-                Game.Instance.Core.ScreenTransform = Transform = Matrix.CreateTranslation(-X, -Y, 0) * Matrix.CreateScale(_zoom, _zoom, 1);
+                Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
+                Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
+
 #if DEBUG
-                Game.Instance.Core.ScreenDebugTransform = Matrix.CreateTranslation(-X * Game.Instance.Scale * _zoom, -Y * Game.Instance.Scale * _zoom, 0);
+                Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * _zoom, -Y * Game.Instance.Scale * _zoom, 0);
 #endif
             }
         }
-
-        internal Matrix Transform { get; set; } = Matrix.Identity;
 
         public virtual void OnAdded() {
             Current = this;

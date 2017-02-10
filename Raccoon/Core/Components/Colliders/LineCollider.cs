@@ -60,7 +60,9 @@ namespace Raccoon.Components {
             To = to;
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Line(From * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, To * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color);
+            Graphic = new Graphics.Primitives.Line(From * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, To * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color) {
+                Surface = Game.Instance.Core.DebugSurface
+            };
 #endif
         }
 

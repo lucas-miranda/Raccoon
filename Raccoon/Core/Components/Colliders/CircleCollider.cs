@@ -43,7 +43,9 @@ namespace Raccoon.Components {
             Size = new Size(radius);
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Circle((int) (Radius * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), Color);
+            Graphic = new Graphics.Primitives.Circle((int) (Radius * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), Color) {
+                Surface = Game.Instance.Core.DebugSurface
+            };
 #endif
         }
 

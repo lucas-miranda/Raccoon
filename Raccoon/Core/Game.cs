@@ -13,7 +13,7 @@ namespace Raccoon {
         #region Public Events
 
         public event TickHandler OnUpdate = delegate { };
-        public event Action OnRender = delegate { };
+        public event Action OnRender = delegate { }, OnBegin = delegate { };
 
         #endregion Public Events
 
@@ -41,8 +41,6 @@ namespace Raccoon {
             ScreenHeight = height;
             IsRunning = false;
             Core = new Core(title, width, height, targetFPS, fullscreen, vsync);
-            Core.OnUpdate += OnUpdate;
-            Core.OnRender += OnRender;
             ScreenWidth = width;
             ScreenHeight = height;
             IsRunning = false;
@@ -69,6 +67,8 @@ namespace Raccoon {
         public bool VSync { get { return Core.Graphics.SynchronizeWithVerticalRetrace; } set { Core.Graphics.SynchronizeWithVerticalRetrace = value; } }
         public bool IsFullscreen { get { return Core.Graphics.IsFullScreen; } set { Core.Graphics.IsFullScreen = value; } }
         public bool IsMouseVisible { get { return Core.IsMouseVisible; } set { Core.IsMouseVisible = value; } }
+        public bool AllowResize { get { return Core.Window.AllowUserResizing; } set { Core.Window.AllowUserResizing = value; } }
+        public bool HasFocus { get { return Core.IsActive; } }
         public string Title { get { return Core.Title; } set { Core.Title = value; } }
         public string ContentDirectory { get { return Core.Content.RootDirectory; } set { Core.Content.RootDirectory = value; } }
         public int DeltaTime { get { return Core.DeltaTime; } }
@@ -83,6 +83,9 @@ namespace Raccoon {
         public Vector2 ScreenCenter { get { return new Vector2(ScreenWidth / 2, ScreenHeight / 2); } }
         public Scene Scene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
+        public Color BackgroundColor { get { return new Color(Core.BackgroundColor.R, Core.BackgroundColor.G, Core.BackgroundColor.B, Core.BackgroundColor.A); } set { Core.BackgroundColor = new Microsoft.Xna.Framework.Color(value.R, value.G, value.B, value.A); } }
+        public Surface DefaultSurface { get { return Core.DefaultSurface; } }
+        public Surface DebugSurface { get { return Core.DebugSurface; } }
 
         public float Scale {
             get {
@@ -111,14 +114,21 @@ namespace Raccoon {
         #region Internal Properties
 
         internal Core Core { get; private set; }
+        internal List<Surface> Surfaces { get; private set; } = new List<Surface>();
 
         #endregion Internal Properties
 
         #region Public Methods
 
         public void Start() {
-            Debug.WriteLine("| Raccoon started |");
+            Debug.WriteLine("| Raccoon Started |");
             IsRunning = true;
+            if (Scene == null) {
+                Core.OnBegin += OnBegin;
+                Core.OnUpdate += OnUpdate;
+                Core.OnRender += OnRender;
+            }
+
             Core.Run();
         }
 
@@ -203,24 +213,24 @@ namespace Raccoon {
         }
 
         public void SwitchScene(string name) {
-            if (!_scenes.ContainsKey(name)) {
-                throw new ArgumentException($"Scene '{name}' not found", "name");
-            }
+            if (!_scenes.ContainsKey(name)) throw new ArgumentException($"Scene '{name}' not found", "name");
 
             if (Scene != null) {
                 Scene.End();
             }
 
             Core.ClearCallbacks();
-            Core.OnUpdate += OnUpdate;
-            Core.OnRender += OnRender;
 
             Scene = _scenes[name];
-            if (Core.SpriteBatch != null) {
+            if (Core.DefaultSurface != null) {
                 Scene.Begin();
             } else {
+                Core.OnBegin += OnBegin;
                 Core.OnBegin += Scene.Begin;
             }
+
+            Core.OnUpdate += OnUpdate;
+            Core.OnRender += OnRender;
 
             Core.OnUnloadContent += Scene.UnloadContent;
             Core.OnBeforeUpdate += Scene.BeforeUpdate;
@@ -241,10 +251,26 @@ namespace Raccoon {
             Core.Graphics.ToggleFullScreen();
         }
 
+        public void AddSurface(Surface surface) {
+            if (Surfaces.Contains(surface)) {
+                return;
+            }
+
+            Surfaces.Add(surface);
+        }
+
+        public void RemoveSurface(Surface surface) {
+            Surfaces.Remove(surface);
+        }
+
+        public void ClearSurfaces() {
+            Surfaces.Clear();
+        }
+
         #endregion
 
         #region Protected Methods
-        
+
         protected virtual void Dispose(bool disposing) {
             if (!Disposed) {
                 if (disposing) {

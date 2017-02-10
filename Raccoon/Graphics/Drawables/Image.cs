@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 
 namespace Raccoon.Graphics {
     public class Image : Graphic {
@@ -14,12 +13,13 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
-        public Image() {
+        public Image() { }
+
+        public Image(Texture texture) {
+            Texture = texture;
         }
 
-        public Image(string filename) {
-            Texture = new Texture(filename);
-        }
+        public Image(string filename) : this(new Texture(filename)) { }
 
         public Image(AtlasSubTexture subTexture) {
             Texture = subTexture.Texture;
@@ -37,7 +37,7 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value == null) throw new ArgumentNullException("Texture");
+                if (value == null) throw new ArgumentNullException("Invalid texture");
 
                 _texture = value;
                 ClippingRegion = SourceRegion = _texture.Bounds;
@@ -81,7 +81,7 @@ namespace Raccoon.Graphics {
 
             set {
                 if (value.Left < 0 || value.Top < 0 || value.Right > _sourceRegion.Width || value.Bottom > _sourceRegion.Height)
-                    throw new ArgumentOutOfRangeException("ClippingRegion", value, "Value must be within source region bounds");
+                    throw new ArgumentOutOfRangeException("ClippingRegion", value, $"Value must be within source region bounds {_sourceRegion}");
 
                 _clippingRegion = value;
                 Size = _clippingRegion.Size;
@@ -107,16 +107,16 @@ namespace Raccoon.Graphics {
         #region Public Methods
         
         public override void Render(Vector2 position, float rotation) {
-            Game.Instance.Core.SpriteBatch.Draw(
-                Texture.XNATexture,
-                null,
-                new Microsoft.Xna.Framework.Rectangle((int) position.X, (int) position.Y, (int) DestinationSize.Width, (int) DestinationSize.Height),
+            Surface.Draw(
+                Texture,
+                position,
+                new Size(DestinationSize.Width * Scale.X, DestinationSize.Height * Scale.Y),
                 SourceRegion.Position + ClippingRegion,
-                new Microsoft.Xna.Framework.Vector2((int) Origin.X, (int) Origin.Y),
+                Origin,
                 rotation * Util.Math.DegToRad,
-                Scale,
+                Vector2.One,
                 FinalColor,
-                (SpriteEffects) Flipped,
+                Flipped,
                 LayerDepth
             );
         }

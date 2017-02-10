@@ -18,21 +18,23 @@ namespace Raccoon {
         private List<Component> _components;
         private List<Graphic> _graphicsToAdd;
         private List<Component> _componentsToAdd, _componentsToRemove;
+        private Surface _surface;
         
         #endregion Private Members
 
         #region Constructors
 
         public Entity() {
-            Name = "Entity";
-            Active = Visible = true;
-
             Graphics = new List<Graphic>();
             _graphicsToAdd = new List<Graphic>();
 
             _components = new List<Component>();
             _componentsToAdd = new List<Component>();
             _componentsToRemove = new List<Component>();
+
+            Name = "Entity";
+            Active = Visible = true;
+            Surface = Game.Instance.Core.DefaultSurface;
 
             OnRemoved += () => {
                 Enabled = false;
@@ -71,6 +73,19 @@ namespace Raccoon {
                 }
 
                 Add(value);
+            }
+        }
+
+        public Surface Surface {
+            get {
+                return _surface;
+            }
+
+            set {
+                _surface = value;
+                foreach (Graphic g in Graphics) {
+                    g.Surface = _surface;
+                }
             }
         }
 
@@ -115,6 +130,7 @@ namespace Raccoon {
                         }
                     }
 
+                    g.Surface = Surface;
                     Graphics.Insert(index, g);
                 }
 
@@ -172,15 +188,12 @@ namespace Raccoon {
                 return;
             }
 
-            int index = 0;
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
                 }
 
-                g.Layer = Layer + index;
                 g.Render(Position + g.Position, Rotation + g.Rotation);
-                index++;
             }
         }
 
@@ -212,20 +225,13 @@ namespace Raccoon {
                 }
             }
 
+            graphic.Surface = Surface;
             Graphics.Insert(index, graphic);
         }
 
         public void Add(IEnumerable<Graphic> graphics) {
             foreach (Graphic g in graphics) {
-                int index = 0;
-                for (int i = Graphics.Count - 1; i >= 0; i--) {
-                    if (Graphics[i].Layer <= g.Layer) {
-                        index = i + 1;
-                        break;
-                    }
-                }
-
-                Graphics.Insert(index, g);
+                Add(g);
             }
         }
 

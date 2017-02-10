@@ -1,4 +1,6 @@
-﻿namespace Raccoon.Graphics {
+﻿using System;
+
+namespace Raccoon.Graphics {
     public abstract class Graphic {
         #region Public Members
 
@@ -20,22 +22,31 @@
 
         #endregion Private Members
 
+        #region Constructors
+
+        public Graphic() {
+            Surface = Game.Instance.Core.DefaultSurface;
+        }
+
+        #endregion Constructors
+
         #region Public Properties
 
         public string Name { get; set; }
         public bool Visible { get; set; } = true;
         public Vector2 Position { get; set; }
-        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
-        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
-        public Size Size { get; protected set; }
-        public float Width { get { return Size.Width; } }
-        public float Height { get { return Size.Height; } }
         public Vector2 Origin { get; set; }
-        public float Rotation { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
         public int Layer { get { return (int) System.Math.Round((LayerDepth * LayerLimit) - LayerMax); } set { LayerDepth = (float) (value + LayerMax) / LayerLimit; } }
+        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
+        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
+        public float Width { get { return Size.Width; } }
+        public float Height { get { return Size.Height; } }
+        public float Rotation { get; set; }
         public float LayerDepth { get; set; }
+        public Size Size { get; protected set; }
         public Color FinalColor { get; set; } = Color.White;
+        public Surface Surface { get; set; }
         //public Shader Shader { get; set; }
 
         public Color Color {
@@ -114,6 +125,10 @@
             Render(Position, Rotation);
         }
 
+        public void Render(Vector2 position) {
+            Render(position, Rotation);
+        }
+
         #endregion Public Methods
 
         #region Public Virtual Methods
@@ -125,6 +140,8 @@
             }
         }
 
+        public virtual void DebugRender() { }
+
         #endregion Public Virtual Methods
 
         #region Public Abstract Methods
@@ -133,12 +150,6 @@
         public abstract void Dispose();
 
         #endregion Public Abstract Methods
-
-        #region Public Virtual Methods
-
-        public virtual void DebugRender() { }
-
-        #endregion Public Virtual Methods
 
         #region Protected Methods
 

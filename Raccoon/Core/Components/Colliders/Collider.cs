@@ -47,6 +47,10 @@ namespace Raccoon.Components {
 
         public override void Update(int delta) {
 #if DEBUG
+            if (Graphic == null) {
+                return;
+            }
+
             Graphic.Update(delta);
 #endif
         }

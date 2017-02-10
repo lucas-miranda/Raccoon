@@ -58,19 +58,23 @@ namespace Raccoon.Components {
                 _graphicNeedUpdate = false;
             }
 
-
-            Scene scene = Game.Instance.Scene;
             for (int y = 0; y < _data.GetLength(0); y++) {
                 for (int x = 0; x < _data.GetLength(1); x++) {
-                    if (!_data[y, x])
+                    if (!_data[y, x]) {
                         continue;
+                    }
 
-                    Graphic.Position = Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + new Vector2(x * TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, y * TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom);
                     Graphic.Color = Color;
-                    Graphic.Layer = Entity.Layer + (_data[y, x] ? 2 : 1);
-                    Graphic.Render();
+                    Graphic.Render(Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + new Vector2(x, y) * TileSize * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom);
                 }
             }
+        }
+
+        public void Setup(int columns, int rows) {
+            Columns = columns;
+            Rows = rows;
+            _data = new bool[Rows, Columns];
+            Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
         }
 
         public void SetData(bool[,] data) {
@@ -82,8 +86,9 @@ namespace Raccoon.Components {
         }
 
         public void SetCollidable(int x, int y, bool collidable = true) {
-            if (x < 0 || x >= Columns || y < 0 || y >= Rows)
+            if (x < 0 || x >= Columns || y < 0 || y >= Rows) {
                 return;
+            }
 
             _data[y, x] = collidable;
         }
@@ -93,19 +98,15 @@ namespace Raccoon.Components {
         #region Private Methods
 
         private void Initialize(Size tileSize, int columns, int rows) {
+            Setup(columns, rows);
             TileSize = tileSize;
-            Columns = columns;
-            Rows = rows;
             Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
-            _data = new bool[Rows, Columns];
-            for (int y = 0; y < Rows; y++) {
-                for (int x = 0; x < Columns; x++) {
-                    _data[y, x] = false;
-                }
-            }
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false);
+            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false) {
+                Surface = Game.Instance.Core.DebugSurface
+            };
+
             _graphicNeedUpdate = false;
 #endif
         }

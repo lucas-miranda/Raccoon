@@ -10,7 +10,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Constructors
 
-        public Rectangle(float width, float height, Color color, bool filled = true) {
+        public Rectangle(float width, float height, Color color, bool filled = true) : base() {
             Size = new Size(width, height);
             Color = color;
             _filled = filled;
@@ -28,10 +28,6 @@ namespace Raccoon.Graphics.Primitives {
 
             set {
                 if (!Filled && Size != value) {
-                    if (Texture != null) {
-                        Texture.Dispose();
-                    }
-
                     NeedsReload = true;
                 }
 
@@ -66,14 +62,14 @@ namespace Raccoon.Graphics.Primitives {
 
         public override void Render(Vector2 position, float rotation) {
             if (Filled) {
-                Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, new Microsoft.Xna.Framework.Rectangle((int) position.X, (int) position.Y, (int) Width, (int) Height), null, FinalColor, rotation * Util.Math.DegToRad, Origin / new Vector2(Width, Height), (SpriteEffects) Flipped, LayerDepth);
+                Surface.Draw(Texture, position, new Size(Size.Width * Scale.X, Size.Height * Scale.Y), null, Origin / new Vector2(Width, Height), rotation * Util.Math.DegToRad, Vector2.One, FinalColor, Flipped, LayerDepth);
             } else {
-                Game.Instance.Core.SpriteBatch.Draw(Texture.XNATexture, position, null, null, Origin, rotation * Util.Math.DegToRad, Scale, FinalColor, (SpriteEffects) Flipped, LayerDepth);
+                Surface.Draw(Texture, position, null, null, Origin, rotation * Util.Math.DegToRad, Scale, FinalColor, Flipped, LayerDepth);
             }
         }
 
         public override void Dispose() {
-            if (Texture != null) {
+            if (!_filled && Texture != null) {
                 Texture.Dispose();
             }
         }
@@ -90,6 +86,10 @@ namespace Raccoon.Graphics.Primitives {
             if (Filled) {
                 Texture = Texture.White;
             } else {
+                if (Texture != null && Texture != Texture.White && Texture != Texture.Black) {
+                    Texture.Dispose();
+                }
+
                 int w = (int) Width, h = (int) Height;
                 Color[] data = new Color[w * h];
                 Texture unfilledRectTexture = new Texture(w, h);

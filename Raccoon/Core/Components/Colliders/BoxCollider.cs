@@ -53,7 +53,9 @@ namespace Raccoon.Components {
             Size = new Size(width, height);
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Rectangle(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color, false);
+            Graphic = new Graphics.Primitives.Rectangle(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color, false) {
+                Surface = Game.Instance.Core.DebugSurface
+            };
 #endif
         }
 

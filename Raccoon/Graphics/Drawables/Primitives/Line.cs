@@ -19,12 +19,18 @@
         public Raccoon.Line Equation { get { return new Raccoon.Line(From, To); } }
 
         public override void Render(Vector2 position, float rotation) {
+            Game.Instance.Core.BasicEffect.World = Surface.World;
+            Game.Instance.Core.BasicEffect.View = Surface.View;
+            Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
+
             Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
             Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(position.X - Origin.X, position.Y - Origin.Y, 0), Color),
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(position.X - Origin.X + _to.X, position.Y - Origin.Y + _to.Y, 0), Color)
                 }, 0, 1);
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.BasicEffect.View = Game.Instance.Core.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
         }
 
         public override void Dispose() { }
