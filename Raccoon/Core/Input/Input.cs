@@ -151,7 +151,7 @@ namespace Raccoon {
                         if ((int) key <= 57) {
                             str = str.Remove(0, 1);
                         } else if ((int) key >= 65) {
-                            str = str.ToLower();
+                            str = IsKeyDown(Key.LeftShift) ? str : str.ToLower();
                         }
                     } else {
                         continue;

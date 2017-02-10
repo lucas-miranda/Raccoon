@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Raccoon.Graphics {
     public struct Color {
         #region Public Static Readonly Members
 
+        public static readonly Regex ColorFormatRegex = new Regex(@"^\#?((([a-fA-F0-9]){3,4})|(([a-fA-F0-9]{2}){3,4}))$");
         public static readonly Color White = new Color(0xFFFFFFFF);
         public static readonly Color Black = new Color(0x000000FF);
         public static readonly Color Red = new Color(0xFF0000FF);
@@ -49,8 +51,7 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public Color(uint hex) : this(hex.ToString("X8")) {
-        }
+        public Color(uint hex) : this(hex.ToString("X8")) { }
 
         public Color(byte r, byte g, byte b, byte a = 255) {
             R = r;
@@ -77,6 +78,20 @@ namespace Raccoon.Graphics {
         #endregion Public Properties
 
         #region Public Static Methods
+
+        public static bool TryParse(string value, out Color result) {
+            result = new Color(0, 0, 0, 0);
+            if (!ColorFormatRegex.IsMatch(value)) {
+                return false;
+            }
+
+            result = new Color(value);
+            return true;
+        }
+
+        public static Color Parse(string value) {
+            return new Color(value);
+        }
 
         public static Color FromARGB(uint hex) {
             return new Color((byte) (hex >> 16), (byte) (hex >> 8), (byte) hex, (byte) (hex >> 24));
@@ -111,7 +126,7 @@ namespace Raccoon.Graphics {
         }
 
         public override string ToString() {
-            return $"[Color | RGBA: {R} {G} {B} {A}]";
+            return Hex;
         }
 
         #endregion Public Methods

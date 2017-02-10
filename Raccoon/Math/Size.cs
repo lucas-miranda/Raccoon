@@ -1,5 +1,11 @@
 ﻿namespace Raccoon {
     public struct Size {
+        #region Static Readonly
+
+        public static readonly Size Empty = new Size(0);
+
+        #endregion Static Readonly  
+
         #region Public Members
 
         public float Width, Height;
@@ -13,11 +19,9 @@
             Height = System.Math.Abs(h);
         }
 
-        public Size(float wh) : this(wh, wh) {
-        }
+        public Size(float wh) : this(wh, wh) { }
 
-        public Size(Vector2 v) : this(v.X, v.Y) {
-        }
+        public Size(Vector2 v) : this(v.X, v.Y) { }
 
         #endregion Constructors
 
