@@ -1,13 +1,13 @@
 ﻿using Raccoon.Util;
 
 namespace Raccoon.Components {
-    public class PlatformMovement : Movement {
+    public class PlatformerMovement : Movement {
         public event System.Action OnMove, OnJumpStart, OnJumpEnd;
 
         private bool _canJump = true, _nextJumpReady = true, _requestedJump;
         private int _jumpDistanceBuffer;
 
-        public PlatformMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
+        public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
             GravityForce = new Vector2(0, 450);
         }
 
@@ -40,7 +40,6 @@ namespace Raccoon.Components {
         public override void OnMoveUpdate(float dt) {
             int x = (int) Entity.X, y = (int) Entity.Y;
             float speedX = Speed.X, speedY = Speed.Y;
-            Vector2 moveAxis = Axis == Vector2.Zero ? LastAxis : Axis;
 
             // determine TargetSpeed
             Vector2 oldTargetSpeed = TargetSpeed;
@@ -62,25 +61,36 @@ namespace Raccoon.Components {
                 } else {
                     while (System.Math.Abs(MoveHorizontalBuffer) >= 1) {
                         if (Collider.Collides(new Vector2(x + hDir, y), CollisionTags)) {
+                            // moving in up slopes
+                            if (OnGround && !Collider.Collides(new Vector2(x + hDir, y - 1), CollisionTags)) { 
+                                y--;
+                                continue;
+                            }
+
                             OnCollide(new Vector2(hDir, 0));
                             MoveHorizontalBuffer = 0;
                             break;
                         } else {
                             x += hDir;
                             MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, 1);
+
+                            // moving in down slopes
+                            if (OnGround && !Collider.Collides(new Vector2(x, y + 1), CollisionTags)) {
+                                y++;
+                            }
                         }
                     }
                 }
             }
 
             // vertical move
-            float yAxis = 0; // vertical axis value
+            float yAxis = 0; // vertical axis direction
             if (IsStillJumping) {
                 yAxis = -1;
                 speedY = Math.Approach(Speed.Y, yAxis * TargetSpeed.Y, Acceleration.Y * dt);
                 IsStillJumping = false;
             } else {
-                if (OnGround) { 
+                if (OnGround) {
                     // checks the ground existence
                     if (!Collider.Collides(new Vector2(x, y + 1), CollisionTags)) {
                         IsFalling = true;
