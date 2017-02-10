@@ -37,6 +37,14 @@ namespace Raccoon.Util {
             return Angle(from.X, from.Y, to.X, to.Y);
         }
 
+        public static float Angle(Vector2 a, Vector2 b, Vector2 c) {
+            float ba = (b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y),
+                  bc = (b.X - c.X) * (b.X - c.X) + (b.Y - c.Y) * (b.Y - c.Y),
+                  ca = (c.X - a.X) * (c.X - a.X) + (c.Y - a.Y) * (c.Y - a.Y);
+
+            return (float) System.Math.Acos((bc + ba - ca) / System.Math.Sqrt(4 * bc * ba)) * RadToDeg;
+        }
+
         public static float Angle(float x, float y) {
             return Angle(0, 0, x, y);
         }
@@ -124,27 +132,27 @@ namespace Raccoon.Util {
             return (float) System.Math.Sqrt(DistanceSquared(from, to));
         }
 
-        public static float Distance(Vector2 fromLineA, Vector2 fromLineB, Vector2 toPoint) {
-            return (float) System.Math.Sqrt(DistanceSquared(fromLineA, fromLineB, toPoint));
+        public static float Distance(Vector2 lineStart, Vector2 lineEnd, Vector2 point) {
+            return (float) System.Math.Sqrt(DistanceSquared(lineStart, lineEnd, point));
         }
 
         public static float DistanceSquared(Vector2 from, Vector2 to) {
             return (to - from).LengthSquared();
         }
 
-        public static float DistanceSquared(Vector2 fromLineStart, Vector2 fromLineEnd, Vector2 toPoint) {
+        public static float DistanceSquared(Vector2 lineStart, Vector2 lineEnd, Vector2 point) {
             // implemented using http://stackoverflow.com/a/1501725
-            float lengthSquared = DistanceSquared(fromLineStart, fromLineEnd);
+            float lengthSquared = DistanceSquared(lineStart, lineEnd);
             if (lengthSquared == 0) {
-                return DistanceSquared(fromLineStart, toPoint);
+                return DistanceSquared(lineStart, point);
             }
 
-            float t = Clamp(Vector2.Dot(toPoint - fromLineStart, fromLineEnd - fromLineStart) / lengthSquared, 0, 1);
-            Vector2 proj = fromLineStart + t * (fromLineEnd - fromLineStart);
-            return DistanceSquared(toPoint, proj);
+            float t = Clamp(Vector2.Dot(point - lineStart, lineEnd - lineStart) / lengthSquared, 0, 1);
+            Vector2 proj = lineStart + t * (lineEnd - lineStart);
+            return DistanceSquared(point, proj);
         }
 
-        public static Vector2 RotateAround(Vector2 point, float degrees) {
+        public static Vector2 Rotate(Vector2 point, float degrees) {
             float cos = Cos(degrees), sin = Sin(degrees);
             return new Vector2(point.X * cos - point.Y * sin, point.X * sin + point.Y * cos);
         }
@@ -174,6 +182,15 @@ namespace Raccoon.Util {
 
         public static float[] Projection(Vector2 axis, params Vector2[] points) {
             return Projection(axis, points as IEnumerable<Vector2>);
+        }
+
+        public static bool IsPointInsideTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 point) {
+            float n = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
+            float s = ((b.Y - c.Y) * (point.X - c.X) + (c.X - b.X) * (point.Y - c.Y)) / n,
+                  t = ((c.Y - a.Y) * (point.X - c.X) + (a.X - c.X) * (point.Y - c.Y)) / n;
+            //float u = 1 - s - t;
+
+            return !(s <= 0 || s > 1 || t <= 0 || t > 1 || s + t > 1); //0 <= u && u <= 1;
         }
     }
 }
