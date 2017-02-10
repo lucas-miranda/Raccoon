@@ -29,7 +29,8 @@ namespace Raccoon {
                 typeof(GridCollider),
                 typeof(CircleCollider),
                 typeof(LineCollider),
-                typeof(PolygonCollider)
+                typeof(PolygonCollider),
+                typeof(RichGridCollider)
             };
 
             foreach (Type type in colliderTypes) {
@@ -42,6 +43,7 @@ namespace Raccoon {
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(CircleCollider), CheckBoxCircle);
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(LineCollider), CheckBoxLine);
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(PolygonCollider), CheckBoxPolygon);
+            _collisionFunctions[typeof(BoxCollider)].Add(typeof(RichGridCollider), CheckBoxRichGrid);
 
             // grid vs others
             _collisionFunctions[typeof(GridCollider)].Add(typeof(GridCollider), CheckGridGrid);
@@ -49,6 +51,7 @@ namespace Raccoon {
             _collisionFunctions[typeof(GridCollider)].Add(typeof(CircleCollider), CheckGridCircle);
             _collisionFunctions[typeof(GridCollider)].Add(typeof(LineCollider), CheckGridLine);
             _collisionFunctions[typeof(GridCollider)].Add(typeof(PolygonCollider), CheckGridPolygon);
+            _collisionFunctions[typeof(GridCollider)].Add(typeof(RichGridCollider), CheckGridRichGrid);
 
             // circle vs others
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(CircleCollider), CheckCircleCircle);
@@ -56,6 +59,7 @@ namespace Raccoon {
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(GridCollider), CheckCircleGrid);
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(LineCollider), CheckCircleLine);
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(PolygonCollider), CheckCirclePolygon);
+            _collisionFunctions[typeof(CircleCollider)].Add(typeof(RichGridCollider), CheckCircleRichGrid);
 
             // line vs others
             _collisionFunctions[typeof(LineCollider)].Add(typeof(LineCollider), CheckLineLine);
@@ -63,6 +67,7 @@ namespace Raccoon {
             _collisionFunctions[typeof(LineCollider)].Add(typeof(GridCollider), CheckLineGrid);
             _collisionFunctions[typeof(LineCollider)].Add(typeof(CircleCollider), CheckLineCircle);
             _collisionFunctions[typeof(LineCollider)].Add(typeof(PolygonCollider), CheckLinePolygon);
+            _collisionFunctions[typeof(LineCollider)].Add(typeof(RichGridCollider), CheckLineRichGrid);
 
             // polygon vs others
             _collisionFunctions[typeof(PolygonCollider)].Add(typeof(PolygonCollider), CheckPolygonPolygon);
@@ -70,6 +75,15 @@ namespace Raccoon {
             _collisionFunctions[typeof(PolygonCollider)].Add(typeof(GridCollider), CheckPolygonGrid);
             _collisionFunctions[typeof(PolygonCollider)].Add(typeof(CircleCollider), CheckPolygonCircle);
             _collisionFunctions[typeof(PolygonCollider)].Add(typeof(LineCollider), CheckPolygonLine);
+            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(RichGridCollider), CheckPolygonRichGrid);
+
+            // rich grid vs others
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(RichGridCollider), CheckRichGridRichGrid);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(PolygonCollider), CheckRichGridPolygon);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(BoxCollider), CheckRichGridBox);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(GridCollider), CheckRichGridGrid);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(CircleCollider), CheckRichGridCircle);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(LineCollider), CheckRichGridLine);
         }
 
         #endregion Constructors
@@ -170,6 +184,18 @@ namespace Raccoon {
 
                 _colliders[tag.ToString()].Remove(collider);
             }
+        }
+
+        public int GetCollidersCount(string tag) {
+            if (!HasTag(tag)) {
+                return 0;
+            }
+
+            return _colliders[tag].Count;
+        }
+
+        public int GetCollidersCount(Enum tag) {
+            return GetCollidersCount(tag.ToString());
         }
 
         #region Collides [Single Tag] [Single Output]
@@ -561,6 +587,136 @@ namespace Raccoon {
 
         #endregion Box vs Polygon
 
+        #region Box vs RichGrid
+
+        private bool CheckBoxRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            BoxCollider boxColl = colliderA as BoxCollider;
+            RichGridCollider richGridColl = colliderB as RichGridCollider;
+
+            int startColumn, startRow, endColumn, endRow, row, column;
+            /*if (boxColl.Rotation != 0) {
+                // box collider polygon
+                Polygon boxCollPolygon = boxColl.Polygon;
+                boxCollPolygon.Translate(colliderAPos);
+
+                Vector2[] axes = new Vector2[] {
+                            new Vector2(1, 0),
+                            new Vector2(0, 1),
+                            (boxCollPolygon[0] - boxCollPolygon[1]).Perpendicular(),
+                            (boxCollPolygon[1] - boxCollPolygon[2]).Perpendicular()
+                        };
+
+                float top = boxCollPolygon[0].Y, right = boxCollPolygon[0].X, bottom = boxCollPolygon[0].Y, left = boxCollPolygon[0].X;
+                foreach (Vector2 vertex in boxCollPolygon) {
+                    if (vertex.Y < top)
+                        top = vertex.Y;
+                    if (vertex.X > right)
+                        right = vertex.X;
+                    if (vertex.Y > bottom)
+                        bottom = vertex.Y;
+                    if (vertex.X < left)
+                        left = vertex.X;
+                }
+
+                startColumn = (int) (left - colliderBPos.X) / (int) richGridColl.TileSize.Width;
+                startRow = (int) (top - colliderBPos.Y) / (int) richGridColl.TileSize.Height;
+                endColumn = (int) (right - colliderBPos.X) / (int) richGridColl.TileSize.Width;
+                endRow = (int) (bottom - colliderBPos.Y) / (int) richGridColl.TileSize.Height;
+
+                for (row = startRow; row <= endRow; row++) {
+                    for (column = startColumn; column <= endColumn; column++) {
+                        if (!richGridColl.IsCollidable(column, row)) {
+                            continue;
+                        }
+
+                        if (CheckPolygonsIntersection(boxCollPolygon,
+                            new Polygon(new Vector2(colliderBPos.X + column * richGridColl.TileSize.Width, colliderBPos.Y + row * richGridColl.TileSize.Height),
+                                new Vector2(colliderBPos.X + (column + 1) * richGridColl.TileSize.Width, colliderBPos.Y + row * richGridColl.TileSize.Height),
+                                new Vector2(colliderBPos.X + (column + 1) * richGridColl.TileSize.Width, colliderBPos.Y + (row + 1) * richGridColl.TileSize.Height),
+                                new Vector2(colliderBPos.X + column * richGridColl.TileSize.Width, colliderBPos.Y + (row + 1) * richGridColl.TileSize.Height)
+                            ), axes)) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }*/
+
+            Rectangle boxRect = new Rectangle(colliderAPos, boxColl.Size);
+            if (!(boxRect & new Rectangle(colliderBPos, richGridColl.Size))) { // out of grid
+                return false;
+            }
+
+            // box collider polygon
+            Polygon boxPolygon = boxColl.Polygon;
+            boxPolygon.Translate(colliderAPos);
+
+            startColumn = (int) (boxRect.Left - colliderBPos.X) / (int) richGridColl.TileSize.Width;
+            startRow = (int) (boxRect.Top - colliderBPos.Y) / (int) richGridColl.TileSize.Height;
+            endColumn = (int) (boxRect.Right - colliderBPos.X - 1) / (int) richGridColl.TileSize.Width;
+            endRow = (int) (boxRect.Bottom - colliderBPos.Y - 1) / (int) richGridColl.TileSize.Height;
+            for (row = startRow; row <= endRow; row++) {
+                for (column = startColumn; column <= endColumn; column++) {
+                    if (!richGridColl.IsCollidable(column, row)) {
+                        continue;
+                    }
+
+                    RichGridCollider.Tile tile = richGridColl.GetTileInfo(column, row);
+                    if (tile is RichGridCollider.BoxTile) {
+                        return true;
+                    }
+
+                    // rich grid collider tile (column, row) polygon
+                    Polygon tilePolygon = (tile as RichGridCollider.PolygonTile).Polygon.Clone();
+
+                    List<Vector2> axes = new List<Vector2>();
+                    Vector2 boxAxis0 = (boxPolygon[0] - boxPolygon[1]).Perpendicular(), 
+                            boxAxis1 = (boxPolygon[1] - boxPolygon[2]).Perpendicular();
+
+                    if (tilePolygon.IsConvex) {
+                        tilePolygon.Translate(colliderBPos + new Vector2(column, row) * richGridColl.TileSize);
+
+                        // box relevant axes
+                        axes.Add(boxAxis0);
+                        axes.Add(boxAxis1);
+
+                        // tile axes
+                        for (int i = 0; i < tilePolygon.VertexCount; i++) {
+                            axes.Add((tilePolygon[i] - tilePolygon[(i + 1) % tilePolygon.VertexCount]).Perpendicular());
+                        }
+
+                        if (CheckPolygonsIntersection(boxPolygon, tilePolygon, axes)) {
+                            return true;
+                        }
+                    } else {
+                        foreach (Polygon convexComponent in tilePolygon.GetConvexComponents()) {
+                            convexComponent.Translate(colliderBPos + new Vector2(column, row) * richGridColl.TileSize);
+
+                            axes.Clear();
+
+                            // box relevant axes
+                            axes.Add(boxAxis0);
+                            axes.Add(boxAxis1);
+
+                            // tile axes
+                            for (int i = 0; i < convexComponent.VertexCount; i++) {
+                                axes.Add((convexComponent[i] - convexComponent[(i + 1) % convexComponent.VertexCount]).Perpendicular());
+                            }
+
+                            if (CheckPolygonsIntersection(boxPolygon, convexComponent, axes)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        #endregion Box vs RichGrid
+
         #endregion Box
 
         #region Grid
@@ -604,6 +760,14 @@ namespace Raccoon {
         }
 
         #endregion Grid vs Polygon
+
+        #region Grid vs RichGrid
+
+        private bool CheckGridRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return true;
+        }
+
+        #endregion Grid vs RichGrid
 
         #endregion Grid
 
@@ -669,6 +833,14 @@ namespace Raccoon {
         }
 
         #endregion Circle vs Polygon
+
+        #region Circle vs RichGrid
+
+        private bool CheckCircleRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return false;
+        }
+
+        #endregion Circle vs RichGrid
 
         #endregion Circle
 
@@ -751,6 +923,14 @@ namespace Raccoon {
 
         #endregion Line vs Polygon
 
+        #region Line vs RichGrid
+
+        private bool CheckLineRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return false;
+        }
+
+        #endregion Line vs RichGrid
+
         #endregion Line
 
         #region Polygon
@@ -813,7 +993,67 @@ namespace Raccoon {
 
         #endregion Polygon vs Line
 
+        #region Polygon vs RichGrid
+
+        private bool CheckPolygonRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return false;
+        }
+
+        #endregion Polygon vs RichGrid
+
         #endregion Polygon
+
+        #region RichGrid
+
+        #region RichGrid vs RichGrid
+
+        private bool CheckRichGridRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return false;
+        }
+
+        #endregion RichGrid vs RichGrid
+
+        #region RichGrid vs Polygon
+
+        private bool CheckRichGridPolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return CheckPolygonRichGrid(colliderB, colliderBPos, colliderA, colliderAPos);
+        }
+
+        #endregion RichGrid vs Polygon
+
+        #region RichGrid vs Box
+
+        private bool CheckRichGridBox(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return CheckBoxRichGrid(colliderB, colliderBPos, colliderA, colliderAPos);
+        }
+
+        #endregion RichGrid vs Box
+
+        #region RichGrid vs Grid
+
+        private bool CheckRichGridGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return CheckGridRichGrid(colliderB, colliderBPos, colliderA, colliderAPos);
+        }
+
+        #endregion RichGrid vs Grid
+
+        #region RichGrid vs Circle
+
+        private bool CheckRichGridCircle(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return CheckCircleRichGrid(colliderB, colliderBPos, colliderA, colliderAPos);
+        }
+
+        #endregion RichGrid vs Circle
+
+        #region RichGrid vs Line
+
+        private bool CheckRichGridLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            return CheckLineRichGrid(colliderB, colliderBPos, colliderA, colliderAPos);
+        }
+
+        #endregion RichGrid vs Line
+
+        #endregion RichGrid
 
         #region Helper Functions
 

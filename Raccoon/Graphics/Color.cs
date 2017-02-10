@@ -14,6 +14,7 @@ namespace Raccoon.Graphics {
         public static readonly Color Cyan = new Color(0x00FFFFFF);
         public static readonly Color Magenta = new Color(0xFF00FFFF);
         public static readonly Color Yellow = new Color(0xFFFF00FF);
+        public static readonly Color Transparent = new Color(0x00000000);
 
         #endregion
 

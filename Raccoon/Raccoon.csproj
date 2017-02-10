@@ -52,6 +52,7 @@
     <Compile Include="Core\Components\Colliders\GridCollider.cs" />
     <Compile Include="Core\Components\Colliders\LineCollider.cs" />
     <Compile Include="Core\Components\Colliders\PolygonCollider.cs" />
+    <Compile Include="Core\Components\Colliders\RichGridCollider.cs" />
     <Compile Include="Core\Components\Component.cs" />
     <Compile Include="Core\Components\Movement\PlatformerController.cs" />
     <Compile Include="Core\Components\Movement\BasicController.cs" />
