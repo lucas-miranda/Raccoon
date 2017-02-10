@@ -78,6 +78,7 @@ namespace Raccoon.Graphics {
         public Size Size { get; private set; }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
+        public string Filename { get; private set; }
 
         #endregion Public Properties
 
@@ -134,9 +135,32 @@ namespace Raccoon.Graphics {
         }
 
         public void Dispose() {
-            if (!_isFromContentManager && XNATexture != null) {
-                XNATexture.Dispose();
+            if (_isFromContentManager || XNATexture == null) {
+                return;
             }
+
+            XNATexture.Dispose();
+        }
+
+        public void Reload() {
+            if (Filename.IsEmpty()) {
+                return;
+            }
+
+            if (_isFromContentManager) {
+                XNATexture = Game.Instance.Core.Content.Load<Texture2D>(Filename);
+            } else {
+                XNATexture.Dispose();
+
+                using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    XNATexture = Texture2D.FromStream(Game.Instance.Core.GraphicsDevice, stream);
+                }
+            }
+
+            if (XNATexture == null) throw new NullReferenceException($"Texture '{Filename}' not found");
+
+            Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
+            Size = Bounds.Size;
         }
 
         #endregion Public Methods
@@ -144,9 +168,7 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected void Load(int width, int height) {
-            if (Game.Instance.Core.GraphicsDevice == null) {
-                throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
-            }
+            if (Game.Instance.Core.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
 
             XNATexture = new Texture2D(Game.Instance.Core.GraphicsDevice, width, height);
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
@@ -154,13 +176,19 @@ namespace Raccoon.Graphics {
         }
 
         protected void Load(string filename) {
-            _isFromContentManager = true;
-            if (Game.Instance.Core.GraphicsDevice == null) {
-                throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
+            if (Game.Instance.Core.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+
+            Filename = filename;
+            if (Filename.EndsWith(".bmp") || Filename.EndsWith(".gif") || Filename.EndsWith(".jpg") || Filename.EndsWith(".png") || Filename.EndsWith(".tif") || Filename.EndsWith(".dds")) {
+                using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    XNATexture = Texture2D.FromStream(Game.Instance.Core.GraphicsDevice, stream);
+                }
+            } else {
+                _isFromContentManager = true;
+                XNATexture = Game.Instance.Core.Content.Load<Texture2D>(Filename);
             }
 
-            XNATexture = Game.Instance.Core.Content.Load<Texture2D>(filename);
-            if (XNATexture == null) throw new NullReferenceException($"Texture '{filename}' not found");
+            if (XNATexture == null) throw new NullReferenceException($"Texture '{Filename}' not found");
 
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;
