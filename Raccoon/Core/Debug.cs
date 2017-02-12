@@ -90,23 +90,63 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, Color color, string message) {
-            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, (!allowCameraScroll && Game.Instance.Scene != null ? Game.Instance.Scene.Camera.Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + position : position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), color);
+        public static void DrawString(Vector2 position, Color color, string message) {
+            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, position, color);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, string message) {
-            DrawString(allowCameraScroll, position, Color.White, message);
+        public static void DrawString(Vector2 position, string message) {
+            DrawString(position, Color.White, message);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, Color color, string format, params object[] args) {
-            DrawString(allowCameraScroll, position, color, string.Format(format, args));
+        public static void DrawString(Vector2 position, Color color, string format, params object[] args) {
+            DrawString(position, color, string.Format(format, args));
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(bool allowCameraScroll, Vector2 position, string format, params object[] args) {
-            DrawString(allowCameraScroll, position, Color.White, format, args);
+        public static void DrawString(Vector2 position, string format, params object[] args) {
+            DrawString(position, Color.White, format, args);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawString(Camera camera, Vector2 position, Color color, string message) {
+            if (camera == null) {
+                DrawString(position, color, message);
+                return;
+            }
+
+            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, camera.Position * camera.Zoom * Game.Instance.Scale + position, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawString(Camera camera, Vector2 position, string message) {
+            if (camera == null) {
+                DrawString(position, message);
+                return;
+            }
+
+            DrawString(camera, position, Color.White, message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawString(Camera camera, Vector2 position, Color color, string format, params object[] args) {
+            if (camera == null) {
+                DrawString(position, color, format, args);
+                return;
+            }
+
+            DrawString(camera, position, color, string.Format(format, args));
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawString(Camera camera, Vector2 position, string format, params object[] args) {
+            if (camera == null) {
+                DrawString(position, format, args);
+                return;
+            }
+
+            DrawString(camera, position, Color.White, format, args);
         }
 
         [Conditional("DEBUG")]

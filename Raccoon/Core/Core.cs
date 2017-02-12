@@ -185,12 +185,12 @@ namespace Raccoon {
             // debug render
             DebugSurface.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
             
-            if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(false, new Vector2(Graphics.PreferredBackBufferWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
-            }
-
             if (Game.Instance.DebugMode) {
                 OnDebugRender.Invoke();
+            }
+
+            if (Debug.ShowPerformanceDiagnostics) {
+                Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
             }
 
             DebugSurface.End();

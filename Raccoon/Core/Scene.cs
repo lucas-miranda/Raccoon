@@ -48,6 +48,10 @@ namespace Raccoon {
             _graphicsToAdd.AddRange(graphics);
         }
 
+        public void Add(params Graphic[] graphics) {
+            Add((IEnumerable<Graphic>) graphics);
+        }
+
         public void Add(Entity entity) {
             entity.OnAdded(this);
             if (_hasStarted) {
@@ -58,7 +62,7 @@ namespace Raccoon {
         }
         
         public void Add(IEnumerable<Entity> entities) {
-            foreach (Entity e in _entitiesToAdd) {
+            foreach (Entity e in entities) {
                 e.OnAdded(this);
                 if (_hasStarted) {
                     e.Start();
@@ -66,6 +70,10 @@ namespace Raccoon {
             }
 
             _entitiesToAdd.AddRange(entities);
+        }
+
+        public void Add(params Entity[] entities) {
+            Add((IEnumerable<Entity>) entities);
         }
 
         public void Remove(Graphic graphic) {
@@ -76,12 +84,20 @@ namespace Raccoon {
             _graphicsToRemove.AddRange(graphics);
         }
 
+        public void Remove(params Graphic[] graphics) {
+            Remove((IEnumerable<Graphic>) graphics);
+        }
+
         public void Remove(Entity entity) {
             _entitiesToRemove.Add(entity);
         }
 
         public void Remove(IEnumerable<Entity> entities) {
             _entitiesToRemove.AddRange(entities);
+        }
+
+        public void Remove(params Entity[] entities) {
+            Remove((IEnumerable<Entity>) entities);
         }
 
         public void ClearEntities() {
@@ -111,6 +127,8 @@ namespace Raccoon {
             if (!_hasStarted) {
                 Start();
             }
+
+            Camera.Position = Camera.Position; // reapply camera matrices
         }
 
         public virtual void End() { }

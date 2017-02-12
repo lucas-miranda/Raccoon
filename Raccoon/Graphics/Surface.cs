@@ -59,6 +59,8 @@ namespace Raccoon.Graphics {
                 return;
             }
 
+            PreparedSurface = this;
+
             Game.Instance.Core.BasicEffect.World = World;
             Game.Instance.Core.BasicEffect.View = View;
             Game.Instance.Core.BasicEffect.Projection = Matrix.CreateOrthographicOffCenter(0, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0, 0f, -1f);
@@ -69,8 +71,6 @@ namespace Raccoon.Graphics {
             }
 
             Game.Instance.Core.BasicEffect.TextureEnabled = false;
-
-            PreparedSurface = this;
         }
 
         internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null) {
