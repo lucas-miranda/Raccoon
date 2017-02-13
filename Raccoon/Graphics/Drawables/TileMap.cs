@@ -45,10 +45,14 @@ namespace Raccoon.Graphics {
         public int Rows { get; private set; }
         public uint[] Data { get { return _tilesIds; } }
 
+#if DEBUG
+        public new Vector2 Scroll { get { return base.Scroll; } set { base.Scroll = _grid.Scroll = value; } }
+#endif
+
         #endregion Public Properties
 
         #region Public Methods
-        
+
         public override void Render(Vector2 position, float rotation) {
             if (_vertices.Length == 0) {
                 return;
@@ -62,8 +66,8 @@ namespace Raccoon.Graphics {
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(Color.R / 255f, Color.G / 255f, Color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
-            Game.Instance.Core.BasicEffect.World = _lastWorldMatrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Microsoft.Xna.Framework.Matrix.CreateLookAt(new Microsoft.Xna.Framework.Vector3(0f, 0f, 1f), new Microsoft.Xna.Framework.Vector3(0f, 0f, -1f), Microsoft.Xna.Framework.Vector3.Up) * Surface.World;
-            Game.Instance.Core.BasicEffect.View = Surface.View;
+            Game.Instance.Core.BasicEffect.World = _lastWorldMatrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X * Scroll.X, position.Y * Scroll.Y, 0f) * Microsoft.Xna.Framework.Matrix.CreateLookAt(new Microsoft.Xna.Framework.Vector3(0f, 0f, 1f), new Microsoft.Xna.Framework.Vector3(0f, 0f, -1f), Microsoft.Xna.Framework.Vector3.Up) * Surface.World;
+            Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.CreateScale(1f / Scroll.X, 1f / Scroll.Y, 1f) * Surface.View * Microsoft.Xna.Framework.Matrix.CreateScale(Scroll.X, Scroll.Y, 1f);
             Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
             
             foreach (EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {

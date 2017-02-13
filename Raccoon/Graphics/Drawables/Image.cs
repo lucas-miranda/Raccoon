@@ -116,8 +116,8 @@ namespace Raccoon.Graphics {
                 rotation * Util.Math.DegToRad,
                 Vector2.One,
                 FinalColor,
-                Flipped,
-                LayerDepth
+                Scroll,
+                Flipped
             );
         }
 

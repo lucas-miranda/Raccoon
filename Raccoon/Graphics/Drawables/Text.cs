@@ -40,11 +40,11 @@
                 Value, 
                 position, 
                 FinalColor,
+                Scroll,
                 rotation * Util.Math.DegToRad,
                 Origin,
                 Scale,
-                Flipped,
-                LayerDepth
+                Flipped
             );
         }
 

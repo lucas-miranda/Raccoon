@@ -24,7 +24,7 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
         
         public override void Render(Vector2 position, float rotation) {
-            Surface.Draw(Texture, position, null, null, Origin, rotation, Scale, FinalColor, Flipped, LayerDepth);
+            Surface.Draw(Texture, position, null, null, Origin, rotation, Scale, FinalColor, Scroll, Flipped);
         }
 
         public override void Dispose() {

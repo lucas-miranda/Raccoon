@@ -91,7 +91,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawString(Vector2 position, Color color, string message) {
-            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, position, color);
+            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, position, color, Vector2.One);
         }
 
         [Conditional("DEBUG")]
@@ -116,7 +116,7 @@ namespace Raccoon {
                 return;
             }
 
-            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, camera.Position * camera.Zoom * Game.Instance.Scale + position, color);
+            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, camera.Position * camera.Zoom * Game.Instance.Scale + position, color, Vector2.One);
         }
 
         [Conditional("DEBUG")]

@@ -1,20 +1,5 @@
-﻿using System;
-
-namespace Raccoon.Graphics {
+﻿namespace Raccoon.Graphics {
     public abstract class Graphic {
-        #region Public Members
-
-        public readonly int LayerMin = -LayerLimit / 2;
-        public readonly int LayerMax = LayerLimit / 2;
-
-        #endregion Public Members
-
-        #region Protected Members
-
-        protected const int LayerLimit = 20000;
-
-        #endregion Protected Members
-
         #region Private Members
 
         private float _opacity = 1f;
@@ -37,17 +22,16 @@ namespace Raccoon.Graphics {
         public Vector2 Position { get; set; }
         public Vector2 Origin { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public int Layer { get { return (int) System.Math.Round((LayerDepth * LayerLimit) - LayerMax); } set { LayerDepth = (float) (value + LayerMax) / LayerLimit; } }
+        public int Layer { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public float Width { get { return Size.Width; } }
         public float Height { get { return Size.Height; } }
         public float Rotation { get; set; }
-        public float LayerDepth { get; set; }
         public Size Size { get; protected set; }
         public Color FinalColor { get; set; } = Color.White;
         public Surface Surface { get; set; }
-        //public Shader Shader { get; set; }
+        public Vector2 Scroll { get; set; } = Vector2.One;
 
         public Color Color {
             get {
