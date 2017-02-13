@@ -17,7 +17,7 @@ namespace Raccoon {
         private Dictionary<int, JoystickState> _joysticksState, _joysticksPreviousState;
         private KeyboardState _keyboardState, _keyboardPreviousState;
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState, _mouseButtonsLastState;
-        private Dictionary<Key, string> _specialKeysToString = new Dictionary<Key, string>();
+        private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
 
         private Input() {
             // joystick
@@ -33,7 +33,9 @@ namespace Raccoon {
             }
 
             // keys to string
-            _specialKeysToString[Key.Space] = " ";
+            _specialKeysToChar[Key.Space] = ' ';
+            _specialKeysToChar[Key.Period] = '.';
+            _specialKeysToChar[Key.Comma] = ',';
         }
 
         public static Input Instance { get { return _instance; } }
@@ -144,8 +146,8 @@ namespace Raccoon {
             if (PressedKeys.Length > 0) {
                 foreach (Key key in PressedKeys) {
                     string str = "";
-                    if (_specialKeysToString.ContainsKey(key)) {
-                        str = _specialKeysToString[key];
+                    if (_specialKeysToChar.ContainsKey(key)) {
+                        str = _specialKeysToChar[key].ToString();
                     } else if ((int) key >= 48 && (int) key <= 90) {
                         str = key.ToString();
                         if ((int) key <= 57) {
