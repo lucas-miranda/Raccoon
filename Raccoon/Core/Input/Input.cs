@@ -18,6 +18,7 @@ namespace Raccoon {
         private KeyboardState _keyboardState, _keyboardPreviousState;
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState, _mouseButtonsLastState;
         private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
+        private bool _activated;
 
         private Input() {
             // joystick
@@ -36,6 +37,10 @@ namespace Raccoon {
             _specialKeysToChar[Key.Space] = ' ';
             _specialKeysToChar[Key.Period] = '.';
             _specialKeysToChar[Key.Comma] = ',';
+
+            Game.Instance.Core.Activated += (object sender, System.EventArgs e) => {
+                _activated = true;
+            };
         }
 
         public static Input Instance { get { return _instance; } }
@@ -188,6 +193,13 @@ namespace Raccoon {
             _mouseButtonsState[MouseButton.M5] = XNAMouseState.XButton2;
 
             // scroll
+            if (_activated) {
+                MouseScrollWheelDelta = 0;
+                MouseScrollWheel = XNAMouseState.ScrollWheelValue;
+                _activated = false;
+                return;
+            }
+
             MouseScrollWheelDelta = XNAMouseState.ScrollWheelValue - MouseScrollWheel;
             MouseScrollWheel = XNAMouseState.ScrollWheelValue;
         }
