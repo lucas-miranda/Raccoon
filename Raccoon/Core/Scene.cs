@@ -9,6 +9,7 @@ namespace Raccoon {
         private bool _hasStarted;
         private List<Graphic> _graphicsToAdd, _graphicsToRemove;
         private List<Entity> _entitiesToAdd, _entitiesToRemove;
+        private Camera _camera;
 
         #endregion Private Members
 
@@ -24,7 +25,6 @@ namespace Raccoon {
             _entitiesToRemove = new List<Entity>();
 
             Camera = new Camera();
-            Camera.OnAdded();
         }
 
         #endregion
@@ -34,7 +34,19 @@ namespace Raccoon {
         public List<Graphic> Graphics { get; protected set; }
         public List<Entity> Entities { get; protected set; }
         public uint Timer { get; private set; }
-        public Camera Camera { get; set; }
+
+        public Camera Camera {
+            get {
+                return _camera;
+            }
+
+            set {
+                _camera = value;
+                if (_hasStarted) {
+                    _camera.Start();
+                }
+            }
+        }
 
         #endregion  
 
@@ -121,6 +133,8 @@ namespace Raccoon {
             foreach (Entity e in Entities) {
                 e.Start();
             }
+
+            Camera.Start();
         }
 
         public virtual void Begin() {
@@ -128,10 +142,12 @@ namespace Raccoon {
                 Start();
             }
 
-            Camera.Position = Camera.Position; // reapply camera matrices
+            Camera.Begin();
         }
 
-        public virtual void End() { }
+        public virtual void End() {
+            Camera.End();
+        }
 
         public virtual void UnloadContent() {
             foreach (Graphic g in Graphics) {
@@ -276,6 +292,8 @@ namespace Raccoon {
             foreach (Entity e in Entities) {
                 e.DebugRender();
             }
+
+            Camera.DebugRender();
         }
 
         #endregion

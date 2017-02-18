@@ -35,12 +35,7 @@ namespace Raccoon {
                 }
 
                 _position = !UseBounds ? value : Util.Math.Clamp(value, Bounds.Position, new Vector2(Bounds.Right - Width, Bounds.Bottom - Height));
-                Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
-                Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
-
-#if DEBUG
-                Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * _zoom, -Y * Game.Instance.Scale * _zoom, 0);
-#endif
+                Refresh();
             }
         }
 
@@ -51,21 +46,33 @@ namespace Raccoon {
 
             set {
                 _zoom = value;
-                Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
-                Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
-
-#if DEBUG
-                Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * _zoom, -Y * Game.Instance.Scale * _zoom, 0);
-#endif
+                Refresh();
             }
         }
 
-        public virtual void OnAdded() {
+        public virtual void Start() {
             Current = this;
         }
+        
+        public virtual void Begin() {
+            Refresh();
+        }
+
+        public virtual void End() { }
 
         public virtual void Update(int delta) {
             OnUpdate?.Invoke();
+        }
+
+        public virtual void DebugRender() { }
+
+        public void Refresh() {
+            Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
+            Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
+
+#if DEBUG
+            Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * Zoom, -Y * Game.Instance.Scale * Zoom, 0);
+#endif
         }
     }
 }
