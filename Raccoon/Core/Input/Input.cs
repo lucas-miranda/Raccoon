@@ -182,7 +182,7 @@ namespace Raccoon {
             // ignore out of screen mouse interactions
             if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
                 _mouseButtonsState[MouseButton.Left] = _mouseButtonsState[MouseButton.Middle] = _mouseButtonsState[MouseButton.Right] = _mouseButtonsState[MouseButton.M4] = _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
-                MouseScrollWheelDelta = MouseScrollWheel = 0;
+                MouseScrollWheelDelta = 0;
                 return;
             }
 

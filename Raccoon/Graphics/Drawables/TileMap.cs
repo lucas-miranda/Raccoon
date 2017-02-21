@@ -195,15 +195,17 @@ namespace Raccoon.Graphics {
         }
 
         public uint GetTile(int x, int y) {
-            if (!ExistsTile(x, y)) throw new ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
+            if (!ExistsTile(x, y)) throw new ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
             return _tilesIds[y * Columns + x];
         }
 
         public uint[] GetTiles(Rectangle area) {
+            if (area.Left < 0 || area.Right > Columns || area.Top < 0 || area.Bottom > Rows) throw new ArgumentException($"area {area} out of bounds [0 0 {Columns} {Rows}]");
+
             int i = 0;
             uint[] tiles = new uint[(uint) area.Area];
-            for (int y = (int) area.Top; y < (int) area.Bottom; y++) {
-                for (int x = (int) area.Left; x < (int) area.Right; x++) {
+            for (int y = (int) area.Top; y < area.Bottom; y++) {
+                for (int x = (int) area.Left; x < area.Right; x++) {
                     tiles[i] = GetTile(x, y);
                     i++;
                 }

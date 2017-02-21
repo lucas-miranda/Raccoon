@@ -2,13 +2,18 @@
 
 namespace Raccoon.Components {
     public class PlatformerMovement : Movement {
-        public event System.Action OnMove, OnJumpStart, OnJumpEnd;
+        public static int LedgeJumpMaxTime = (int) (12f / 60f * 1000f);
+
+        public event System.Action OnMove = delegate { }, OnJumpBegin = delegate { }, OnJumpEnd = delegate { }, OnFallingBegin = delegate { };
 
         private bool _canJump = true, _nextJumpReady = true, _requestedJump;
-        private int _jumpDistanceBuffer;
+        private int _jumpDistanceBuffer, _ledgeJumpTime;
 
         public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
             GravityForce = new Vector2(0, 450);
+            OnFallingBegin += () => {
+                _ledgeJumpTime = 0;
+            };
         }
 
         public bool OnGround { get; protected set; }
@@ -30,10 +35,11 @@ namespace Raccoon.Components {
                 IsStillJumping = IsJumping = IsFalling = false;
                 Jumps = MaxJumps;
                 _jumpDistanceBuffer = 0;
-                OnJumpEnd?.Invoke();
+                OnJumpEnd.Invoke();
             } else if (moveDirection.Y < 0) { // jumping and reach a ceiling
                 IsStillJumping = IsJumping = false;
                 IsFalling = true;
+                OnFallingBegin.Invoke();
             }
         }
 
@@ -95,11 +101,13 @@ namespace Raccoon.Components {
                     if (!Collider.Collides(new Vector2(x, y + 1), CollisionTags)) {
                         IsFalling = true;
                         OnGround = false;
+                        OnFallingBegin.Invoke();
                     }
                 } else {
                     // falling & jump brake speed update
                     yAxis = 1;
                     speedY = Math.Approach(Speed.Y, yAxis * TargetSpeed.Y, GravityForce.Y * dt);
+                    _ledgeJumpTime += (int) (dt * 1000);
 
                     // reached jump max height
                     if (IsJumping && speedY >= 0) {
@@ -107,6 +115,7 @@ namespace Raccoon.Components {
                         IsFalling = true;
                         Speed = new Vector2(Speed.X, 0);
                         _nextJumpReady = false;
+                        OnFallingBegin.Invoke();
                     }
                 }
 
@@ -149,7 +158,7 @@ namespace Raccoon.Components {
             Vector2 oldPosition = Entity.Position;
             Entity.Position = new Vector2(x, y);
             if (x != oldPosition.X || y != oldPosition.Y) {
-                OnMove?.Invoke();
+                OnMove.Invoke();
             }
         }
 
@@ -166,16 +175,17 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (!CanJump) {
+            Debug.WriteLine("LedgeJumpTime: {0}, LedgeJumpMaxTime: {1}", _ledgeJumpTime, LedgeJumpMaxTime);
+            if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime) || Collider.Collides(new Vector2(Entity.X, Entity.Y - 1), CollisionTags)) {
                 return;
             }
-
+            
             IsStillJumping = IsJumping = true;
             OnGround = IsFalling = false;
             Jumps--;
             _jumpDistanceBuffer = 0;
             Speed = new Vector2(Speed.X, -JumpStartExplosionRate * MaxSpeed.Y);
-            OnJumpStart?.Invoke();
+            OnJumpBegin.Invoke();
         }
 
         /*public override void DebugRender() {

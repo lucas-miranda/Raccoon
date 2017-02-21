@@ -73,6 +73,10 @@ namespace Raccoon.Util {
             return Clamp(value, rect.Position, new Vector2(rect.Right, rect.Bottom));
         }
 
+        public static Rectangle Clamp(Rectangle inner, Rectangle outer) {
+            return new Rectangle(Clamp(inner.TopLeft, outer.TopLeft, outer.BottomRight), Clamp(inner.BottomRight, outer.TopLeft, outer.BottomRight));
+        }
+
         public static float Lerp(float start, float end, float t) {
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }

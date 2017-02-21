@@ -49,6 +49,10 @@
         public float Bottom { get { return Y + Height; } set { Height = value - Y; } }
         public Vector2 Center { get { return new Vector2(X + Width / 2, Y + Height / 2); } }
         public bool IsEmpty { get { return Width == 0 && Height == 0; } }
+        public Vector2 TopLeft { get { return new Vector2(Left, Top); } set { Left = value.X; Top = value.Y; } }
+        public Vector2 TopRight { get { return new Vector2(Right, Top); } set { Right = value.X; Top = value.Y; } }
+        public Vector2 LeftRight { get { return new Vector2(Left, Bottom); } set { Left = value.X; Bottom = value.Y; } }
+        public Vector2 BottomRight { get { return new Vector2(Right, Bottom); } set { Right = value.X; Bottom = value.Y; } }
 
         #endregion Public Properties
 
@@ -100,7 +104,7 @@
         }
 
         public override string ToString() {
-            return $"[Rectangle | X: {X}, Y: {Y}, Width: {Width}, Height: {Height}]";
+            return $"[{X} {Y} {Width} {Height}]";
         }
 
         #endregion Public Methods
