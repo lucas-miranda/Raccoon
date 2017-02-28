@@ -28,6 +28,7 @@
         #region Public Properties
 
         public float Area { get { return Width * Height; } }
+        public bool IsEmpty { get { return Width == 0 && Height == 0; } }
 
         #endregion Public Properties
 

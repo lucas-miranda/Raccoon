@@ -21,11 +21,8 @@
             Height = height;
         }
 
-        public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
-        }
-
-        public Rectangle(Vector2 topLeft, Vector2 bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) {
-        }
+        public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) { }
+        public Rectangle(Vector2 topLeft, Vector2 bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) { }
 
         public Rectangle(float w, float h) {
             X = Y = 0;
@@ -33,8 +30,7 @@
             Height = h;
         }
 
-        public Rectangle(Size size) : this(size.Width, size.Height) {
-        }
+        public Rectangle(Size size) : this(size.Width, size.Height) { }
 
         #endregion Constructors
 

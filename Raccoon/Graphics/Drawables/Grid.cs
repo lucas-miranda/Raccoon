@@ -60,6 +60,10 @@ namespace Raccoon.Graphics {
             TileSize = tileSize;
             Size = new Size(Columns * TileSize.Width, Rows * TileSize.Height);
 
+            if (Columns == 0 || Rows == 0) {
+                return;
+            }
+
             _vertices = new VertexPositionColor[2 * (Columns + Rows + 2)];
             _lineCount = Columns + Rows + 2;
 

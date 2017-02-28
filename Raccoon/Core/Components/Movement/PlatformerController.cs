@@ -175,7 +175,6 @@ namespace Raccoon.Components {
                 return;
             }
 
-            Debug.WriteLine("LedgeJumpTime: {0}, LedgeJumpMaxTime: {1}", _ledgeJumpTime, LedgeJumpMaxTime);
             if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime) || Collider.Collides(new Vector2(Entity.X, Entity.Y - 1), CollisionTags)) {
                 return;
             }

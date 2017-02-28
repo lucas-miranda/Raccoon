@@ -7,7 +7,6 @@ namespace Raccoon.Graphics {
         private Texture _texture;
         private Rectangle _sourceRegion, _clippingRegion;
         private Size _destinationSize;
-        private bool _customDestinationSize;
 
         #endregion Private Members
 
@@ -21,8 +20,7 @@ namespace Raccoon.Graphics {
 
         public Image(string filename) : this(new Texture(filename)) { }
 
-        public Image(AtlasSubTexture subTexture) {
-            Texture = subTexture.Texture;
+        public Image(AtlasSubTexture subTexture) : this(subTexture.Texture) {
             SourceRegion = subTexture.Region;
             ClippingRegion = new Rectangle(SourceRegion.Width, SourceRegion.Height);
         }
@@ -54,23 +52,6 @@ namespace Raccoon.Graphics {
                     throw new ArgumentOutOfRangeException("SourceRegion", value, "Value must be within texture bounds");
                 
                 _sourceRegion = value;
-
-                // keep clipping region in source region bounds
-                if (_clippingRegion.Left < _sourceRegion.Left) {
-                    _clippingRegion.Left = _sourceRegion.Left;
-                }
-
-                if (_clippingRegion.Right > _sourceRegion.Right) {
-                    _clippingRegion.Right = _sourceRegion.Right;
-                }
-
-                if (_clippingRegion.Top < _sourceRegion.Top) {
-                    _clippingRegion.Top = _sourceRegion.Top;
-                }
-
-                if (_clippingRegion.Bottom > _sourceRegion.Bottom) {
-                    _clippingRegion.Bottom = _sourceRegion.Bottom;
-                }
             }
         }
 
@@ -84,9 +65,9 @@ namespace Raccoon.Graphics {
                     throw new ArgumentOutOfRangeException("ClippingRegion", value, $"Value must be within source region bounds {_sourceRegion}");
 
                 _clippingRegion = value;
-                Size = _clippingRegion.Size;
-                if (!_customDestinationSize) {
-                    _destinationSize = Size;
+
+                if (_destinationSize.IsEmpty) {
+                    Size = _clippingRegion.Size;
                 }
             }
         }
@@ -97,8 +78,7 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                _destinationSize = value;
-                _customDestinationSize = true;
+                Size = _destinationSize = value;
             }
         }
 
@@ -110,7 +90,7 @@ namespace Raccoon.Graphics {
             Surface.Draw(
                 Texture,
                 position,
-                new Size(DestinationSize.Width * Scale.X, DestinationSize.Height * Scale.Y),
+                (DestinationSize.IsEmpty ? Size : DestinationSize) * Scale,
                 SourceRegion.Position + ClippingRegion,
                 Origin,
                 rotation * Util.Math.DegToRad,
@@ -122,9 +102,11 @@ namespace Raccoon.Graphics {
         }
 
         public override void Dispose() {
-            if (Texture != null) {
-                Texture.Dispose();
+            if (Texture == null) {
+                return;
             }
+
+            Texture.Dispose();
         }
 
         public override string ToString() {
