@@ -67,10 +67,12 @@ namespace Raccoon {
 
         public void RemoveVertex(Vector2 vertex) {
             _vertices.Remove(vertex);
+            Verify();
         }
 
         public void RemoveVertex(int index) {
             _vertices.RemoveAt(index);
+            Verify();
         }
 
         public void Translate(Vector2 dist) {
@@ -94,6 +96,7 @@ namespace Raccoon {
             }
 
             _vertices = _rotatedVertices;
+            _needRecalculateComponents = true;
         }
 
         public void Rotate(float degrees) {
@@ -105,6 +108,8 @@ namespace Raccoon {
                 Vector2 vertex = _vertices[i];
                 _vertices[i] = new Vector2(2 * axis.X - vertex.X, 2 * axis.Y - vertex.Y);
             }
+
+            _needRecalculateComponents = true;
         }
 
         public void ReflectHorizontal(float axis) {
@@ -112,6 +117,8 @@ namespace Raccoon {
                 Vector2 vertex = _vertices[i];
                 _vertices[i] = new Vector2(2 * axis - vertex.X, vertex.Y);
             }
+
+            _needRecalculateComponents = true;
         }
 
         public void ReflectVertical(float axis) {
@@ -119,6 +126,8 @@ namespace Raccoon {
                 Vector2 vertex = _vertices[i];
                 _vertices[i] = new Vector2(vertex.X, 2 * axis - vertex.Y);
             }
+
+            _needRecalculateComponents = true;
         }
 
         public float[] Projection(Vector2 axis) {
@@ -135,6 +144,19 @@ namespace Raccoon {
         }
 
         public List<Polygon> Triangulate() {
+            // detemine if vertices are in clockwise or anti-clockwise format
+            bool clockwise = true;
+            int verticesSum = 0;
+
+            Vector2 a, b;
+            for (int i = 0; i < VertexCount; i++) {
+                a = _vertices[i];
+                b = _vertices[(i + 1) % VertexCount];
+                verticesSum += (int) ((b.X - a.X) * (b.Y + a.Y));
+            }
+
+            clockwise = verticesSum < 0;
+
             // triangulate using ear clipping
             List<Polygon> triangles = new List<Polygon>();
             Stack<LinkedListNode<Vector2>> ears = new Stack<LinkedListNode<Vector2>>();
@@ -146,30 +168,35 @@ namespace Raccoon {
                                         next = current.Next == null ? vertices.First : current.Next;
 
                 // is current vertex an ear?
-                if (IsEar(previous.Value, current.Value, next.Value)) {
+                if (IsEar(previous.Value, current.Value, next.Value, clockwise)) {
                     ears.Push(current);
                 }
 
                 current = current.Next;
             }
 
-            while (vertices.Count > 0) {
-                current = ears.Pop();
+            while (true) {
+                current = vertices.Count == 3 ? vertices.First : ears.Pop();
 
                 LinkedListNode<Vector2> previous = current.Previous == null ? vertices.Last : current.Previous,
                                         next = current.Next == null ? vertices.First : current.Next;
 
                 triangles.Add(new Polygon(previous.Value, current.Value, next.Value));
+
+                if (vertices.Count == 3) {
+                    break;
+                }
+
                 vertices.Remove(current);
 
                 if (previous != next) {
                     // is previous vertex an ear?
-                    if (IsEar((previous.Previous == null ? vertices.Last : previous.Previous).Value, previous.Value, next.Value)) {
+                    if (IsEar((previous.Previous == null ? vertices.Last : previous.Previous).Value, previous.Value, next.Value, clockwise)) {
                         ears.Push(previous);
                     }
 
                     // is next vertex an ear?
-                    if (IsEar(previous.Value, next.Value, (next.Next == null ? vertices.First : next.Next).Value)) {
+                    if (IsEar(previous.Value, next.Value, (next.Next == null ? vertices.First : next.Next).Value, clockwise)) {
                         ears.Push(next);
                     }
                 }
@@ -187,12 +214,12 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            string s = "[Polygon | ";
+            string s = "[";
             foreach (Vector2 vertex in _vertices) {
-                s +=  vertex + " ";
+                s += vertex + " ";
             }
 
-            return s + "]";
+            return s.Remove(s.Length - 1) + "]";
         }
 
         private void Verify() {
@@ -262,21 +289,28 @@ namespace Raccoon {
                     }
                 }
 
-                foreach (int triangleId in trianglesUsed) {
-                    triangles.RemoveAt(triangleId);
+                for (int j = trianglesUsed.Count - 1; j >= 0; j--) {
+                    triangles.RemoveAt(trianglesUsed[j]);
                 }
+
                 trianglesUsed.Clear();
 
                 _convexComponents.Add(currentComponent);
             }
         }
 
-        private bool IsEar(Vector2 previous, Vector2 center, Vector2 next) {
-            if (System.Math.Abs(Util.Math.Angle(previous, center, next)) >= 180) {
+        private bool IsEar(Vector2 previous, Vector2 center, Vector2 next, bool clockwise) {
+            float x1 = next.X - center.X, y1 = next.Y - center.Y,
+                  x2 = previous.X - center.X, y2 = previous.Y - center.Y;
+
+            bool crossSign = (x1 * y2 > x2 * y1) == clockwise;
+            float angle = System.Math.Abs(Util.Math.Angle(previous, center, next));
+
+            if (!crossSign || angle == 180) {
                 return false;
             }
 
-            // test if some other points lies inside (if so triangle isn't a ear)
+            // test if some other points lies inside (if so triangle isn't an ear)
             foreach (Vector2 point in _vertices) {
                 if (point == previous || point == center || point == next) {
                     continue;
