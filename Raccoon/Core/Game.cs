@@ -84,8 +84,9 @@ namespace Raccoon {
         public Scene Scene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
         public Color BackgroundColor { get { return new Color(Core.BackgroundColor.R, Core.BackgroundColor.G, Core.BackgroundColor.B, Core.BackgroundColor.A); } set { Core.BackgroundColor = new Microsoft.Xna.Framework.Color(value.R, value.G, value.B, value.A); } }
-        public Surface DefaultSurface { get { return Core.DefaultSurface; } }
+        public Surface MainSurface { get { return Core.MainSurface; } }
         public Surface DebugSurface { get { return Core.DebugSurface; } }
+        public Canvas MainCanvas { get { return Core.MainCanvas; } }
 
         public float Scale {
             get {
@@ -222,7 +223,7 @@ namespace Raccoon {
             Core.ClearCallbacks();
 
             Scene = _scenes[name];
-            if (Core.DefaultSurface != null) {
+            if (Core.MainSurface != null) {
                 Scene.Begin();
             } else {
                 Core.OnBegin += OnBegin;

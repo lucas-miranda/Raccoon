@@ -34,7 +34,7 @@ namespace Raccoon {
 
             Name = "Entity";
             Active = Visible = true;
-            Surface = Game.Instance.Core.DefaultSurface;
+            Surface = Game.Instance.Core.MainSurface;
 
             OnRemoved += () => {
                 Enabled = false;
@@ -52,6 +52,8 @@ namespace Raccoon {
         public bool Active { get; set; }
         public bool Visible { get; set; }
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
+        public bool AutoUpdate { get; set; } = true;
+        public bool AutoRender { get; set; } = true;
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -159,11 +161,7 @@ namespace Raccoon {
 
         public virtual void Update(int delta) {
             Timer += (uint) delta;
-
-            if (!Active) {
-                return;
-            }
-
+            
             foreach (Component c in _components) {
                 if (!c.Enabled) {
                     continue;
@@ -184,10 +182,6 @@ namespace Raccoon {
         public virtual void LateUpdate() { }
 
         public virtual void Render() {
-            if (!Visible) {
-                return;
-            }
-
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;

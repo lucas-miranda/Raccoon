@@ -151,9 +151,9 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DefaultSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DefaultSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DefaultSurface.Projection;
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -185,9 +185,9 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawRectangle(Rectangle rectangle, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DefaultSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DefaultSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DefaultSurface.Projection;
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 

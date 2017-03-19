@@ -3,13 +3,6 @@ using System;
 
 namespace Raccoon.Graphics {
     public class Shader {
-        #region Private Members
-
-        private Effect _effect;
-        private string _currentTechniqueName;
-
-        #endregion Private Members
-
         #region Constructors
 
         public Shader(string filename) {
@@ -20,66 +13,67 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
-        public int TechniqueCount { get { return _effect.Techniques.Count; } }
-
-        public string CurrentTechniqueName {
-            get {
-                return _currentTechniqueName;
-            }
-            set {
-                _currentTechniqueName = value;
-                _effect.CurrentTechnique = _effect.Techniques[_currentTechniqueName];
-            }
-        }
+        public int TechniqueCount { get { return XNAEffect.Techniques.Count; } }
+        public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } }
 
         #endregion Public Properties
+
+        #region Internal Properties
+
+        internal Effect XNAEffect { get; set; }
+
+        #endregion Internal Properties
 
         #region Public Methods
 
         public void Apply() {
-            foreach (EffectPass pass in _effect.CurrentTechnique.Passes) {
+            foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
                 pass.Apply();
             }
         }
 
-        public void Apply(int id) {
-            _effect.CurrentTechnique.Passes[id].Apply();
+        public void Apply(int passId) {
+            XNAEffect.CurrentTechnique.Passes[passId].Apply();
         }
 
-        public void SetCurrentTechnique(int id) {
-            _effect.CurrentTechnique = _effect.Techniques[id];
+        public void SetCurrentTechnique(int techniqueId) {
+            XNAEffect.CurrentTechnique = XNAEffect.Techniques[techniqueId];
+        }
+
+        public void SetCurrentTechnique(string name) {
+            XNAEffect.CurrentTechnique = XNAEffect.Techniques[name];
         }
 
         public bool GetParameterBoolean(string name) {
-            return _effect.Parameters[name].GetValueBoolean();
+            return XNAEffect.Parameters[name].GetValueBoolean();
         }
 
         public void SetParameter(string name, bool value) {
-            _effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
         }
 
         public float GetParameterFloat(string name) {
-            return _effect.Parameters[name].GetValueSingle();
+            return XNAEffect.Parameters[name].GetValueSingle();
         }
 
         public void SetParameter(string name, float value) {
-            _effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
         }
 
         public float[] GetParameterFloatArray(string name) {
-            return _effect.Parameters[name].GetValueSingleArray();
+            return XNAEffect.Parameters[name].GetValueSingleArray();
         }
 
         public void SetParameter(string name, float[] value) {
-            _effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
         }
 
         public int GetParameterInteger(string name) {
-            return _effect.Parameters[name].GetValueInt32();
+            return XNAEffect.Parameters[name].GetValueInt32();
         }
 
         public void SetParameter(string name, int value) {
-            _effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
         }
 
         /*public void SetParameter(string name, Microsoft.Xna.Framework.Matrix value) {
@@ -95,15 +89,15 @@ namespace Raccoon.Graphics {
         }*/
 
         public Vector2 GetParameterVector2(string name) {
-            return new Vector2(_effect.Parameters[name].GetValueVector2());
+            return new Vector2(XNAEffect.Parameters[name].GetValueVector2());
         }
 
         public void SetParameter(string name, Vector2 value) {
-            _effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
         }
 
         public Vector2[] GetParameterVector2Array(string name) {
-            Microsoft.Xna.Framework.Vector2[] xnaVec2Arr = _effect.Parameters[name].GetValueVector2Array();
+            Microsoft.Xna.Framework.Vector2[] xnaVec2Arr = XNAEffect.Parameters[name].GetValueVector2Array();
             Vector2[] vec2Arr = new Vector2[xnaVec2Arr.Length];
             for (int i = 0; i < xnaVec2Arr.Length; i++) {
                 vec2Arr[i] = new Vector2(xnaVec2Arr[i]);
@@ -118,15 +112,15 @@ namespace Raccoon.Graphics {
                 vec2[i] = value[i];
             }
 
-            _effect.Parameters[name].SetValue(vec2);
+            XNAEffect.Parameters[name].SetValue(vec2);
         }
 
         public Texture GetParameterTexture(string name) {
-            return new Texture(_effect.Parameters[name].GetValueTexture2D());
+            return new Texture(XNAEffect.Parameters[name].GetValueTexture2D());
         }
 
         public void SetParameter(string name, Texture value) {
-            _effect.Parameters[name].SetValue(value.XNATexture);
+            XNAEffect.Parameters[name].SetValue(value.XNATexture);
         }
 
         #endregion Public Methods
@@ -138,11 +132,13 @@ namespace Raccoon.Graphics {
                 throw new NoSuitableGraphicsDeviceException("Shader needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            _effect = Game.Instance.Core.Content.Load<Effect>(filename);
-            if (_effect == null) throw new NullReferenceException($"Shader '{filename}' not found");
-            if (_effect.Techniques.Count > 0) {
-                _currentTechniqueName = _effect.Techniques[0].Name;
-            }
+            XNAEffect = Game.Instance.Core.Content.Load<Effect>(filename);
+
+            if (XNAEffect == null) throw new NullReferenceException($"Shader '{filename}' not found");
+            
+            /*if (XNAEffect.Techniques.Count > 0) {
+                XNAEffect.CurrentTechnique = XNAEffect.Techniques[0];
+            }*/
         }
 
         #endregion Protected Methods

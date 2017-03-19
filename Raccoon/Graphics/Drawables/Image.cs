@@ -5,8 +5,7 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private Texture _texture;
-        private Rectangle _sourceRegion, _clippingRegion;
-        private Size _destinationSize;
+        private Rectangle _sourceRegion, _clippingRegion, _destinationRegion;
 
         #endregion Private Members
 
@@ -66,19 +65,20 @@ namespace Raccoon.Graphics {
 
                 _clippingRegion = value;
 
-                if (_destinationSize.IsEmpty) {
+                if (DestinationRegion.IsEmpty) {
                     Size = _clippingRegion.Size;
                 }
             }
         }
 
-        public Size DestinationSize {
+        public Rectangle DestinationRegion {
             get {
-                return _destinationSize;
+                return _destinationRegion;
             }
 
             set {
-                Size = _destinationSize = value;
+                _destinationRegion = value;
+                Size = DestinationRegion.Size;
             }
         }
 
@@ -87,18 +87,12 @@ namespace Raccoon.Graphics {
         #region Public Methods
         
         public override void Render(Vector2 position, float rotation) {
-            Surface.Draw(
-                Texture,
-                position,
-                (DestinationSize.IsEmpty ? Size : DestinationSize) * Scale,
-                SourceRegion.Position + ClippingRegion,
-                Origin,
-                rotation * Util.Math.DegToRad,
-                Vector2.One,
-                FinalColor,
-                Scroll,
-                Flipped
-            );
+            if (DestinationRegion.IsEmpty) {
+                Surface.Draw(Texture, position, SourceRegion.Position + ClippingRegion, FinalColor, rotation * Util.Math.DegToRad, Origin, Scale, Flipped, Scroll, Shader);
+                return;
+            }
+
+            Surface.Draw(Texture, new Rectangle(position, DestinationRegion.Size * Scale), SourceRegion.Position + ClippingRegion, FinalColor, rotation * Util.Math.DegToRad, Origin, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {

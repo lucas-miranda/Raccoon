@@ -58,9 +58,9 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.SecondaryRenderTarget);
+            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
             Game.Instance.Core.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
-            Game.Instance.Core.RenderTargetStack.Push(Game.Instance.Core.SecondaryRenderTarget);
+            Game.Instance.Core.RenderTargetStack.Push(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
 
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
@@ -83,8 +83,8 @@ namespace Raccoon.Graphics {
             // draw to main render target
             Game.Instance.Core.RenderTargetStack.Pop();
             Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.RenderTargetStack.Peek());
-            Game.Instance.Core.MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
-            Game.Instance.Core.MainSpriteBatch.Draw(Game.Instance.Core.SecondaryRenderTarget, Microsoft.Xna.Framework.Vector2.Zero);
+            Game.Instance.Core.MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            Game.Instance.Core.MainSpriteBatch.Draw(Game.Instance.Core.SecondaryCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Microsoft.Xna.Framework.Color.White);
             Game.Instance.Core.MainSpriteBatch.End();
         }
 

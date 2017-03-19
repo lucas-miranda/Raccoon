@@ -1,15 +1,38 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Text;
+using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
+    public enum BlendState {
+        AlphaBlend,
+        Additive,
+        NonPremultiplied,
+        Opaque
+    }
+
     public class Surface {
+        private static Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState> _blendstates = new Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState>();
+
         private Vector2 _scale = Vector2.One;
 
-        public Surface() {
+        static Surface() {
+            _blendstates.Add(BlendState.AlphaBlend, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend);
+            _blendstates.Add(BlendState.Additive, Microsoft.Xna.Framework.Graphics.BlendState.Additive);
+            _blendstates.Add(BlendState.NonPremultiplied, Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied);
+            _blendstates.Add(BlendState.Opaque, Microsoft.Xna.Framework.Graphics.BlendState.Opaque);
+        }
+
+        public Surface(BlendState blendState = BlendState.AlphaBlend) {
             if (Game.Instance.Core.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Surface needs a valid graphics device. Maybe are you using before first Scene.Start() is called?");
+
+            BlendState = blendState;
             Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 1f, 0f);
             SpriteBatch = new SpriteBatch(Game.Instance.Core.GraphicsDevice);
         }
+
+        public BlendState BlendState { get; private set; }
 
         public Vector2 Scale {
             get {
@@ -27,32 +50,72 @@ namespace Raccoon.Graphics {
         internal Matrix View { get; set; } = Matrix.Identity;
         internal Matrix Projection { get; set; } = Matrix.Identity;
 
-        public void Draw(Texture texture, Vector2? position = default(Vector2?), Size? destinationSize = default(Size?), Rectangle? sourceRectangle = default(Rectangle?), Vector2? origin = default(Vector2?), float rotation = 0, Vector2? scale = default(Vector2?), Color? color = default(Color?), Vector2? scrollFactor = default(Vector2?), ImageFlip flip = ImageFlip.None) {
-            Microsoft.Xna.Framework.Rectangle? destinationRect = null;
-            if (destinationSize != null) {
-                destinationRect = new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationSize.Value.Width, (int) destinationSize.Value.Height);
-            }
-
-            Prepare(position.Value, scrollFactor.Value);
-            SpriteBatch.Draw(texture.XNATexture, destinationRect != null ? null : new Microsoft.Xna.Framework.Vector2?(Microsoft.Xna.Framework.Vector2.Zero), destinationRect, sourceRectangle, origin, rotation, scale, color, (SpriteEffects) flip, 0f);
+        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(destinationRectangle.Position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), color);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scrollFactor, float rotation, Vector2 origin, ImageFlip flip) {
-            Prepare(destinationRectangle.Position, scrollFactor);
-            SpriteBatch.Draw(texture.XNATexture, new Rectangle(Vector2.Zero, destinationRectangle.Size), sourceRectangle, color, rotation, origin, (SpriteEffects) flip, 0f);
+        public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, color);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scrollFactor, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip) {
-            Prepare(position, scrollFactor);
-            SpriteBatch.DrawString(font.SpriteFont, text, Vector2.Zero, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scrollFactor) {
-            Prepare(position, scrollFactor);
-            SpriteBatch.DrawString(font.SpriteFont, text, Vector2.Zero, color);
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(destinationRectangle.Position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), sourceRectangle, color);
+        }
+
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(destinationRectangle.Position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), sourceRectangle, color, rotation, origin, (SpriteEffects) flip, 0f);
+        }
+
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
         }
         
-        internal void Prepare(Vector2 position, Vector2 scrollFactor) {
+        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color);
+        }
+
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color);
+        }
+
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, rotation, origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        internal void Prepare(Vector2 position, Vector2 scrollFactor, Shader shader) {
             Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X * scrollFactor.X, position.Y * scrollFactor.Y, 0f) * World;
             Game.Instance.Core.BasicEffect.View = Matrix.CreateScale(1f / scrollFactor.X, 1f / scrollFactor.Y, 1f) * View * Matrix.CreateScale(scrollFactor.X, scrollFactor.Y, 1f);
             Game.Instance.Core.BasicEffect.Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
@@ -63,10 +126,14 @@ namespace Raccoon.Graphics {
             }
 
             Game.Instance.Core.BasicEffect.TextureEnabled = false;
+
+            if (shader != null) {
+                shader.Apply();
+            }
         }
 
-        internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null) {
-            SpriteBatch.Begin(sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, null);
+        internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null) {
+            SpriteBatch.Begin(sortMode, _blendstates[BlendState], samplerState, depthStencilState, rasterizerState, effect, null);
         }
 
         internal void End() {

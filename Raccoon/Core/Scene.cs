@@ -238,6 +238,10 @@ namespace Raccoon {
             }
 
             foreach (Entity e in Entities) {
+                if (!e.Active || !e.AutoUpdate) {
+                    continue;
+                }
+
                 e.BeforeUpdate();
             }
         }
@@ -254,6 +258,10 @@ namespace Raccoon {
             }
 
             foreach (Entity e in Entities) {
+                if (!e.Active || !e.AutoUpdate) {
+                    continue;
+                }
+
                 e.Update(delta);
             }
 
@@ -262,6 +270,10 @@ namespace Raccoon {
 
         public virtual void LateUpdate() {
             foreach (Entity e in Entities) {
+                if (!e.Active || !e.AutoUpdate) {
+                    continue;
+                }
+
                 e.LateUpdate();
             }
         }
@@ -276,6 +288,10 @@ namespace Raccoon {
             }
 
             foreach (Entity e in Entities) {
+                if (!e.Visible || !e.AutoRender) {
+                    continue;
+                }
+
                 e.Render();
             }
         }
@@ -290,6 +306,10 @@ namespace Raccoon {
             }
 
             foreach (Entity e in Entities) {
+                if (!e.Visible || !e.AutoRender) {
+                    continue;
+                }
+
                 e.DebugRender();
             }
 

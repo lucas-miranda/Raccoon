@@ -10,7 +10,7 @@
         #region Constructors
 
         public Graphic() {
-            Surface = Game.Instance.Core.DefaultSurface;
+            Surface = Game.Instance.Core.MainSurface;
         }
 
         #endregion Constructors
@@ -32,6 +32,7 @@
         public Color FinalColor { get; set; } = Color.White;
         public Surface Surface { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;
+        public Shader Shader { get; set; }
 
         public Color Color {
             get {

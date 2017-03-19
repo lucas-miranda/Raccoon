@@ -35,17 +35,7 @@
         }
 
         public override void Render(Vector2 position, float rotation) {
-            Surface.DrawString(
-                Font, 
-                Value, 
-                position, 
-                FinalColor,
-                Scroll,
-                rotation * Util.Math.DegToRad,
-                Origin,
-                Scale,
-                Flipped
-            );
+            Surface.DrawString(Font, Value, position, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() { }

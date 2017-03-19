@@ -67,8 +67,8 @@ namespace Raccoon {
         public virtual void DebugRender() { }
 
         public void Refresh() {
-            Game.Instance.Core.DefaultSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
-            Game.Instance.Core.DefaultSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.DefaultSurface.View;
+            Game.Instance.Core.MainSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
+            Game.Instance.Core.MainSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.MainSurface.View;
 
 #if DEBUG
             Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * Zoom, -Y * Game.Instance.Scale * Zoom, 0);

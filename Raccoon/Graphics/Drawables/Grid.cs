@@ -23,9 +23,9 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.SecondaryRenderTarget);
+            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
             Game.Instance.Core.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
-            Game.Instance.Core.RenderTargetStack.Push(Game.Instance.Core.SecondaryRenderTarget);
+            Game.Instance.Core.RenderTargetStack.Push(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
 
             Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X, Scale.Y, 1) * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X * Scroll.X, position.Y * Scroll.Y, 0f) * Microsoft.Xna.Framework.Matrix.CreateLookAt(new Microsoft.Xna.Framework.Vector3(0f, 0f, 1f), new Microsoft.Xna.Framework.Vector3(0f, 0f, -1f), Microsoft.Xna.Framework.Vector3.Up) * Surface.World;
             Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.CreateScale(1f / Scroll.X, 1f / Scroll.Y, 1f) * Surface.View * Microsoft.Xna.Framework.Matrix.CreateScale(Scroll.X, Scroll.Y, 1f);
@@ -44,8 +44,8 @@ namespace Raccoon.Graphics {
             // draw to main render target
             Game.Instance.Core.RenderTargetStack.Pop();
             Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.RenderTargetStack.Peek());
-            Game.Instance.Core.MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
-            Game.Instance.Core.MainSpriteBatch.Draw(Game.Instance.Core.SecondaryRenderTarget, Microsoft.Xna.Framework.Vector2.Zero);
+            Game.Instance.Core.MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            Game.Instance.Core.MainSpriteBatch.Draw(Game.Instance.Core.SecondaryCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Microsoft.Xna.Framework.Color.White);
             Game.Instance.Core.MainSpriteBatch.End();
         }
 

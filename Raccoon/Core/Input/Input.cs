@@ -137,18 +137,19 @@ namespace Raccoon {
             // keyboard state
             _keyboardPreviousState = _keyboardState;
             _keyboardState = Keyboard.GetState();
-
-            if (KeyboardText.Length > 0) {
-                KeyboardText = "";
-            }
-
+            
             Keys[] _xnaPressedKeys = _keyboardState.GetPressedKeys();
             PressedKeys = new Key[_xnaPressedKeys.Length];
             for (int i = 0; i < _xnaPressedKeys.Length; i++) {
                 PressedKeys[i] = (Key) _xnaPressedKeys[i];
             }
 
-            if (PressedKeys.Length > 0) {
+            // keyboard text input
+            if (KeyboardText.Length > 0) {
+                KeyboardText = "";
+            }
+
+            if (PressedKeys.Length > 0 && !(IsKeyDown(Key.LeftControl) || IsKeyDown(Key.LeftShift) || IsKeyDown(Key.LeftAlt))) {
                 foreach (Key key in PressedKeys) {
                     string str = "";
                     if (_specialKeysToChar.ContainsKey(key)) {
@@ -158,7 +159,7 @@ namespace Raccoon {
                         if ((int) key <= 57) {
                             str = str.Remove(0, 1);
                         } else if ((int) key >= 65) {
-                            str = IsKeyDown(Key.LeftShift) ? str : str.ToLower();
+                            str = IsKeyDown(Key.LeftShift) || _keyboardState.CapsLock ? str : str.ToLower();
                         }
                     } else {
                         continue;
