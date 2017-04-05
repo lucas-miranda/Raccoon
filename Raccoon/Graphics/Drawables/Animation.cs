@@ -94,6 +94,16 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void Play(bool forceReset = true) {
+            if (CurrentTrack == null) throw new InvalidOperationException("Animation can't play or resume an invalid track");
+
+            IsPlaying = true;
+            if (forceReset) {
+                CurrentTrack.Reset();
+                UpdateClippingRegion();
+            }
+        }
+
         public void Play(KeyType key, bool forceReset = true) {
             IsPlaying = true;
             if (CurrentTrack == null || !CurrentKey.Equals(key)) {
@@ -105,6 +115,10 @@ namespace Raccoon.Graphics {
                 CurrentTrack.Reset();
                 UpdateClippingRegion();
             }
+        }
+
+        public void Resume() {
+            Play(false);
         }
 
         public void Pause() {
@@ -218,8 +232,8 @@ namespace Raccoon.Graphics {
 
         protected override void Load() {
             base.Load();
-            _columns = (int) (SourceRegion.Width / Size.Width);
-            _rows = (int) (SourceRegion.Height / Size.Height);
+            _columns = (int) (SourceRegion.Width / ClippingRegion.Width);
+            _rows = (int) (SourceRegion.Height / ClippingRegion.Height);
         }
 
         #endregion Protected Methods
@@ -227,7 +241,7 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateClippingRegion() {
-            ClippingRegion = new Rectangle((CurrentTrack.CurrentSpriteID % _columns) * Size.Width, (CurrentTrack.CurrentSpriteID / _columns) * Size.Height, Size.Width, Size.Height);
+            ClippingRegion = new Rectangle((CurrentTrack.CurrentSpriteID % _columns) * ClippingRegion.Width, (CurrentTrack.CurrentSpriteID / _columns) * ClippingRegion.Height, ClippingRegion.Width, ClippingRegion.Height);
         }
 
         #endregion Private Methods

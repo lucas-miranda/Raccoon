@@ -8,21 +8,27 @@
 
         #region Contructors
 
-        private FrameSet(Size frameSize, int frameCount = -1) {
+        private FrameSet(Size frameSize, int frameCount) {
             FrameSize = frameSize;
             FrameCount = System.Math.Max(-1, frameCount);
         }
 
-        public FrameSet(string filename, Size frameSize, int frameCount = -1) : this(frameSize, frameCount) {
+        private FrameSet(Size frameSize) : this(frameSize, -1) { }
+
+        public FrameSet(string filename, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = new Texture(filename);
             Load();
         }
 
-        public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount = -1) : this(frameSize, frameCount) {
+        public FrameSet(string filename, Size frameSize) : this(frameSize, -1) { }
+
+        public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = subTexture.Texture;
             SourceRegion = subTexture.Region;
             Load();
         }
+
+        public FrameSet(AtlasSubTexture subTexture, Size frameSize) : this(frameSize, -1) { }
 
         #endregion Contructors
 
@@ -39,7 +45,9 @@
             }
 
             set {
-                _currentFrame = (int) Util.Math.Clamp(value, 0, FrameCount - 1);
+                if (value < 0 || value >= FrameCount) throw new System.ArgumentOutOfRangeException("CurrentFrame", value, $"Frame Id must be inclusive between 0 and {FrameCount - 1} (FrameCount)");
+
+                _currentFrame = value;
                 UpdateClippingRegion();
             }
         }
@@ -53,7 +61,7 @@
             int texColumns = (int) (SourceRegion.Width / FrameSize.Width);
             int texRows = (int) (SourceRegion.Height / FrameSize.Height);
 
-            if (FrameCount == -1) {
+            if (FrameCount <= -1) {
                 FrameCount = texColumns * texRows;
                 Columns = texColumns;
                 Rows = texRows;
