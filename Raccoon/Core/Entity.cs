@@ -9,7 +9,7 @@ namespace Raccoon {
     public class Entity {
         #region Public Delegates
 
-        public Action OnRemoved = delegate { };
+        public Action OnUpdate = delegate { }, OnRender = delegate { }, OnDebugRender = delegate { }, OnRemoved = delegate { };
 
         #endregion Public Delegates
 
@@ -177,6 +177,8 @@ namespace Raccoon {
 
                 g.Update(delta);
             }
+
+            OnUpdate.Invoke();
         }
 
         public virtual void LateUpdate() { }
@@ -189,6 +191,8 @@ namespace Raccoon {
 
                 g.Render(Position + g.Position, Rotation + g.Rotation);
             }
+
+            OnRender.Invoke();
         }
 
         [Conditional("DEBUG")]
@@ -208,6 +212,8 @@ namespace Raccoon {
 
                 c.DebugRender();
             }
+
+            OnDebugRender.Invoke();
         }
 
         public void Add(Graphic graphic) {

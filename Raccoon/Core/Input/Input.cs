@@ -19,6 +19,7 @@ namespace Raccoon {
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState, _mouseButtonsLastState;
         private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
         private bool _activated;
+        private string _keyboardTextBuffer = "";
 
         private Input() {
             // joystick
@@ -38,6 +39,7 @@ namespace Raccoon {
             _specialKeysToChar[Key.Period] = '.';
             _specialKeysToChar[Key.Comma] = ',';
 
+            Game.Instance.Core.Window.TextInput += ProcessTextInput;
             Game.Instance.Core.Activated += (object sender, System.EventArgs e) => {
                 _activated = true;
             };
@@ -145,28 +147,10 @@ namespace Raccoon {
             }
 
             // keyboard text input
-            if (KeyboardText.Length > 0) {
-                KeyboardText = "";
-            }
-
-            if (PressedKeys.Length > 0 && !(IsKeyDown(Key.LeftControl) || IsKeyDown(Key.LeftShift) || IsKeyDown(Key.LeftAlt))) {
-                foreach (Key key in PressedKeys) {
-                    string str = "";
-                    if (_specialKeysToChar.ContainsKey(key)) {
-                        str = _specialKeysToChar[key].ToString();
-                    } else if ((int) key >= 48 && (int) key <= 90) {
-                        str = key.ToString();
-                        if ((int) key <= 57) {
-                            str = str.Remove(0, 1);
-                        } else if ((int) key >= 65) {
-                            str = IsKeyDown(Key.LeftShift) || _keyboardState.CapsLock ? str : str.ToLower();
-                        }
-                    } else {
-                        continue;
-                    }
-
-                    KeyboardText += str;
-                }
+            KeyboardText = "";
+            if (_keyboardTextBuffer.Length > 0) {
+                KeyboardText = _keyboardTextBuffer;
+                _keyboardTextBuffer = "";
             }
 
             // mouse
@@ -194,7 +178,7 @@ namespace Raccoon {
             _mouseButtonsState[MouseButton.M5] = XNAMouseState.XButton2;
 
             // scroll
-            if (_activated) {
+            if (_activated) { // reset scroll wheel values if mouse is coming out of game screen
                 MouseScrollWheelDelta = 0;
                 MouseScrollWheel = XNAMouseState.ScrollWheelValue;
                 _activated = false;
@@ -203,6 +187,10 @@ namespace Raccoon {
 
             MouseScrollWheelDelta = XNAMouseState.ScrollWheelValue - MouseScrollWheel;
             MouseScrollWheel = XNAMouseState.ScrollWheelValue;
+        }
+
+        private void ProcessTextInput(object sender, Microsoft.Xna.Framework.TextInputEventArgs e) {
+            _keyboardTextBuffer += e.Character.ToString();
         }
     }
 }
