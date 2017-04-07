@@ -24,6 +24,15 @@ namespace Raccoon.Graphics {
             ClippingRegion = new Rectangle(SourceRegion.Width, SourceRegion.Height);
         }
 
+        public Image(Image image) : this(image.Texture) {
+            SourceRegion = image.SourceRegion;
+            ClippingRegion = image.ClippingRegion;
+
+            if (!image.DestinationRegion.IsEmpty) {
+                DestinationRegion = image.DestinationRegion;
+            }
+        }
+
         #endregion Constructors
 
         #region Public Properties

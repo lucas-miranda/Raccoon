@@ -14,32 +14,33 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private int _columns, _rows;
-        private Dictionary<KeyType, Track> _tracks;
+        private Dictionary<KeyType, Track> _tracks = new Dictionary<KeyType, Track>();
 
         #endregion Private Members
 
         #region Constructors
 
-        public Animation() {
-            _tracks = new Dictionary<KeyType, Track>();
-        }
+        public Animation() { }
 
-        public Animation(string filename, Size frameSize) : this() {
-            Texture = new Texture(filename);
+        public Animation(Texture texture, Size frameSize) {
+            Texture = texture;
             ClippingRegion = new Rectangle(frameSize);
             Load();
         }
 
-        public Animation(AtlasSubTexture subTexture, Size frameSize) : this() {
+        public Animation(string filename, Size frameSize) : this(new Texture(filename), frameSize) { }
+
+        public Animation(AtlasSubTexture subTexture, Size frameSize) {
             Texture = subTexture.Texture;
             SourceRegion = subTexture.Region;
             ClippingRegion = new Rectangle(frameSize);
             Load();
         }
 
-        public Animation(AtlasAnimation animTexture) : this() {
+        public Animation(AtlasAnimation animTexture) {
+            // TODO: support KeyType with AtlasAnimation, converting string animations label to KeyType enum
             if (typeof(KeyType) != typeof(string)) {
-                throw new NotSupportedException("KeyType " + typeof(KeyType) + " doesn't support AtlasAnimationTexture, switch to KeyType string");
+                throw new NotSupportedException("KeyType " + typeof(KeyType) + " doesn't support AtlasAnimationTexture, switch to string");
             }
 
             Texture = animTexture.Texture;
@@ -56,6 +57,21 @@ namespace Raccoon.Graphics {
             }
 
             Load();
+        }
+
+        public Animation(Animation<KeyType> animation) {
+            Texture = animation.Texture;
+            SourceRegion = animation.SourceRegion;
+            ClippingRegion = animation.ClippingRegion;
+            Load();
+
+            if (!animation.DestinationRegion.IsEmpty) {
+                DestinationRegion = animation.DestinationRegion;
+            }
+
+            foreach (KeyValuePair<KeyType, Track> track in animation._tracks) {
+                Add(track.Key, new Track(track.Value));
+            }
         }
 
         #endregion Constructors
@@ -170,7 +186,7 @@ namespace Raccoon.Graphics {
                 durationList.RemoveRange(frameList.Count - 1, durationList.Count - frameList.Count);
             }
 
-            _tracks.Add(key, new Track(frameList.ToArray(), durationList.ToArray()));
+            Add(key, new Track(frameList.ToArray(), durationList.ToArray()));
         }
 
         public void Add(KeyType key, string frames, int duration) {
@@ -197,7 +213,7 @@ namespace Raccoon.Graphics {
                 durations.SetValue(duration, i);
             }
 
-            _tracks.Add(key, new Track(frameList.ToArray(), durations));
+            Add(key, new Track(frameList.ToArray(), durations));
         }
 
         public void Add(KeyType key, ICollection<int> frames, ICollection<int> durations) {
@@ -208,7 +224,7 @@ namespace Raccoon.Graphics {
             frames.CopyTo(frameList, 0);
             int[] durationList = new int[durations.Count];
             durations.CopyTo(durationList, 0);
-            _tracks.Add(key, new Track(frameList, durationList));
+            Add(key, new Track(frameList, durationList));
         }
 
         public void Add(KeyType key, ICollection<int> frames, int duration) {
@@ -223,7 +239,11 @@ namespace Raccoon.Graphics {
                 durations.SetValue(duration, i);
             }
 
-            _tracks.Add(key, new Track(frameList, durations));
+            Add(key, new Track(frameList, durations));
+        }
+
+        public void Add(KeyType key, Track track) {
+            _tracks.Add(key, track);
         }
 
         #endregion Public Methods
@@ -249,12 +269,27 @@ namespace Raccoon.Graphics {
         #region Public Class Track
 
         public class Track {
-            private event Action _onEnd, _onChangeFrame;
+            private event Action _onEnd = delegate { }, _onChangeFrame = delegate { };
             private int _currentFrameIndex;
 
             public Track(int[] frames, int[] duration) {
                 Frames = frames;
                 Durations = duration;
+            }
+
+            public Track(Track track) {
+                Frames = new int[track.Frames.Length];
+                track.Frames.CopyTo(Frames, 0);
+
+                Durations = new int[track.Durations.Length];
+                track.Durations.CopyTo(Durations, 0);
+
+                RepeatTimes = track.RepeatTimes;
+                IsPingPong = track.IsPingPong;
+                IsReverse = track.IsReverse;
+
+                _onEnd += track._onEnd;
+                _onChangeFrame += track._onChangeFrame;
             }
 
             public int[] Frames { get; private set; }
@@ -300,15 +335,15 @@ namespace Raccoon.Graphics {
                     if (IsLooping || TimesPlayed < RepeatTimes) {
                         CurrentFrameIndex = IsReverse ? Frames.Length - 1 : 0;
                         TimesPlayed++;
-                        _onEnd?.Invoke();
+                        _onEnd.Invoke();
                     } else {
                         HasEnded = true;
-                        _onEnd?.Invoke();
+                        _onEnd.Invoke();
                         return;
                     }
                 } else {
                     CurrentFrameIndex = IsReverse ? CurrentFrameIndex - 1 : CurrentFrameIndex + 1;
-                    _onChangeFrame?.Invoke();
+                    _onChangeFrame.Invoke();
                 }
             }
 
@@ -358,9 +393,11 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public Animation() : base() { }
+        public Animation(Texture texture, Size frameSize) : base(texture, frameSize) { }
         public Animation(string filename, Size frameSize) : base(filename, frameSize) { }
         public Animation(AtlasSubTexture subTexture, Size frameSize) : base(subTexture, frameSize) { }
         public Animation(AtlasAnimation animTexture) : base(animTexture) { }
+        public Animation(Animation animation) : base(animation) { }
 
         #endregion Constructors
     }

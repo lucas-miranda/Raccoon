@@ -320,7 +320,6 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTiles(Rectangle area, uint[] gids) {
-            if (gids.Length == 0) throw new ArgumentException("Gids data is empty", "gids");
             if (gids.Length != area.Area) throw new ArgumentException($"Inconsistent gids data size, expected {area.Area} gids, got {gids.Length}", "gids");
 
             for (int y = 0; y < area.Height && area.Top + y < Rows; y++) {
