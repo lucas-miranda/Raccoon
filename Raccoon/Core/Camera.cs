@@ -55,6 +55,10 @@ namespace Raccoon {
         }
         
         public virtual void Begin() {
+            if (Current != this) {
+                Current = this;
+            }
+
             Refresh();
         }
 

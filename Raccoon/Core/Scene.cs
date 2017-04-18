@@ -1,14 +1,12 @@
 ﻿using System.Collections.Generic;
 
+using Raccoon.Collections;
 using Raccoon.Graphics;
 
 namespace Raccoon {
     public class Scene {
         #region Private Members
 
-        private bool _hasStarted;
-        private List<Graphic> _graphicsToAdd, _graphicsToRemove;
-        private List<Entity> _entitiesToAdd, _entitiesToRemove;
         private Camera _camera;
 
         #endregion Private Members
@@ -16,13 +14,9 @@ namespace Raccoon {
         #region Constructor
 
         public Scene() {
-            Graphics = new List<Graphic>();
-            _graphicsToAdd = new List<Graphic>();
-            _graphicsToRemove = new List<Graphic>();
-
-            Entities = new List<Entity>();
-            _entitiesToAdd = new List<Entity>();
-            _entitiesToRemove = new List<Entity>();
+            Graphics = new Locker<Graphic>(new Graphic.LayerComparer());
+            Entities = new Locker<Entity>(new Entity.LayerComparer());
+            Entities.OnRemoved += (Entity e) => e.OnRemoved.Invoke();
 
             Camera = new Camera();
         }
@@ -31,9 +25,10 @@ namespace Raccoon {
 
         #region Public Properties
 
-        public List<Graphic> Graphics { get; protected set; }
-        public List<Entity> Entities { get; protected set; }
+        public Locker<Graphic> Graphics { get; protected set; }
+        public Locker<Entity> Entities { get; protected set; }
         public uint Timer { get; private set; }
+        public bool HasStarted { get; private set; } 
 
         public Camera Camera {
             get {
@@ -42,7 +37,7 @@ namespace Raccoon {
 
             set {
                 _camera = value;
-                if (_hasStarted) {
+                if (HasStarted) {
                     _camera.Start();
                 }
             }
@@ -53,11 +48,11 @@ namespace Raccoon {
         #region Public Methods
 
         public void Add(Graphic graphic) {
-            _graphicsToAdd.Add(graphic);
+            Graphics.Add(graphic);
         }
 
         public void Add(IEnumerable<Graphic> graphics) {
-            _graphicsToAdd.AddRange(graphics);
+            Graphics.AddRange(graphics);
         }
 
         public void Add(params Graphic[] graphics) {
@@ -65,23 +60,21 @@ namespace Raccoon {
         }
 
         public void Add(Entity entity) {
+            Entities.Add(entity);
             entity.OnAdded(this);
-            if (_hasStarted) {
+            if (HasStarted) {
                 entity.Start();
             }
-
-            _entitiesToAdd.Add(entity);
         }
         
         public void Add(IEnumerable<Entity> entities) {
+            Entities.AddRange(entities);
             foreach (Entity e in entities) {
                 e.OnAdded(this);
-                if (_hasStarted) {
+                if (HasStarted) {
                     e.Start();
                 }
             }
-
-            _entitiesToAdd.AddRange(entities);
         }
 
         public void Add(params Entity[] entities) {
@@ -89,11 +82,11 @@ namespace Raccoon {
         }
 
         public void Remove(Graphic graphic) {
-            _graphicsToRemove.Add(graphic);
+            Graphics.Remove(graphic);
         }
 
         public void Remove(IEnumerable<Graphic> graphics) {
-            _graphicsToRemove.AddRange(graphics);
+            Graphics.RemoveRange(graphics);
         }
 
         public void Remove(params Graphic[] graphics) {
@@ -101,11 +94,11 @@ namespace Raccoon {
         }
 
         public void Remove(Entity entity) {
-            _entitiesToRemove.Add(entity);
+            Entities.Remove(entity);
         }
 
         public void Remove(IEnumerable<Entity> entities) {
-            _entitiesToRemove.AddRange(entities);
+            Entities.RemoveRange(entities);
         }
 
         public void Remove(params Entity[] entities) {
@@ -113,13 +106,11 @@ namespace Raccoon {
         }
 
         public void ClearEntities() {
-            _entitiesToAdd.Clear();
-            _entitiesToRemove.AddRange(Entities);
+            Entities.Clear();
         }
 
         public void ClearGraphics() {
-            _graphicsToAdd.Clear();
-            _graphicsToRemove.AddRange(Graphics);
+            Graphics.Clear();
         }
 
         #endregion Public Methods
@@ -129,7 +120,7 @@ namespace Raccoon {
         public virtual void OnAdded() { }
 
         public virtual void Start() {
-            _hasStarted = true;
+            HasStarted = true;
             foreach (Entity e in Entities) {
                 e.Start();
             }
@@ -138,7 +129,7 @@ namespace Raccoon {
         }
 
         public virtual void Begin() {
-            if (!_hasStarted) {
+            if (!HasStarted) {
                 Start();
             }
 
@@ -162,80 +153,8 @@ namespace Raccoon {
         }
 
         public virtual void BeforeUpdate() {
-            // check entities Layer
-            if (Entities.Count > 1) {
-                int previousLayer = Entities[0].Layer;
-                for (int i = 1; i < Entities.Count; i++) {
-                    if (previousLayer > Entities[i].Layer) {
-                        _entitiesToAdd.Add(Entities[i - 1]);
-                        Entities.RemoveAt(i - 1);
-                        i--;
-                    }
-
-                    previousLayer = Entities[i].Layer;
-                }
-            }
-
-            if (_entitiesToAdd.Count > 0) {
-                foreach (Entity e in _entitiesToAdd) {
-                    int index = 0;
-                    for (int i = Entities.Count - 1; i >= 0; i--) {
-                        if (Entities[i].Layer <= e.Layer) {
-                            index = i + 1;
-                            break;
-                        }
-                    }
-
-                    Entities.Insert(index, e);
-                }
-
-                _entitiesToAdd.Clear();
-            }
-
-            if (_entitiesToRemove.Count > 0) {
-                foreach (Entity e in _entitiesToRemove) {
-                    if (Entities.Remove(e)) {
-                        e.OnRemoved.Invoke();
-                    }
-                }
-
-                _entitiesToRemove.Clear();
-            }
-
-            // check graphics Layer
-            if (Graphics.Count > 1) {
-                int previousLayer = Graphics[0].Layer;
-                for (int i = 1; i < Graphics.Count; i++) {
-                    if (previousLayer > Graphics[i].Layer) {
-                        _graphicsToAdd.Add(Graphics[i - 1]);
-                        Graphics.RemoveAt(i - 1);
-                        i--;
-                    }
-
-                    previousLayer = Graphics[i].Layer;
-                }
-            }
-
-            if (_graphicsToAdd.Count > 0) {
-                foreach (Graphic g in _graphicsToAdd) {
-                    int index = 0;
-                    for (int i = Graphics.Count - 1; i >= 0; i--) {
-                        if (Graphics[i].Layer <= g.Layer) {
-                            index = i + 1;
-                            break;
-                        }
-                    }
-
-                    Graphics.Insert(index, g);
-                }
-
-                _graphicsToAdd.Clear();
-            }
-
-            if (_graphicsToRemove.Count > 0) {
-                Graphics.RemoveAll(p => _graphicsToRemove.Contains(p));
-                _graphicsToRemove.Clear();
-            }
+            Entities.Upkeep();
+            Graphics.Upkeep();
 
             foreach (Entity e in Entities) {
                 if (!e.Active || !e.AutoUpdate) {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LD37.DataStructures {
+namespace Raccoon.Collections {
     public enum HeapType {
         Min,
         Max

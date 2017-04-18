@@ -1,4 +1,4 @@
-﻿namespace LD37.DataStructures {
+﻿namespace Raccoon.Collections {
     public class PriorityQueue<T> {
         #region Private Members
 

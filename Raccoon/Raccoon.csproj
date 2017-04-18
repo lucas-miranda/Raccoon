@@ -43,6 +43,7 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Collections\BinaryHeap.cs" />
+    <Compile Include="Collections\Locker.cs" />
     <Compile Include="Collections\PriorityQueue.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Colliders\CircleCollider.cs" />
@@ -154,37 +155,37 @@
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
-	<None Include="x86\SDL2.dll">
+    <None Include="x86\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x64\SDL2.dll">
+    <None Include="x64\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x86\soft_oal.dll">
+    <None Include="x86\soft_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x64\soft_oal.dll">
+    <None Include="x64\soft_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x86\libSDL2-2.0.so.0">
+    <None Include="x86\libSDL2-2.0.so.0">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x64\libSDL2-2.0.so.0">
+    <None Include="x64\libSDL2-2.0.so.0">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x86\libopenal.so.1">
+    <None Include="x86\libopenal.so.1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="x64\libopenal.so.1">
+    <None Include="x64\libopenal.so.1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="libSDL2-2.0.0.dylib">
+    <None Include="libSDL2-2.0.0.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="libopenal.1.dylib">
+    <None Include="libopenal.1.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="MonoGame.Framework.dll.config">
+    <None Include="MonoGame.Framework.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />

@@ -1,4 +1,6 @@
-﻿namespace Raccoon.Graphics {
+﻿using System.Collections.Generic;
+
+namespace Raccoon.Graphics {
     public abstract class Graphic {
         #region Private Members
 
@@ -141,5 +143,15 @@
         protected virtual void Load() { }
 
         #endregion Protected Methods
+
+        #region Layer Comparer
+
+        public class LayerComparer : IComparer<Graphic> {
+            public int Compare(Graphic x, Graphic y) {
+                return System.Math.Sign(x.Layer - y.Layer);
+            }
+        }
+
+        #endregion Layer Comparer
     }
 }
