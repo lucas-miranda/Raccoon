@@ -97,11 +97,11 @@ namespace Raccoon.Graphics {
         
         public override void Render(Vector2 position, float rotation) {
             if (DestinationRegion.IsEmpty) {
-                Surface.Draw(Texture, position, SourceRegion.Position + ClippingRegion, FinalColor, rotation * Util.Math.DegToRad, Origin, Scale, Flipped, Scroll, Shader);
+                Surface.Draw(Texture, position, SourceRegion.Position + ClippingRegion, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
                 return;
             }
 
-            Surface.Draw(Texture, new Rectangle(position, DestinationRegion.Size * Scale), SourceRegion.Position + ClippingRegion, FinalColor, rotation * Util.Math.DegToRad, Origin, Flipped, Scroll, Shader);
+            Surface.Draw(Texture, new Rectangle(position, DestinationRegion.Size * Scale), SourceRegion.Position + ClippingRegion, FinalColor, rotation, Origin, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {

@@ -62,11 +62,11 @@ namespace Raccoon.Graphics.Primitives {
 
         public override void Render(Vector2 position, float rotation) {
             if (Filled) {
-                Surface.Draw(Texture, new Raccoon.Rectangle(position, Size * Scale), null, FinalColor, rotation * Util.Math.DegToRad, Origin / Size.ToVector2(), Flipped, Scroll, Shader);
+                Surface.Draw(Texture, new Raccoon.Rectangle(position, Size * Scale), null, FinalColor, rotation, Origin / Size.ToVector2(), Flipped, Scroll, Shader);
                 return;
             }
 
-            Surface.Draw(Texture, position, null, FinalColor, rotation * Util.Math.DegToRad, Origin, Scale, Flipped, Scroll, Shader);
+            Surface.Draw(Texture, position, null, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {
