@@ -21,6 +21,7 @@ namespace Raccoon.Graphics {
 
         public string Name { get; set; }
         public bool Visible { get; set; } = true;
+        public bool IgnoreDebugRender { get; set; }
         public Vector2 Position { get; set; }
         public Vector2 Origin { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
@@ -35,6 +36,7 @@ namespace Raccoon.Graphics {
         public Surface Surface { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;
         public Shader Shader { get; set; }
+        public ImageFlip Flipped { get; set; }
 
         public Color Color {
             get {
@@ -60,11 +62,11 @@ namespace Raccoon.Graphics {
 
         public bool FlippedBoth {
             get {
-                return Flipped.HasFlag(ImageFlip.Horizontal | ImageFlip.Vertical);
+                return Flipped.HasFlag(ImageFlip.Both);
             }
 
             set {
-                Flipped = (value ? ImageFlip.Horizontal | ImageFlip.Vertical : ImageFlip.None);
+                Flipped = value ? ImageFlip.Both : ImageFlip.None;
             }
         }
 
@@ -74,11 +76,7 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value) {
-                    Flipped |= ImageFlip.Horizontal;
-                } else {
-                    Flipped &= ~ImageFlip.Horizontal;
-                }
+                Flipped = value ? Flipped | ImageFlip.Horizontal : Flipped & ~ImageFlip.Horizontal;
             }
         }
 
@@ -88,15 +86,9 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value) {
-                    Flipped |= ImageFlip.Vertical;
-                } else {
-                    Flipped &= ~ImageFlip.Vertical;
-                }
+                Flipped = value ? Flipped | ImageFlip.Vertical : Flipped & ~ImageFlip.Vertical;
             }
         }
-
-        public ImageFlip Flipped { get; set; }
 
         #endregion Public Properties
 

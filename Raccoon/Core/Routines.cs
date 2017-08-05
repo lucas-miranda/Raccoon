@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 
 namespace Raccoon {
-    public static class Routine {
+    public static class Routines {
         public static IEnumerator Wait(float seconds) {
             if (seconds <= 0) {
                 yield break;

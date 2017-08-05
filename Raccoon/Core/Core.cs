@@ -125,8 +125,11 @@ namespace Raccoon {
 
             OnUnloadContent += resourceContentManager.Unload;
 
+            // systems initialization
+            Debug.Instance.Initialize();
+
             // scene OnBegin
-            OnBegin.Invoke();
+            OnBegin();
             OnBegin = null;
 
             Util.Tween.Tweener.Instance.Start();
@@ -136,7 +139,7 @@ namespace Raccoon {
         protected override void UnloadContent() {
             Raccoon.Graphics.Texture.White.Dispose();
             Raccoon.Graphics.Texture.Black.Dispose();
-            OnUnloadContent.Invoke();
+            OnUnloadContent();
             OnUnloadContent = null;
             Content.Unload();
             base.UnloadContent();
@@ -150,12 +153,16 @@ namespace Raccoon {
 
             // updates
             Input.Instance.Update(delta);
-            OnBeforeUpdate.Invoke();
-            OnUpdate.Invoke(delta);
-            Coroutine.Instance.Update(delta);
-            OnLateUpdate.Invoke();
             Util.Tween.Tweener.Instance.Update(delta);
-            
+            OnBeforeUpdate();
+            OnUpdate(delta);
+            OnLateUpdate();
+            Coroutine.Instance.Update(delta);
+
+#if DEBUG
+            Debug.Instance.Update(delta);
+#endif
+
             // fps
             _fpsCount++;
             if (Time.Subtract(_lastFpsTime).Seconds >= 1) {
@@ -182,7 +189,7 @@ namespace Raccoon {
                 surface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
             }
             
-            OnRender.Invoke();
+            OnRender();
 
             MainSurface.End();
             foreach (Graphics.Surface surface in Game.Instance.Surfaces) {
@@ -192,7 +199,7 @@ namespace Raccoon {
 #if DEBUG
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
 
-            MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, MainCanvas.Shader == null ? null : MainCanvas.Shader.XNAEffect);
+            MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, MainCanvas.Shader?.XNAEffect);
             MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
             MainSpriteBatch.End();
 
@@ -202,11 +209,13 @@ namespace Raccoon {
             DebugSurface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, null, null, null);
             
             if (Game.Instance.DebugMode) {
-                OnDebugRender.Invoke();
+                OnDebugRender();
             }
 
+            Debug.Instance.Render();
+
             if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), "Time: {0}\n\nDraw calls: {1}, Sprites: {2}\nTextures: {3}", Time.ToString(@"hh\:mm\:ss\.fff"), metrics.DrawCount, metrics.SpriteCount, metrics.TextureCount);
+                Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}");
             }
 
             DebugSurface.End();

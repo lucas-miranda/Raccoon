@@ -12,7 +12,8 @@
     <AssemblyName>Raccoon</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -20,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;LINUX</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -29,7 +30,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;LINUX</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -59,7 +60,8 @@
     <Compile Include="Core\Components\Movement\Movement.cs" />
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\Coroutine.cs" />
-    <Compile Include="Core\Debug.cs" />
+    <Compile Include="Core\Debug\Debug.cs" />
+    <Compile Include="Core\Debug\Console.cs" />
     <Compile Include="Core\Definitions\Direction.cs" />
     <Compile Include="Core\Definitions\Extensions.cs" />
     <Compile Include="Core\Definitions\ImageFlip.cs" />
@@ -72,7 +74,7 @@
     <Compile Include="Core\Input\Trigger.cs" />
     <Compile Include="Core\Input\XboxController.cs" />
     <Compile Include="Core\Physics.cs" />
-    <Compile Include="Core\Routine.cs" />
+    <Compile Include="Core\Routines.cs" />
     <Compile Include="Graphics\Drawables\Animation.cs" />
     <Compile Include="Graphics\Atlas\Atlas.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />
@@ -189,6 +191,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

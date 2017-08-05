@@ -49,6 +49,7 @@ namespace Raccoon {
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
+        public bool IgnoreDebugRender { get; set; }
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -146,7 +147,7 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public virtual void DebugRender() {
             foreach (Graphic g in Graphics) {
-                if (!g.Visible) {
+                if (!g.Visible || g.IgnoreDebugRender) {
                     continue;
                 }
 
@@ -154,7 +155,7 @@ namespace Raccoon {
             }
 
             foreach (Component c in _components) {
-                if (!c.Enabled) {
+                if (!c.Enabled || c.IgnoreDebugRender) {
                     continue;
                 }
 

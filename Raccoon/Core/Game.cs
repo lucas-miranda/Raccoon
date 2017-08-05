@@ -27,24 +27,23 @@ namespace Raccoon {
 
         public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFPS = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
+
 #if DEBUG
             try {
-                Console.Title = "Raccoon Debug";
+                System.Console.Title = "Raccoon Debug";
             } catch { }
-#else
+#endif
+
             AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs args) => {
                 Exception e = (Exception) args.ExceptionObject;
-                System.IO.File.WriteAllText($"error-{DateTime.Now.ToString("MMddyy-HHmmss")}.txt", $"{DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
+                Debug.Log("crash-report", $"[Unhandled Exception] {e.Message}\n{e.StackTrace}\n");
             };
-#endif
-            ScreenWidth = width;
-            ScreenHeight = height;
-            IsRunning = false;
+
             Core = new Core(title, width, height, targetFPS, fullscreen, vsync);
-            ScreenWidth = width;
-            ScreenHeight = height;
-            IsRunning = false;
-            Instance = this;
+            ScreenSize = new Size(width, height);
+            ScreenCenter = (ScreenSize / 2f).ToVector2();
+            WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
+            WindowCenter = (WindowSize / 2f).ToVector2();
         }
 
         ~Game() {
@@ -74,13 +73,14 @@ namespace Raccoon {
         public int DeltaTime { get { return Core.DeltaTime; } }
         public int X { get { return Core.Window.Position.X; } }
         public int Y { get { return Core.Window.Position.Y; } }
-        public int ScreenWidth { get; private set; }
-        public int ScreenHeight { get; private set; }
-        public int WindowWidth { get { return Core.Graphics.PreferredBackBufferWidth; } }
-        public int WindowHeight { get { return Core.Graphics.PreferredBackBufferHeight; } }
-        public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
-        public Size WindowSize { get { return new Size(WindowWidth, WindowHeight); } }
-        public Vector2 ScreenCenter { get { return new Vector2(ScreenWidth / 2, ScreenHeight / 2); } }
+        public int ScreenWidth { get { return (int) ScreenSize.Width; } }
+        public int ScreenHeight { get { return (int) ScreenSize.Height; } }
+        public int WindowWidth { get { return (int) WindowSize.Width; } }
+        public int WindowHeight { get { return (int) WindowSize.Height; } }
+        public Size ScreenSize { get; private set; }
+        public Size WindowSize { get; private set; }
+        public Vector2 ScreenCenter { get; private set; }
+        public Vector2 WindowCenter { get; private set; }
         public Scene Scene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
         public Color BackgroundColor { get { return new Color(Core.BackgroundColor.R, Core.BackgroundColor.G, Core.BackgroundColor.B, Core.BackgroundColor.A); } set { Core.BackgroundColor = new Microsoft.Xna.Framework.Color(value.R, value.G, value.B, value.A); } }
@@ -99,8 +99,8 @@ namespace Raccoon {
                 }
 
                 Core.Scale = value;
-                ScreenWidth = (int) Math.Ceiling(WindowWidth / Scale);
-                ScreenHeight = (int) Math.Ceiling(WindowHeight / Scale);
+                ScreenSize = WindowSize / Scale;
+                ScreenCenter = (ScreenSize / 2f).ToVector2();
             }
         }
 
@@ -167,8 +167,7 @@ namespace Raccoon {
         }
 
         public void RemoveScene(string name) {
-            Scene scene;
-            if (!_scenes.TryGetValue(name, out scene)) {
+            if (!_scenes.TryGetValue(name, out Scene scene)) {
                 return;
             }
 

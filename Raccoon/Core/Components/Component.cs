@@ -2,6 +2,7 @@
     public abstract class Component {
         public Entity Entity { get; private set; }
         public bool Enabled { get; set; } = true;
+        public bool IgnoreDebugRender { get; set; }
 
         public virtual void OnAdded(Entity entity) {
             Entity = entity;
