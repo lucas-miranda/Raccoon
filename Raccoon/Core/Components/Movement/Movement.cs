@@ -83,6 +83,7 @@ namespace Raccoon.Components {
         public abstract void OnMoveUpdate(float dt);
 
         public virtual void Move(Vector2 axis) {
+            axis = Util.Math.Clamp(axis, new Vector2(-1, -1), new Vector2(1, 1));
             if (axis != Vector2.Zero) {
                 LastAxis = axis;
             }
@@ -95,6 +96,8 @@ namespace Raccoon.Components {
         }
 
         public virtual void MoveHorizontal(float x) {
+            x = Util.Math.Clamp(x, -1, 1);
+
             if (x != 0) {
                 LastAxis = new Vector2(x, LastAxis.Y);
             }
@@ -103,6 +106,8 @@ namespace Raccoon.Components {
         }
 
         public virtual void MoveVertical(float y) {
+            y = Util.Math.Clamp(y, -1, 1);
+
             if (y != 0) {
                 LastAxis = new Vector2(LastAxis.X, y);
             }

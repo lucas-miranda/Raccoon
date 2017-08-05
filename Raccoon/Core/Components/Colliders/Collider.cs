@@ -81,11 +81,11 @@ namespace Raccoon.Components {
             return Collides(position, tag.ToString(), out collidedCollider);
         }
 
-        public bool Collides(Vector2 position, string tag, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, string tag, out T collidedEntity) where T : Entity {
             return Physics.Instance.Collides(position, this, tag, out collidedEntity);
         }
 
-        public bool Collides(Vector2 position, Enum tag, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, Enum tag, out T collidedEntity) where T : Entity {
             return Collides(position, tag.ToString(), out collidedEntity);
         }
 
@@ -105,11 +105,11 @@ namespace Raccoon.Components {
             return Collides(tag.ToString(), out collidedCollider);
         }
 
-        public bool Collides(string tag, out Entity collidedEntity) {
+        public bool Collides<T>(string tag, out T collidedEntity) where T : Entity {
             return Physics.Instance.Collides(this, tag, out collidedEntity);
         }
 
-        public bool Collides(Enum tag, out Entity collidedEntity) {
+        public bool Collides<T>(Enum tag, out T collidedEntity) where T : Entity {
             return Collides(tag.ToString(), out collidedEntity);
         }
 
@@ -125,11 +125,11 @@ namespace Raccoon.Components {
             return Collides(position, tag.ToString(), out collidedColliders);
         }
 
-        public bool Collides(Vector2 position, string tag, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Vector2 position, string tag, out List<T> collidedEntities) where T : Entity {
             return Physics.Instance.Collides(position, this, tag, out collidedEntities);
         }
 
-        public bool Collides(Vector2 position, Enum tag, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Vector2 position, Enum tag, out List<T> collidedEntities) where T : Entity {
             return Collides(position, tag.ToString(), out collidedEntities);
         }
 
@@ -141,11 +141,11 @@ namespace Raccoon.Components {
             return Collides(tag.ToString(), out collidedColliders);
         }
 
-        public bool Collides(string tag, out List<Entity> collidedEntities) {
+        public bool Collides<T>(string tag, out List<T> collidedEntities) where T : Entity {
             return Physics.Instance.Collides(this, tag, out collidedEntities);
         }
 
-        public bool Collides(Enum tag, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Enum tag, out List<T> collidedEntities) where T : Entity {
             return Collides(tag.ToString(), out collidedEntities);
         }
 
@@ -182,11 +182,11 @@ namespace Raccoon.Components {
             return false;
         }
 
-        public bool Collides(Vector2 position, IEnumerable<string> tags, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, IEnumerable<string> tags, out T collidedEntity) where T : Entity {
             return Physics.Instance.Collides(position, this, tags, out collidedEntity);
         }
 
-        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, IEnumerable<Enum> tags, out T collidedEntity) where T : Entity {
             foreach (Enum tag in tags) {
                 if (Collides(position, tag, out collidedEntity)) {
                     return true;
@@ -226,11 +226,11 @@ namespace Raccoon.Components {
             return false;
         }
 
-        public bool Collides(IEnumerable<string> tags, out Entity collidedEntity) {
+        public bool Collides<T>(IEnumerable<string> tags, out T collidedEntity) where T : Entity {
             return Physics.Instance.Collides(this, tags, out collidedEntity);
         }
 
-        public bool Collides(IEnumerable<Enum> tags, out Entity collidedEntity) {
+        public bool Collides<T>(IEnumerable<Enum> tags, out T collidedEntity) where T : Entity {
             foreach (Enum tag in tags) {
                 if (Collides(tag, out collidedEntity)) {
                     return true;
@@ -261,14 +261,14 @@ namespace Raccoon.Components {
             return collidedColliders.Count > 0;
         }
 
-        public bool Collides(Vector2 position, IEnumerable<string> tags, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Vector2 position, IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
             return Physics.Instance.Collides(position, this, tags, out collidedEntities);
         }
 
-        public bool Collides(Vector2 position, IEnumerable<Enum> tags, out List<Entity> collidedEntities) {
-            collidedEntities = new List<Entity>();
+        public bool Collides<T>(Vector2 position, IEnumerable<Enum> tags, out List<T> collidedEntities) where T : Entity {
+            collidedEntities = new List<T>();
             foreach (Enum tag in tags) {
-                List<Entity> collidedTagEntities = new List<Entity>();
+                List<T> collidedTagEntities = new List<T>();
                 if (Collides(position, tag, out collidedTagEntities)) {
                     collidedEntities.AddRange(collidedTagEntities);
                 }
@@ -293,14 +293,14 @@ namespace Raccoon.Components {
             return collidedColliders.Count > 0;
         }
 
-        public bool Collides(IEnumerable<string> tags, out List<Entity> collidedEntities) {
+        public bool Collides<T>(IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
             return Physics.Instance.Collides(this, tags, out collidedEntities);
         }
 
-        public bool Collides(IEnumerable<Enum> tags, out List<Entity> collidedEntities) {
-            collidedEntities = new List<Entity>();
+        public bool Collides<T>(IEnumerable<Enum> tags, out List<T> collidedEntities) where T : Entity {
+            collidedEntities = new List<T>();
             foreach (Enum tag in tags) {
-                List<Entity> collidedTagEntities = new List<Entity>();
+                List<T> collidedTagEntities = new List<T>();
                 if (Collides(tag, out collidedTagEntities)) {
                     collidedEntities.AddRange(collidedTagEntities);
                 }

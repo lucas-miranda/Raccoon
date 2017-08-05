@@ -6,23 +6,20 @@ namespace Raccoon {
     public class Physics {
         #region Private Static Readonly Members
 
-        private static readonly Physics _instance = new Physics();
+        private static readonly Lazy<Physics> _lazy = new Lazy<Physics>(() => new Physics());
 
         #endregion Private Static Readonly Members
 
         #region Private Members
 
-        private Dictionary<string, List<Collider>> _colliders;
-        private Dictionary<Type, Dictionary<Type, Func<Collider, Vector2, Collider, Vector2, bool>>> _collisionFunctions;
+        private Dictionary<string, List<Collider>> _colliders = new Dictionary<string, List<Collider>>();
+        private Dictionary<Type, Dictionary<Type, Func<Collider, Vector2, Collider, Vector2, bool>>> _collisionFunctions = new Dictionary<Type, Dictionary<Type, Func<Collider, Vector2, Collider, Vector2, bool>>>();
 
         #endregion Private Members
 
         #region Constructors
 
         private Physics() {
-            _colliders = new Dictionary<string, List<Collider>>();
-            _collisionFunctions = new Dictionary<Type, Dictionary<Type, Func<Collider, Vector2, Collider , Vector2, bool>>>();
-
             // collision functions dictionary
             Type[] colliderTypes = {
                 typeof(BoxCollider),
@@ -90,7 +87,7 @@ namespace Raccoon {
 
         #region Public Static Properties
 
-        public static Physics Instance { get { return _instance; } }
+        public static Physics Instance { get { return _lazy.Value; } }
         public static int MinUpdateInterval { get; set; } = (int) (1 / 60f * 1000);
 
         #endregion Public Static Properties
@@ -230,7 +227,7 @@ namespace Raccoon {
             return false;
         }
 
-        public bool Collides(Vector2 position, Collider collider, string tag, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, Collider collider, string tag, out T collidedEntity) where T : Entity {
             collidedEntity = null;
             if (!HasTag(tag)) {
                 return false;
@@ -238,7 +235,7 @@ namespace Raccoon {
 
             foreach (Collider c in _colliders[tag]) {
                 if (c != collider && CheckCollision(collider, position - collider.Origin, c)) {
-                    collidedEntity = c.Entity;
+                    collidedEntity = c.Entity as T;
                     return true;
                 }
             }
@@ -254,7 +251,7 @@ namespace Raccoon {
             return Collides(collider.Entity.Position, collider, tag, out collidedCollider);
         }
 
-        public bool Collides(Collider collider, string tag, out Entity collidedEntity) {
+        public bool Collides<T>(Collider collider, string tag, out T collidedEntity) where T : Entity {
             return Collides(collider.Entity.Position, collider, tag, out collidedEntity);
         }
 
@@ -277,15 +274,15 @@ namespace Raccoon {
             return collidedColliders.Count > 0;
         }
 
-        public bool Collides(Vector2 position, Collider collider, string tag, out List<Entity> collidedEntities) {
-            collidedEntities = new List<Entity>();
+        public bool Collides<T>(Vector2 position, Collider collider, string tag, out List<T> collidedEntities) where T : Entity {
+            collidedEntities = new List<T>();
             if (!HasTag(tag)) {
                 return false;
             }
 
             foreach (Collider c in _colliders[tag]) {
                 if (c != collider && CheckCollision(collider, position - collider.Origin, c)) {
-                    collidedEntities.Add(c.Entity);
+                    collidedEntities.Add(c.Entity as T);
                 }
             }
 
@@ -296,7 +293,7 @@ namespace Raccoon {
             return Collides(collider.Entity.Position, collider, tag, out collidedColliders);
         }
 
-        public bool Collides(Collider collider, string tag, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Collider collider, string tag, out List<T> collidedEntities) where T : Entity {
             return Collides(collider.Entity.Position, collider, tag, out collidedEntities);
         }
 
@@ -325,7 +322,7 @@ namespace Raccoon {
             return false;
         }
 
-        public bool Collides(Vector2 position, Collider collider, IEnumerable<string> tags, out Entity collidedEntity) {
+        public bool Collides<T>(Vector2 position, Collider collider, IEnumerable<string> tags, out T collidedEntity) where T : Entity {
             foreach (string tag in tags) {
                 if (Collides(position, collider, tag, out collidedEntity)) {
                     return true;
@@ -344,13 +341,13 @@ namespace Raccoon {
             return Collides(collider.Position, collider, tags, out collidedCollider);
         }
 
-        public bool Collides(Collider collider, IEnumerable<string> tags, out Entity collidedEntity) {
+        public bool Collides<T>(Collider collider, IEnumerable<string> tags, out T collidedEntity) where T : Entity {
             return Collides(collider.Position, collider, tags, out collidedEntity);
         }
 
         #endregion Collides [Multiple Tag] [Single Output]
 
-        #region Collides [Multiple Tag] [Multi Output]
+        #region Collides [Multiple Tag] [Multiple Output]
 
         public bool Collides(Vector2 position, Collider collider, IEnumerable<string> tags, out List<Collider> collidedColliders) {
             collidedColliders = new List<Collider>();
@@ -364,10 +361,10 @@ namespace Raccoon {
             return collidedColliders.Count > 0;
         }
 
-        public bool Collides(Vector2 position, Collider collider, IEnumerable<string> tags, out List<Entity> collidedEntities) {
-            collidedEntities = new List<Entity>();
+        public bool Collides<T>(Vector2 position, Collider collider, IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
+            collidedEntities = new List<T>();
             foreach (string tag in tags) {
-                List<Entity> collidedTagEntities = new List<Entity>();
+                List<T> collidedTagEntities = new List<T>();
                 if (Collides(position, collider, tag, out collidedTagEntities)) {
                     collidedEntities.AddRange(collidedTagEntities);
                 }
@@ -380,11 +377,11 @@ namespace Raccoon {
             return Collides(collider.Position, collider, tags, out collidedColliders);
         }
 
-        public bool Collides(Collider collider, IEnumerable<string> tags, out List<Entity> collidedEntities) {
+        public bool Collides<T>(Collider collider, IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
             return Collides(collider.Position, collider, tags, out collidedEntities);
         }
 
-        #endregion Collides [Multiple Tag] [Multi Output]
+        #endregion Collides [Multiple Tag] [Multiple Output]
 
         #endregion Public Methods
 
