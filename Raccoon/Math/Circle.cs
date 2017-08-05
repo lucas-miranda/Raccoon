@@ -24,13 +24,13 @@
 
         #region Public Properties
 
-        public float Diameter { get { return Radius * 2; } }
-        public float Circumference { get { return 2 * Util.Math.PI * Radius; } }
+        public float Diameter { get { return Radius * 2f; } }
+        public float Circumference { get { return (float) (2.0 * Util.Math.PI * Radius); } }
         public float Top { get { return Center.Y - Radius; } }
         public float Right { get { return Center.X + Radius; } }
         public float Bottom { get { return Center.Y + Radius; } }
         public float Left { get { return Center.X - Radius; } }
-        public bool IsEmpty { get { return Radius == 0; } }
+        public bool IsEmpty { get { return Radius == 0f; } }
 
         #endregion Public Properties
 
