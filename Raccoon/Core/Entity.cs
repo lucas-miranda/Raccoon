@@ -10,7 +10,11 @@ namespace Raccoon {
     public class Entity {
         #region Public Delegates
 
-        public Action OnUpdate = delegate { }, OnRender = delegate { }, OnDebugRender = delegate { }, OnRemoved = delegate { };
+        public Action OnAdded = delegate { }, OnRemoved = delegate { }, OnStart = delegate { }, OnSceneBegin = delegate { }, OnSceneEnd = delegate { }, OnBeforeUpdate = delegate { }, OnUpdate = delegate { }, OnLateUpdate = delegate { }, OnRender = delegate { };
+
+#if DEBUG
+        public Action OnDebugRender = delegate { };
+#endif
 
         #endregion Public Delegates
 
@@ -33,10 +37,6 @@ namespace Raccoon {
             Name = "Entity";
             Active = Visible = true;
             Surface = Game.Instance.Core.MainSurface;
-
-            OnRemoved += () => {
-                Scene = null;
-            };
         }
 
         #endregion Constructors
@@ -91,7 +91,7 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public virtual void OnAdded(Scene scene) {
+        public virtual void Added(Scene scene) {
             Scene = scene;
             foreach (Component c in _components) {
                 if (c is Collider) {
@@ -99,13 +99,31 @@ namespace Raccoon {
                     Physics.Instance.AddCollider(collider, collider.Tags);
                 }
             }
+
+            OnAdded();
         }
 
-        public virtual void Start() { }
+        public virtual void Removed() {
+            Scene = null;
+            OnRemoved();
+        }
+
+        public virtual void Start() {
+            OnStart();
+        }
+
+        public virtual void SceneBegin() {
+            OnSceneBegin();
+        }
+
+        public virtual void SceneEnd() {
+            OnSceneEnd();
+        }
 
         public virtual void BeforeUpdate() {
             Graphics.Upkeep();
             _components.Upkeep();
+            OnBeforeUpdate();
         }
 
         public virtual void Update(int delta) {
@@ -127,10 +145,12 @@ namespace Raccoon {
                 g.Update(delta);
             }
 
-            OnUpdate.Invoke();
+            OnUpdate();
         }
 
-        public virtual void LateUpdate() { }
+        public virtual void LateUpdate() {
+            OnLateUpdate();
+        }
 
         public virtual void Render() {
             foreach (Graphic g in Graphics) {
@@ -141,7 +161,7 @@ namespace Raccoon {
                 g.Render(Position + g.Position, Rotation + g.Rotation);
             }
 
-            OnRender.Invoke();
+            OnRender();
         }
 
         [Conditional("DEBUG")]
@@ -162,7 +182,9 @@ namespace Raccoon {
                 c.DebugRender();
             }
 
-            OnDebugRender.Invoke();
+#if DEBUG
+            OnDebugRender();
+#endif
         }
 
         public void Add(Graphic graphic) {
