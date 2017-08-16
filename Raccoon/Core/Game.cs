@@ -4,22 +4,18 @@ using System.Collections.Generic;
 
 namespace Raccoon {
     public class Game : IDisposable {
-        #region Public Delegates
-
-        public delegate void TickHandler(int delta);
-
-        #endregion Public Delegates
 
         #region Public Events
 
-        public event TickHandler OnUpdate = delegate { };
-        public event Action OnRender = delegate { }, OnBegin = delegate { };
+        public event Action<int> OnUpdate = delegate { };
+        public event Action OnRender = delegate { }, OnBegin = delegate { }, OnBeforeUpdate, OnLateUpdate = delegate { };
 
         #endregion Public Events
 
         #region Private Members
 
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
+        private bool _isUnloadingCurrentScene;
 
         #endregion Private Members
 
@@ -44,6 +40,15 @@ namespace Raccoon {
             ScreenCenter = (ScreenSize / 2f).ToVector2();
             WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
+
+            // events
+            OnBeforeUpdate = () => {
+                if (NextScene == Scene) {
+                    return;
+                }
+
+                UpdateCurrentScene();
+            };
         }
 
         ~Game() {
@@ -82,6 +87,7 @@ namespace Raccoon {
         public Vector2 ScreenCenter { get; private set; }
         public Vector2 WindowCenter { get; private set; }
         public Scene Scene { get; private set; }
+        public Scene NextScene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
         public Color BackgroundColor { get { return new Color(Core.BackgroundColor.R, Core.BackgroundColor.G, Core.BackgroundColor.B, Core.BackgroundColor.A); } set { Core.BackgroundColor = new Microsoft.Xna.Framework.Color(value.R, value.G, value.B, value.A); } }
         public Surface MainSurface { get { return Core.MainSurface; } }
@@ -126,8 +132,7 @@ namespace Raccoon {
             IsRunning = true;
             if (Scene == null) {
                 Core.OnBegin += OnBegin;
-                Core.OnUpdate += OnUpdate;
-                Core.OnRender += OnRender;
+                UpdateCurrentScene();
             }
 
             Core.Run();
@@ -139,6 +144,7 @@ namespace Raccoon {
             }
 
             SwitchScene(startScene);
+            UpdateCurrentScene();
             Start();
         }
 
@@ -160,10 +166,6 @@ namespace Raccoon {
             name = !name.IsEmpty() ? name : scene.GetType().Name.Replace("Scene", "");
             _scenes.Add(name, scene);
             scene.OnAdded();
-
-            if (Scene == null) {
-                SwitchScene(name);
-            }
         }
 
         public void RemoveScene(string name) {
@@ -172,12 +174,11 @@ namespace Raccoon {
             }
 
             if (scene == Scene) {
-                Scene.End();
-                Scene.UnloadContent();
-                Scene = null;
+                NextScene = null;
             }
 
             _scenes.Remove(name);
+            _isUnloadingCurrentScene = true;
         }
 
         public void RemoveScene(Scene scene) {
@@ -189,9 +190,11 @@ namespace Raccoon {
                 }
             }
 
-            if (!name.IsEmpty()) {
-                RemoveScene(name);
+            if (name.IsEmpty()) {
+                return;
             }
+
+            RemoveScene(name);
         }
 
         public void RemoveScene<T>() where T : Scene {
@@ -200,47 +203,24 @@ namespace Raccoon {
 
         public void ClearScenes() {
             if (Scene != null) {
-                Scene.End();
-                Scene.UnloadContent();
-                Scene = null;
+                NextScene = null;
             }
 
             foreach (Scene scene in _scenes.Values) {
+                if (scene == Scene) {
+                    continue;
+                }
+
                 scene.UnloadContent();
             }
 
             _scenes.Clear();
+            _isUnloadingCurrentScene = true;
         }
 
         public void SwitchScene(string name) {
-            if (!_scenes.ContainsKey(name)) throw new ArgumentException($"Scene '{name}' not found", "name");
-
-            if (Scene != null) {
-                Scene.End();
-            }
-
-            Core.ClearCallbacks();
-
-            Scene = _scenes[name];
-            if (Core.MainSurface != null) {
-                Scene.Begin();
-            } else {
-                Core.OnBegin += OnBegin;
-                Core.OnBegin += Scene.Begin;
-            }
-
-            Core.OnUpdate += OnUpdate;
-            Core.OnRender += OnRender;
-
-            Core.OnUnloadContent += Scene.UnloadContent;
-            Core.OnBeforeUpdate += Scene.BeforeUpdate;
-            Core.OnUpdate += Scene.Update;
-            Core.OnLateUpdate += Scene.LateUpdate;
-            Core.OnRender += Scene.Render;
-
-#if DEBUG
-            Core.OnDebugRender += Scene.DebugRender;
-#endif
+            if (!_scenes.TryGetValue(name, out Scene scene)) throw new ArgumentException($"Scene '{name}' not found", "name");
+            NextScene = scene;
         }
 
         public void SwitchScene<T>() where T : Scene {
@@ -283,5 +263,50 @@ namespace Raccoon {
         }
 
         #endregion
+
+        #region Private Methods
+
+        private void UpdateCurrentScene() {
+            if (Scene != null) {
+                Scene.End();
+
+                if (_isUnloadingCurrentScene) {
+                    Scene.UnloadContent();
+                    _isUnloadingCurrentScene = false;
+                }
+            }
+
+            Core.ClearCallbacks();
+
+            Scene = NextScene;
+
+            Core.OnBeforeUpdate += OnBeforeUpdate;
+            Core.OnUpdate += OnUpdate;
+            Core.OnLateUpdate += OnLateUpdate;
+            Core.OnRender += OnRender;
+
+            if (Scene == null) {
+                return;
+            }
+
+            if (Core.MainSurface != null) {
+                Scene.Begin();
+            } else {
+                Core.OnBegin += OnBegin;
+                Core.OnBegin += Scene.Begin;
+            }
+
+            Core.OnUnloadContent += Scene.UnloadContent;
+            Core.OnBeforeUpdate += Scene.BeforeUpdate;
+            Core.OnUpdate += Scene.Update;
+            Core.OnLateUpdate += Scene.LateUpdate;
+            Core.OnRender += Scene.Render;
+
+#if DEBUG
+            Core.OnDebugRender += Scene.DebugRender;
+#endif
+        }
+
+        #endregion Private Methods
     }
 }

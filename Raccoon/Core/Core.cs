@@ -9,7 +9,7 @@ namespace Raccoon {
         #region Public Events
 
         public event Action OnBegin, OnExit, OnUnloadContent, OnBeforeUpdate, OnLateUpdate, OnRender, OnDebugRender;
-        public event Game.TickHandler OnUpdate;
+        public event Action<int> OnUpdate;
 
         #endregion Public Events
 
