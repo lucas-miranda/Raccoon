@@ -40,6 +40,7 @@ namespace Raccoon {
         public bool Visible { get; private set; }
         public Font Font { get; set; }
         public bool ShowTimestamp { get; set; } = true;
+        public bool MergeIdenticalMessages { get; set; } = true;
 
         #endregion Public Properties
 
@@ -73,21 +74,26 @@ namespace Raccoon {
                 return;
             }
 
-            Message msg;
-            int messageIndex = _messages.FindIndex(m => m.Text == message);
-            if (messageIndex != -1) {
-                msg = _messages[messageIndex];
-                msg.Repeat();
+            bool isDefaultCategory = string.IsNullOrWhiteSpace(category);
 
-                _messages.RemoveAt(messageIndex);
-                _messages.Insert(0, msg);
+            Message msg = null;
+            if (MergeIdenticalMessages && isDefaultCategory) {
+                int messageIndex = _messages.FindIndex(m => m.Text == message);
+                if (messageIndex != -1) {
+                    msg = _messages[messageIndex];
+                    msg.Repeat();
 
-            } else {
+                    _messages.RemoveAt(messageIndex);
+                    _messages.Insert(0, msg);
+                }
+            }
+
+            if (msg == null) {
                 msg = new Message(message);
                 _messages.Insert(0, msg);
             }
 
-            if (!string.IsNullOrWhiteSpace(category)) {
+            if (!isDefaultCategory) {
                 _categoriesFormatter[category](msg);
             }
 
