@@ -29,7 +29,7 @@ namespace Raccoon.Collections {
                     }
 
                     Add(value);
-                    OnAdded.Invoke(value);
+                    OnAdded(value);
                     return;
                 }
 
@@ -41,7 +41,7 @@ namespace Raccoon.Collections {
             if (_toAdd.Count > 0) {
                 foreach (T item in _toAdd) {
                     _items.Add(item);
-                    OnAdded.Invoke(item);
+                    OnAdded(item);
                 }
 
                 _toAdd.Clear();
@@ -50,7 +50,7 @@ namespace Raccoon.Collections {
             if (_toRemove.Count > 0) {
                 foreach (T item in _toRemove) {
                     if (_items.Remove(item)) {
-                        OnRemoved.Invoke(item);
+                        OnRemoved(item);
                     }
                 }
 
@@ -77,7 +77,7 @@ namespace Raccoon.Collections {
             }
 
             _items.Add(item);
-            OnAdded.Invoke(item);
+            OnAdded(item);
             if (_sortComparer != null) {
                 _items.Sort(_sortComparer);
             }
@@ -91,7 +91,7 @@ namespace Raccoon.Collections {
 
             foreach (T item in items) {
                 _items.Add(item);
-                OnAdded.Invoke(item);
+                OnAdded(item);
             }
 
             if (_sortComparer != null) {
@@ -119,7 +119,7 @@ namespace Raccoon.Collections {
             }
 
             _items.Remove(item);
-            OnRemoved.Invoke(item);
+            OnRemoved(item);
             return true;
         }
 
@@ -138,7 +138,7 @@ namespace Raccoon.Collections {
 
             foreach (T item in items) {
                 if (_items.Remove(item)) {
-                    OnRemoved.Invoke(item);
+                    OnRemoved(item);
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace Raccoon.Collections {
         public int RemoveWhere(Predicate<T> match) {
             int count = 0;
             foreach (T item in _items) {
-                if (match.Invoke(item)) {
+                if (match(item)) {
                     _toRemove.Add(item);
                     count++;
                 }
@@ -155,7 +155,7 @@ namespace Raccoon.Collections {
 
             if (IsLocked) {
                 foreach (T item in _toAdd) {
-                    if (match.Invoke(item)) {
+                    if (match(item)) {
                         _toRemove.Add(item);
                         count++;
                     }
@@ -166,7 +166,7 @@ namespace Raccoon.Collections {
 
             foreach (T item in _toRemove) {
                 if (_items.Remove(item)) {
-                    OnRemoved.Invoke(item);
+                    OnRemoved(item);
                 }
             }
 
@@ -183,7 +183,7 @@ namespace Raccoon.Collections {
             }
 
             foreach (T item in _items) {
-                OnRemoved.Invoke(item);
+                OnRemoved(item);
             }
 
             _items.Clear();
@@ -195,13 +195,13 @@ namespace Raccoon.Collections {
 
         public T Find(Predicate<T> match) {
             foreach (T item in _items) {
-                if (match.Invoke(item)) {
+                if (match(item)) {
                     return item;
                 }
             }
 
             foreach (T item in _toAdd) {
-                if (match.Invoke(item)) {
+                if (match(item)) {
                     return item;
                 }
             }
@@ -219,6 +219,10 @@ namespace Raccoon.Collections {
             }
 
             Unlock();
+        }
+
+        public override string ToString() {
+            return $"Count: {Count} Real: {_items.Count} [A: {_toAdd.Count} R: {_toRemove.Count}]";
         }
     }
 }

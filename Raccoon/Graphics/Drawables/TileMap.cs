@@ -46,7 +46,18 @@ namespace Raccoon.Graphics {
         public uint[] Data { get { return _tilesIds; } }
 
 #if DEBUG
-        public new Vector2 Scroll { get { return base.Scroll; } set { base.Scroll = _grid.Scroll = value; } }
+        public new Vector2 Scroll {
+            get {
+                return base.Scroll;
+            }
+
+            set {
+                base.Scroll = value;
+                if (_grid != null) {
+                    _grid.Scroll = value;
+                }
+            }
+        }
 #endif
 
         #endregion Public Properties
@@ -134,7 +145,9 @@ namespace Raccoon.Graphics {
             _tilesIds = newTilesIds;
 #if DEBUG
             if (_grid == null) {
-                _grid = new Grid(TileSize);
+                _grid = new Grid(TileSize) {
+                    Scroll = Scroll
+                };
             }
 
             _grid.Setup(Columns, Rows);
