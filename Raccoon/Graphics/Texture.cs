@@ -143,7 +143,7 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload() {
-            if (Filename.IsEmpty()) {
+            if (string.IsNullOrWhiteSpace(Filename)) {
                 return;
             }
 

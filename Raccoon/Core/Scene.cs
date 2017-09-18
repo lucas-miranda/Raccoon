@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using Raccoon.Collections;
+using Raccoon.Util.Collections;
 using Raccoon.Graphics;
 
 namespace Raccoon {

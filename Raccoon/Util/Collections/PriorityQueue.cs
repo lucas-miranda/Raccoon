@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Collections {
+﻿namespace Raccoon.Util.Collections {
     public class PriorityQueue<T> {
         #region Private Members
 

@@ -158,19 +158,19 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            Vector2 position = Camera.Current != null ? Camera.Current.Position * Game.Instance.Scale : Vector2.Zero;
-            _background.Render(position);
+            Vector2 topLeftPos = Camera.Current != null ? Camera.Current.Position * Camera.Current.Zoom * Game.Instance.Scale : Vector2.Zero;
+            _background.Render(topLeftPos);
 
             // total messages
-            Surface.DrawString(Font, _messages.Count.ToString(), position + new Vector2(Game.Instance.WindowWidth - 25, 15), Color.White);
+            Surface.DrawString(Font, _messages.Count.ToString(), topLeftPos + new Vector2(Game.Instance.WindowWidth - 25, 15), Color.White);
 
             // messages
-            position += new Vector2(15, Game.Instance.WindowHeight - 20 - Font.LineSpacing);
+            Vector2 messagePos = new Vector2(15, Game.Instance.WindowHeight - 20 - Font.LineSpacing);
             foreach (Message message in _messages) {
-                Surface.DrawString(Font, (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), position, message.Color);
-                position += new Vector2(0, -Font.LineSpacing - SpaceBetweenLines);
+                Surface.DrawString(Font, (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), topLeftPos + messagePos, message.Color);
+                messagePos += new Vector2(0, -Font.LineSpacing - SpaceBetweenLines);
 
-                if (position.Y <= -Font.LineSpacing) {
+                if (messagePos.Y <= -Font.LineSpacing) {
                     break;
                 }
             }

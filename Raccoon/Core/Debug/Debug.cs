@@ -252,7 +252,7 @@ namespace Raccoon {
                 }, 0, 4);
 
             Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -298,7 +298,7 @@ namespace Raccoon {
             }
 
             Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
         
         [Conditional("DEBUG")]
@@ -332,7 +332,33 @@ namespace Raccoon {
             Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments - 1);
 
             Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Triangle triangle, Color color) {
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+
+            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
+                new Microsoft.Xna.Framework.Graphics.VertexPositionColor[4] {
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.B.X, triangle.B.Y, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.C.X, triangle.C.Y, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White)
+                }, 0, 3);
+
+            Game.Instance.Core.BasicEffect.Alpha = 1f;
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Triangle triangle) {
+            DrawTriangle(triangle, Color.White);
         }
 
         #endregion Primitives

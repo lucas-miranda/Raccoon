@@ -163,7 +163,7 @@ namespace Raccoon {
         }
 
         public void AddScene(Scene scene, string name = "") {
-            name = !name.IsEmpty() ? name : scene.GetType().Name.Replace("Scene", "");
+            name = !string.IsNullOrWhiteSpace(name) ? name : scene.GetType().Name.Replace("Scene", "");
             _scenes.Add(name, scene);
             scene.OnAdded();
         }
@@ -190,7 +190,7 @@ namespace Raccoon {
                 }
             }
 
-            if (name.IsEmpty()) {
+            if (string.IsNullOrWhiteSpace(name)) {
                 return;
             }
 

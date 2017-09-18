@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Raccoon.Collections {
+namespace Raccoon.Util.Collections {
     public enum HeapType {
         Min,
         Max

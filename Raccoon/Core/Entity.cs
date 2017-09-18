@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
-using Raccoon.Collections;
+using Raccoon.Util.Collections;
 
 namespace Raccoon {
     public class Entity {

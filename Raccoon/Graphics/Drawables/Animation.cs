@@ -148,8 +148,8 @@ namespace Raccoon.Graphics {
         }
 
         public void Add(KeyType key, string frames, string durations) {
-            if (frames.IsEmpty()) throw new ArgumentException("Value is empty", "frames");
-            if (durations.IsEmpty()) throw new ArgumentException("Value is empty", "durations");
+            if (string.IsNullOrWhiteSpace(frames)) throw new ArgumentException("Value is empty", "frames");
+            if (string.IsNullOrWhiteSpace(durations)) throw new ArgumentException("Value is empty", "durations");
 
             List<int> durationList = new List<int>();
             foreach (Match m in DurationRegex.Matches(durations)) {
@@ -190,7 +190,7 @@ namespace Raccoon.Graphics {
         }
 
         public void Add(KeyType key, string frames, int duration) {
-            if (frames.IsEmpty()) throw new ArgumentException("Value is empty", "frames");
+            if (string.IsNullOrWhiteSpace(frames)) throw new ArgumentException("Value is empty", "frames");
             if (duration < 0) throw new ArgumentException("Value is invalid, must be greater or equal zero", "durations");
 
             List<int> frameList = new List<int>();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Raccoon.Collections {
+namespace Raccoon.Util.Collections {
     public class Locker<T> {
         public Action<T> OnAdded = delegate { }, OnRemoved = delegate { };
 

@@ -164,7 +164,6 @@ namespace Raccoon {
 #endif
 
             // fps
-            _fpsCount++;
             if (Time.Subtract(_lastFpsTime).Seconds >= 1) {
                 _lastFpsTime = Time;
                 _fps = _fpsCount;
@@ -222,21 +221,17 @@ namespace Raccoon {
 #endif
 
             // draw main render target to screen
-#if DEBUG
             GraphicsDevice.SetRenderTarget(null);
             //GraphicsDevice.Clear(ClearOptions.Target, Game.Instance.Core.BackgroundColor, 0f, 0);
             GraphicsDevice.Clear(Color.Black);
             MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
             MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
+#if DEBUG
             MainSpriteBatch.Draw(DebugCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
-            MainSpriteBatch.End();
-#else
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(ClearOptions.Target, Game.Instance.Core.BackgroundColor, 1f, 0);
-            MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, MainCanvas.Shader == null? null : MainCanvas.Shader.XNAEffect);
-            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
-            MainSpriteBatch.End();
 #endif
+            MainSpriteBatch.End();
+
+            _fpsCount++;
         }
 
         protected override void Dispose(bool disposing) {

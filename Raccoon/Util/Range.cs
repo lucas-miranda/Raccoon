@@ -16,12 +16,12 @@ namespace Raccoon.Util {
 
         public Range(float min, float max) {
             if (min > max) throw new ArgumentException("Invalid interval, 'max' must be greater than 'min'");
-            Min = min;
+            _min = min;
             Max = max;
         }
 
         public Range(Range range) {
-            Min = range.Min;
+            _min = range.Min;
             Max = range.Max;
         }
 

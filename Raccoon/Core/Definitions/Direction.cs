@@ -11,12 +11,13 @@ namespace Raccoon {
         UpLeft = Up | Left,
         UpRight = Up | Right,
         DownLeft = Down | Left,
-        DownRight = Down | Right/*,
+        DownRight = Down | Right,/*,
         UpLeftRight = Up | Left | Right,
         UpDownRight = Up | Down | Right,
         DownLeftRight = Down | Left | Right,
         UpDownLeft = Up | Down | Left,
-        UpDownLeftRight = Up | Down | Left | Right*/
+        UpDownLeftRight = Up | Down | Left | Right,*/
+        All = Up | Right | Down | Left
     }
 
     public static class DirectionExtensions {
@@ -33,7 +34,7 @@ namespace Raccoon {
         }
 
         public static Vector2 ToVector2(this Direction direction) {
-            return new Vector2((((int) direction >> 1) & 1) - (((int) direction >> 3) & 1), ((int) direction & 1) - (((int) direction >> 2) & 1));
+            return new Vector2((((int) direction >> 1) & 1) - (((int) direction >> 3) & 1), (((int) direction >> 2) & 1) - ((int) direction & 1));
         }
 
         /*public static Coordinate ToCoordinate(this Direction direction) {
