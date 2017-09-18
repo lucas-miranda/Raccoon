@@ -1,11 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
+using Raccoon.Util;
+
 namespace Raccoon {
     public class Polygon : IEnumerable {
+        #region Private Members
+
         private List<Vector2> _vertices = new List<Vector2>();
         private List<Polygon> _convexComponents = new List<Polygon>();
         private bool _needRecalculateComponents = false;
+
+        #endregion Private Members
+
+        #region Constructors
 
         public Polygon() { }
 
@@ -13,9 +21,7 @@ namespace Raccoon {
             AddVertices(points);
         }
 
-        public Polygon(params Vector2[] points) {
-            AddVertices(points);
-        }
+        public Polygon(params Vector2[] points) : this((IEnumerable<Vector2>) points) { }
 
         public Polygon(Polygon polygon) {
             _vertices.AddRange(polygon._vertices);
@@ -27,6 +33,10 @@ namespace Raccoon {
             IsConvex = polygon.IsConvex;
             _needRecalculateComponents = polygon._needRecalculateComponents;
         }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public int VertexCount { get { return _vertices.Count; } }
         public bool IsConvex { get; private set; }
@@ -42,6 +52,10 @@ namespace Raccoon {
             }
         }
 
+        #endregion Public Properties
+
+        #region Public Static Methods
+
         public static Polygon RotateAround(Polygon polygon, float degrees, Vector2 origin) {
             List<Vector2> _rotatedVertices = new List<Vector2>(polygon._vertices.Count);
             foreach (Vector2 vertex in polygon._vertices) {
@@ -54,6 +68,10 @@ namespace Raccoon {
         public static Polygon Rotate(Polygon polygon, float degrees) {
             return RotateAround(polygon, degrees, polygon[0]);
         }
+
+        #endregion Public Static Methods
+
+        #region Public Methods
 
         public void AddVertex(Vector2 vertex) {
             _vertices.Add(vertex);
@@ -130,8 +148,8 @@ namespace Raccoon {
             _needRecalculateComponents = true;
         }
 
-        public float[] Projection(Vector2 axis) {
-            return Util.Math.Projection(axis, _vertices);
+        public Range Projection(Vector2 axis) {
+            return axis.Projection(_vertices);
         }
 
         public List<Polygon> GetConvexComponents() {
@@ -164,8 +182,8 @@ namespace Raccoon {
             LinkedList<Vector2> vertices = new LinkedList<Vector2>(_vertices);
             LinkedListNode<Vector2> current = vertices.First;
             while (current != null) {
-                LinkedListNode<Vector2> previous = current.Previous == null ? vertices.Last : current.Previous,
-                                        next = current.Next == null ? vertices.First : current.Next;
+                LinkedListNode<Vector2> previous = current.Previous ?? vertices.Last,
+                                        next = current.Next ?? vertices.First;
 
                 // is current vertex an ear?
                 if (IsEar(previous.Value, current.Value, next.Value, clockwise)) {
@@ -178,8 +196,8 @@ namespace Raccoon {
             while (true) {
                 current = vertices.Count == 3 ? vertices.First : ears.Pop();
 
-                LinkedListNode<Vector2> previous = current.Previous == null ? vertices.Last : current.Previous,
-                                        next = current.Next == null ? vertices.First : current.Next;
+                LinkedListNode<Vector2> previous = current.Previous ?? vertices.Last,
+                                        next = current.Next ?? vertices.First;
 
                 triangles.Add(new Polygon(previous.Value, current.Value, next.Value));
 
@@ -191,12 +209,12 @@ namespace Raccoon {
 
                 if (previous != next) {
                     // is previous vertex an ear?
-                    if (IsEar((previous.Previous == null ? vertices.Last : previous.Previous).Value, previous.Value, next.Value, clockwise)) {
+                    if (IsEar((previous.Previous ?? vertices.Last).Value, previous.Value, next.Value, clockwise)) {
                         ears.Push(previous);
                     }
 
                     // is next vertex an ear?
-                    if (IsEar(previous.Value, next.Value, (next.Next == null ? vertices.First : next.Next).Value, clockwise)) {
+                    if (IsEar(previous.Value, next.Value, (next.Next ?? vertices.First).Value, clockwise)) {
                         ears.Push(next);
                     }
                 }
@@ -214,13 +232,12 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            string s = "[";
-            foreach (Vector2 vertex in _vertices) {
-                s += vertex + " ";
-            }
-
-            return s.Remove(s.Length - 1) + "]";
+            return $"[{string.Join(", ", _vertices)}]";
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
 
         private void Verify() {
             if (VertexCount < 3) {
@@ -316,12 +333,14 @@ namespace Raccoon {
                     continue;
                 }
 
-                if (Util.Math.IsPointInsideTriangle(previous, center, next, point)) {
+                if (new Triangle(previous, center, next).Contains(point)) {
                     return false;
                 }
             }
 
             return true;
         }
+
+        #endregion Private Methods
     }
 }

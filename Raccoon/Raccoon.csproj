@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Math\Triangle.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />

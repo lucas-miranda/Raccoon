@@ -43,8 +43,8 @@
         public float Top { get { return Y; } set { Y = value; } }
         public float Right { get { return X + Width; } set { Width = value - X; } }
         public float Bottom { get { return Y + Height; } set { Height = value - Y; } }
-        public Vector2 Center { get { return new Vector2(X + Width / 2, Y + Height / 2); } }
-        public bool IsEmpty { get { return Width == 0 && Height == 0; } }
+        public Vector2 Center { get { return new Vector2(X + Width / 2f, Y + Height / 2f); } }
+        public bool IsEmpty { get { return (int) Width == 0 && (int) Height == 0; } }
         public Vector2 TopLeft { get { return new Vector2(Left, Top); } set { Left = value.X; Top = value.Y; } }
         public Vector2 TopRight { get { return new Vector2(Right, Top); } set { Right = value.X; Top = value.Y; } }
         public Vector2 LeftRight { get { return new Vector2(Left, Bottom); } set { Left = value.X; Bottom = value.Y; } }
@@ -73,6 +73,10 @@
             return !(v.X <= Left || v.X >= Right || v.Y <= Top || v.Y >= Bottom);
         }
 
+        public bool ContainsInclusive(Vector2 v) {
+            return !(v.X < Left || v.X >= Right || v.Y < Top || v.Y >= Bottom);
+        }
+
         public bool Intersects(Rectangle r) {
             return !(r.Right <= Left || r.Left >= Right || r.Bottom <= Top || r.Top >= Bottom);
         }
@@ -94,13 +98,19 @@
         public bool Equals(Rectangle r) {
             return this == r;
         }
-
-        public override int GetHashCode() {
-            return (X.GetHashCode() + Y.GetHashCode()) ^ (Width.GetHashCode() + Height.GetHashCode());
-        }
-
+        
         public override string ToString() {
             return $"[{X} {Y} {Width} {Height}]";
+        }
+
+        public override int GetHashCode() {
+            var hashCode = 466501756;
+            hashCode = hashCode * -1521134295 + base.GetHashCode();
+            hashCode = hashCode * -1521134295 + X.GetHashCode();
+            hashCode = hashCode * -1521134295 + Y.GetHashCode();
+            hashCode = hashCode * -1521134295 + Width.GetHashCode();
+            hashCode = hashCode * -1521134295 + Height.GetHashCode();
+            return hashCode;
         }
 
         #endregion Public Methods
@@ -153,6 +163,34 @@
 
         public static Rectangle operator +(Rectangle l, Vector2 r) {
             return new Rectangle(l.X + r.X, l.Y + r.Y, l.Width, l.Height);
+        }
+
+        public static Rectangle operator +(Vector2 l, Rectangle r) {
+            return r + l;
+        }
+
+        public static Rectangle operator +(Rectangle l, Size r) {
+            return new Rectangle(l.X, l.Y, l.Width + r.Width, l.Height + r.Height);
+        }
+
+        public static Rectangle operator -(Rectangle l, Size r) {
+            return new Rectangle(l.X, l.Y, l.Width - r.Width, l.Height - r.Height);
+        }
+
+        public static Rectangle operator *(Rectangle l, Size r) {
+            return new Rectangle(l.X, l.Y, l.Width * r.Width, l.Height * r.Height);
+        }
+
+        public static Rectangle operator *(Rectangle l, float v) {
+            return new Rectangle(l.X, l.Y, l.Width * v, l.Height * v);
+        }
+
+        public static Rectangle operator *(float v, Rectangle r) {
+            return r * v;
+        }
+
+        public static Rectangle operator /(Rectangle l, Size r) {
+            return new Rectangle(l.X, l.Y, l.Width / r.Width, l.Height / r.Height);
         }
 
         #endregion Operators

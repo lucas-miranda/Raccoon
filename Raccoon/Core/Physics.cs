@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Raccoon.Components;
+using Raccoon.Util;
 
 namespace Raccoon {
     public class Physics {
@@ -518,10 +520,10 @@ namespace Raccoon {
             }
 
             float radiusSquared = circleColl.Radius * circleColl.Radius;
-            return Util.Math.DistanceSquared(new Vector2(colliderAPos.X - 1, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X, colliderAPos.Y - 1), circleColl.Center) < radiusSquared;
+            return Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1)), circleColl.Center) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height)), circleColl.Center) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height)), circleColl.Center) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X, colliderAPos.Y - 1)), circleColl.Center) < radiusSquared;
         }
 
         #endregion Box vs Circle
@@ -802,7 +804,7 @@ namespace Raccoon {
             CircleCollider circleColl = colliderA as CircleCollider;
             LineCollider lineColl = colliderB as LineCollider;
 
-            if (Util.Math.DistanceSquared(colliderBPos + lineColl.From, colliderBPos + lineColl.To, circleColl.Center) < circleColl.Radius * circleColl.Radius) {
+            if (Util.Math.DistanceSquared(new Line(colliderBPos + lineColl.From, colliderBPos + lineColl.To), circleColl.Center) < circleColl.Radius * circleColl.Radius) {
                 return true;
             }
 
@@ -821,7 +823,7 @@ namespace Raccoon {
             Polygon polygon = polygonColl.Polygon.Clone();
             polygon.Translate(colliderBPos);
             for (int i = 0; i < polygon.VertexCount; i++) {
-                if (Util.Math.DistanceSquared(polygon[i], polygon[(i + 1) % polygon.VertexCount], circleColl.Center) < radiusSquared) {
+                if (Util.Math.DistanceSquared(new Line(polygon[i], polygon[(i + 1) % polygon.VertexCount]), circleColl.Center) < radiusSquared) {
                     return true;
                 }
             }
@@ -1056,8 +1058,8 @@ namespace Raccoon {
 
         private bool CheckPolygonsIntersection(Polygon polygonA, Polygon polygonB, IEnumerable<Vector2> axes) {
             foreach (Vector2 axis in axes) {
-                float[] projectionA = polygonA.Projection(axis), projectionB = polygonB.Projection(axis);
-                if (projectionA[0] >= projectionB[1] || projectionB[0] >= projectionA[1]) {
+                Range projectionA = polygonA.Projection(axis), projectionB = polygonB.Projection(axis);
+                if (projectionA.Min >= projectionB.Max || projectionB.Min >= projectionA.Max) {
                     return false;
                 }
             }

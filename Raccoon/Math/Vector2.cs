@@ -1,5 +1,9 @@
-﻿namespace Raccoon {
-    public struct Vector2 {
+﻿using System.Collections.Generic;
+
+using Raccoon.Util;
+
+namespace Raccoon {
+    public struct Vector2 : System.IEquatable<Vector2> {
         #region Static Readonly
 
         public static readonly Vector2 Zero = new Vector2(0, 0);
@@ -12,6 +16,8 @@
         public static readonly Vector2 UpRight = new Vector2(-1, 1);
         public static readonly Vector2 DownRight = new Vector2(1, 1);
         public static readonly Vector2 DownLeft = new Vector2(1, -1);
+        public static readonly Vector2 UnitX = new Vector2(1, 0);
+        public static readonly Vector2 UnitY = new Vector2(0, 1);
 
         #endregion Static Readonly          
 
@@ -29,7 +35,10 @@
         }
 
         public Vector2(float xy) : this(xy, xy) { }
-
+        public Vector2(float[] xy) : this(xy[0], xy[1]) { }
+        public Vector2(double x, double y) : this((float) x, (float) y) { }
+        public Vector2(double xy) : this((float) xy, (float) xy) { }
+        public Vector2(double[] xy) : this((float) xy[0], (float) xy[1]) { }
         public Vector2(Size size) : this(size.Width, size.Height) { }
 
         internal Vector2(Microsoft.Xna.Framework.Vector2 vec2) : this(vec2.X, vec2.Y) { }
@@ -46,6 +55,16 @@
             return a.Cross(b);
         }
 
+        public static float Cross(Vector2 a, Vector2 b, Vector2 c) {
+            return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+        }
+
+        public static Vector2 Normalize(Vector2 v) {
+            if ((int) v.X == 0 && (int) v.Y == 0) throw new System.ArgumentException("Both X and Y values can't be zero.", "v");
+
+            return v * (1f / v.Length());
+        }
+
         #endregion Public Static Methods
 
         #region Public Methods
@@ -58,20 +77,8 @@
             return X * X + Y * Y;
         }
 
-        public void Normalize() {
-            if (X == 0 && Y == 0) {
-                return;
-            }
-
-            float n = 1f / Length();
-            X *= n;
-            Y *= n;
-        }
-
         public Vector2 Normalized() {
-            Vector2 v = new Vector2(this);
-            v.Normalize();
-            return v;
+            return Normalize(this);
         }
 
         public Vector2 Perpendicular() {
@@ -86,16 +93,37 @@
             return X * other.Y - Y * other.X;
         }
 
+        public Range Projection(ICollection<Vector2> points) {
+            if (points.Count == 0) throw new System.ArgumentException("Projection needs at least one value.", "points");
+
+            IEnumerator<Vector2> enumerator = points.GetEnumerator();
+            enumerator.MoveNext();
+
+            float min = Dot(enumerator.Current),
+                  max = min;
+
+            while (enumerator.MoveNext()) {
+                float p = Dot(enumerator.Current);
+                if (p < min) {
+                    min = p;
+                } else if (p > max) {
+                    max = p;
+                }
+            }
+
+            return new Range(min, max);
+        }
+
+        public Range Projection(params Vector2[] points) {
+            return Projection(points as ICollection<Vector2>);
+        }
+
         public override bool Equals(object obj) {
             return obj is Vector2 && Equals((Vector2) obj);
         }
 
-        public bool Equals(Vector2 v) {
-            return this == v;
-        }
-
-        public override int GetHashCode() {
-            return X.GetHashCode() + Y.GetHashCode();
+        public bool Equals(Vector2 other) {
+            return this == other;
         }
 
         public Direction ToDirection() {
@@ -114,7 +142,15 @@
         }
 
         public override string ToString() {
-            return $"[X: {X}, Y: {Y}]";
+            return $"[{X} {Y}]";
+        }
+
+        public override int GetHashCode() {
+            var hashCode = 1861411795;
+            hashCode = hashCode * -1521134295 + base.GetHashCode();
+            hashCode = hashCode * -1521134295 + X.GetHashCode();
+            hashCode = hashCode * -1521134295 + Y.GetHashCode();
+            return hashCode;
         }
 
         #endregion Public Methods
@@ -149,8 +185,20 @@
             return new Vector2(l.X + r.Width, l.Y + r.Height);
         }
 
-        public static Rectangle operator +(Vector2 l, Rectangle r) {
-            return r + l;
+        public static Vector2 operator +(Vector2 l, float v) {
+            return new Vector2(l.X + v, l.Y + v);
+        }
+
+        public static Vector2 operator +(float v, Vector2 r) {
+            return r + v;
+        }
+
+        public static Vector2 operator +(Vector2 l, double v) {
+            return new Vector2((float) (l.X + v), (float) (l.Y + v));
+        }
+
+        public static Vector2 operator +(double v, Vector2 r) {
+            return r + v;
         }
 
         public static Vector2 operator -(Vector2 l, Vector2 r) {
@@ -161,48 +209,48 @@
             return new Vector2(l.X - r.Width, l.Y - r.Height);
         }
 
-        public static Vector2 operator *(Vector2 l, Vector2 r) {
-            return new Vector2(l.X * r.X, l.Y * r.Y);
-        }
-
-        public static Vector2 operator /(Vector2 l, Vector2 r) {
-            return new Vector2(l.X / r.X, l.Y / r.Y);
-        }
-
-        public static Vector2 operator +(Vector2 l, float v) {
-            return new Vector2(l.X + v, l.Y + v);
-        }
-
-        public static Vector2 operator +(Vector2 l, double v) {
-            return new Vector2((float) (l.X + v), (float) (l.Y + v));
-        }
-        
         public static Vector2 operator -(Vector2 l, float v) {
             return new Vector2(l.X - v, l.Y - v);
+        }
+
+        public static Vector2 operator -(float v, Vector2 r) {
+            return r - v;
         }
 
         public static Vector2 operator -(Vector2 l, double v) {
             return new Vector2((float) (l.X - v), (float) (l.Y - v));
         }
-        
+
+        public static Vector2 operator -(double v, Vector2 r) {
+            return r - v;
+        }
+
+        public static Vector2 operator *(Vector2 l, Vector2 r) {
+            return new Vector2(l.X * r.X, l.Y * r.Y);
+        }
+
         public static Vector2 operator *(Vector2 l, float v) {
             return new Vector2(l.X * v, l.Y * v);
+        }
+
+        public static Vector2 operator *(float v, Vector2 r) {
+            return r * v;
         }
 
         public static Vector2 operator *(Vector2 l, double v) {
             return new Vector2((float) (l.X * v), (float)  (l.Y * v));
         }
 
+        public static Vector2 operator *(double v, Vector2 r) {
+            return r * v;
+        }
+
         public static Vector2 operator *(Vector2 l, Size s) {
             return new Vector2(l.X * s.Width, l.Y * s.Height);
         }
 
-        public static Vector2 operator *(float v, Vector2 l) {
-            return l * v;
-        }
-
-        public static Vector2 operator *(double v, Vector2 l) {
-            return l * v;
+        public static Vector2 operator /(Vector2 l, Vector2 r) {
+            return new Vector2(l.X / r.X, l.Y / r.Y);
         }
 
         public static Vector2 operator /(Vector2 l, Size s) {
@@ -213,8 +261,16 @@
             return new Vector2(l.X / v, l.Y / v);
         }
 
+        public static Vector2 operator /(float v, Vector2 r) {
+            return r / v;
+        }
+
         public static Vector2 operator /(Vector2 l, double v) {
             return new Vector2((float) (l.X / v), (float) (l.Y / v));
+        }
+
+        public static Vector2 operator /(double v, Vector2 r) {
+            return r / v;
         }
 
         #endregion Operators

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Raccoon.Util {
+﻿namespace Raccoon.Util {
     public static class Math {
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
         public const double DoublePI = 2.0 * PI;
@@ -27,6 +25,10 @@ namespace Raccoon.Util {
 
         public static Vector2 Approach(Vector2 start, Vector2 end, Vector2 amount) {
             return new Vector2(Approach(start.X, end.X, amount.X), Approach(start.Y, end.Y, amount.Y));
+        }
+
+        public static Vector2 Ceiling(Vector2 value) {
+            return new Vector2((float) System.Math.Ceiling(value.X), (float) System.Math.Ceiling(value.Y));
         }
 
         public static float Clamp(float value, float min, float max) {
@@ -59,6 +61,10 @@ namespace Raccoon.Util {
 
         public static Vector2 DispersionNormalized(Vector2 value, Vector2 center) {
             return (value - center) / center;
+        }
+
+        public static Vector2 Floor(Vector2 value) {
+            return new Vector2((float) System.Math.Floor(value.X), (float) System.Math.Floor(value.Y));
         }
 
         public static float Lerp(float start, float end, float t) {
@@ -184,23 +190,23 @@ namespace Raccoon.Util {
             return (float) System.Math.Sqrt(DistanceSquared(from, to));
         }
 
-        public static float Distance(Vector2 lineStart, Vector2 lineEnd, Vector2 point) {
-            return (float) System.Math.Sqrt(DistanceSquared(lineStart, lineEnd, point));
+        public static float Distance(Line line, Vector2 point) {
+            return (float) System.Math.Sqrt(DistanceSquared(line, point));
         }
 
         public static float DistanceSquared(Vector2 from, Vector2 to) {
             return (to - from).LengthSquared();
         }
 
-        public static float DistanceSquared(Vector2 lineStart, Vector2 lineEnd, Vector2 point) {
+        public static float DistanceSquared(Line line, Vector2 point) {
             // implemented using http://stackoverflow.com/a/1501725
-            float lengthSquared = DistanceSquared(lineStart, lineEnd);
+            float lengthSquared = line.LengthSquared;
             if (lengthSquared == 0) {
-                return DistanceSquared(lineStart, point);
+                return DistanceSquared(line.PointA, point);
             }
 
-            float t = Clamp(Vector2.Dot(point - lineStart, lineEnd - lineStart) / lengthSquared, 0, 1);
-            Vector2 proj = lineStart + t * (lineEnd - lineStart);
+            float t = Clamp(Vector2.Dot(point - line.PointA, line.ToVector2()) / lengthSquared, 0, 1);
+            Vector2 proj = line.GetPointNormalized(t);
             return DistanceSquared(point, proj);
         }
 
@@ -213,65 +219,6 @@ namespace Raccoon.Util {
             float cos = Cos(degrees), sin = Sin(degrees);
             point -= origin;
             return origin + new Vector2(point.X * cos - point.Y * sin, point.X * sin + point.Y * cos);
-        }
-
-        public static float[] Projection(Vector2 axis, IEnumerable<Vector2> points) {
-            IEnumerator<Vector2> enumerator = points.GetEnumerator();
-            enumerator.MoveNext();
-            float min = axis.Dot(enumerator.Current);
-            float max = min;
-            foreach (Vector2 point in points) {
-                float p = axis.Dot(point);
-                if (p < min) {
-                    min = p;
-                } else if (p > max) {
-                    max = p;
-                }
-            }
-
-            return new float[] { min, max };
-        }
-
-        public static float[] Projection(Vector2 axis, params Vector2[] points) {
-            return Projection(axis, points as IEnumerable<Vector2>);
-        }
-
-        public static bool IsPointInsideTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 point) {
-            float n = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
-            float s = ((b.Y - c.Y) * (point.X - c.X) + (c.X - b.X) * (point.Y - c.Y)) / n,
-                  t = ((c.Y - a.Y) * (point.X - c.X) + (a.X - c.X) * (point.Y - c.Y)) / n;
-            //float u = 1 - s - t;
-
-            return !(s <= 0 || s > 1 || t <= 0 || t > 1 || s + t > 1); //0 <= u && u <= 1;
-        }
-
-        public static bool IsInsideCircle(Vector2 center, float radius, Vector2 point) {
-            return (point - center).LengthSquared() <= radius * radius;
-        }
-
-        public static Vector2[] IntersectionLineCircle(Vector2 lineFrom, Vector2 lineTo, Vector2 circleCenter, float radius) {
-            Vector2 p1 = lineFrom - circleCenter, p2 = lineTo - circleCenter;
-            Vector2 dist = p2 - p1;
-
-            float det = p1.X * p2.Y - p2.X * p1.Y;
-            float distSquared = dist.LengthSquared();
-            float discrimant = radius * radius * distSquared - det * det;
-
-            if (discrimant < 0) {
-                return new Vector2[0];
-            }
-
-            if (discrimant == 0) {
-                return new Vector2[] { new Vector2(det * dist.Y / distSquared + circleCenter.X, -det * dist.X / distSquared + circleCenter.Y) };
-            }
-
-            double discrimantSqrt = System.Math.Sqrt(discrimant);
-            float signal = dist.Y < 0 ? -1 : 1;
-
-            return new Vector2[] {
-                new Vector2((float) ((det * dist.Y + signal * dist.X * discrimantSqrt) / distSquared + circleCenter.X), (float) ((-det * dist.X + System.Math.Abs(dist.Y) * discrimantSqrt) / distSquared + circleCenter.Y)),
-                new Vector2((float) ((det * dist.Y - signal * dist.X * discrimantSqrt) / distSquared + circleCenter.X), (float) ((-det * dist.X - System.Math.Abs(dist.Y) * discrimantSqrt) / distSquared + circleCenter.Y))
-            };
         }
 
         #endregion Trygonometric Stuff
