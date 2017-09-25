@@ -50,86 +50,79 @@ namespace Raccoon.Graphics {
         internal Matrix View { get; set; } = Matrix.Identity;
         internal Matrix Projection { get; set; } = Matrix.Identity;
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Shader shader = null) {
-            Draw(texture, destinationRectangle, color, Vector2.One, shader);
+        public Vector2 Transform(Vector2 position, Surface surface) {
+            return (position * surface.Scale) / Scale;
         }
-
-        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(destinationRectangle.Position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), color);
         }
 
-        public void Draw(Texture texture, Vector2 position, Color color, Shader shader = null) {
-            Draw(texture, position, color, Vector2.One, shader);
-        }
-
-        public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Vector2 position, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, color);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(destinationRectangle.Position, scroll, shader);
-            SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), sourceRectangle, color);
-        }
-
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
             Prepare(destinationRectangle.Position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), sourceRectangle, color, Util.Math.ToRadians(rotation), origin, (SpriteEffects) flip, 0f);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2? scroll = null, Shader shader = null) {
+            Prepare(destinationRectangle.Position, scroll, shader);
+            SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), sourceRectangle, color);
+        }
+
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, Microsoft.Xna.Framework.Vector2.Zero, sourceRectangle, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null) {
-            DrawString(font, text, position, color, Vector2.One, shader);
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color);
         }
 
-        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
+            Prepare(position, scroll, shader);
+            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
+        }
+
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color);
         }
 
-        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
+        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2? scroll = null, Shader shader = null) {
             Prepare(position, scroll, shader);
             SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
-            Prepare(position, scroll, shader);
-            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
-        }
+        internal void Prepare(Vector2 position, Vector2? scrollFactor, Shader shader = null) {
+            Vector2 scroll = scrollFactor ?? Vector2.One;
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
-            Prepare(position, scroll, shader);
-            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
-        }
-
-        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, ImageFlip flip, Vector2 scroll, Shader shader = null) {
-            Prepare(position, scroll, shader);
-            SpriteBatch.DrawString(font.SpriteFont, text, Microsoft.Xna.Framework.Vector2.Zero, color, Util.Math.ToRadians(rotation), origin, scale, (SpriteEffects) flip, 0f);
-        }
-
-        internal void Prepare(Vector2 position, Vector2 scrollFactor, Shader shader) {
-            Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X * scrollFactor.X, position.Y * scrollFactor.Y, 0f) * World;
-            Game.Instance.Core.BasicEffect.View = Matrix.CreateScale(1f / scrollFactor.X, 1f / scrollFactor.Y, 1f) * View * Matrix.CreateScale(scrollFactor.X, scrollFactor.Y, 1f);
+            Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X * scroll.X, position.Y * scroll.Y, 0f) * World;
+            Game.Instance.Core.BasicEffect.View = Matrix.CreateScale(1f / scroll.X, 1f / scroll.Y, 1f) * View * Matrix.CreateScale(scroll.X, scroll.Y, 1f);
             Game.Instance.Core.BasicEffect.Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
 
