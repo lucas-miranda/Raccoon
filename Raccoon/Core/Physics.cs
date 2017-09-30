@@ -515,15 +515,15 @@ namespace Raccoon {
             BoxCollider boxColl = colliderA as BoxCollider;
             CircleCollider circleColl = colliderB as CircleCollider;
 
-            if (boxColl.Rect & circleColl.Center) {
+            if (boxColl.Rect & circleColl.Position) {
                 return true;
             }
 
             float radiusSquared = circleColl.Radius * circleColl.Radius;
-            return Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1)), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height)), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height)), circleColl.Center) < radiusSquared
-                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X, colliderAPos.Y - 1)), circleColl.Center) < radiusSquared;
+            return Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1)), circleColl.Position) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y - 1), new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height)), circleColl.Position) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X + boxColl.Width, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height)), circleColl.Position) < radiusSquared
+                || Util.Math.DistanceSquared(new Line(new Vector2(colliderAPos.X - 1, colliderAPos.Y + boxColl.Height), new Vector2(colliderAPos.X, colliderAPos.Y - 1)), circleColl.Position) < radiusSquared;
         }
 
         #endregion Box vs Circle
@@ -804,7 +804,7 @@ namespace Raccoon {
             CircleCollider circleColl = colliderA as CircleCollider;
             LineCollider lineColl = colliderB as LineCollider;
 
-            if (Util.Math.DistanceSquared(new Line(colliderBPos + lineColl.From, colliderBPos + lineColl.To), circleColl.Center) < circleColl.Radius * circleColl.Radius) {
+            if (Util.Math.DistanceSquared(new Line(colliderBPos + lineColl.From, colliderBPos + lineColl.To), circleColl.Position) < circleColl.Radius * circleColl.Radius) {
                 return true;
             }
 
@@ -823,7 +823,7 @@ namespace Raccoon {
             Polygon polygon = polygonColl.Polygon.Clone();
             polygon.Translate(colliderBPos);
             for (int i = 0; i < polygon.VertexCount; i++) {
-                if (Util.Math.DistanceSquared(new Line(polygon[i], polygon[(i + 1) % polygon.VertexCount]), circleColl.Center) < radiusSquared) {
+                if (Util.Math.DistanceSquared(new Line(polygon[i], polygon[(i + 1) % polygon.VertexCount]), circleColl.Position) < radiusSquared) {
                     return true;
                 }
             }

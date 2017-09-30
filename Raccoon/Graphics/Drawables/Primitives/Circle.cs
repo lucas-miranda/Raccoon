@@ -6,7 +6,7 @@ namespace Raccoon.Graphics.Primitives {
 
         public Circle(int radius, Color color) {
             Radius = radius;
-            Size = new Size(Radius * 2);
+            Size = new Size(2 * Radius);
             Color = color;
             Load();
         }

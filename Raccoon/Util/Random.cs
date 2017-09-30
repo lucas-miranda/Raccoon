@@ -124,16 +124,28 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
-        /// Choose a random value contained in a determined list.
+        /// Choose a random value contained in a list.
         /// </summary>
         /// <typeparam name="T">Any class.</typeparam>
         /// <param name="list">A list containing values.</param>
         /// <returns>A random value in list or default T value, if list is empty.</returns>
-        public static T Choose<T>(ICollection<T> list) where T : class {
-            int i = Integer(0, Math.Max(0, list.Count - 1));
-            foreach (T item in list) {
+        public static T Choose<T>(IList<T> list) {
+            return list[Integer(0, list.Count - 1)];
+        }
+
+        /// <summary>
+        /// Choose a random value contained in a collection.
+        /// </summary>
+        /// <typeparam name="T">Any class.</typeparam>
+        /// <param name="collection">A collection containing values.</param>
+        /// <returns>A random value in collection or default T value, if collection is empty.</returns>
+        public static T Choose<T>(ICollection<T> collection) {
+            IEnumerator<T> enumerator = collection.GetEnumerator();
+            int i = Integer(0, collection.Count - 1);
+
+            while (enumerator.MoveNext()) {
                 if (i == 0) {
-                    return item;
+                    return enumerator.Current;
                 }
 
                 i--;

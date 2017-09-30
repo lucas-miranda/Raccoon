@@ -21,17 +21,14 @@ namespace Raccoon.Components {
         #region Public Properties
 
         public int Radius { get; private set; }
-        public Vector2 Center { get { return Position + Radius; } }
 
         #endregion Public Properties
 
         #region Public Methods
 
         public override void DebugRender() {
-            Graphic.Position = (Position + Origin) * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom;
             Graphic.Layer = Entity.Layer + 1;
-            Graphic.Origin = Origin * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom;
-            Graphic.Render();
+            Graphic.Render(Graphic.Surface.Transform(Position - Radius, Game.Instance.MainSurface));
         }
 
         #endregion Public Methods
@@ -40,7 +37,7 @@ namespace Raccoon.Components {
 
         private void Initialize(int radius) {
             Radius = radius;
-            Size = new Size(radius);
+            Size = new Size(2 * Radius);
 
 #if DEBUG
             Graphic = new Graphics.Primitives.Circle((int) (Radius * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), Color) {

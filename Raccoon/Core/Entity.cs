@@ -195,6 +195,10 @@ namespace Raccoon {
             Graphics.AddRange(graphics);
         }
 
+        public void Add(params Graphic[] graphics) {
+            Add((IEnumerable<Graphic>) graphics);
+        }
+
         public void Add(Component component) {
             _components.Add(component);
         }
@@ -205,6 +209,10 @@ namespace Raccoon {
 
         public void Remove(IEnumerable<Graphic> graphics) {
             Graphics.RemoveRange(graphics);
+        }
+
+        public void Remove(params Graphic[] graphics) {
+            Remove((IEnumerable<Graphic>) graphics);
         }
 
         public void Remove(Component component) {
