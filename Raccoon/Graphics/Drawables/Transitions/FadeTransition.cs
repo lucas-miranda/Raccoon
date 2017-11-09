@@ -1,11 +1,13 @@
-﻿namespace Raccoon.Graphics.Transitions {
+﻿using Raccoon.Graphics.Primitives;
+
+namespace Raccoon.Graphics.Transitions {
     public enum Fade {
         In,
         Out
     }
 
     public class FadeTransition : SceneTransition {
-        public FadeTransition(Color color) : base(new Primitives.Rectangle(Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, color)) {
+        public FadeTransition(Color color) : base(new RectangleShape(Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, color)) {
             Type = Fade.In;
         }
 

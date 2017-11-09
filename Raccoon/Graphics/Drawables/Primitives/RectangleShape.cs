@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics.Primitives {
-    public class Rectangle : Graphic {
+    public class RectangleShape : Graphic {
         #region Private Members
 
         private bool _filled;
@@ -10,7 +10,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Constructors
 
-        public Rectangle(float width, float height, Color color, bool filled = true) : base() {
+        public RectangleShape(float width, float height, Color color, bool filled = true) : base() {
             Size = new Size(width, height);
             Color = color;
             _filled = filled;
@@ -60,13 +60,13 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
 
-        public override void Render(Vector2 position, float rotation) {
+        public override void Render(Vector2 position, Color color, float rotation) {
             if (Filled) {
-                Surface.Draw(Texture, new Raccoon.Rectangle(position, Size * Scale), null, FinalColor, rotation, Origin / Size.ToVector2(), Flipped, Scroll, Shader);
+                Surface.Draw(Texture, new Raccoon.Rectangle(position, Size * Scale), null, color * Opacity, rotation, Origin / Size.ToVector2(), Flipped, Scroll, Shader);
                 return;
             }
 
-            Surface.Draw(Texture, position, null, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
+            Surface.Draw(Texture, position, null, color * Opacity, rotation, Origin, Scale, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {

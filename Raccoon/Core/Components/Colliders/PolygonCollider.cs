@@ -54,7 +54,7 @@ namespace Raccoon.Components {
             Polygon = polygon;
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Polygon(Polygon, Color) {
+            Graphic = new Graphics.Primitives.PolygonShape(Polygon, Color) {
                 Surface = Game.Instance.Core.DebugSurface
             };
 #endif
