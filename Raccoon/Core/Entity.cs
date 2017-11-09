@@ -10,7 +10,7 @@ namespace Raccoon {
     public class Entity {
         #region Public Delegates
 
-        public Action OnAdded = delegate { }, OnRemoved = delegate { }, OnStart = delegate { }, OnSceneBegin = delegate { }, OnSceneEnd = delegate { }, OnBeforeUpdate = delegate { }, OnUpdate = delegate { }, OnLateUpdate = delegate { }, OnRender = delegate { };
+        public Action OnSceneAdded = delegate { }, OnSceneRemoved = delegate { }, OnStart = delegate { }, OnSceneBegin = delegate { }, OnSceneEnd = delegate { }, OnBeforeUpdate = delegate { }, OnUpdate = delegate { }, OnLateUpdate = delegate { }, OnRender = delegate { };
 
 #if DEBUG
         public Action OnDebugRender = delegate { };
@@ -19,10 +19,10 @@ namespace Raccoon {
         #endregion Public Delegates
 
         #region Private Members
-        
+
         private Locker<Component> _components = new Locker<Component>();
         private Surface _surface;
-        
+
         #endregion Private Members
 
         #region Constructors
@@ -35,7 +35,6 @@ namespace Raccoon {
             Graphics.OnAdded += (Graphic g) => g.Surface = Surface;
 
             Name = "Entity";
-            Active = Visible = true;
             Surface = Game.Instance.Core.MainSurface;
         }
 
@@ -44,12 +43,13 @@ namespace Raccoon {
         #region Public Properties
 
         public string Name { get; set; }
-        public bool Active { get; set; }
-        public bool Visible { get; set; }
+        public bool Active { get; set; } = true;
+        public bool Visible { get; set; } = true;
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
+        public bool HasStarted { get; private set; }
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -66,7 +66,7 @@ namespace Raccoon {
 
             set {
                 if (Graphics.Count == 0) {
-                    Add(value);
+                    AddGraphic(value);
                     return;
                 }
 
@@ -91,7 +91,7 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public virtual void Added(Scene scene) {
+        public virtual void SceneAdded(Scene scene) {
             Scene = scene;
             foreach (Component c in _components) {
                 if (c is Collider) {
@@ -100,15 +100,20 @@ namespace Raccoon {
                 }
             }
 
-            OnAdded();
+            OnSceneAdded();
         }
 
-        public virtual void Removed() {
+        public virtual void SceneRemoved() {
             Scene = null;
-            OnRemoved();
+            OnSceneRemoved();
         }
 
         public virtual void Start() {
+            if (HasStarted) {
+                return; 
+            }
+
+            HasStarted = true;
             OnStart();
         }
 
@@ -128,7 +133,7 @@ namespace Raccoon {
 
         public virtual void Update(int delta) {
             Timer += (uint) delta;
-            
+
             foreach (Component c in _components) {
                 if (!c.Enabled) {
                     continue;
@@ -187,35 +192,35 @@ namespace Raccoon {
 #endif
         }
 
-        public void Add(Graphic graphic) {
+        public void AddGraphic(Graphic graphic) {
             Graphics.Add(graphic);
         }
 
-        public void Add(IEnumerable<Graphic> graphics) {
+        public void AddGraphics(IEnumerable<Graphic> graphics) {
             Graphics.AddRange(graphics);
         }
 
-        public void Add(params Graphic[] graphics) {
-            Add((IEnumerable<Graphic>) graphics);
+        public void AddGraphics(params Graphic[] graphics) {
+            AddGraphics((IEnumerable<Graphic>) graphics);
         }
 
-        public void Add(Component component) {
+        public void AddComponent(Component component) {
             _components.Add(component);
         }
 
-        public void Remove(Graphic graphic) {
+        public void RemoveGraphic(Graphic graphic) {
             Graphics.Remove(graphic);
         }
 
-        public void Remove(IEnumerable<Graphic> graphics) {
+        public void RemoveGraphics(IEnumerable<Graphic> graphics) {
             Graphics.RemoveRange(graphics);
         }
 
-        public void Remove(params Graphic[] graphics) {
-            Remove((IEnumerable<Graphic>) graphics);
+        public void RemoveGraphics(params Graphic[] graphics) {
+            RemoveGraphics((IEnumerable<Graphic>) graphics);
         }
 
-        public void Remove(Component component) {
+        public void RemoveComponent(Component component) {
             _components.Remove(component);
         }
 

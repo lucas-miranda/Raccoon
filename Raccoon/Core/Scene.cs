@@ -20,8 +20,8 @@ namespace Raccoon {
         public Scene() {
             Graphics = new Locker<Graphic>(new Graphic.LayerComparer());
             Entities = new Locker<Entity>(new Entity.LayerComparer());
-            Entities.OnAdded += (Entity e) => e.Added(this);
-            Entities.OnRemoved += (Entity e) => e.Removed();
+            Entities.OnAdded += (Entity e) => e.SceneAdded(this);
+            Entities.OnRemoved += (Entity e) => e.SceneRemoved();
 
             Camera = new Camera();
         }
