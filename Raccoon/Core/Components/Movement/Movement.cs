@@ -6,6 +6,12 @@ namespace Raccoon.Components {
         private float _moveUpdateTime;
         private Vector2 _nextAxis;
     
+        /// <summary>
+        /// A component that handles movements, providing methods and properties to deal with speed.
+        /// </summary>
+        /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
+        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
+        /// <param name="collider">Collider used to detect end of movement.</param>
         public Movement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) {
             CollisionTags = new List<string>();
             MaxSpeed = maxSpeed;

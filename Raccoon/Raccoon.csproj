@@ -48,6 +48,7 @@
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />
     <Compile Include="Core\Camera.cs" />
+    <Compile Include="Core\Components\Alarm.cs" />
     <Compile Include="Core\Components\Colliders\CircleCollider.cs" />
     <Compile Include="Core\Components\Colliders\Collider.cs" />
     <Compile Include="Core\Components\Colliders\BoxCollider.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="Core\Components\Movement\PlatformerMovement.cs" />
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />
     <Compile Include="Core\Components\Movement\Movement.cs" />
+    <Compile Include="Core\Components\StateMachine.cs" />
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\Coroutine.cs" />
     <Compile Include="Core\Debug\Debug.cs" />

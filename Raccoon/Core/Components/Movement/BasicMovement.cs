@@ -4,6 +4,12 @@ namespace Raccoon.Components {
     public class BasicMovement : Movement {
         public event System.Action OnMove;
 
+        /// <summary>
+        /// A component that handles simple top-down movement.
+        /// </summary>
+        /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
+        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
+        /// <param name="collider">Collider used to detect end of movement.</param>
         public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) { }
 
         public override void OnCollide(Vector2 moveDirection) { }

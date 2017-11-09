@@ -9,6 +9,12 @@ namespace Raccoon.Components {
         private bool _canJump = true, _nextJumpReady = true, _requestedJump;
         private int _jumpDistanceBuffer, _ledgeJumpTime;
 
+        /// <summary>
+        /// A component that handles platformer movement.
+        /// </summary>
+        /// <param name="maxSpeed">Max horizontal and vertical speed (affects gravity and jumping). (in pixels/sec)</param>
+        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
+        /// <param name="collider">Collider used to detect end of movement.</param>
         public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
             GravityForce = new Vector2(0, 450);
             OnFallingBegin += () => {
