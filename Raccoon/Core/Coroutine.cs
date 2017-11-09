@@ -4,46 +4,46 @@ using System.Collections.Generic;
 
 namespace Raccoon {
     public class Coroutine {
+        #region Private Members
+
         private static readonly Lazy<Coroutine> _lazy = new Lazy<Coroutine>(() => new Coroutine());
+
         private List<int> _runningRoutines = new List<int>();
         private Dictionary<int, IEnumerator> _routines = new Dictionary<int, IEnumerator>();
         private List<object> _tokens = new List<object>();
         private int _nextId;
 
+        #endregion Private Members
+
+        #region Constructors
+
         private Coroutine() {
         }
 
+        #endregion Constructors
+
+        #region Public Static Properties
+
         public static Coroutine Instance { get { return _lazy.Value; } }
+
+        #endregion Public Static Properties
+
+        #region Public Properties
 
         public int Count { get { return _routines.Count; } }
 
-        private bool MoveNext(IEnumerator routine) {
-            if (routine.Current is IEnumerator) {
-                if (MoveNext(routine.Current as IEnumerator)) {
-                    return true;
-                }
-            }
+        #endregion Public Properties
 
-            return routine.MoveNext();
-        }
+        #region Public Methods
 
         public void Update(int delta) {
-            if (Count == 0) {
-                return;
-            }
-
-            for (int i = _runningRoutines.Count - 1; i >= 0; i--) {
-                int routineId = _runningRoutines[i];
+            foreach (int routineId in _runningRoutines) {
                 if (MoveNext(_routines[routineId])) {
                     continue;
-                } else {
-                    _routines.Remove(routineId);
-                    _runningRoutines.Remove(routineId);
                 }
 
-                if (_runningRoutines.Count <= i) {
-                    i = _runningRoutines.Count - 1;
-                }
+                _routines.Remove(routineId);
+                _runningRoutines.Remove(routineId);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Raccoon {
         }
 
         public void Pause(int id) {
-            if (!_routines.ContainsKey(id) || !_runningRoutines.Contains(id)) {
+            if (!Exists(id) || !IsRunning(id)) {
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace Raccoon {
         }
 
         public void Resume(int id) {
-            if (!_routines.ContainsKey(id) || _runningRoutines.Contains(id)) {
+            if (!Exists(id) || IsRunning(id)) {
                 return;
             }
 
@@ -70,14 +70,11 @@ namespace Raccoon {
         }
 
         public void Stop(int id) {
-            if (_routines.ContainsKey(id)) {
+            if (Exists(id)) {
                 _routines.Remove(id);
             }
 
-            int i = _runningRoutines.IndexOf(id);
-            if (i != -1) {
-                _runningRoutines.RemoveAt(i);
-            }
+            _runningRoutines.Remove(id);
         }
 
         public void StopAll() {
@@ -89,7 +86,7 @@ namespace Raccoon {
             return _runningRoutines.Contains(id);
         }
 
-        public bool Exist(int id) {
+        public bool Exists(int id) {
             return _routines.ContainsKey(id);
         }
 
@@ -97,12 +94,27 @@ namespace Raccoon {
             _tokens.Add(token);
         }
 
-        public void ConsumeToken(object token) {
-            _tokens.Remove(token);
+        public bool ConsumeToken(object token) {
+            return _tokens.Remove(token);
         }
 
         public bool HasToken(object token) {
             return _tokens.Contains(token);
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
+        
+        private bool MoveNext(IEnumerator routine) {
+            // checks if need to run a sub-routine
+            if (routine.Current is IEnumerator && MoveNext(routine.Current as IEnumerator)) {
+                return true;
+            }
+
+            return routine.MoveNext();
+        }
+
+        #endregion Private Methods
     }
 }
