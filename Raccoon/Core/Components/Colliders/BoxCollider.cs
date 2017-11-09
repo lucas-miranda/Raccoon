@@ -1,7 +1,6 @@
 ﻿using System;
 
 using Raccoon.Graphics;
-using Raccoon.Graphics.Primitives;
 
 namespace Raccoon.Components {
     public class BoxCollider : Collider {
@@ -39,7 +38,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             Graphic.Position = (Position + Origin) * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom;
-            (Graphic as RectangleShape).Size = new Size((float) Math.Floor(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), (float) Math.Floor(Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom));
+            (Graphic as Graphics.Primitives.Rectangle).Size = new Size((float) Math.Floor(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom), (float) Math.Floor(Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom));
             Graphic.Layer = Entity.Layer + 1;
             Graphic.Origin = Origin * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom;
             Graphic.Rotation = Rotation;
@@ -54,7 +53,7 @@ namespace Raccoon.Components {
             Size = new Size(width, height);
 
 #if DEBUG
-            Graphic = new RectangleShape(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color, false) {
+            Graphic = new Graphics.Primitives.Rectangle(Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color, false) {
                 Surface = Game.Instance.Core.DebugSurface
             };
 #endif
