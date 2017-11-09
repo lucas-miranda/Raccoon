@@ -23,6 +23,7 @@ namespace Raccoon.Graphics {
         public static readonly Color Orange = new Color(0xFF8000FF);
         public static readonly Color Violet = new Color(0x7F00FFFF);
         public static readonly Color Indigo = new Color(0x4B0082FF);
+        public static readonly Color Purple = new Color(0x800080FF);
         
         #endregion
 
@@ -35,7 +36,7 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public Color(string rgba) {
-            R = G = B = A = 255;
+            R = G = B = A = byte.MaxValue;
 
             if (rgba[0] == '#') {
                 rgba = rgba.Substring(1);
@@ -62,7 +63,7 @@ namespace Raccoon.Graphics {
 
         public Color(uint rgba) : this(rgba.ToString("X8")) { }
 
-        public Color(byte r, byte g, byte b, byte a = 255) {
+        public Color(byte r, byte g, byte b, byte a = byte.MaxValue) {
             R = r;
             G = g;
             B = b;
@@ -70,10 +71,10 @@ namespace Raccoon.Graphics {
         }
 
         public Color(float r, float g, float b, float a = 1f) {
-            R = (byte) Util.Math.Clamp(r * 255, byte.MinValue, byte.MaxValue);
-            G = (byte) Util.Math.Clamp(g * 255, byte.MinValue, byte.MaxValue);
-            B = (byte) Util.Math.Clamp(b * 255, byte.MinValue, byte.MaxValue);
-            A = (byte) Util.Math.Clamp(a * 255, byte.MinValue, byte.MaxValue);
+            R = (byte) Util.Math.Clamp(r * byte.MaxValue, byte.MinValue, byte.MaxValue);
+            G = (byte) Util.Math.Clamp(g * byte.MaxValue, byte.MinValue, byte.MaxValue);
+            B = (byte) Util.Math.Clamp(b * byte.MaxValue, byte.MinValue, byte.MaxValue);
+            A = (byte) Util.Math.Clamp(a * byte.MaxValue, byte.MinValue, byte.MaxValue);
         }
 
         #endregion Constructors

@@ -64,7 +64,7 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
-        public override void Render(Vector2 position, float rotation) {
+        public override void Render(Vector2 position, Color color, float rotation) {
             if (_vertices.Length == 0) {
                 return;
             }
@@ -75,7 +75,7 @@ namespace Raccoon.Graphics {
 
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(Color.R / 255f, Color.G / 255f, Color.B / 255f);
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
             Game.Instance.Core.BasicEffect.World = _lastWorldMatrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X * Scroll.X, position.Y * Scroll.Y, 0f) * Microsoft.Xna.Framework.Matrix.CreateLookAt(new Microsoft.Xna.Framework.Vector3(0f, 0f, 1f), new Microsoft.Xna.Framework.Vector3(0f, 0f, -1f), Microsoft.Xna.Framework.Vector3.Up) * Surface.World;
             Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.CreateScale(1f / Scroll.X, 1f / Scroll.Y, 1f) * Surface.View * Microsoft.Xna.Framework.Matrix.CreateScale(Scroll.X, Scroll.Y, 1f);

@@ -32,33 +32,12 @@ namespace Raccoon.Graphics {
         public float Height { get { return Size.Height; } }
         public float Rotation { get; set; }
         public Size Size { get; protected set; }
-        public Color FinalColor { get; set; } = Color.White;
         public Surface Surface { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;
         public Shader Shader { get; set; }
         public ImageFlip Flipped { get; set; }
-
-        public Color Color {
-            get {
-                return _color;
-            }
-
-            set {
-                _color = new Color(value.R, value.G, value.B);
-                FinalColor = _color * Opacity;
-            }
-        }
-
-        public float Opacity {
-            get {
-                return _opacity;
-            }
-
-            set {
-                _opacity = Util.Math.Clamp(value, 0, 1);
-                FinalColor = Color * _opacity;
-            }
-        }
+        public Color Color { get; set; } = Color.White;
+        public float Opacity { get { return _opacity; } set { _opacity = Util.Math.Clamp(value, 0f, 1f); } }
 
         public bool FlippedBoth {
             get {
@@ -101,11 +80,19 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public void Render() {
-            Render(Position, Rotation);
+            Render(Position, Color, Rotation);
         }
 
         public void Render(Vector2 position) {
-            Render(position, Rotation);
+            Render(position, Color, Rotation);
+        }
+
+        public void Render(Vector2 position, Color color) {
+            Render(position, color, Rotation);
+        }
+
+        public void Render(Vector2 position, float rotation) {
+            Render(position, Color, rotation);
         }
 
         #endregion Public Methods
@@ -125,7 +112,7 @@ namespace Raccoon.Graphics {
 
         #region Public Abstract Methods
 
-        public abstract void Render(Vector2 position, float rotation);
+        public abstract void Render(Vector2 position, Color color, float rotation);
         public abstract void Dispose();
 
         #endregion Public Abstract Methods

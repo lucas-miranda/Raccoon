@@ -50,7 +50,7 @@
             }
         }
 
-        public override void Render(Vector2 position, float rotation) {
+        public override void Render(Vector2 position, Color color, float rotation) {
             EndGraphic.Render(position, rotation);
         }
 

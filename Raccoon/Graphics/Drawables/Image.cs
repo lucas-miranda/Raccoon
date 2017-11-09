@@ -43,9 +43,7 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value == null) throw new ArgumentNullException("Invalid texture");
-
-                _texture = value;
+                _texture = value ?? throw new ArgumentNullException("Invalid texture");
                 ClippingRegion = SourceRegion = _texture.Bounds;
             }
         }
@@ -95,13 +93,13 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
         
-        public override void Render(Vector2 position, float rotation) {
+        public override void Render(Vector2 position, Color color, float rotation) {
             if (DestinationRegion.IsEmpty) {
-                Surface.Draw(Texture, position, SourceRegion.Position + ClippingRegion, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
+                Surface.Draw(Texture, position, SourceRegion.Position + ClippingRegion, color * Opacity, rotation, Origin, Scale, Flipped, Scroll, Shader);
                 return;
             }
 
-            Surface.Draw(Texture, new Rectangle(position, DestinationRegion.Size * Scale), SourceRegion.Position + ClippingRegion, FinalColor, rotation, Origin, Flipped, Scroll, Shader);
+            Surface.Draw(Texture, new Rectangle(position, DestinationRegion.Size * Scale), SourceRegion.Position + ClippingRegion, color * Opacity, rotation, Origin, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {
