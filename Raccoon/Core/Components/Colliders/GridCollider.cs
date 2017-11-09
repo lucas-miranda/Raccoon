@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Raccoon.Graphics;
+using Raccoon.Graphics.Primitives;
 
 namespace Raccoon.Components {
     public class GridCollider : Collider {
@@ -54,7 +55,7 @@ namespace Raccoon.Components {
         public override void DebugRender() {
             Size graphicSize = new Size((float) Math.Floor(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1), (float) Math.Floor(TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1));
             if (_graphicNeedUpdate || Graphic.Size != graphicSize) {
-                (Graphic as Graphics.Primitives.Rectangle).Size = graphicSize;
+                (Graphic as RectangleShape).Size = graphicSize;
                 _graphicNeedUpdate = false;
             }
 
@@ -65,12 +66,20 @@ namespace Raccoon.Components {
                     }
 
                     Graphic.Color = Color;
-                    Graphic.Render(Position * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + new Vector2(x, y) * TileSize * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom);
+                    Graphic.Render(Graphic.Surface.Transform(Position + new Vector2(x, y) * TileSize, Game.Instance.Core.MainSurface));
                 }
             }
         }
 
         public void Setup(int columns, int rows) {
+            if (columns <= 0) {
+                throw new ArgumentException("Value should be greater than 0.", "columns");
+            }
+
+            if (rows <= 0) {
+                throw new ArgumentException("Value should be greater than 0.", "rows");
+            }
+
             Columns = columns;
             Rows = rows;
             _data = new bool[Rows, Columns];
@@ -86,8 +95,12 @@ namespace Raccoon.Components {
         }
 
         public void SetCollidable(int x, int y, bool collidable = true) {
-            if (x < 0 || x >= Columns || y < 0 || y >= Rows) {
-                return;
+            if (x < 0 || x >= Columns) {
+                throw new ArgumentOutOfRangeException("x", x, $"Value should be between {0} and {Columns - 1}.");
+            }
+
+            if (y < 0 || y >= Rows) {
+                throw new ArgumentOutOfRangeException("y", y, $"Value should be between {0} and {Rows - 1}.");
             }
 
             _data[y, x] = collidable;
@@ -103,7 +116,7 @@ namespace Raccoon.Components {
             Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.Rectangle(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false) {
+            Graphic = new RectangleShape(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false) {
                 Surface = Game.Instance.Core.DebugSurface
             };
 

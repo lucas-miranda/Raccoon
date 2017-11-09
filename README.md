@@ -1,11 +1,4 @@
-![Raccoon](/Raccoon/logo.png)
-
-About
-==============
-
-Raccoon is a framework focused in 2D game development made with [MonoGame](https://github.com/MonoGame/MonoGame) using .NET Framework 4.6, the idea is to provide tools to easily make games with MonoGame running under the hood.
-
-It's originally designed for my personal use, but feel free to suggest or make a pull request anything you find relevant.
+![Raccoonr my personal use, but feel free to suggest or make a pull request anything you find relevant.
 
 Dependencies
 ==============

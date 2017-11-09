@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics.Primitives {
-    public class Circle : Graphic {
+    public class CircleShape : Graphic {
         #region Constructors
 
-        public Circle(int radius, Color color) {
+        public CircleShape(int radius, Color color) {
             Radius = radius;
             Size = new Size(2 * Radius);
             Color = color;
@@ -23,8 +23,8 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
         
-        public override void Render(Vector2 position, float rotation) {
-            Surface.Draw(Texture, position, null, FinalColor, rotation, Origin, Scale, Flipped, Scroll, Shader);
+        public override void Render(Vector2 position, Color color, float rotation) {
+            Surface.Draw(Texture, position, null, color * Opacity, rotation, Origin, Scale, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {
