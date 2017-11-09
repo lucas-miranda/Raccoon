@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 using Raccoon.Graphics;
+using Raccoon.Graphics.Primitives;
 
 namespace Raccoon {
     public class Console : TraceListener {
@@ -19,7 +20,7 @@ namespace Raccoon {
         private Dictionary<string, Action<Message>> _categoriesFormatter = new Dictionary<string, Action<Message>>();
 
         // graphics
-        private Graphics.Primitives.Rectangle _background;
+        private RectangleShape _background;
 
         #endregion Private Members
 
@@ -52,7 +53,7 @@ namespace Raccoon {
                 Font = Game.Instance.Core.StdFont;
             }
 
-            _background = new Graphics.Primitives.Rectangle(Game.Instance.WindowWidth, Game.Instance.WindowHeight, Color.Black) {
+            _background = new RectangleShape(Game.Instance.WindowWidth, Game.Instance.WindowHeight, Color.Black) {
                 Surface = Game.Instance.Core.DebugSurface,
                 Opacity = 0.25f
             };
@@ -149,12 +150,15 @@ namespace Raccoon {
             _categoriesFormatter.Add(name, styleFormatter);
         }
 
+        public void Clear() {
+            _messages.Clear();
+        }
+
         #endregion Public Methods
 
         #region Internal Methods
 
         internal void Update(int delta) {
-
         }
 
         internal void Render() {
@@ -165,10 +169,15 @@ namespace Raccoon {
             Surface.DrawString(Font, _messages.Count.ToString(), topLeftPos + new Vector2(Game.Instance.WindowWidth - 25, 15), Color.White);
 
             // messages
-            Vector2 messagePos = new Vector2(15, Game.Instance.WindowHeight - 20 - Font.LineSpacing);
+            Vector2 messagePos = new Vector2(15, Game.Instance.WindowHeight - Font.LineSpacing);
             foreach (Message message in _messages) {
-                Surface.DrawString(Font, (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), topLeftPos + messagePos, message.Color);
-                messagePos += new Vector2(0, -Font.LineSpacing - SpaceBetweenLines);
+                messagePos += new Vector2(0, message.Lines * (-Font.LineSpacing - SpaceBetweenLines));
+                
+                Surface.DrawString(Font, 
+                                   (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), 
+                                   topLeftPos + messagePos, 
+                                   message.Color
+                                  );
 
                 if (messagePos.Y <= -Font.LineSpacing) {
                     break;
@@ -184,12 +193,15 @@ namespace Raccoon {
             public Message(string text) {
                 Text = text;
                 Timestamp = DateTime.Now;
+                Lines = 1 + Text.Count("\n");
             }
 
             public string Text { get; private set; }
             public Color Color { get; set; } = Color.White;
             public int Count { get; private set; } = 1;
             public DateTime Timestamp { get; private set; }
+            public int Lines { get; private set; } = 1;
+            public bool IsMultiline { get { return Lines > 1; } }
 
             public void Repeat() {
                 Count++;

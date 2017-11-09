@@ -17,7 +17,7 @@ namespace Raccoon {
         #region Private Static Members
 
         private const int MessagesSpacing = 5;
-        private static readonly Vector2 _screenMessageStartPosition = new Vector2(15, Game.Instance.WindowHeight - 30);
+        private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, Game.Instance.WindowHeight - 30);
         private static readonly Lazy<Debug> _lazy = new Lazy<Debug>(() => new Debug());
 
         #endregion Private Static Members
@@ -26,7 +26,7 @@ namespace Raccoon {
 
         private bool _useLogToFile;
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
-        private Vector2 _screenMessagePosition = _screenMessageStartPosition;
+        private Vector2 _screenMessagePosition = ScreenMessageStartPosition;
         private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
 
         #endregion Private Members
@@ -130,7 +130,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Error(string message, string detailMessage) {
-            WriteLine($"{message}\n{new string(' ', IndentSize * (IndentLevel + 1))}{detailMessage}", "Error");
+            WriteLine($"{message}\n{detailMessage}", "Error");
         }
 
         [Conditional("DEBUG")]
@@ -174,17 +174,22 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void PostString(string text, int duration, Color? color = null) {
+        public static void PostString(string text, int duration, Color? color = null, bool showCount = true) {
             // search for and repeat a message with same text
             Message richMsg = Instance._messagesList.Find(msg => msg.Text == text);
             if (richMsg != null) {
+                Instance._messagesList.Remove(richMsg);
+                Instance._messagesList.Insert(0, richMsg);
+
                 richMsg.Color = color ?? Color.White;
+                richMsg.ShowCount = showCount;
                 richMsg.Repeat();
                 return;
             }
 
             richMsg = new Message(text) {
                 Color = color ?? Color.White,
+                ShowCount = showCount
             };
 
             // fading effect
@@ -192,7 +197,7 @@ namespace Raccoon {
                 .From(new { Opacity = 1f })
                 .To(new { Opacity = .03f }, Ease.SineOut));
 
-            Instance._messagesList.Add(richMsg);
+            Instance._messagesList.Insert(0, richMsg);
         }
 
         #endregion String
@@ -231,6 +236,11 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public static void DrawLine(float x1, float y1, float x2, float y2) {
             DrawLine(x1, y1, x2, y2, Color.Red);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(Line line, Color color) {
+            DrawLine(line.PointA, line.PointB, color);
         }
 
         [Conditional("DEBUG")]
@@ -443,8 +453,8 @@ namespace Raccoon {
             foreach (Message message in _messagesList) {
                 message.Render();
             }
-
-            _screenMessagePosition = _screenMessageStartPosition;
+            
+            _screenMessagePosition = ScreenMessageStartPosition;
 
             if (Console.Visible) {
                 Console.Render();
@@ -483,6 +493,7 @@ namespace Raccoon {
             public bool AutoPosition { get; private set; }
             public bool PositionRelativeToCamera { get; private set; }
             public bool HasEnded { get { return Timer >= Duration && (Tween == null || Tween.HasEnded); } }
+            public bool ShowCount { get; set; } = true;
             public uint Timer { get; private set; }
             public int Count { get; private set; } = 1;
 
@@ -502,16 +513,16 @@ namespace Raccoon {
                 }
 
                 if (AutoPosition) {
-                    DrawString(Camera.Current, Text + (Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                    DrawString(Camera.Current, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
                     return;
                 }
 
                 if (PositionRelativeToCamera) {
-                    DrawString(Camera.Current, Position, Text + (Count > 1 ? Count.ToString() : ""), Color * Opacity);
+                    DrawString(Camera.Current, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
                     return;
                 }
 
-                DrawString(Position, Text + (Count > 1 ? Count.ToString() : ""), Color * Opacity);
+                DrawString(Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
             }
 
             public void RegisterTween(Tween tween) {
