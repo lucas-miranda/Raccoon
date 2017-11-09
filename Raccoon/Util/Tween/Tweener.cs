@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 
 namespace Raccoon.Util.Tween {
@@ -86,7 +85,7 @@ namespace Raccoon.Util.Tween {
 
             tween.Play(forceReset);
         }
-        
+
         #endregion Public Methods
     }
 }

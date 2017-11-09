@@ -49,6 +49,8 @@ namespace Raccoon {
 
                 UpdateCurrentScene();
             };
+
+            Debug.Instance.GetType(); // HACK: Force early Debug lazy initialization
         }
 
         ~Game() {
@@ -128,7 +130,7 @@ namespace Raccoon {
         #region Public Methods
 
         public void Start() {
-            Debug.WriteLine("| Raccoon Started |");
+            Debug.Info("| Raccoon Started |");
             IsRunning = true;
             if (Scene == null) {
                 Core.OnBegin += OnBegin;

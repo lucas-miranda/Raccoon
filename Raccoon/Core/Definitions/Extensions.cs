@@ -21,5 +21,21 @@ namespace Raccoon {
         }
 
         #endregion Enums
+
+        #region String
+
+        public static int Count(this string str, string value) {
+            int count = 0,
+                i = str.IndexOf(value);
+            
+            while (i != -1) {
+                count++;
+                i = str.IndexOf(value, i + value.Length);
+            }
+
+            return count;
+        }
+
+        #endregion String
     }
 }

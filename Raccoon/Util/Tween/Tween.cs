@@ -30,22 +30,23 @@ namespace Raccoon.Util.Tween {
         static Tween() {
             Type[] types = new Type[] { typeof(object), typeof(string), typeof(Func<float, float>) };
 
-            LerpersAvailable = new Dictionary<Type, ConstructorInfo>();
-            LerpersAvailable.Add(typeof(int), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(byte), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(uint), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(long), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(ulong), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(sbyte), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(short), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(float), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(ushort), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(double), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(decimal), typeof(NumberLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(Vector2), typeof(Vector2Lerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(Size), typeof(SizeLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(Rectangle), typeof(RectangleLerper).GetConstructor(types));
-            LerpersAvailable.Add(typeof(Color), typeof(ColorLerper).GetConstructor(types));
+            LerpersAvailable = new Dictionary<Type, ConstructorInfo> {
+                { typeof(int), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(byte), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(uint), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(long), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(ulong), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(sbyte), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(short), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(float), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(ushort), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(double), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(decimal), typeof(NumberLerper).GetConstructor(types) },
+                { typeof(Vector2), typeof(Vector2Lerper).GetConstructor(types) },
+                { typeof(Size), typeof(SizeLerper).GetConstructor(types) },
+                { typeof(Rectangle), typeof(RectangleLerper).GetConstructor(types) },
+                { typeof(Color), typeof(ColorLerper).GetConstructor(types) }
+            };
         }
 
         #endregion Static
@@ -150,8 +151,7 @@ namespace Raccoon.Util.Tween {
                 PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "start");
 
-                Lerper lerper;
-                if (!_lerpers.TryGetValue(subjectProperty, out lerper)) {
+                if (!_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
                     lerper = CreateLerper(subjectProperty);
                 }
 
@@ -169,8 +169,7 @@ namespace Raccoon.Util.Tween {
                 PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
-                Lerper lerper;
-                if (!_lerpers.TryGetValue(subjectProperty, out lerper)) {
+                if (!_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
                     lerper = CreateLerper(subjectProperty);
                 }
 
@@ -231,13 +230,11 @@ namespace Raccoon.Util.Tween {
             PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
             if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
-            Lerper lerper;
-            if (_lerpers.TryGetValue(subjectProperty, out lerper)) {
+            if (_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
                 return lerper;
             }
 
-            ConstructorInfo constructorInfo;
-            if (LerpersAvailable.TryGetValue(subjectProperty.PropertyType, out constructorInfo)) {
+            if (LerpersAvailable.TryGetValue(subjectProperty.PropertyType, out ConstructorInfo constructorInfo)) {
                 lerper = (Lerper) constructorInfo.Invoke(new object[] { Subject, property.Name, new Func<float, float>(Ease.Linear) });
             }
 
