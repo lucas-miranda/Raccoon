@@ -91,14 +91,15 @@ namespace Raccoon {
 
             // test for collinear intersection range
             // reference: https://stackoverflow.com/a/565282
-            Vector2 r = ToVector2(), s = line.ToVector2();
+            // BUG: not working well
+            /*Vector2 r = ToVector2(), s = line.ToVector2();
             if (Vector2.Cross(r, s) == 0 && Vector2.Cross(line.PointA - PointA, r) == 0) {
                 float t0 = (line.PointA - PointA).Dot(r / (r.Dot(r)));
                 float t1 = t0 + s.Dot(r / r.Dot(r));
                 Range range = s.Dot(r) < 0 ? new Range(t1, t0) : new Range(t0, t1);
                 range.Overlaps(new Range(0, 1), out float t);
                 return PointA + t * r;
-            }
+            }*/
 
             return null;
 

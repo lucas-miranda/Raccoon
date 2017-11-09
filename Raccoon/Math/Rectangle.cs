@@ -56,8 +56,8 @@
 
         public static Rectangle Union(Rectangle a, Rectangle b) {
             return new Rectangle(
-                new Vector2(a.Left < b.Left ? a.Left : b.Left, a.Top < b.Top ? a.Top : b.Top),
-                new Vector2(a.Right > b.Right ? a.Right : b.Right, a.Bottom > b.Bottom ? a.Bottom : b.Bottom)
+                new Vector2(System.Math.Min(a.Left, b.Left), System.Math.Min(a.Top, b.Top)),
+                new Vector2(System.Math.Max(a.Right, b.Right), System.Math.Max(a.Bottom, b.Bottom))
             );
         }
 
@@ -191,6 +191,14 @@
 
         public static Rectangle operator /(Rectangle l, Size r) {
             return new Rectangle(l.X, l.Y, l.Width / r.Width, l.Height / r.Height);
+        }
+
+        public static Rectangle operator /(Rectangle l, float v) {
+            return new Rectangle(l.X, l.Y, l.Width / v, l.Height / v);
+        }
+
+        public static Rectangle operator /(float v, Rectangle r) {
+            return r / v;
         }
 
         #endregion Operators
