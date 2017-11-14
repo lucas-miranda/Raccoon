@@ -1,4 +1,4 @@
-﻿namespace Raccoon {
+﻿namespace Raccoon.Input {
     public class Button {
         private bool _forceState;
 

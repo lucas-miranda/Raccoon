@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Microsoft.Xna.Framework.Input;
 
-namespace Raccoon {
+namespace Raccoon.Input {
     public enum MouseButton {
         Left,
         Middle,

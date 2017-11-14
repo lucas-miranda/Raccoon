@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -152,7 +153,7 @@ namespace Raccoon {
             DeltaTime = delta;
 
             // updates
-            Input.Instance.Update(delta);
+            Input.Input.Instance.Update(delta);
             Util.Tween.Tweener.Instance.Update(delta);
             OnBeforeUpdate();
             OnUpdate(delta);

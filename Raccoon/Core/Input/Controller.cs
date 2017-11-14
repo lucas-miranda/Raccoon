@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 
-namespace Raccoon {
+namespace Raccoon.Input {
     /*public enum PlayStationLabel {
         Triangle, Square, Circle, Cross,
         L1, R1, L2, R2, L3, R3,
