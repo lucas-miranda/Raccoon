@@ -2,13 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using Raccoon.Util.Collections;
+
 namespace Raccoon {
     public class Coroutine {
         #region Private Members
 
         private static readonly Lazy<Coroutine> _lazy = new Lazy<Coroutine>(() => new Coroutine());
 
-        private List<int> _runningRoutines = new List<int>();
+        private Locker<int> _runningRoutines = new Locker<int>();
         private Dictionary<int, IEnumerator> _routines = new Dictionary<int, IEnumerator>();
         private List<object> _tokens = new List<object>();
         private int _nextId;
@@ -37,6 +39,7 @@ namespace Raccoon {
         #region Public Methods
 
         public void Update(int delta) {
+            _runningRoutines.Upkeep();
             foreach (int routineId in _runningRoutines) {
                 if (MoveNext(_routines[routineId])) {
                     continue;
@@ -49,7 +52,7 @@ namespace Raccoon {
 
         public int Start(IEnumerator routine) {
             _routines.Add(_nextId, routine);
-            _runningRoutines.Insert(0, _nextId);
+            _runningRoutines.Add(_nextId);
             return _nextId++;
         }
 
