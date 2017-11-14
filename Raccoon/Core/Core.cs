@@ -158,7 +158,7 @@ namespace Raccoon {
             OnBeforeUpdate();
             OnUpdate(delta);
             OnLateUpdate();
-            Coroutine.Instance.Update(delta);
+            Coroutines.Instance.Update(delta);
 
 #if DEBUG
             Debug.Instance.Update(delta);

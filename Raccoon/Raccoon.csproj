@@ -66,7 +66,7 @@
     <Compile Include="Core\Components\Movement\Movement.cs" />
     <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
     <Compile Include="Core\Core.cs" />
-    <Compile Include="Core\Coroutine.cs" />
+    <Compile Include="Core\Coroutines.cs" />
     <Compile Include="Core\Debug\Debug.cs" />
     <Compile Include="Core\Debug\Console.cs" />
     <Compile Include="Core\Definitions\Direction.cs" />
@@ -81,7 +81,6 @@
     <Compile Include="Core\Input\Trigger.cs" />
     <Compile Include="Core\Input\XboxController.cs" />
     <Compile Include="Core\Physics.cs" />
-    <Compile Include="Core\Routines.cs" />
     <Compile Include="Graphics\Drawables\Animation.cs" />
     <Compile Include="Graphics\Atlas\Atlas.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />

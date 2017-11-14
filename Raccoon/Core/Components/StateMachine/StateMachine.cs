@@ -17,7 +17,7 @@ namespace Raccoon.Components {
 
         private Dictionary<T, State<T>> _states = new Dictionary<T, State<T>>();
         private Dictionary<string, System.IComparable> _triggerValues = new Dictionary<string, System.IComparable>();
-        private int _onUpdateCoroutineId = -1;
+        private Coroutines.Coroutine _onUpdateCoroutine;
 
         #endregion Private Members
 
@@ -60,16 +60,20 @@ namespace Raccoon.Components {
                 return;
             }
 
+            // default triggers
+            SetTrigger("Timer", GetTrigger<uint>("Timer") + (uint) delta);
+
             if (NextState != null) {
                 UpdateState();
-            } else {
-                foreach (Transition<T> transition in CurrentState.Transitions) {
-                    foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
-                        if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
-                            NextState = _states[transition.TargetStateName];
-                            UpdateState();
-                            return;
-                        }
+                return;
+            }
+
+            foreach (Transition<T> transition in CurrentState.Transitions) {
+                foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
+                    if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
+                        NextState = _states[transition.TargetStateName];
+                        UpdateState();
+                        return;
                     }
                 }
             }
@@ -88,7 +92,7 @@ namespace Raccoon.Components {
 
             CurrentState = StartState = _states[name];
             CurrentState.OnEnter();
-            _onUpdateCoroutineId = Coroutine.Instance.Start(CurrentState.OnUpdate());
+            _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
 
         public void ChangeState(T name) {
@@ -188,7 +192,7 @@ namespace Raccoon.Components {
 
         private void UpdateState() {
             CurrentState.OnLeave();
-            Coroutine.Instance.Stop(_onUpdateCoroutineId);
+            _onUpdateCoroutine.Stop();
 
             if (!KeepTriggerValuesBetweenStates) {
                 ClearTriggers();
@@ -197,7 +201,7 @@ namespace Raccoon.Components {
             CurrentState = NextState;
             NextState = null;
             CurrentState.OnEnter();
-            _onUpdateCoroutineId = Coroutine.Instance.Start(CurrentState.OnUpdate());
+            _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
 
         #endregion Private Methods
