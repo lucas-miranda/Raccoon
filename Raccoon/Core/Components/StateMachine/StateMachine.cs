@@ -1,24 +1,48 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
+using Raccoon.Components.StateMachine;
+
 namespace Raccoon.Components {
     public class StateMachine<T> : Component {
+        #region Public Members
+
         public const string OnEnterStateName = "OnEnterState",
                             OnUpdateStateName = "OnUpdateState",
                             OnLeaveStateName = "OnLeaveState";
 
-        //
+        #endregion Public Members
 
-        private Dictionary<T, State> _states = new Dictionary<T, State>();
+        #region Private Members
+
+        private Dictionary<T, State<T>> _states = new Dictionary<T, State<T>>();
+        private Dictionary<string, System.IComparable> _triggerValues = new Dictionary<string, System.IComparable>();
         private int _onUpdateCoroutineId = -1;
+
+        #endregion Private Members
+
+        #region Constructors
 
         public StateMachine() {
         }
 
-        public State StartState { get; private set; }
-        public State CurrentState { get; private set; }
+        #endregion Constructors
 
-        protected State NextState { get; private set; } = null;
+        #region Public Properties
+
+        public State<T> StartState { get; private set; }
+        public State<T> CurrentState { get; private set; }
+        public bool KeepTriggerValuesBetweenStates { get; set; } = false;
+
+        #endregion Public Properties
+
+        #region Protected Properties
+
+        protected State<T> NextState { get; private set; } = null;
+
+        #endregion Protected Properties
+
+        #region Public Methods
 
         public override void OnAdded(Entity entity) {
             base.OnAdded(entity);
@@ -36,25 +60,18 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (NextState == null) {
-                foreach (Transition transition in CurrentState.Transitions) {
-                    transition.Update(delta);
-                    if (transition.IsReady) {
-                        NextState = _states[transition.TargetStateName];
-                        break;
+            if (NextState != null) {
+                UpdateState();
+            } else {
+                foreach (Transition<T> transition in CurrentState.Transitions) {
+                    foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
+                        if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
+                            NextState = _states[transition.TargetStateName];
+                            UpdateState();
+                            return;
+                        }
                     }
                 }
-            }
-
-            if (NextState != null) {
-                CurrentState.OnLeave();
-                Coroutine.Instance.Stop(_onUpdateCoroutineId);
-
-                CurrentState = NextState;
-                NextState = null;
-                CurrentState.ResetTransitions();
-                CurrentState.OnEnter();
-                _onUpdateCoroutineId = Coroutine.Instance.Start(CurrentState.OnUpdate());
             }
         }
 
@@ -107,12 +124,12 @@ namespace Raccoon.Components {
                 throw new System.InvalidOperationException($"'{Entity.GetType().Name}' doesn't contains a definition of onLeave method '{onLeaveStateMethodName}'.");
             }
 
-            State state = new State(
-                            name,
-                            (System.Action) onEnterStateMethodInfo.CreateDelegate(typeof(System.Action), Entity),
-                            (System.Func<IEnumerator>) onUpdateStateMethodInfo.CreateDelegate(typeof(System.Func<IEnumerator>), Entity),
-                            (System.Action) onLeaveStateMethodInfo.CreateDelegate(typeof(System.Action), Entity)
-                          );
+            State<T> state = new State<T>(
+                                name,
+                                (System.Action) onEnterStateMethodInfo.CreateDelegate(typeof(System.Action), Entity),
+                                (System.Func<IEnumerator>) onUpdateStateMethodInfo.CreateDelegate(typeof(System.Func<IEnumerator>), Entity),
+                                (System.Action) onLeaveStateMethodInfo.CreateDelegate(typeof(System.Action), Entity)
+                              );
 
             _states.Add(name, state);
         }
@@ -123,16 +140,16 @@ namespace Raccoon.Components {
             }
         }
 
-        public void AddTransition(T fromStateName, T toStateName, uint mili, System.Func<bool> prerequisite = null) {
+        public Transition<T> AddTransition(T fromStateName, T toStateName) {
             if (fromStateName.Equals(toStateName)) {
                 throw new System.InvalidOperationException($"Can't add a transition from a state to itself.");
             }
 
-            if (!_states.TryGetValue(fromStateName, out State fromState)) {
+            if (!_states.TryGetValue(fromStateName, out State<T> fromState)) {
                 throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{fromStateName}");
             }
 
-            if (!_states.TryGetValue(toStateName, out State toState)) {
+            if (!_states.TryGetValue(toStateName, out State<T> toState)) {
                 throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{toStateName}");
             }
 
@@ -140,67 +157,49 @@ namespace Raccoon.Components {
                 throw new System.InvalidOperationException($"StateMachine already have a transition from '{fromStateName}' to '{toStateName}'");
             }
 
-            fromState.Transitions.Add(new Transition(toStateName, mili, prerequisite));
+            Transition<T> transition = new Transition<T>(toStateName);
+            fromState.Transitions.Add(transition);
+            return transition;
         }
 
-        public void AddTransition(T fromStateName, T toStateName, int mili, System.Func<bool> prerequisite = null) {
-            AddTransition(fromStateName, toStateName, (uint) mili, prerequisite);
+        public void SetTrigger<K>(string name, K value) where K : System.IComparable {
+            _triggerValues[name] = value;
         }
 
-        public void AddTransition(T fromStateName, T toStateName, float seconds, System.Func<bool> prerequisite = null) {
-            AddTransition(fromStateName, toStateName, (uint) System.Math.Round(seconds * Util.Time.SecToMili), prerequisite);
+        public K GetTrigger<K>(string name) where K : System.IComparable {
+            if (_triggerValues.TryGetValue(name, out System.IComparable value)) {
+                return (K) value;
+            }
+
+            return default(K);
         }
 
-        #region Class State
-
-        public class State {
-            public State(T name, System.Action onEnter, System.Func<IEnumerator> onUpdate, System.Action onLeave) {
-                Name = name;
-                OnEnter = onEnter;
-                OnUpdate = onUpdate;
-                OnLeave = onLeave;
-            }
-
-            public T Name { get; private set; }
-            public System.Action OnEnter { get; private set; }
-            public System.Func<IEnumerator> OnUpdate { get; private set; }
-            public System.Action OnLeave { get; private set; }
-
-            public List<Transition> Transitions { get; } = new List<Transition>();
-
-            public void ResetTransitions() {
-                foreach (Transition transition in Transitions) {
-                    transition.Reset();
-                }
-            }
+        public void RemoveTrigger(string name) {
+            _triggerValues.Remove(name);
         }
 
-        #endregion Class State
-
-        #region Class Transition
-        
-        public class Transition {
-            public Transition(T targetStateName, uint interval, System.Func<bool> prerequisite) {
-                Prerequisite = prerequisite;
-                TargetStateName = targetStateName;
-                Interval = interval;
-            }
-
-            public T TargetStateName { get; private set; }
-            public uint Interval { get; set; }
-            public uint Timer { get; private set; }
-            public System.Func<bool> Prerequisite { get; private set; }
-            public bool IsReady { get { return Timer >= Interval && (Prerequisite == null || Prerequisite.Invoke()); } }
-
-            public void Update(int delta) {
-                Timer += (uint) delta;
-            }
-
-            public void Reset() {
-                Timer = 0;
-            }
+        public void ClearTriggers() {
+            _triggerValues.Clear();
         }
 
-        #endregion Class Transition
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private void UpdateState() {
+            CurrentState.OnLeave();
+            Coroutine.Instance.Stop(_onUpdateCoroutineId);
+
+            if (!KeepTriggerValuesBetweenStates) {
+                ClearTriggers();
+            }
+
+            CurrentState = NextState;
+            NextState = null;
+            CurrentState.OnEnter();
+            _onUpdateCoroutineId = Coroutine.Instance.Start(CurrentState.OnUpdate());
+        }
+
+        #endregion Private Methods
     }
 }

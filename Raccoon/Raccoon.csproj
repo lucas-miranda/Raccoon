@@ -43,6 +43,10 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Core\Components\StateMachine\State.cs" />
+    <Compile Include="Core\Components\StateMachine\Transition.cs" />
+    <Compile Include="Core\Components\StateMachine\Trigger.cs" />
+    <Compile Include="Core\Definitions\Comparison.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
@@ -60,7 +64,7 @@
     <Compile Include="Core\Components\Movement\PlatformerMovement.cs" />
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />
     <Compile Include="Core\Components\Movement\Movement.cs" />
-    <Compile Include="Core\Components\StateMachine.cs" />
+    <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
     <Compile Include="Core\Core.cs" />
     <Compile Include="Core\Coroutine.cs" />
     <Compile Include="Core\Debug\Debug.cs" />
