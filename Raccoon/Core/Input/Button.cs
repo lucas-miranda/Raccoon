@@ -1,11 +1,16 @@
 ﻿namespace Raccoon.Input {
     public class Button {
-        private bool _forceState;
+        private bool _forceState, _usingMouseButton;
 
         public Button() { }
 
         public Button(Key key) {
             Key = key;
+        }
+
+        public Button(MouseButton mouseButton) {
+            MouseButton = mouseButton;
+            _usingMouseButton = true;
         }
 
         public Button(int joystickId, int joystickButtonId) {
@@ -14,6 +19,7 @@
         }
 
         public Key Key { get; set; } = Key.None;
+        public MouseButton MouseButton { get; set; }
         public int JoystickId { get; set; } = -1;
         public int JoystickButtonId { get; set; } = -1;
         public bool IsDown { get; protected set; }
@@ -21,7 +27,7 @@
         public bool IsReleased { get; protected set; } = true;
 
         public virtual void Update() {
-            if (_forceState || (Key != Key.None && Input.IsKeyDown(Key)) || (JoystickId > -1 && Input.IsJoyButtonDown(JoystickId, JoystickButtonId))) {
+            if (_forceState || (Key != Key.None && Input.IsKeyDown(Key)) || (_usingMouseButton && Input.IsMouseButtonDown(MouseButton)) || (JoystickId > -1 && Input.IsJoyButtonDown(JoystickId, JoystickButtonId))) {
                 if (IsReleased) {
                     IsPressed = IsDown = true;
                     IsReleased = false;
@@ -41,7 +47,7 @@
         }
 
         public override string ToString() {
-            return $"[Button |" + (Key != Key.None ? $" Key: {Key}" : " ") + (JoystickId != -1 && JoystickButtonId != -1 ? $" JoystickId: {JoystickId} JoystickButtonId: {JoystickButtonId}" : "") + $" |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
+            return $"[Button |" + (Key != Key.None ? $" Key: {Key}" : " ") + (_usingMouseButton ? $" MouseButton: {MouseButton}" : " ") + (JoystickId != -1 && JoystickButtonId != -1 ? $" JoystickId: {JoystickId} JoystickButtonId: {JoystickButtonId}" : "") + $" |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
         }
     }
 }
