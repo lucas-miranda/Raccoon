@@ -155,9 +155,7 @@ namespace Raccoon.Util.Tween {
                     lerper = CreateLerper(subjectProperty);
                 }
 
-                //throw new ArgumentException("Lerper to property '" + property.Name + "' not found. Maybe you forgot to add it?", "start");
-
-                lerper.From = property.GetValue(start);
+                lerper.From = Convert.ChangeType(property.GetValue(start), subjectProperty.PropertyType);
             }
 
             return this;
@@ -173,7 +171,7 @@ namespace Raccoon.Util.Tween {
                     lerper = CreateLerper(subjectProperty);
                 }
 
-                lerper.To = property.GetValue(target);
+                lerper.To = Convert.ChangeType(property.GetValue(target), subjectProperty.PropertyType);
 
                 if (easing != null) {
                     lerper.Easing = easing;

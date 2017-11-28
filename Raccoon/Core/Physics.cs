@@ -859,8 +859,8 @@ namespace Raccoon {
 
             if (lengthsCross == 0) {
                 if (fromDiffCrossLengthA == 0) { // collinear
-                    float t0 = (lineBFrom - lineAFrom).Dot(lineALength / lineALength.Dot(lineALength));
-                    float t1 = t0 + lineBLength.Dot(lineALength / lineALength.Dot(lineALength));
+                    float t0 = Vector2.Dot(lineBFrom - lineAFrom, lineALength / Vector2.Dot(lineALength, lineALength));
+                    float t1 = t0 + Vector2.Dot(lineBLength, lineALength / Vector2.Dot(lineALength, lineALength));
                     return Vector2.Dot(lineBLength, lineALength) < 0 ? !(t1 > 1 || t0 < 0) : !(t0 > 1 || t1 < 0);
                 }
 

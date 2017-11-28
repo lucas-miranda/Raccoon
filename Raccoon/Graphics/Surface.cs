@@ -120,6 +120,7 @@ namespace Raccoon.Graphics {
 
         internal void Prepare(Vector2 position, Vector2? scrollFactor, Shader shader = null) {
             Vector2 scroll = scrollFactor ?? Vector2.One;
+            position = new Vector2(System.Math.Round(position.X), System.Math.Round(position.Y)); // HACK: Do this using a pixel-perfect shader
 
             Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X * scroll.X, position.Y * scroll.Y, 0f) * World;
             Game.Instance.Core.BasicEffect.View = Matrix.CreateScale(1f / scroll.X, 1f / scroll.Y, 1f) * View * Matrix.CreateScale(scroll.X, scroll.Y, 1f);

@@ -48,11 +48,11 @@ namespace Raccoon {
         #region Public Static Methods
         
         public static float Dot(Vector2 a, Vector2 b) {
-            return a.Dot(b);
+            return a.X * b.X + a.Y * b.Y;
         }
 
         public static float Cross(Vector2 a, Vector2 b) {
-            return a.Cross(b);
+            return a.X * b.Y - a.Y * b.X;
         }
 
         public static float Cross(Vector2 a, Vector2 b, Vector2 c) {
@@ -63,6 +63,10 @@ namespace Raccoon {
             if ((int) v.X == 0 && (int) v.Y == 0) throw new System.ArgumentException("Both X and Y values can't be zero.", "v");
 
             return v * (1f / v.Length());
+        }
+
+        public static Vector2 Lerp(Vector2 start, Vector2 end, float t) {
+            return new Vector2(Math.Lerp(start.X, end.X, t), Math.Lerp(start.Y, end.Y, t));
         }
 
         #endregion Public Static Methods
@@ -85,25 +89,17 @@ namespace Raccoon {
             return new Vector2(-Y, X);
         }
 
-        public float Dot(Vector2 other) {
-            return X * other.X + Y * other.Y;
-        }
-
-        public float Cross(Vector2 other) {
-            return X * other.Y - Y * other.X;
-        }
-
         public Range Projection(ICollection<Vector2> points) {
             if (points.Count == 0) throw new System.ArgumentException("Projection needs at least one value.", "points");
 
             IEnumerator<Vector2> enumerator = points.GetEnumerator();
             enumerator.MoveNext();
 
-            float min = Dot(enumerator.Current),
+            float min = Dot(this, enumerator.Current),
                   max = min;
 
             while (enumerator.MoveNext()) {
-                float p = Dot(enumerator.Current);
+                float p = Dot(this, enumerator.Current);
                 if (p < min) {
                     min = p;
                 } else if (p > max) {

@@ -71,6 +71,10 @@
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }
 
+        public static float LerpPrecise(float start, float end, float t) {
+            return Microsoft.Xna.Framework.MathHelper.LerpPrecise(start, end, t);
+        }
+
         public static float Min(float n1, float n2) {
             return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
         }
