@@ -50,28 +50,38 @@
         }
 
         public Vector2[] IntersectionPoints(Line line) {
-            Vector2 p1 = line.PointA - Center, p2 = line.PointB - Center;
-            Vector2 dist = p2 - p1;
+            Vector2 m = line.PointA - Center;
+            Vector2 d = (line.PointB - Center) - m;
+            float a = Vector2.Dot(d, d),
+                  b = 2 * Vector2.Dot(m, d),
+                  c = Vector2.Dot(m, m) - Radius * Radius;
 
-            float det = p1.X * p2.Y - p2.X * p1.Y;
-            float distSquared = dist.LengthSquared();
-            float discrimant = Radius * Radius * distSquared - det * det;
-
-            if (discrimant < 0) {
+            float determinant = b * b - 4 * a *  c;
+            if (determinant < 0.0f) {
                 return new Vector2[0];
             }
 
-            if (discrimant == 0) {
-                return new Vector2[] { new Vector2(det * dist.Y / distSquared + Center.X, -det * dist.X / distSquared + Center.Y) };
+            double sqrtDeterminant = System.Math.Sqrt(determinant);
+
+            // root A
+            double t1 = (-b - sqrtDeterminant) / (2 * a);
+
+            // root B
+            double t2 = (-b + sqrtDeterminant) / (2 * a);
+
+            Vector2 p1 = Vector2.Lerp(line.PointA, line.PointB, (float) t1),  // intersection point 1
+                    p2 = Vector2.Lerp(line.PointA, line.PointB, (float) t2); // intersection point 2
+            bool t1Insersect = 0.0 <= t1 && t1 <= 1.0, 
+                 t2Intersect = 0.0 <= t2 && t2 <= 1.0;
+            if (t1Insersect && !t2Intersect) {
+                return new Vector2[] { p1 };
+            } else if (!t1Insersect && t2Intersect) {
+                return new Vector2[] { p2 };
+            } else if (!t1Insersect && !t2Intersect) {
+                return new Vector2[0];
             }
 
-            double discrimantSqrt = System.Math.Sqrt(discrimant);
-            float signal = dist.Y < 0 ? -1 : 1;
-
-            return new Vector2[] {
-                new Vector2((float) ((det * dist.Y + signal * dist.X * discrimantSqrt) / distSquared + Center.X), (float) ((-det * dist.X + System.Math.Abs(dist.Y) * discrimantSqrt) / distSquared + Center.Y)),
-                new Vector2((float) ((det * dist.Y - signal * dist.X * discrimantSqrt) / distSquared + Center.X), (float) ((-det * dist.X - System.Math.Abs(dist.Y) * discrimantSqrt) / distSquared + Center.Y))
-            };
+            return new Vector2[] { p1, p2 };
         }
 
         public override bool Equals(object obj) {
