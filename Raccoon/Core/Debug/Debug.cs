@@ -312,6 +312,11 @@ namespace Raccoon {
         }
         
         [Conditional("DEBUG")]
+        public static void DrawCircle(Circle circle, int segments, Color color, bool dashed = false, float rotation = 0) {
+            DrawCircle(circle.Center, circle.Radius, segments, color, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
         public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments, Color color) {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
 

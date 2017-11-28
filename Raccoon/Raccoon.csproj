@@ -48,6 +48,7 @@
     <Compile Include="Core\Components\StateMachine\Trigger.cs" />
     <Compile Include="Core\Definitions\Comparison.cs" />
     <Compile Include="Math\Triangle.cs" />
+    <Compile Include="Test\Math\CircleTest.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />
@@ -149,6 +150,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>Lib\Newtonsoft.Json\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="nunit.framework, Version=3.9.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\Grimoire\code\packages\NUnit.3.9.0\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -163,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="packages.config" />
     <None Include="x86\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -200,6 +205,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
