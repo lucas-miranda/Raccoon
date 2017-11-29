@@ -86,10 +86,10 @@ namespace Raccoon.Util.Tween {
             }
 
             Timer += (uint) delta;
-            Time = Math.Clamp(Timer / (float) Duration, 0, 1);
+            Time = Math.Clamp(Timer / (float) Duration, 0f, 1f);
 
             foreach (Lerper lerp in _lerpers.Values) {
-                lerp.Interpolate(IsReverse ? 1 - Time : Time);
+                lerp.Interpolate(IsReverse ? 1f - Time : Time);
             }
 
             _onUpdate?.Invoke();
@@ -104,7 +104,7 @@ namespace Raccoon.Util.Tween {
                     IsPlaying = false;
                     HasEnded = true;
                 } else {
-                    Timer = 0;
+                    Timer = Timer - (uint) Duration;
                 }
 
                 _onEnd?.Invoke();
@@ -119,8 +119,14 @@ namespace Raccoon.Util.Tween {
             Time = 0;
             IsReverse = _startReverse;
 
-            foreach (Lerper lerp in _lerpers.Values) {
-                lerp.Begin();
+            if (IsForward) {
+                foreach (Lerper lerp in _lerpers.Values) {
+                    lerp.Begin();
+                }
+            } else {
+                foreach (Lerper lerp in _lerpers.Values) {
+                    lerp.End();
+                }
             }
         }
 
@@ -198,12 +204,28 @@ namespace Raccoon.Util.Tween {
         }
 
         public Tween Reverse() {
+            if (IsReverse) {
+                return this;
+            }
+
+            if (IsPlaying) {
+                Timer = (uint) ((1f - Time) * Duration);
+            }
+
             IsReverse = true;
             _startReverse = true;
             return this;
         }
 
         public Tween Forward() {
+            if (IsForward) {
+                return this;
+            }
+
+            if (IsPlaying) {
+                Timer = (uint) ((1f - Time) * Duration);
+            }
+
             IsForward = true;
             _startReverse = false;
             return this;
