@@ -96,13 +96,13 @@ namespace Raccoon.Graphics.Primitives {
                 Texture unfilledRectTexture = new Texture(w, h);
 
                 // left & right columns
-                for (int x = 0; x < Width; x++) {
+                for (int x = 0; x < w; x++) {
                     data[x] = Color.White;
                     data[x + (h - 1) * w] = Color.White;
                 }
 
                 // top & bottom rows
-                for (int y = 1; y < Height - 1; y++) {
+                for (int y = 1; y < h - 1; y++) {
                     data[y * w] = Color.White;
                     data[w - 1 + y * w] = Color.White;
                 }

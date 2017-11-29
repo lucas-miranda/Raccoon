@@ -76,6 +76,7 @@ namespace Raccoon.Util.Tween {
 
         public void Remove(Tween tween) {
             _toRemove.Add(tween);
+            tween.Pause();
         }
 
         public void Play(Tween tween, bool forceReset = true) {

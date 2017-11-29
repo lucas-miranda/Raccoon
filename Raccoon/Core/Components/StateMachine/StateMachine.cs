@@ -63,11 +63,11 @@ namespace Raccoon.Components {
             // default triggers
             SetTrigger("Timer", GetTrigger<uint>("Timer") + (uint) delta);
 
-            if (NextState != null) {
+            if (NextState != CurrentState && NextState != null) {
                 UpdateState();
                 return;
             }
-
+            
             foreach (Transition<T> transition in CurrentState.Transitions) {
                 foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
                     if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
