@@ -15,7 +15,6 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Properties
 
-        public Vector2 Center { get { return Position + Radius - Origin; } set { Position = value - Radius + Origin; } }
         public int Radius { get; private set; }
         public Texture Texture { get; private set; }
 
@@ -24,7 +23,7 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
         
         public override void Render(Vector2 position, Color color, float rotation) {
-            Surface.Draw(Texture, position, null, color * Opacity, rotation, Origin, Scale, Flipped, Scroll, Shader);
+            Surface.Draw(Texture, position - Radius, null, color * Opacity, rotation, Origin, Scale, Flipped, Scroll, Shader);
         }
 
         public override void Dispose() {
