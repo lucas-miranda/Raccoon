@@ -122,6 +122,7 @@
     <Compile Include="Util\Math.cs" />
     <Compile Include="Util\Random.cs" />
     <Compile Include="Util\Range.cs" />
+    <Compile Include="Util\Routines.cs" />
     <Compile Include="Util\Tiled\Tileset\TiledAnimation.cs" />
     <Compile Include="Util\Tiled\TiledData.cs" />
     <Compile Include="Util\Tiled\TiledImage.cs" />
