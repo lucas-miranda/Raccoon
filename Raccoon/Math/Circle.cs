@@ -39,24 +39,49 @@
 
         #region Public Methods
 
+        /// <summary>
+        /// Checks Circle-Point intersection.
+        /// </summary>
+        /// <param name="v">Point to detect intersection.</param>
+        /// <returns>True if intersection has been found, otherwise false.</returns>
         public bool Contains(Vector2 v) {
             return (v - Center).LengthSquared() <= Radius * Radius;
         }
 
+        /// <summary>
+        /// Checks Circle-Circle intersection.
+        /// </summary>
+        /// <param name="c">Circle to detect intersection.</param>
+        /// <returns>True if intersection has been found, otherwise false.</returns>
         public bool Intersects(Circle c) {
             Vector2 centerDist = c.Center - Center;
             float radiusDiff = Radius - c.Radius;
             return centerDist.X * centerDist.X + centerDist.Y * centerDist.Y <= System.Math.Abs(radiusDiff * radiusDiff);
         }
 
+        /// <summary>
+        /// Checks Circle-Line intersection.
+        /// </summary>
+        /// <param name="line">Line to detect intersection.</param>
+        /// <returns>True if intersection has been found, otherwise false.</returns>
+        public bool Intersects(Line line) {
+            throw new System.NotImplementedException();
+        }
+
+        /// <summary>
+        /// Finds Circle-Line intersection points.
+        /// See <see cref="Circle.Intersects(Line)"/> if simply the intersection is needed.
+        /// </summary>
+        /// <param name="line">Line to detect intersection.</param>
+        /// <returns>Zero points if no intersection is detected; One point if just a point intersects; Two points if Line goes through Circle.</returns>
         public Vector2[] IntersectionPoints(Line line) {
             Vector2 m = line.PointA - Center;
             Vector2 d = (line.PointB - Center) - m;
             float a = Vector2.Dot(d, d),
-                  b = 2 * Vector2.Dot(m, d),
+                  b = 2f * Vector2.Dot(m, d),
                   c = Vector2.Dot(m, m) - Radius * Radius;
 
-            float determinant = b * b - 4 * a *  c;
+            float determinant = b * b - 4f * a *  c;
             if (determinant < 0.0f) {
                 return new Vector2[0];
             }
@@ -64,12 +89,12 @@
             double sqrtDeterminant = System.Math.Sqrt(determinant);
 
             // root A
-            double t1 = (-b - sqrtDeterminant) / (2 * a);
+            double t1 = (-b - sqrtDeterminant) / (2.0 * a);
 
             // root B
-            double t2 = (-b + sqrtDeterminant) / (2 * a);
+            double t2 = (-b + sqrtDeterminant) / (2.0 * a);
 
-            Vector2 p1 = Vector2.Lerp(line.PointA, line.PointB, (float) t1),  // intersection point 1
+            Vector2 p1 = Vector2.Lerp(line.PointA, line.PointB, (float) t1), // intersection point 1
                     p2 = Vector2.Lerp(line.PointA, line.PointB, (float) t2); // intersection point 2
             bool t1Insersect = 0.0 <= t1 && t1 <= 1.0, 
                  t2Intersect = 0.0 <= t2 && t2 <= 1.0;
