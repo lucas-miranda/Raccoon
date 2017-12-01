@@ -69,6 +69,10 @@ namespace Raccoon {
             return new Vector2(Math.Lerp(start.X, end.X, t), Math.Lerp(start.Y, end.Y, t));
         }
 
+        public static Vector2 CatmullRom(Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, float amount) {
+            return new Vector2(Math.CatmullRom(v1.X, v2.X, v3.X, v4.X, amount), Math.CatmullRom(v1.Y, v2.Y, v3.Y, v4.Y, amount));
+        }
+
         #endregion Public Static Methods
 
         #region Public Methods

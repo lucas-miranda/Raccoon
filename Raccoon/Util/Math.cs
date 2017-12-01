@@ -225,6 +225,10 @@
             return origin + new Vector2(point.X * cos - point.Y * sin, point.X * sin + point.Y * cos);
         }
 
+        public static float CatmullRom(float n1, float n2, float n3, float n4, float amount) {
+            return Microsoft.Xna.Framework.MathHelper.CatmullRom(n1, n2, n3, n4, amount);
+        }
+
         #endregion Trygonometric Stuff
     }
 }
