@@ -246,6 +246,10 @@ namespace Raccoon.Graphics {
             _tracks.Add(key, track);
         }
 
+        public bool ContainsTrack(KeyType key) {
+            return _tracks.ContainsKey(key);
+        }
+
         #endregion Public Methods
 
         #region Protected Methods

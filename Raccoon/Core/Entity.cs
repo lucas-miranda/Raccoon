@@ -94,8 +94,7 @@ namespace Raccoon {
         public virtual void SceneAdded(Scene scene) {
             Scene = scene;
             foreach (Component c in _components) {
-                if (c is Collider) {
-                    Collider collider = c as Collider;
+                if (c is Collider collider) {
                     Physics.Instance.AddCollider(collider, collider.Tags);
                 }
             }
@@ -105,6 +104,12 @@ namespace Raccoon {
 
         public virtual void SceneRemoved() {
             Scene = null;
+            foreach (Component c in _components) {
+                if (c is Collider collider) {
+                    Physics.Instance.RemoveCollider(collider, collider.Tags);
+                }
+            }
+
             OnSceneRemoved();
         }
 
