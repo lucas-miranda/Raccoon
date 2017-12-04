@@ -82,12 +82,9 @@ namespace Raccoon.Graphics {
         public KeyType CurrentKey { get; private set; }
         public Track CurrentTrack { get; private set; }
         public int ElapsedTime { get; private set; }
+        public float PlaybackSpeed { get; set; } = 1f;
 
-        public Track this[KeyType key] {
-            get {
-                return _tracks[key];
-            }
-        }
+        public Track this[KeyType key] { get { return _tracks[key]; } }
 
         #endregion Public Properties
 
@@ -98,7 +95,7 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            ElapsedTime += delta;
+            ElapsedTime += (int) Math.Round(delta * PlaybackSpeed);
             if (ElapsedTime >= CurrentTrack.CurrentFrameDuration) {
                 ElapsedTime -= CurrentTrack.CurrentFrameDuration;
                 CurrentTrack.NextFrame();
