@@ -44,10 +44,8 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             Graphics.Primitives.LineShape line = Graphic as Graphics.Primitives.LineShape;
-            Graphic.Origin = Origin * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom;
-            line.From = Position + From;
-            line.To = Position + To;
-            Graphic.Layer = Entity.Layer + 1;
+            line.From = line.Surface.Transform(Position + From, Entity.Surface);
+            line.To = line.Surface.Transform(Position + To, Entity.Surface);
             Graphic.Render();
         }
 
@@ -60,7 +58,7 @@ namespace Raccoon.Components {
             To = to;
 
 #if DEBUG
-            Graphic = new Graphics.Primitives.LineShape(From * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, To * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom, Color) {
+            Graphic = new Graphics.Primitives.LineShape(Vector2.Right, Color) {
                 Surface = Game.Instance.Core.DebugSurface
             };
 #endif
