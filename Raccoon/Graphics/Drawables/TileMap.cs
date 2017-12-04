@@ -69,10 +69,6 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
-            Game.Instance.Core.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
-            Game.Instance.Core.RenderTargetStack.Push(Game.Instance.Core.SecondaryCanvas.XNARenderTarget);
-
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
@@ -90,13 +86,6 @@ namespace Raccoon.Graphics {
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
             Game.Instance.Core.BasicEffect.Texture = null;
             Game.Instance.Core.BasicEffect.TextureEnabled = false;
-
-            // draw to main render target
-            Game.Instance.Core.RenderTargetStack.Pop();
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.RenderTargetStack.Peek());
-            Game.Instance.Core.MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
-            Game.Instance.Core.MainSpriteBatch.Draw(Game.Instance.Core.SecondaryCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Microsoft.Xna.Framework.Color.White);
-            Game.Instance.Core.MainSpriteBatch.End();
         }
 
         public override void DebugRender() {

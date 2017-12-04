@@ -64,7 +64,6 @@ namespace Raccoon {
         public SpriteBatch MainSpriteBatch { get; private set; }
         public Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
         public Graphics.Canvas MainCanvas { get; private set; }
-        public Graphics.Canvas SecondaryCanvas { get; private set; }
 
 #if DEBUG
         public Graphics.Canvas DebugCanvas { get; private set; }
@@ -103,7 +102,6 @@ namespace Raccoon {
         protected override void LoadContent() {
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
             MainCanvas = new Graphics.Canvas(Game.Instance.WindowWidth, Game.Instance.WindowHeight, false, Raccoon.Graphics.SurfaceFormat.Color, Raccoon.Graphics.DepthFormat.None, 0, Raccoon.Graphics.CanvasUsage.PreserveContents);
-            SecondaryCanvas = new Graphics.Canvas(Game.Instance.WindowWidth, Game.Instance.WindowHeight, false, Raccoon.Graphics.SurfaceFormat.Color, Raccoon.Graphics.DepthFormat.None, 0, Raccoon.Graphics.CanvasUsage.PreserveContents);
 
 #if DEBUG
             DebugCanvas = new Graphics.Canvas(Game.Instance.WindowWidth, Game.Instance.WindowHeight, false, Raccoon.Graphics.SurfaceFormat.Color, Raccoon.Graphics.DepthFormat.None, 0, Raccoon.Graphics.CanvasUsage.PreserveContents);
