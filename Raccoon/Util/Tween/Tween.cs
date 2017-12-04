@@ -20,7 +20,7 @@ namespace Raccoon.Util.Tween {
 
         #region Private Members
 
-        private Dictionary<PropertyInfo, Lerper> _lerpers;
+        private Dictionary<string, Lerper> _lerpers = new Dictionary<string, Lerper>();
         private bool _startReverse;
 
         #endregion Private Members
@@ -54,7 +54,6 @@ namespace Raccoon.Util.Tween {
         #region Constructors
 
         public Tween(object subject, int duration) {
-            _lerpers = new Dictionary<PropertyInfo, Lerper>();
             Subject = subject;
             Duration = duration;
         }
@@ -75,6 +74,8 @@ namespace Raccoon.Util.Tween {
         public bool IsPingPong { get; set; }
         public bool IsReverse { get; set; }
         public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
+
+        public Lerper this[string name] { get { return _lerpers[name]; } }
 
         #endregion Public Properties
 
@@ -151,13 +152,17 @@ namespace Raccoon.Util.Tween {
             IsPlaying = false;
         }
 
+        public void ClearLerpers() {
+            _lerpers.Clear();
+        }
+
         public Tween From(object start) {
             PropertyInfo[] properties = start.GetType().GetProperties();
             foreach (PropertyInfo property in properties) {
                 PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "start");
 
-                if (!_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
+                if (!_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {
                     lerper = CreateLerper(subjectProperty);
                 }
 
@@ -173,7 +178,7 @@ namespace Raccoon.Util.Tween {
                 PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
-                if (!_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
+                if (!_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {
                     lerper = CreateLerper(subjectProperty);
                 }
 
@@ -250,7 +255,7 @@ namespace Raccoon.Util.Tween {
             PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
             if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
-            if (_lerpers.TryGetValue(subjectProperty, out Lerper lerper)) {
+            if (_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {
                 return lerper;
             }
 
@@ -260,7 +265,7 @@ namespace Raccoon.Util.Tween {
 
             if (lerper == null) throw new NotImplementedException("Lerper with type '" + subjectProperty.PropertyType.Name + "' not found");
 
-            _lerpers.Add(subjectProperty, lerper);
+            _lerpers.Add(subjectProperty.Name, lerper);
             return lerper;
         }
 
