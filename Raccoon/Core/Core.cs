@@ -231,10 +231,10 @@ namespace Raccoon {
             if (Debug.ShowPerformanceDiagnostics) {
                 Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}");
 
-                // framerate monitor
+                // framerate monitor frame
                 Debug.DrawRectangle(Camera.Current, FramerateMonitorFrame, Raccoon.Graphics.Color.White);
-                Debug.DrawRectangle(Camera.Current.Position + FramerateMonitorFrame - FramerateMonitorFrame.Position, Raccoon.Graphics.Color.Magenta);
 
+                // plot framerate values
                 int previousFramerateValue = FramerateValues[0], currentFramerateValue;
                 Vector2 monitorBottomLeft = FramerateMonitorFrame.BottomLeft;
                 Vector2 previousPos = monitorBottomLeft + new Vector2(1, -previousFramerateValue - 1), currentPos;
