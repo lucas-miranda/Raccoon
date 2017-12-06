@@ -218,7 +218,7 @@ namespace Raccoon {
         }
 
         public static Vector2 operator -(Vector2 l, double v) {
-            return new Vector2((float) (l.X - v), (float) (l.Y - v));
+            return new Vector2(l.X - v, l.Y - v);
         }
 
         public static Vector2 operator -(double v, Vector2 r) {
@@ -238,7 +238,7 @@ namespace Raccoon {
         }
 
         public static Vector2 operator *(Vector2 l, double v) {
-            return new Vector2((float) (l.X * v), (float)  (l.Y * v));
+            return new Vector2(l.X * v, l.Y * v);
         }
 
         public static Vector2 operator *(double v, Vector2 r) {
@@ -262,15 +262,15 @@ namespace Raccoon {
         }
 
         public static Vector2 operator /(float v, Vector2 r) {
-            return r / v;
+            return new Vector2(v / r.X, v / r.Y);
         }
 
         public static Vector2 operator /(Vector2 l, double v) {
-            return new Vector2((float) (l.X / v), (float) (l.Y / v));
+            return new Vector2(l.X / v, l.Y / v);
         }
 
         public static Vector2 operator /(double v, Vector2 r) {
-            return r / v;
+            return new Vector2(v / r.X, v / r.Y);
         }
 
         #endregion Operators

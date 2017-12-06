@@ -107,8 +107,28 @@ namespace Raccoon {
             return new Triangle(l.A + r, l.B + r, l.C + r);
         }
 
+        public static Triangle operator +(Vector2 l, Triangle r) {
+            return r + l;
+        }
+
         public static Triangle operator -(Triangle l, Vector2 r) {
             return new Triangle(l.A - r, l.B - r, l.C - r);
+        }
+
+        public static Triangle operator *(Triangle l, float r) {
+            return new Triangle(l.A * r, l.B * r, l.C * r);
+        }
+
+        public static Triangle operator *(float l, Triangle r) {
+            return r * l;
+        }
+
+        public static Triangle operator /(Triangle l, float r) {
+            return new Triangle(l.A / r, l.B / r, l.C / r);
+        }
+
+        public static Triangle operator /(float l, Triangle r) {
+            return new Triangle(l / r.A, l / r.B, l / r.C);
         }
 
         #endregion Operators

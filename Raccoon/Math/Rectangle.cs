@@ -48,6 +48,7 @@
         public Vector2 TopLeft { get { return new Vector2(Left, Top); } set { Left = value.X; Top = value.Y; } }
         public Vector2 TopRight { get { return new Vector2(Right, Top); } set { Right = value.X; Top = value.Y; } }
         public Vector2 LeftRight { get { return new Vector2(Left, Bottom); } set { Left = value.X; Bottom = value.Y; } }
+        public Vector2 BottomLeft { get { return new Vector2(Left, Bottom); } set { Left = value.X; Bottom = value.Y; } }
         public Vector2 BottomRight { get { return new Vector2(Right, Bottom); } set { Right = value.X; Bottom = value.Y; } }
 
         #endregion Public Properties
@@ -173,6 +174,14 @@
             return new Rectangle(l.X, l.Y, l.Width + r.Width, l.Height + r.Height);
         }
 
+        public static Rectangle operator -(Rectangle l, Vector2 r) {
+            return l + (-r);
+        }
+
+        public static Rectangle operator -(Vector2 l, Rectangle r) {
+            return r - l;
+        }
+
         public static Rectangle operator -(Rectangle l, Size r) {
             return new Rectangle(l.X, l.Y, l.Width - r.Width, l.Height - r.Height);
         }
@@ -195,10 +204,6 @@
 
         public static Rectangle operator /(Rectangle l, float v) {
             return new Rectangle(l.X, l.Y, l.Width / v, l.Height / v);
-        }
-
-        public static Rectangle operator /(float v, Rectangle r) {
-            return r / v;
         }
 
         #endregion Operators
