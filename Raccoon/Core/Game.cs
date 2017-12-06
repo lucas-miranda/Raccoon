@@ -21,7 +21,7 @@ namespace Raccoon {
 
         #region Constructor
 
-        public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFPS = 60, bool fullscreen = false, bool vsync = false) {
+        public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
 
 #if DEBUG
@@ -35,7 +35,8 @@ namespace Raccoon {
                 Debug.Log("crash-report", $"[Unhandled Exception] {e.Message}\n{e.StackTrace}\n");
             };
 
-            Core = new Core(title, width, height, targetFPS, fullscreen, vsync);
+            TargetFramerate = targetFramerate;
+            Core = new Core(title, width, height, TargetFramerate, fullscreen, vsync);
             ScreenSize = new Size(width, height);
             ScreenCenter = (ScreenSize / 2f).ToVector2();
             WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
@@ -84,6 +85,7 @@ namespace Raccoon {
         public int ScreenHeight { get { return (int) ScreenSize.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
         public int WindowHeight { get { return (int) WindowSize.Height; } }
+        public int TargetFramerate { get; private set; }
         public Size ScreenSize { get; private set; }
         public Size WindowSize { get; private set; }
         public Vector2 ScreenCenter { get; private set; }

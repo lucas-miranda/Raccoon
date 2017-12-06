@@ -25,7 +25,7 @@ namespace Raccoon {
 
         #region Constructor
 
-        public Core(string title, int width, int height, int targetFPS, bool fullscreen, bool vsync) {
+        public Core(string title, int width, int height, int targetFramerate, bool fullscreen, bool vsync) {
             Title = title;
 
 #if DEBUG
@@ -35,7 +35,7 @@ namespace Raccoon {
 #endif
 
             Content.RootDirectory = "Content/";
-            TargetElapsedTime = TimeSpan.FromTicks((long) Math.Round(10000000 / (double) targetFPS)); // time between frames
+            TargetElapsedTime = TimeSpan.FromTicks((long) Math.Round(10000000 / (double) targetFramerate)); // time between frames
             Scale = 1f;
             BackgroundColor = Color.Black;
 
