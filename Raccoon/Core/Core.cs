@@ -21,6 +21,11 @@ namespace Raccoon {
         private float _scale = 1f;
         private TimeSpan _lastFpsTime;
 
+#if DEBUG
+        private const int FramerateMonitorValuesCount = 25;
+        private const int FramerateMonitorDataSpacing = 4;
+#endif
+
         #endregion Private Members
 
         #region Constructor
@@ -67,6 +72,8 @@ namespace Raccoon {
 
 #if DEBUG
         public Graphics.Canvas DebugCanvas { get; private set; }
+        public Rectangle FramerateMonitorFrame { get; private set; }
+        public List<int> FramerateValues { get; } = new List<int>();
 #endif
 
         public float Scale {
@@ -106,6 +113,12 @@ namespace Raccoon {
 #if DEBUG
             DebugCanvas = new Graphics.Canvas(Game.Instance.WindowWidth, Game.Instance.WindowHeight, false, Raccoon.Graphics.SurfaceFormat.Color, Raccoon.Graphics.DepthFormat.None, 0, Raccoon.Graphics.CanvasUsage.PreserveContents);
             RenderTargetStack.Push(DebugCanvas.XNARenderTarget);
+
+            float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
+            FramerateMonitorFrame = new Rectangle(new Vector2(Game.Instance.WindowWidth - 200 - monitorFrameWidth - 32, 15), new Size(monitorFrameWidth, 82));
+            for (int i = 0; i < FramerateMonitorValuesCount; i++) {
+                FramerateValues.Add(0);
+            }
 #endif
 
             RenderTargetStack.Push(MainCanvas.XNARenderTarget);
@@ -168,6 +181,9 @@ namespace Raccoon {
                 _fps = _fpsCount;
                 _fpsCount = 0;
 #if DEBUG
+                FramerateValues.RemoveAt(0);
+                FramerateValues.Add(_fps);
+
                 Window.Title = string.Format(_windowTitleDetailed, Title, _fps, GC.GetTotalMemory(false) / 1048576f);
 #endif
             }
@@ -214,6 +230,34 @@ namespace Raccoon {
 
             if (Debug.ShowPerformanceDiagnostics) {
                 Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}");
+
+                // framerate monitor
+                Debug.DrawRectangle(Camera.Current, FramerateMonitorFrame, Raccoon.Graphics.Color.White);
+                Debug.DrawRectangle(Camera.Current.Position + FramerateMonitorFrame - FramerateMonitorFrame.Position, Raccoon.Graphics.Color.Magenta);
+
+                int previousFramerateValue = FramerateValues[0], currentFramerateValue;
+                Vector2 monitorBottomLeft = FramerateMonitorFrame.BottomLeft;
+                Vector2 previousPos = monitorBottomLeft + new Vector2(1, -previousFramerateValue - 1), currentPos;
+                for (int i = 1; i < FramerateValues.Count; i++) {
+                    currentFramerateValue = FramerateValues[i];
+                    currentPos = monitorBottomLeft + new Vector2(1 + i * FramerateMonitorDataSpacing, -currentFramerateValue - 1);
+
+                    // pick a color based on framerate
+                    Graphics.Color color;
+                    if (currentFramerateValue >= Game.Instance.TargetFramerate * .95f) {
+                        color = Raccoon.Graphics.Color.Cyan;
+                    } else if (currentFramerateValue >= Game.Instance.TargetFramerate * .75f) {
+                        color = Raccoon.Graphics.Color.Yellow;
+                    } else if (currentFramerateValue >= Game.Instance.TargetFramerate * .5f) {
+                        color = Raccoon.Graphics.Color.Orange;
+                    } else {
+                        color = Raccoon.Graphics.Color.Red;
+                    }
+
+                    Debug.DrawLine(Camera.Current, previousPos, currentPos, color);
+                    previousPos = currentPos;
+                    previousFramerateValue = currentFramerateValue;
+                }
             }
 
             DebugSurface.End();

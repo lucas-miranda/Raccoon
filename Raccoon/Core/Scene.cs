@@ -353,7 +353,7 @@ namespace Raccoon {
 
             Camera.DebugRender();
 
-            Debug.DrawString(Camera, new Vector2(Game.Instance.WindowWidth - 250, 100), $"Entities: {Entities}\nGraphics: {Graphics}");
+            Debug.DrawString(Camera, new Vector2(Game.Instance.WindowWidth - 250, 125), $"Entities: {Entities}\nGraphics: {Graphics}");
         }
 
         #endregion
