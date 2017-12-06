@@ -206,9 +206,12 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            from *= (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
+            to *= (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -225,29 +228,37 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to) {
-            DrawLine(from, to, Color.Red);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawLine(float x1, float y1, float x2, float y2, Color color) {
-            DrawLine(new Vector2(x1, y1), new Vector2(x2, y2), color);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawLine(float x1, float y1, float x2, float y2) {
-            DrawLine(x1, y1, x2, y2, Color.Red);
+            DrawLine(from, to, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLine(Line line, Color color) {
             DrawLine(line.PointA, line.PointB, color);
         }
+        
+        [Conditional("DEBUG")]
+        public static void DrawLine(Camera camera, Vector2 from, Vector2 to, Color color) {
+            if (camera == null) {
+                DrawLine(from, to, color);
+                return;
+            }
+
+            float scaleFactor = camera.Zoom * Game.Instance.Scale;
+            DrawLine(camera.Position + from / scaleFactor, camera.Position + to / scaleFactor, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(Camera camera, Vector2 from, Vector2 to) {
+            DrawLine(camera, from, to, Color.White);
+        }
 
         [Conditional("DEBUG")]
         public static void DrawRectangle(Rectangle rectangle, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            rectangle = new Rectangle(rectangle.Position * (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale, rectangle.Size);
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -267,12 +278,28 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawRectangle(Rectangle rectangle) {
-            DrawRectangle(rectangle, Color.Red);
+            DrawRectangle(rectangle, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color) {
+            if (camera == null) {
+                DrawRectangle(rectangle, color);
+                return;
+            }
+
+            DrawRectangle(new Rectangle(camera.Position + rectangle.Position / (camera.Zoom * Game.Instance.Scale), rectangle.Size), color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Camera camera, Rectangle rectangle) {
+            DrawRectangle(camera, rectangle, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawCircle(Vector2 center, float radius, int segments, Color color, bool dashed = false, float rotation = 0) {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
+            center *= (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
 
             float theta = (float) (2.0 * Util.Math.PI / segments);
             float t, c = (float) Math.Cos(theta), s = (float) Math.Sin(theta); // precalculate the sine and cosine
@@ -280,9 +307,9 @@ namespace Raccoon {
             float x = radius * Util.Math.Cos(rotation);
             float y = radius * Util.Math.Sin(rotation);
 
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -310,6 +337,11 @@ namespace Raccoon {
             Game.Instance.Core.BasicEffect.Alpha = 1f;
             Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Vector2 center, float radius, int segments, bool dashed = false, float rotation = 0) {
+            DrawCircle(center, radius, segments, Color.White, dashed, rotation);
+        }
         
         [Conditional("DEBUG")]
         public static void DrawCircle(Circle circle, int segments, Color color, bool dashed = false, float rotation = 0) {
@@ -317,8 +349,34 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
+        public static void DrawCircle(Circle circle, int segments, bool dashed = false, float rotation = 0) {
+            DrawCircle(circle.Center, circle.Radius, segments, Color.White, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Camera camera, Vector2 center, float radius, int segments, Color color, bool dashed = false, float rotation = 0) {
+            if (camera == null) {
+                DrawCircle(center, radius, segments, color, dashed, rotation);
+                return;
+            }
+
+            DrawCircle(camera.Position + center / (camera.Zoom * Game.Instance.Scale), radius, segments, color, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Camera camera, Vector2 center, float radius, int segments, bool dashed = false, float rotation = 0) {
+            DrawCircle(camera, center, radius, segments, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Camera camera, Circle circle, int segments, bool dashed = false, float rotation = 0) {
+            DrawCircle(camera, circle.Center, circle.Radius, segments, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
         public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments, Color color) {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
+            center *= (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
 
             float theta = Util.Math.ToRadians(arcAngle) / (segments - 1); // theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
             float tangentialFactor = (float) Math.Tan(theta), radialFactor = (float) Math.Cos(theta);
@@ -326,9 +384,9 @@ namespace Raccoon {
             float x = radius * Util.Math.Cos(startAngle), // we now start at the start angle
                   y = radius * Util.Math.Sin(startAngle);
 
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -351,10 +409,32 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
+        public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments) {
+            DrawArc(center, radius, startAngle, arcAngle, segments, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawArc(Camera camera, Vector2 center, float radius, float startAngle, float arcAngle, int segments, Color color) {
+            if (camera == null) {
+                DrawArc(center, radius, startAngle, arcAngle, segments, color);
+                return;
+            }
+
+            DrawArc(camera.Position + center / (camera.Zoom * Game.Instance.Scale), radius, startAngle, arcAngle, segments, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawArc(Camera camera, Vector2 center, float radius, float startAngle, float arcAngle, int segments) {
+            DrawArc(camera, center, radius, startAngle, arcAngle, segments, Color.White);
+        }
+
+        [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            triangle *= (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
@@ -374,6 +454,21 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle) {
             DrawTriangle(triangle, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Camera camera, Triangle triangle, Color color) {
+            if (camera == null) {
+                DrawTriangle(triangle, color);
+                return;
+            }
+
+            DrawTriangle(camera.Position + triangle / (camera.Zoom * Game.Instance.Scale), Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Camera camera, Triangle triangle) {
+            DrawTriangle(camera, triangle, Color.White);
         }
 
         #endregion Primitives
