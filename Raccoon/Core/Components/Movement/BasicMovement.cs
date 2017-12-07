@@ -1,6 +1,4 @@
-﻿using Raccoon.Util;
-
-namespace Raccoon.Components {
+﻿namespace Raccoon.Components {
     public class BasicMovement : Movement {
         public event System.Action OnMove;
 
@@ -10,80 +8,71 @@ namespace Raccoon.Components {
         /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
         /// <param name="collider">Collider used to detect end of movement.</param>
-        public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) { }
+        public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider) : base(maxSpeed, acceleration, collider) {
+        }
 
-        public override void OnCollide(Vector2 moveDirection) { }
+        public BasicMovement(Vector2 maxSpeed, float timeToMaxSpeed, Collider collider) : base(maxSpeed, maxSpeed / timeToMaxSpeed, collider) {
+        }
 
         public override void OnMoveUpdate(float dt) {
-            int x = (int) Entity.X, y = (int) Entity.Y;
-            float speedX = Speed.X, speedY = Speed.Y;
+            /*
+                verlet integration
+                ----------------------
+                speed = pos - lastPos
+                nextPos = pos + speed + acc * timestep
+                lastPos = pos
+                pos = nextPos
+            */
 
-            // determine TargetSpeed
-            Vector2 oldTargetSpeed = TargetSpeed;
-            TargetSpeed = Axis * MaxSpeed;
-            if (HorizontalAxisSnap && System.Math.Sign(oldTargetSpeed.X) != System.Math.Sign(TargetSpeed.X)) {
+            Vector2 speed = CurrentSpeed;
+            float speedX = speed.X, speedY = speed.Y;
+
+            // apply drag force, if it's necessary
+            speedX = Axis.X == 0f ? speedX * DragForce : speedX;
+            speedY = Axis.Y == 0f ? speedY * DragForce : speedY;
+
+            // axes snap 
+            // ignore speed if it's too low
+            if (System.Math.Abs(speedX) < 0.001f || (HorizontalAxisSnap && System.Math.Sign(speed.X) != System.Math.Sign(Axis.X))) {
                 speedX = 0;
-                MoveHorizontalBuffer = 0;
-            } else if (VerticalAxisSnap && System.Math.Sign(oldTargetSpeed.Y) != System.Math.Sign(TargetSpeed.Y)) {
+            }
+
+            if (System.Math.Abs(speedY) < 0.001f || (VerticalAxisSnap && System.Math.Sign(speed.Y) != System.Math.Sign(Axis.Y))) {
                 speedY = 0;
-                MoveVerticalBuffer = 0;
             }
 
-            // horizontal move
-            speedX = Math.Approach(speedX, TargetSpeed.X, (Axis.X != 0 ? Acceleration.X : Acceleration.X * DragForce) * dt);
+            speed = new Vector2(speedX, speedY);
 
-            if ((int) speedX != 0) {
-                MoveHorizontalBuffer += speedX * dt;
-                int hDir = System.Math.Sign(MoveHorizontalBuffer);
-                if (Collider == null) {
-                    int dist = (int) System.Math.Floor(System.Math.Abs(MoveHorizontalBuffer));
-                    x += dist * hDir;
-                    MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, dist);
-                } else {
-                    while (System.Math.Abs(MoveHorizontalBuffer) >= 1) {
-                        if (Collider.Collides(new Vector2(x + hDir, y), CollisionTags)) {
-                            OnCollide(new Vector2(hDir, 0));
-                            MoveHorizontalBuffer = 0;
-                            break;
-                        } else {
-                            x += hDir;
-                            MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, 1);
-                        }
-                    }
-                }
-            }
+            Vector2 nextPos = Entity.Position + speed + AccumulatedForce * dt * dt;
+            LastPosition = Entity.Position;
+            Entity.Position = nextPos;
+            AccumulatedForce = Vector2.Zero;
 
-            // vertical move
-            speedY = Math.Approach(speedY, TargetSpeed.Y, (Axis.Y != 0 ? Acceleration.Y : Acceleration.Y * DragForce) * dt);
-
-            if ((int) speedY != 0) {
-                MoveVerticalBuffer += speedY * dt;
-                int vDir = System.Math.Sign(MoveVerticalBuffer);
-                if (Collider == null) {
-                    int dist = (int) System.Math.Floor(System.Math.Abs(MoveVerticalBuffer));
-                    y += dist * vDir;
-                    MoveVerticalBuffer = Math.Approach(MoveVerticalBuffer, 0, dist);
-                } else {
-                    while (System.Math.Abs(MoveVerticalBuffer) >= 1) {
-                        if (Collider.Collides(new Vector2(x, y + vDir), CollisionTags)) {
-                            OnCollide(new Vector2(0, vDir));
-                            MoveVerticalBuffer = 0;
-                            break;
-                        } else {
-                            y += vDir;
-                            MoveVerticalBuffer = Math.Approach(MoveVerticalBuffer, 0, 1);
-                        }
-                    }
-                }
-            }
-
-            // update entity values
-            Speed = new Vector2(speedX, speedY);
-            Vector2 oldPosition = Entity.Position;
-            Entity.Position = new Vector2(x, y);
-            if (x != oldPosition.X || y != oldPosition.Y) {
+            if (speed.LengthSquared() != 0) {
                 OnMove?.Invoke();
             }
+        }
+
+        public override void DebugRender() {
+            base.DebugRender();
+            string message = $"Position: {Entity.Position}\nLastPosition: {LastPosition}]\nAxis: {Axis} [Last: {LastAxis}]\nCurrentSpeed: {CurrentSpeed} [Max: {MaxSpeed}]\nAcceleration: {Acceleration}\nAccumulatedForce: {AccumulatedForce}\nDragForce: {DragForce}\nH-Snap? {HorizontalAxisSnap}, V-Snap? {VerticalAxisSnap}\nEnabled? {Enabled}, CanMove? {CanMove}, Sleeping? {Sleeping}\nBuffer: [{MoveHorizontalBuffer}, {MoveVerticalBuffer}]";
+            Vector2 pos = new Vector2(Game.Instance.WindowWidth - 350, Game.Instance.WindowHeight / 2);
+
+            if (Camera.Current != null) {
+                Debug.DrawString(Camera.Current, pos, message);
+                return;
+            }
+
+            Debug.DrawString(pos, message);
+        }
+
+        public override void Move(Vector2 axis) {
+            base.Move(axis);
+            if (NextAxis == Vector2.Zero) {
+                return;
+            }
+
+            ApplyForce(NextAxis * Acceleration);
         }
     }
 }

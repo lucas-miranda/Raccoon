@@ -115,7 +115,7 @@ namespace Raccoon {
             RenderTargetStack.Push(DebugCanvas.XNARenderTarget);
 
             float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
-            FramerateMonitorFrame = new Rectangle(new Vector2(Game.Instance.WindowWidth - 200 - monitorFrameWidth - 32, 15), new Size(monitorFrameWidth, 82));
+            FramerateMonitorFrame = new Rectangle(new Vector2(Game.Instance.WindowWidth - 260 - monitorFrameWidth - 32, 15), new Size(monitorFrameWidth, 82));
             for (int i = 0; i < FramerateMonitorValuesCount; i++) {
                 FramerateValues.Add(0);
             }
@@ -168,8 +168,9 @@ namespace Raccoon {
             Util.Tween.Tweener.Instance.Update(delta);
             OnBeforeUpdate();
             OnUpdate(delta);
-            OnLateUpdate();
             Coroutines.Instance.Update(delta);
+            Physics.Instance.Update(delta);
+            OnLateUpdate();
 
 #if DEBUG
             Debug.Instance.Update(delta);
@@ -229,7 +230,7 @@ namespace Raccoon {
             Debug.Instance.Render();
 
             if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 200, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}");
+                Debug.DrawString(Camera.Current, new Vector2(Game.Instance.WindowWidth - 260, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}\n\nPhysics:\n  Update Position: {Physics.UpdatePositionExecutionTime}ms\n  Solve Constraints: {Physics.SolveConstraintsExecutionTime}ms\n  Collision Broad Phase (C: {Physics.CollidersBroadPhaseCount}): {Physics.CollisionDetectionBroadPhaseExecutionTime}ms\n  Collision Narrow Phase (C: {Physics.CollidersNarrowPhaseCount}): {Physics.CollisionDetectionNarrowPhaseExecutionTime}ms\n\nScene:\n  Entities: {(Game.Instance.Scene == null ? "0" : Game.Instance.Scene.Entities.ToString())}\n  Graphics: {(Game.Instance.Scene == null ? "0" : Game.Instance.Scene.Graphics.ToString())}");
 
                 // framerate monitor frame
                 Debug.DrawRectangle(Camera.Current, FramerateMonitorFrame, Raccoon.Graphics.Color.White);
@@ -259,6 +260,8 @@ namespace Raccoon {
                     previousFramerateValue = currentFramerateValue;
                 }
             }
+
+            Physics.Instance.ClearTimers();
 
             DebugSurface.End();
 #endif

@@ -16,10 +16,12 @@ namespace Raccoon.Components {
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
         /// <param name="collider">Collider used to detect end of movement.</param>
         public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
-            GravityForce = new Vector2(0, 450);
             OnFallingBegin += () => {
                 _ledgeJumpTime = 0;
             };
+        }
+
+        public PlatformerMovement(Vector2 maxSpeed, float timeToMaxSpeed, Collider collider = null) : this(maxSpeed, maxSpeed / timeToMaxSpeed, collider) {
         }
 
         public bool OnGround { get; protected set; }
@@ -31,11 +33,11 @@ namespace Raccoon.Components {
         public int Jumps { get; set; }
         public int JumpHeight { get; set; } = 19;
         public float JumpStartExplosionRate { get; set; } = 0.6f;
-        public Vector2 GravityForce { get; set; }
+        public Vector2 GravityForce { get; set; } = new Vector2(0, 450);
 
         protected bool IsStillJumping { get; set; }
 
-        public override void OnCollide(Vector2 moveDirection) {
+        /*public override void OnCollide(Vector2 moveDirection) {
             if (moveDirection.Y > 0) { // falling and reach the ground
                 OnGround = true;
                 IsStillJumping = IsJumping = IsFalling = false;
@@ -47,11 +49,11 @@ namespace Raccoon.Components {
                 IsFalling = true;
                 OnFallingBegin.Invoke();
             }
-        }
+        }*/
 
         public override void OnMoveUpdate(float dt) {
-            int x = (int) Entity.X, y = (int) Entity.Y;
-            float speedX = Speed.X, speedY = Speed.Y;
+            /*int x = (int) Entity.X, y = (int) Entity.Y;
+            float speedX = CurrentSpeed.X, speedY = CurrentSpeed.Y;
 
             // determine TargetSpeed
             Vector2 oldTargetSpeed = TargetSpeed;
@@ -99,7 +101,7 @@ namespace Raccoon.Components {
             float yAxis = 0; // vertical axis direction
             if (IsStillJumping) {
                 yAxis = -1;
-                speedY = Math.Approach(Speed.Y, yAxis * TargetSpeed.Y, Acceleration.Y * dt);
+                speedY = Math.Approach(CurrentSpeed.Y, yAxis * TargetSpeed.Y, Acceleration.Y * dt);
                 IsStillJumping = false;
             } else {
                 if (OnGround) {
@@ -112,14 +114,14 @@ namespace Raccoon.Components {
                 } else {
                     // falling & jump brake speed update
                     yAxis = 1;
-                    speedY = Math.Approach(Speed.Y, yAxis * TargetSpeed.Y, GravityForce.Y * dt);
+                    speedY = Math.Approach(CurrentSpeed.Y, yAxis * TargetSpeed.Y, GravityForce.Y * dt);
                     _ledgeJumpTime += (int) (dt * 1000);
 
                     // reached jump max height
                     if (IsJumping && speedY >= 0) {
                         IsJumping = false;
                         IsFalling = true;
-                        Speed = new Vector2(Speed.X, 0);
+                        Speed = new Vector2(CurrentSpeed.X, 0);
                         _nextJumpReady = false;
                         OnFallingBegin.Invoke();
                     }
@@ -166,6 +168,7 @@ namespace Raccoon.Components {
             if (x != oldPosition.X || y != oldPosition.Y) {
                 OnMove.Invoke();
             }
+            */
         }
 
         public void Jump() {
@@ -181,15 +184,15 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime) || Collider.Collides(new Vector2(Entity.X, Entity.Y - 1), CollisionTags)) {
+            /*if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime) || Collider.Collides(new Vector2(Entity.X, Entity.Y - 1), CollisionTags)) {
                 return;
-            }
+            }*/
             
             IsStillJumping = IsJumping = true;
             OnGround = IsFalling = false;
             Jumps--;
             _jumpDistanceBuffer = 0;
-            Speed = new Vector2(Speed.X, -JumpStartExplosionRate * MaxSpeed.Y);
+            //Speed = new Vector2(CurrentSpeed.X, -JumpStartExplosionRate * MaxSpeed.Y);
             OnJumpBegin.Invoke();
         }
 

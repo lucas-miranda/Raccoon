@@ -46,7 +46,17 @@
     <Compile Include="Core\Components\StateMachine\State.cs" />
     <Compile Include="Core\Components\StateMachine\Transition.cs" />
     <Compile Include="Core\Components\StateMachine\Trigger.cs" />
+    <Compile Include="Core\Physics\Constraints\DistanceJoint.cs" />
+    <Compile Include="Core\Physics\Constraints\IConstraint.cs" />
+    <Compile Include="Core\Physics\Constraints\Joint.cs" />
     <Compile Include="Core\Definitions\Comparison.cs" />
+    <Compile Include="Core\Physics\Physics.Box.cs" />
+    <Compile Include="Core\Physics\Physics.Circle.cs" />
+    <Compile Include="Core\Physics\Physics.Grid.cs" />
+    <Compile Include="Core\Physics\Physics.Helper.cs" />
+    <Compile Include="Core\Physics\Physics.Line.cs" />
+    <Compile Include="Core\Physics\Physics.Polygon.cs" />
+    <Compile Include="Core\Physics\Physics.RichGrid.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
@@ -81,7 +91,7 @@
     <Compile Include="Core\Input\Controller.cs" />
     <Compile Include="Core\Input\Trigger.cs" />
     <Compile Include="Core\Input\XboxController.cs" />
-    <Compile Include="Core\Physics.cs" />
+    <Compile Include="Core\Physics\Physics.cs" />
     <Compile Include="Graphics\Drawables\Animation.cs" />
     <Compile Include="Graphics\Atlas\Atlas.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />

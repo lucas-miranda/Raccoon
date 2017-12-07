@@ -15,10 +15,6 @@ namespace Raccoon.Components {
 
         #region Constructors
 
-        public GridCollider(Size tileSize, int columns, int rows) : base() {
-            Initialize(tileSize, columns, rows);
-        }
-
         public GridCollider(Size tileSize, int columns, int rows, params string[] tags) : base(tags) {
             Initialize(tileSize, columns, rows);
         }

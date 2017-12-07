@@ -1,63 +1,74 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Raccoon.Components {
     public abstract class Movement : Component {
-        private float _moveUpdateTime;
-        private Vector2 _nextAxis;
-    
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
         /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
         /// <param name="collider">Collider used to detect end of movement.</param>
-        public Movement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) {
-            CollisionTags = new List<string>();
+        public Movement(Vector2 maxSpeed, Vector2 acceleration, Collider collider) {
             MaxSpeed = maxSpeed;
             Acceleration = acceleration;
             Collider = collider;
-            CanMove = true;
+            IgnoreDebugRender = true;
         }
 
-        public Collider Collider { get; set; }
-        public Vector2 Speed { get; protected set; }
+        public Collider Collider { get; private set; }
+        public Vector2 LastPosition { get; protected set; }
+        public Vector2 CurrentSpeed { get { return Util.Math.Clamp(Entity.Position - LastPosition, -MaxSpeed, MaxSpeed); } }
         public Vector2 MaxSpeed { get; set; }
-        public Vector2 TargetSpeed { get; protected set; }
+        //public Vector2 TargetSpeed { get; protected set; }
         public Vector2 Acceleration { get; set; }
+        public Vector2 AccumulatedForce { get; protected set; }
         public Vector2 Axis { get; set; }
         public Vector2 LastAxis { get; protected set; }
-        public float DragForce { get; set; } = 2f;
+        public float DragForce { get; set; } = .8f;
         public bool HorizontalAxisSnap { get; set; }
         public bool VerticalAxisSnap { get; set; }
         public bool AxesSnap { get { return HorizontalAxisSnap && VerticalAxisSnap; } set { HorizontalAxisSnap = VerticalAxisSnap = value; } }
-        public bool CanMove { get; set; }
+        public bool CanMove { get; set; } = true;
+        public bool Sleeping { get; protected set; }
 
-        protected List<string> CollisionTags { get; private set; }
+        protected Vector2 NextAxis { get; set; }
         protected float MoveHorizontalBuffer { get; set; }
         protected float MoveVerticalBuffer { get; set; }
 
-        public override void Update(int delta) {
-            Axis = _nextAxis;
-            if (CanMove) {
-                _moveUpdateTime += delta;
-                while (_moveUpdateTime >= Physics.MinUpdateInterval) {
-                    OnMoveUpdate(Physics.MinUpdateInterval / 1000f);
-                    _moveUpdateTime -= Physics.MinUpdateInterval;
-                }
+        public override void OnAdded(Entity entity) {
+            base.OnAdded(entity);
+            LastPosition = Entity.Position;
+
+            // register collider, if isn't already registered
+            if (Collider.Entity != Entity) {
+                Entity.AddComponent(Collider);
             }
 
-            _nextAxis = Vector2.Zero;
+            Physics.Instance.AddMovement(this);
+        }
+
+        public override void OnRemoved() {
+            base.OnRemoved();
+            if (Collider.Entity != null) {
+                Entity.RemoveComponent(Collider);
+            }
+
+            Physics.Instance.RemoveMovement(this);
+        }
+
+        public override void Update(int delta) {
+            Axis = NextAxis;
+            NextAxis = Vector2.Zero;
         }
 
         public override void Render() { }
         public override void DebugRender() { }
 
-        public bool HasCollisionTag(string tag) {
+        /*public bool HasCollisionTag(string tag) {
             return CollisionTags.Contains(tag);
         }
 
-        public bool HasCollisionTag(Enum tag) {
+        public bool HasCollisionTag(System.Enum tag) {
             return HasCollisionTag(tag.ToString());
         }
 
@@ -69,7 +80,7 @@ namespace Raccoon.Components {
             CollisionTags.Add(tag);
         }
 
-        public void AddCollisionTag(Enum tag) {
+        public void AddCollisionTag(System.Enum tag) {
             AddCollisionTag(tag.ToString());
         }
 
@@ -77,24 +88,36 @@ namespace Raccoon.Components {
             CollisionTags.Remove(tag);
         }
 
-        public void RemoveCollisionTag(Enum tag) {
+        public void RemoveCollisionTag(System.Enum tag) {
             RemoveCollisionTag(tag.ToString());
         }
 
         public void ClearCollisionTags() {
             CollisionTags.Clear();
-        }
+        }*/
 
-        public abstract void OnCollide(Vector2 moveDirection);
+        //public abstract void OnCollide(Vector2 moveDirection);
         public abstract void OnMoveUpdate(float dt);
 
+        public void ApplyForce(Vector2 force) {
+            if (!CanMove) {
+                return;
+            }
+
+            AccumulatedForce += force / Collider.Mass;
+        }
+
         public virtual void Move(Vector2 axis) {
+            if (!CanMove) {
+                return;
+            }
+
             axis = Util.Math.Clamp(axis, new Vector2(-1, -1), new Vector2(1, 1));
             if (axis != Vector2.Zero) {
                 LastAxis = axis;
             }
 
-            _nextAxis = axis;
+            NextAxis = axis;
         }
 
         public virtual void Move(float x, float y) {
@@ -102,23 +125,11 @@ namespace Raccoon.Components {
         }
 
         public virtual void MoveHorizontal(float x) {
-            x = Util.Math.Clamp(x, -1, 1);
-
-            if (x != 0) {
-                LastAxis = new Vector2(x, LastAxis.Y);
-            }
-
-            _nextAxis = new Vector2(x, _nextAxis.Y);
+            Move(new Vector2(x, LastAxis.Y));
         }
 
         public virtual void MoveVertical(float y) {
-            y = Util.Math.Clamp(y, -1, 1);
-
-            if (y != 0) {
-                LastAxis = new Vector2(LastAxis.X, y);
-            }
-
-            _nextAxis = new Vector2(_nextAxis.X, y);
+            Move(new Vector2(LastAxis.X, y));
         }
     }
 }

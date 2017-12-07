@@ -92,22 +92,34 @@ namespace Raccoon {
         #region Public Methods
 
         public virtual void SceneAdded(Scene scene) {
+            if (Scene != null) {
+                return;
+            }
+
             Scene = scene;
             foreach (Component c in _components) {
-                if (c is Collider collider) {
-                    Physics.Instance.AddCollider(collider, collider.Tags);
+                if (c.Entity == this) {
+                    continue;
                 }
+
+                c.OnAdded(this);
             }
 
             OnSceneAdded();
         }
 
         public virtual void SceneRemoved() {
+            if (Scene == null) {
+                return;
+            }
+
             Scene = null;
             foreach (Component c in _components) {
-                if (c is Collider collider) {
-                    Physics.Instance.RemoveCollider(collider, collider.Tags);
+                if (c.Entity == null) {
+                    continue;
                 }
+
+                c.OnRemoved();
             }
 
             OnSceneRemoved();
@@ -271,6 +283,11 @@ namespace Raccoon {
         }
 
         #endregion Public Methods
+
+        #region Private Methods
+
+
+        #endregion Private Methods
 
         #region Layer Comparer
 

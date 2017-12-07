@@ -5,20 +5,12 @@ namespace Raccoon.Components {
     public class PolygonCollider : Collider {
         #region Construcors
 
-        public PolygonCollider(Polygon polygon) : base() {
-            Initialize(polygon);
-        }
-
         public PolygonCollider(Polygon polygon, params string[] tags) : base(tags) {
             Initialize(polygon);
         }
 
         public PolygonCollider(Polygon polygon, params Enum[] tags) : base(tags) {
             Initialize(polygon);
-        }
-
-        public PolygonCollider(IEnumerable<Vector2> points) : base() {
-            Initialize(new Polygon(points));
         }
 
         public PolygonCollider(IEnumerable<Vector2> points, params string[] tags) : base(tags) {

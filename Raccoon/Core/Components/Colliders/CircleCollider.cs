@@ -4,10 +4,6 @@ namespace Raccoon.Components {
     public class CircleCollider : Collider {
         #region Constructors
 
-        public CircleCollider(int radius) : base() {
-            Initialize(radius);
-        }
-
         public CircleCollider(int radius, params string[] tags) : base(tags) {
             Initialize(radius);
         }

@@ -11,10 +11,6 @@ namespace Raccoon.Components {
         private Tile[,] _data = new Tile[0,0];
         private bool _graphicNeedUpdate;
 
-        public RichGridCollider(Size tileSize, int columns, int rows) : base() {
-            Initialize(tileSize, columns, rows);
-        }
-
         public RichGridCollider(Size tileSize, int columns, int rows, params string[] tags) : base(tags) {
             Initialize(tileSize, columns, rows);
         }

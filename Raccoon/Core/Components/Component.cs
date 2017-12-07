@@ -8,7 +8,9 @@
             Entity = entity;
         }
 
-        public virtual void OnRemoved() { }
+        public virtual void OnRemoved() {
+            Entity = null;
+        }
 
         public abstract void Update(int delta);
         public abstract void Render();

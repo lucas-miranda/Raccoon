@@ -272,7 +272,7 @@ namespace Raccoon {
         /// <summary>
         /// Main Scene Update. Normally all Game main logics stay here.
         /// </summary>
-        /// <param name="delta"></param>
+        /// <param name="delta">Time difference (in milliseconds) from previous update.</param>
         public virtual void Update(int delta) {
             Timer += (uint) delta;
 
@@ -291,8 +291,6 @@ namespace Raccoon {
 
                 e.Update(delta);
             }
-
-            Camera.Update(delta);
         }
 
 
@@ -300,6 +298,7 @@ namespace Raccoon {
         /// Runs after Update().
         /// </summary>
         public virtual void LateUpdate() {
+            Camera.Update(Game.Instance.DeltaTime);
             foreach (Entity e in Entities) {
                 if (!e.Active || !e.AutoUpdate) {
                     continue;
@@ -352,8 +351,6 @@ namespace Raccoon {
             }
 
             Camera.DebugRender();
-
-            Debug.DrawString(Camera, new Vector2(Game.Instance.WindowWidth - 250, 125), $"Entities: {Entities}\nGraphics: {Graphics}");
         }
 
         #endregion
