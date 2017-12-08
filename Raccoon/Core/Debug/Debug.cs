@@ -215,6 +215,7 @@ namespace Raccoon {
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
 
+
             Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
             Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
@@ -514,6 +515,22 @@ namespace Raccoon {
 
         public static void Unindent() {
             Trace.Unindent();
+        }
+
+        public static Vector2 Transform(Vector2 position) {
+            return Game.Instance.DebugSurface.Transform(position, Game.Instance.MainSurface);
+        }
+
+        public static Vector2 Transform(Vector2 position, Surface surface) {
+            return Game.Instance.DebugSurface.Transform(position, surface);
+        }
+
+        public static float Transform(float n) {
+            return Game.Instance.DebugSurface.Transform(new Vector2(n), Game.Instance.MainSurface).X;
+        }
+
+        public static float Transform(float n, Surface surface) {
+            return Game.Instance.DebugSurface.Transform(new Vector2(n), surface).X;
         }
 
         #endregion Others

@@ -20,7 +20,7 @@ namespace Raccoon {
         private Dictionary<string, Action<Message>> _categoriesFormatter = new Dictionary<string, Action<Message>>();
 
         // graphics
-        private RectangleShape _background;
+        private RectanglePrimitive _background;
 
         #endregion Private Members
 
@@ -53,7 +53,7 @@ namespace Raccoon {
                 Font = Game.Instance.Core.StdFont;
             }
 
-            _background = new RectangleShape(Game.Instance.WindowWidth, Game.Instance.WindowHeight, Color.Black) {
+            _background = new RectanglePrimitive(Game.Instance.WindowWidth, Game.Instance.WindowHeight, Color.Black) {
                 Surface = Game.Instance.Core.DebugSurface,
                 Opacity = 0.25f
             };

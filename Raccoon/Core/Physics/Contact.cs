@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Physics {
+﻿namespace Raccoon {
     public struct Contact {
         public Vector2 Position, Normal;
         public float PenetrationDepth;

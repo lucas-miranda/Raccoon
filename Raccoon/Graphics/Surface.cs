@@ -53,6 +53,7 @@ namespace Raccoon.Graphics {
         public Vector2 Transform(Vector2 position, Surface surface) {
             return (position * surface.Scale) / Scale;
         }
+
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(destinationRectangle.Position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), color);

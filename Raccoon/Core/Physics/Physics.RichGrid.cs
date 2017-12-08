@@ -1,7 +1,8 @@
 ﻿using Raccoon.Components;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
+        /*
         #region RichGrid vs RichGrid
 
         private bool CheckRichGridRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
@@ -49,5 +50,6 @@ namespace Raccoon.Physics {
         }
 
         #endregion RichGrid vs Line
+        */
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Raccoon.Components;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
         #region Circle vs Circle
 
@@ -24,13 +24,15 @@ namespace Raccoon.Physics {
                 manifold.Contacts[0] = new Contact(APos, Vector2.Right, shapeA.Radius);
             } else {
                 Vector2 normal = translation / dist;
-                manifold.Contacts[0] = new Contact(normal * shapeA.Radius + APos, normal, radius - dist);
+                manifold.Contacts[0] = new Contact(APos + normal * shapeA.Radius, normal, radius - dist);
             }
 
             return true;
         }
 
         #endregion Circle vs Circle
+
+        /*
 
         #region Circle vs Box
 
@@ -51,13 +53,13 @@ namespace Raccoon.Physics {
         #region Circle vs Line
 
         private bool CheckCircleLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            CircleCollider circleColl = colliderA as CircleCollider;
+            /*CircleCollider circleColl = colliderA as CircleCollider;
             LineCollider lineColl = colliderB as LineCollider;
 
             if (Util.Math.DistanceSquared(new Line(colliderBPos + lineColl.From, colliderBPos + lineColl.To), circleColl.Position) < circleColl.Radius * circleColl.Radius) {
                 return true;
             }
-
+            
             return false;
         }
 
@@ -66,7 +68,7 @@ namespace Raccoon.Physics {
         #region Circle vs Polygon
 
         private bool CheckCirclePolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            CircleCollider circleColl = colliderA as CircleCollider;
+            /*CircleCollider circleColl = colliderA as CircleCollider;
             PolygonCollider polygonColl = colliderB as PolygonCollider;
 
             float radiusSquared = circleColl.Radius * circleColl.Radius;
@@ -77,7 +79,7 @@ namespace Raccoon.Physics {
                     return true;
                 }
             }
-
+            
             return false;
         }
 
@@ -90,5 +92,6 @@ namespace Raccoon.Physics {
         }
 
         #endregion Circle vs RichGrid
+    */
     }
 }

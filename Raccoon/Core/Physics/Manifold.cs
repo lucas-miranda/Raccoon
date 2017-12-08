@@ -1,7 +1,7 @@
 ﻿using Raccoon.Components;
 using Raccoon.Util;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public class Manifold {
         public const float PenetrationAllowance = 0.01f,
                            PenetrationPercentageToCorrect = 0.2f;

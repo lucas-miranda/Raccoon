@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics.Primitives {
-    public class RectangleShape : Graphic {
+    public class RectanglePrimitive : Graphic {
         #region Private Members
 
         private bool _filled;
@@ -10,7 +10,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Constructors
 
-        public RectangleShape(float width, float height, Color color, bool filled = true) : base() {
+        public RectanglePrimitive(float width, float height, Color color, bool filled = true) : base() {
             Size = new Size(width, height);
             Color = color;
             _filled = filled;

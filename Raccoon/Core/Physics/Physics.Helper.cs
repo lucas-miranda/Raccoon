@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Raccoon.Util;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
         private bool CheckPolygonsIntersection(Polygon polygonA, Polygon polygonB, IEnumerable<Vector2> axes) {
             foreach (Vector2 axis in axes) {

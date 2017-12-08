@@ -72,9 +72,6 @@
     <Compile Include="Util\Collections\PriorityQueue.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Alarm.cs" />
-    <Compile Include="Core\Physics\Shapes\Collider.cs" />
-    <Compile Include="Core\Physics\Shapes\GridCollider.cs" />
-    <Compile Include="Core\Physics\Shapes\RichGridCollider.cs" />
     <Compile Include="Core\Components\Component.cs" />
     <Compile Include="Core\Components\Movement\PlatformerMovement.cs" />
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />

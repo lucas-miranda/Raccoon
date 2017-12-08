@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using Raccoon.Components;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
+        /*
         #region Line vs Line
 
         private bool CheckLineLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            LineCollider lineA = colliderA as LineCollider, lineB = colliderB as LineCollider;
+            /*LineCollider lineA = colliderA as LineCollider, lineB = colliderB as LineCollider;
             Vector2 lineAFrom = lineA.From + colliderAPos, lineATo = lineA.To + colliderAPos,
                     lineBFrom = lineB.From + colliderBPos, lineBTo = lineB.To + colliderBPos;
 
@@ -27,6 +28,7 @@ namespace Raccoon.Physics {
 
             float t = Vector2.Cross(lineBFrom - lineAFrom, lineBLength) / lengthsCross, u = fromDiffCrossLengthA / lengthsCross;
             return !((t < 0 || t > 1) || (u < 0 || u > 1));
+            return false;
         }
 
         #endregion Line vs Line
@@ -54,7 +56,7 @@ namespace Raccoon.Physics {
         #region Line vs Polygon
 
         private bool CheckLinePolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            LineCollider lineColl = colliderA as LineCollider;
+            /*LineCollider lineColl = colliderA as LineCollider;
             PolygonCollider polygonColl = colliderB as PolygonCollider;
 
             // line collider polygon
@@ -76,6 +78,7 @@ namespace Raccoon.Physics {
             }
 
             return CheckPolygonsIntersection(linePolygon, polygon, axes);
+            return false;
         }
 
         #endregion Line vs Polygon
@@ -87,5 +90,6 @@ namespace Raccoon.Physics {
         }
 
         #endregion Line vs RichGrid
+        */
     }
 }

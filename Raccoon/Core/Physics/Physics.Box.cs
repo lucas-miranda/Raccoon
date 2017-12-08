@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using Raccoon.Components;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
+        /*
         #region Box vs Box
 
         private bool CheckBoxBox(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxAColl = colliderA as BoxCollider, boxBColl = colliderB as BoxCollider;
+            /*BoxCollider boxAColl = colliderA as BoxCollider, boxBColl = colliderB as BoxCollider;
             if (boxAColl.Rotation != 0 || boxBColl.Rotation != 0) { // SAT
                 // box collider polygon
                 Polygon boxACollPolygon = boxAColl.Polygon;
@@ -27,6 +28,7 @@ namespace Raccoon.Physics {
             }
 
             return new Rectangle(colliderAPos, boxAColl.Size) & new Rectangle(colliderBPos, boxBColl.Size); // regular AABB
+            return false;
         }
 
         #endregion Box vs Box
@@ -34,7 +36,7 @@ namespace Raccoon.Physics {
         #region Box vs Grid
 
         private bool CheckBoxGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxColl = colliderA as BoxCollider;
+            /*BoxCollider boxColl = colliderA as BoxCollider;
             GridCollider gridColl = colliderB as GridCollider;
 
             int startColumn, startRow, endColumn, endRow, row, column;
@@ -103,7 +105,7 @@ namespace Raccoon.Physics {
                     }
                 }
             }
-
+            
             return false;
         }
 
@@ -112,7 +114,7 @@ namespace Raccoon.Physics {
         #region Box vs Circle
 
         private bool CheckBoxCircle(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxColl = colliderA as BoxCollider;
+            /*BoxCollider boxColl = colliderA as BoxCollider;
             CircleCollider circleColl = colliderB as CircleCollider;
 
             if (boxColl.Rect & circleColl.Position) {
@@ -131,7 +133,7 @@ namespace Raccoon.Physics {
         #region Box vs Line
 
         private bool CheckBoxLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxColl = colliderA as BoxCollider;
+            /*BoxCollider boxColl = colliderA as BoxCollider;
             LineCollider lineColl = colliderB as LineCollider;
 
             // box collider polygon
@@ -159,7 +161,7 @@ namespace Raccoon.Physics {
         #region Box vs Polygon
 
         private bool CheckBoxPolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxColl = colliderA as BoxCollider;
+            /*BoxCollider boxColl = colliderA as BoxCollider;
             PolygonCollider polygonColl = colliderB as PolygonCollider;
 
             // box collider polygon
@@ -189,7 +191,7 @@ namespace Raccoon.Physics {
         #region Box vs RichGrid
 
         private bool CheckBoxRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            BoxCollider boxColl = colliderA as BoxCollider;
+            /*BoxCollider boxColl = colliderA as BoxCollider;
             RichGridCollider richGridColl = colliderB as RichGridCollider;
 
             int startColumn, startRow, endColumn, endRow, row, column;
@@ -242,6 +244,7 @@ namespace Raccoon.Physics {
                 return false;
             }*/
 
+            /*
             Rectangle boxRect = new Rectangle(colliderAPos, boxColl.Size);
             if (!(boxRect & new Rectangle(colliderBPos, richGridColl.Size))) { // out of grid
                 return false;
@@ -315,5 +318,6 @@ namespace Raccoon.Physics {
         }
 
         #endregion Box vs RichGrid
+        */
     }
 }

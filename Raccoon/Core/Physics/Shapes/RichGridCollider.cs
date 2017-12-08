@@ -36,7 +36,7 @@ namespace Raccoon.Components {
         public override void DebugRender() {
             Size graphicSize = new Size((float) Math.Floor(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1), (float) Math.Floor(TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1));
             if (_graphicNeedUpdate || Graphic.Size != graphicSize) {
-                (Graphic as RectangleShape).Size = graphicSize;
+                (Graphic as RectanglePrimitive).Size = graphicSize;
                 _graphicNeedUpdate = false;
             }
 
@@ -161,7 +161,7 @@ namespace Raccoon.Components {
             Size = new Size(TileSize.Width * Columns, TileSize.Height * Rows);
 
 #if DEBUG
-            Graphic = new RectangleShape(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false) {
+            Graphic = new RectanglePrimitive(TileSize.Width * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, TileSize.Height * Game.Instance.Scale * Game.Instance.Scene.Camera.Zoom + 1, Color, false) {
                 Surface = Game.Instance.Core.DebugSurface
             };
 
@@ -196,14 +196,14 @@ namespace Raccoon.Components {
                 Polygon = polygon;
 
 #if DEBUG
-                Graphic = new Graphics.Primitives.PolygonShape(Polygon, Color.Red);
+                Graphic = new Graphics.Primitives.PolygonPrimitive(Polygon, Color.Red);
 #endif
             }
 
             public Polygon Polygon { get; private set; }
 
 #if DEBUG
-            public Graphics.Primitives.PolygonShape Graphic { get; protected set; }
+            public Graphics.Primitives.PolygonPrimitive Graphic { get; protected set; }
 #endif
         }
 

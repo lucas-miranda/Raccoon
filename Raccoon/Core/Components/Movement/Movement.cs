@@ -1,21 +1,19 @@
-﻿using System.Collections.Generic;
-
-namespace Raccoon.Components {
+﻿namespace Raccoon.Components {
     public abstract class Movement : Component {
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
         /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="collider">Collider used to detect end of movement.</param>
-        public Movement(Vector2 maxSpeed, Vector2 acceleration, Collider collider) {
+        /// <param name="body">Collider used to detect end of movement.</param>
+        public Movement(Vector2 maxSpeed, Vector2 acceleration, Body body) {
             MaxSpeed = maxSpeed;
             Acceleration = acceleration;
-            Collider = collider;
+            Body = body;
             IgnoreDebugRender = true;
         }
 
-        public Collider Collider { get; private set; }
+        public Body Body { get; private set; }
         public Vector2 LastPosition { get; protected set; }
         public Vector2 CurrentSpeed { get { return Util.Math.Clamp(Entity.Position - LastPosition, -MaxSpeed, MaxSpeed); } }
         public Vector2 MaxSpeed { get; set; }
@@ -40,8 +38,8 @@ namespace Raccoon.Components {
             LastPosition = Entity.Position;
 
             // register collider, if isn't already registered
-            if (Collider.Entity != Entity) {
-                Entity.AddComponent(Collider);
+            if (Body.Entity != Entity) {
+                Entity.AddComponent(Body);
             }
 
             Physics.Instance.AddMovement(this);
@@ -49,8 +47,8 @@ namespace Raccoon.Components {
 
         public override void OnRemoved() {
             base.OnRemoved();
-            if (Collider.Entity != null) {
-                Entity.RemoveComponent(Collider);
+            if (Body.Entity != null) {
+                Entity.RemoveComponent(Body);
             }
 
             Physics.Instance.RemoveMovement(this);
@@ -104,7 +102,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            AccumulatedForce += force / Collider.Mass;
+            AccumulatedForce += force / Body.Mass;
         }
 
         public virtual void Move(Vector2 axis) {

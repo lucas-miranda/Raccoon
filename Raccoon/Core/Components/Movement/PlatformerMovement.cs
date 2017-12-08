@@ -14,14 +14,14 @@ namespace Raccoon.Components {
         /// </summary>
         /// <param name="maxSpeed">Max horizontal and vertical speed (affects gravity and jumping). (in pixels/sec)</param>
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="collider">Collider used to detect end of movement.</param>
-        public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider = null) : base(maxSpeed, acceleration, collider) {
+        /// <param name="body">Collider used to detect end of movement.</param>
+        public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Body body = null) : base(maxSpeed, acceleration, body) {
             OnFallingBegin += () => {
                 _ledgeJumpTime = 0;
             };
         }
 
-        public PlatformerMovement(Vector2 maxSpeed, float timeToMaxSpeed, Collider collider = null) : this(maxSpeed, maxSpeed / timeToMaxSpeed, collider) {
+        public PlatformerMovement(Vector2 maxSpeed, float timeToMaxSpeed, Body body = null) : this(maxSpeed, maxSpeed / timeToMaxSpeed, body) {
         }
 
         public bool OnGround { get; protected set; }

@@ -7,11 +7,11 @@
         /// </summary>
         /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
         /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="collider">Collider used to detect end of movement.</param>
-        public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Collider collider) : base(maxSpeed, acceleration, collider) {
+        /// <param name="body">Collider used to detect end of movement.</param>
+        public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Body body) : base(maxSpeed, acceleration, body) {
         }
 
-        public BasicMovement(Vector2 maxSpeed, float timeToMaxSpeed, Collider collider) : base(maxSpeed, maxSpeed / timeToMaxSpeed, collider) {
+        public BasicMovement(Vector2 maxSpeed, float timeToMaxSpeed, Body body) : base(maxSpeed, maxSpeed / timeToMaxSpeed, body) {
         }
 
         public override void OnMoveUpdate(float dt) {

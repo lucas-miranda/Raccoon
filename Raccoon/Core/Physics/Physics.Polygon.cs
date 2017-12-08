@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using Raccoon.Components;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
+        /*
         #region Polygon vs Polygon
 
         private bool CheckPolygonPolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            PolygonCollider polygonAColl = colliderA as PolygonCollider, polygonBColl = colliderB as PolygonCollider;
+            /*PolygonCollider polygonAColl = colliderA as PolygonCollider, polygonBColl = colliderB as PolygonCollider;
 
             // polygon A collider polygon
             Polygon polygonA = polygonAColl.Polygon.Clone();
@@ -29,6 +30,7 @@ namespace Raccoon.Physics {
             }
 
             return CheckPolygonsIntersection(polygonA, polygonB, axes);
+            return false;
         }
 
         #endregion Polygon vs Polygon
@@ -68,5 +70,6 @@ namespace Raccoon.Physics {
         }
 
         #endregion Polygon vs RichGrid
+        */
     }
 }

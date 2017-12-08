@@ -3,7 +3,7 @@
 using Raccoon.Components;
 using Raccoon.Util;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public partial class Physics {
         #region Public Members
 
@@ -15,21 +15,23 @@ namespace Raccoon.Physics {
 
         #region Private Members
 
+        private delegate bool CollisionCheckDelegate(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold);
+
         private static readonly System.Lazy<Physics> _lazy = new System.Lazy<Physics>(() => new Physics());
 
-        private Dictionary<System.Type, Dictionary<System.Type, System.Func<Collider, Vector2, Collider, Vector2, bool>>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, System.Func<Collider, Vector2, Collider, Vector2, bool>>>();
+        private Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>>();
 
         // colliders register
         private Dictionary<string, HashSet<string>> _collisionTagTable = new Dictionary<string, HashSet<string>>();
-        private Dictionary<string, List<Collider>> _collidersByTag = new Dictionary<string, List<Collider>>();
-        private List<Collider> _colliders = new List<Collider>();
+        private Dictionary<string, List<Body>> _collidersByTag = new Dictionary<string, List<Body>>();
+        private List<Body> _colliders = new List<Body>();
         private List<Movement> _movements = new List<Movement>();
 
         // collision checking
         private int _leftOverDeltaTime;
-        private List<Collider> _collisionCandidates = new List<Collider>();
-        private Dictionary<string, List<Collider>> _candidatesByTag = new Dictionary<string, List<Collider>>();
-        private Dictionary<Collider, List<Collider>> _collisionQueries = new Dictionary<Collider, List<Collider>>();
+        private List<Body> _collisionCandidates = new List<Body>();
+        private Dictionary<string, List<Body>> _candidatesByTag = new Dictionary<string, List<Body>>();
+        private Dictionary<Body, List<Body>> _collisionQueries = new Dictionary<Body, List<Body>>();
 
         #endregion Private Members
 
@@ -37,21 +39,24 @@ namespace Raccoon.Physics {
 
         private Physics() {
             // collision functions dictionary
+            System.Type circle = typeof(CircleShape);
+
             System.Type[] colliderTypes = {
-                typeof(BoxCollider),
+                /*typeof(BoxCollider),
                 typeof(GridCollider),
                 typeof(CircleCollider),
                 typeof(LineCollider),
                 typeof(PolygonCollider),
-                typeof(RichGridCollider)
+                typeof(RichGridCollider)*/
+                circle
             };
 
             foreach (System.Type type in colliderTypes) {
-                _collisionFunctions.Add(type, new Dictionary<System.Type, System.Func<Collider, Vector2, Collider, Vector2, bool>>());
+                _collisionFunctions.Add(type, new Dictionary<System.Type, CollisionCheckDelegate>());
             }
 
             // box vs others
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(BoxCollider), CheckBoxBox);
+            /*_collisionFunctions[typeof(BoxCollider)].Add(typeof(BoxCollider), CheckBoxBox);
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(GridCollider), CheckBoxGrid);
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(CircleCollider), CheckBoxCircle);
             _collisionFunctions[typeof(BoxCollider)].Add(typeof(LineCollider), CheckBoxLine);
@@ -64,10 +69,11 @@ namespace Raccoon.Physics {
             _collisionFunctions[typeof(GridCollider)].Add(typeof(CircleCollider), CheckGridCircle);
             _collisionFunctions[typeof(GridCollider)].Add(typeof(LineCollider), CheckGridLine);
             _collisionFunctions[typeof(GridCollider)].Add(typeof(PolygonCollider), CheckGridPolygon);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(RichGridCollider), CheckGridRichGrid);
+            _collisionFunctions[typeof(GridCollider)].Add(typeof(RichGridCollider), CheckGridRichGrid);*/
 
             // circle vs others
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(CircleCollider), CheckCircleCircle);
+            _collisionFunctions[circle].Add(circle, CheckCircleCircle);
+            /*_collisionFunctions[typeof(CircleCollider)].Add(typeof(CircleCollider), CheckCircleCircle);
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(BoxCollider), CheckCircleBox);
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(GridCollider), CheckCircleGrid);
             _collisionFunctions[typeof(CircleCollider)].Add(typeof(LineCollider), CheckCircleLine);
@@ -96,7 +102,7 @@ namespace Raccoon.Physics {
             _collisionFunctions[typeof(RichGridCollider)].Add(typeof(BoxCollider), CheckRichGridBox);
             _collisionFunctions[typeof(RichGridCollider)].Add(typeof(GridCollider), CheckRichGridGrid);
             _collisionFunctions[typeof(RichGridCollider)].Add(typeof(CircleCollider), CheckRichGridCircle);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(LineCollider), CheckRichGridLine);
+            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(LineCollider), CheckRichGridLine);*/
         }
 
         #endregion Constructors
@@ -144,11 +150,11 @@ namespace Raccoon.Physics {
 #endif
 
                 // solve constraints
-                for (int j = 0; j < ConstraintSolverAccuracy; j++) {
-                    foreach (Collider collider in _colliders) {
+                /*for (int j = 0; j < ConstraintSolverAccuracy; j++) {
+                    foreach (Body collider in _colliders) {
                         collider.SolveConstraints();
                     }
-                }
+                }*/
 
 #if DEBUG
                 SolveConstraintsExecutionTime += Time.EndStopwatch();
@@ -159,26 +165,34 @@ namespace Raccoon.Physics {
                 // collision detection
                 _collisionCandidates.Clear();
                 _collisionQueries.Clear();
-                foreach (List<Collider> candidatesList in _candidatesByTag.Values) {
+                foreach (List<Body> candidatesList in _candidatesByTag.Values) {
                     candidatesList.Clear();
                 }
 
                 // broad phase
                 // choose candidate colliders
-                foreach (Collider collider in _colliders) {
+                foreach (Body collider in _colliders) {
                     _collisionCandidates.Add(collider);
 
-                    foreach (string tag in collider.Tags) {
+                    /*foreach (string tag in collider.Tags) {
                         _candidatesByTag[tag].Add(collider);
-                    }
+                    }*/
                 }
 
                 // prepare queries
                 // TODO: optimize this section
-                foreach (Collider collider in _collisionCandidates) {
-                    _collisionQueries.Add(collider, new List<Collider>());
+                foreach (Body collider in _collisionCandidates) {
+                    _collisionQueries.Add(collider, new List<Body>());
 
-                    foreach (string tag in collider.Tags) {
+                    foreach (Body colliderB in _collisionCandidates) {
+                        if (colliderB == collider || _collisionQueries.ContainsKey(colliderB)) {
+                            continue;
+                        }
+
+                        _collisionQueries[collider].Add(colliderB);
+                    }
+
+                    /*foreach (string tag in collider.Tags) {
                         foreach (string collisionTag in _collisionTagTable[tag]) {
                             foreach (Collider candidateCollider in _candidatesByTag[collisionTag]) {
                                 if (_collisionQueries.ContainsKey(candidateCollider)) {
@@ -188,7 +202,7 @@ namespace Raccoon.Physics {
                                 _collisionQueries[collider].Add(candidateCollider);
                             }
                         }
-                    }
+                    }*/
                 }
 
 #if DEBUG
@@ -198,11 +212,12 @@ namespace Raccoon.Physics {
 #endif
 
                 // narrow phase
-                foreach (KeyValuePair<Collider, List<Collider>> query in _collisionQueries) {
-                    foreach (Collider colliderCandidate in query.Value) {
-                        if (CheckCollision(query.Key, colliderCandidate, out Manifold collManifold)) {
-                            query.Key.OnCollide(colliderCandidate);
-                            colliderCandidate.OnCollide(query.Key);
+                foreach (KeyValuePair<Body, List<Body>> query in _collisionQueries) {
+                    foreach (Body colliderCandidate in query.Value) {
+                        if (CheckCollision(query.Key, colliderCandidate, out Manifold manifold)) {
+                            //Debug.WriteLine($"Collision with {query.Key.Entity.Name} and {colliderCandidate.Entity.Name}");
+                            query.Key.OnCollide(colliderCandidate, manifold);
+                            colliderCandidate.OnCollide(query.Key, manifold);
                         }
                     }
                 }
@@ -222,9 +237,9 @@ namespace Raccoon.Physics {
                 return;
             }
 
-            _collidersByTag.Add(tagName, new List<Collider>());
+            _collidersByTag.Add(tagName, new List<Body>());
             _collisionTagTable.Add(tagName, new HashSet<string>());
-            _candidatesByTag.Add(tagName, new List<Collider>());
+            _candidatesByTag.Add(tagName, new List<Body>());
         }
 
         public void RegisterTag(System.Enum tag) {
@@ -310,10 +325,10 @@ namespace Raccoon.Physics {
             return IsCollidable(tagA.ToString(), tagB.ToString());
         }
 
-        public void AddCollider(Collider collider) {
-            foreach (string tag in collider.Tags) {
+        public void AddCollider(Body collider) {
+            /*foreach (string tag in collider.Tags) {
                 AddCollider(collider, tag);
-            }
+            }*/
 
             _colliders.Add(collider);
         }
@@ -322,10 +337,10 @@ namespace Raccoon.Physics {
             _movements.Add(movement);
         }
 
-        public void RemoveCollider(Collider collider) {
-            foreach (string tag in collider.Tags) {
+        public void RemoveCollider(Body collider) {
+            /*foreach (string tag in collider.Tags) {
                 RemoveCollider(collider, tag);
-            }
+            }*/
 
             _colliders.Remove(collider);
         }
@@ -345,6 +360,8 @@ namespace Raccoon.Physics {
         public int GetCollidersCount(System.Enum tag) {
             return GetCollidersCount(tag.ToString());
         }
+
+        /*
 
         #region Collides [Single Tag] [Single Output]
 
@@ -534,11 +551,13 @@ namespace Raccoon.Physics {
 
         #endregion Collides [Multiple Tag] [Multiple Output]
 
+        */
+
         #endregion Public Methods
 
         #region Private Methods
 
-        private void AddCollider(Collider collider, string tagName) {
+        private void AddCollider(Body collider, string tagName) {
             RegisterTag(tagName);
             if (_collidersByTag[tagName].Contains(collider)) {
                 return;
@@ -547,7 +566,7 @@ namespace Raccoon.Physics {
             _collidersByTag[tagName].Add(collider);
         }
 
-        private void RemoveCollider(Collider collider, string tagName) {
+        private void RemoveCollider(Body collider, string tagName) {
             if (string.IsNullOrWhiteSpace(tagName)) {
                 throw new System.ArgumentException("Tag can't be empty.", "tagName");
             }
@@ -559,16 +578,16 @@ namespace Raccoon.Physics {
             _collidersByTag[tagName].Remove(collider);
         }
 
-        private bool CheckCollision(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return _collisionFunctions[colliderA.GetType()][colliderB.GetType()](colliderA, colliderAPos, colliderB, colliderBPos);
+        private bool CheckCollision(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            return _collisionFunctions[A.Shape.GetType()][B.Shape.GetType()](A, APos, B, BPos, out manifold);
         }
 
-        private bool CheckCollision(Collider colliderA, Vector2 colliderAPos, Collider colliderB) {
-            return CheckCollision(colliderA, colliderAPos, colliderB, colliderB.Position);
+        private bool CheckCollision(Body A, Vector2 APos, Body B, out Manifold manifold) {
+            return CheckCollision(A, APos, B, B.Position, out manifold);
         }
 
-        private bool CheckCollision(Collider colliderA, Collider colliderB) {
-            return CheckCollision(colliderA, colliderA.Position, colliderB, colliderB.Position);
+        private bool CheckCollision(Body A, Body B, out Manifold manifold) {
+            return CheckCollision(A, A.Position, B, B.Position, out manifold);
         }
 
         #endregion Private Methods

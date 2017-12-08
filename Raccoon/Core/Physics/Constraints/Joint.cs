@@ -1,24 +1,24 @@
 ﻿using Raccoon.Components;
 using Raccoon.Graphics;
 
-namespace Raccoon.Physics {
+namespace Raccoon {
     public abstract class Joint : IConstraint {
-        public Joint(Collider colliderA, Collider colliderB) {
-            if (colliderA == null || colliderB == null) {
-                throw new System.ArgumentNullException("ColliderA and colliderB can't be null.");
+        public Joint(Body a, Body b) {
+            if (a == null || b == null) {
+                throw new System.ArgumentNullException("Body A and B can't be null.");
             }
 
-            ColliderA = colliderA;
-            ColliderB = colliderB;
+            A = a;
+            B = b;
         }
 
-        public Collider ColliderA { get; private set; }
-        public Collider ColliderB { get; private set; }
+        public Body A { get; private set; }
+        public Body B { get; private set; }
 
         public abstract void Solve();
 
         public virtual void DebugRender() {
-            Debug.DrawLine(ColliderA.Position, ColliderB.Position, Color.Orange);
+            Debug.DrawLine(A.Position, B.Position, Color.Orange);
         }
     }
 }
