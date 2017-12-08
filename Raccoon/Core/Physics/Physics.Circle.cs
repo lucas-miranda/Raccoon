@@ -1,7 +1,7 @@
 ﻿using Raccoon.Components;
 
 namespace Raccoon {
-    public partial class Physics {
+    public sealed partial class Physics {
         #region Circle vs Circle
 
         private bool CheckCircleCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {

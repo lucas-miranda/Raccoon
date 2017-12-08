@@ -2,7 +2,7 @@
 using Raccoon.Util;
 
 namespace Raccoon {
-    public partial class Physics {
+    public sealed partial class Physics {
         private bool CheckPolygonsIntersection(Polygon polygonA, Polygon polygonB, IEnumerable<Vector2> axes) {
             foreach (Vector2 axis in axes) {
                 Range projectionA = polygonA.Projection(axis), projectionB = polygonB.Projection(axis);

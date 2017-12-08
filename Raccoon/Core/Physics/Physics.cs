@@ -4,7 +4,7 @@ using Raccoon.Components;
 using Raccoon.Util;
 
 namespace Raccoon {
-    public partial class Physics {
+    public sealed partial class Physics {
         #region Public Members
 
         public static float FixedDeltaTimeSeconds = 1f / 60f;

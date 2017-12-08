@@ -33,9 +33,10 @@
         public override void Render() {
         }
 
+#if DEBUG
         Manifold m;
         public override void DebugRender() {
-            /*Shape.DebugRender(Position);
+            Shape.DebugRender(Position);
 
             if (m != null) {
                 foreach (Contact contact in m.Contacts) {
@@ -43,11 +44,14 @@
                 }
             }
 
-            Debug.DrawString(Debug.Transform(Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0)), Position.ToString());*/
+            Debug.DrawString(Debug.Transform(Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0)), Position.ToString());
         }
+#endif
 
         public void OnCollide(Body otherBody, Manifold manifold) {
+#if DEBUG
             m = manifold;
+#endif
         }
     }
 }

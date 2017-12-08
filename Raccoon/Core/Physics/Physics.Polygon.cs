@@ -2,7 +2,7 @@
 using Raccoon.Components;
 
 namespace Raccoon {
-    public partial class Physics {
+    public sealed partial class Physics {
         /*
         #region Polygon vs Polygon
 
