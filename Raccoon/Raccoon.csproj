@@ -43,13 +43,20 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Core\Physics\Contact.cs" />
+    <Compile Include="Core\Physics\Shapes\BoxShape.cs" />
     <Compile Include="Core\Components\StateMachine\State.cs" />
     <Compile Include="Core\Components\StateMachine\Transition.cs" />
     <Compile Include="Core\Components\StateMachine\Trigger.cs" />
+    <Compile Include="Core\Components\Physics\Body.cs" />
+    <Compile Include="Core\Physics\Manifold.cs" />
     <Compile Include="Core\Physics\Constraints\DistanceJoint.cs" />
     <Compile Include="Core\Physics\Constraints\IConstraint.cs" />
     <Compile Include="Core\Physics\Constraints\Joint.cs" />
     <Compile Include="Core\Definitions\Comparison.cs" />
+    <Compile Include="Core\Physics\Shapes\CircleShape.cs" />
+    <Compile Include="Core\Physics\Shapes\IShape.cs" />
+    <Compile Include="Core\Physics\IMaterial.cs" />
     <Compile Include="Core\Physics\Physics.Box.cs" />
     <Compile Include="Core\Physics\Physics.Circle.cs" />
     <Compile Include="Core\Physics\Physics.Grid.cs" />
@@ -57,6 +64,7 @@
     <Compile Include="Core\Physics\Physics.Line.cs" />
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\Physics.RichGrid.cs" />
+    <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
@@ -64,13 +72,9 @@
     <Compile Include="Util\Collections\PriorityQueue.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Alarm.cs" />
-    <Compile Include="Core\Components\Colliders\CircleCollider.cs" />
-    <Compile Include="Core\Components\Colliders\Collider.cs" />
-    <Compile Include="Core\Components\Colliders\BoxCollider.cs" />
-    <Compile Include="Core\Components\Colliders\GridCollider.cs" />
-    <Compile Include="Core\Components\Colliders\LineCollider.cs" />
-    <Compile Include="Core\Components\Colliders\PolygonCollider.cs" />
-    <Compile Include="Core\Components\Colliders\RichGridCollider.cs" />
+    <Compile Include="Core\Physics\Shapes\Collider.cs" />
+    <Compile Include="Core\Physics\Shapes\GridCollider.cs" />
+    <Compile Include="Core\Physics\Shapes\RichGridCollider.cs" />
     <Compile Include="Core\Components\Component.cs" />
     <Compile Include="Core\Components\Movement\PlatformerMovement.cs" />
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />

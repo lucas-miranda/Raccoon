@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
+using Raccoon.Physics;
 using Raccoon.Graphics;
-using Raccoon.Constraints;
 
 namespace Raccoon.Components {
     public abstract class Collider : Component {
@@ -75,11 +75,11 @@ namespace Raccoon.Components {
 
         public override void OnAdded(Entity entity) {
             base.OnAdded(entity);
-            Physics.Instance.AddCollider(this);
+            Physics.Physics.Instance.AddCollider(this);
         }
 
         public override void OnRemoved() {
-            Physics.Instance.RemoveCollider(this);
+            Physics.Physics.Instance.RemoveCollider(this);
         }
 
         public override void Update(int delta) {
@@ -125,7 +125,7 @@ namespace Raccoon.Components {
 
         public void RegisterCallback(System.Action<Collider, Collider> callback, params string[] tagNames) {
             foreach (string tagName in tagNames) {
-                if (!Physics.Instance.HasTag(tagName)) {
+                if (!Physics.Physics.Instance.HasTag(tagName)) {
                     throw new System.ArgumentException($"Tag '{tagName}' has not been registered.");
                 }
 
@@ -145,7 +145,7 @@ namespace Raccoon.Components {
         #region Collides [Single Tag] [Single Output]
 
         public bool Collides(Vector2 position, string tag) {
-            return Physics.Instance.Collides(position, this, tag);
+            return Physics.Physics.Instance.Collides(position, this, tag);
         }
 
         public bool Collides(Vector2 position, System.Enum tag) {
@@ -153,7 +153,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(Vector2 position, string tag, out Collider collidedCollider) {
-            return Physics.Instance.Collides(position, this, tag, out collidedCollider);
+            return Physics.Physics.Instance.Collides(position, this, tag, out collidedCollider);
         }
 
         public bool Collides(Vector2 position, System.Enum tag, out Collider collidedCollider) {
@@ -161,7 +161,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(Vector2 position, string tag, out T collidedEntity) where T : Entity {
-            return Physics.Instance.Collides(position, this, tag, out collidedEntity);
+            return Physics.Physics.Instance.Collides(position, this, tag, out collidedEntity);
         }
 
         public bool Collides<T>(Vector2 position, System.Enum tag, out T collidedEntity) where T : Entity {
@@ -169,7 +169,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(string tag) {
-            return Physics.Instance.Collides(this, tag);
+            return Physics.Physics.Instance.Collides(this, tag);
         }
 
         public bool Collides(System.Enum tag) {
@@ -177,7 +177,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(string tag, out Collider collidedCollider) {
-            return Physics.Instance.Collides(this, tag, out collidedCollider);
+            return Physics.Physics.Instance.Collides(this, tag, out collidedCollider);
         }
 
         public bool Collides(System.Enum tag, out Collider collidedCollider) {
@@ -185,7 +185,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(string tag, out T collidedEntity) where T : Entity {
-            return Physics.Instance.Collides(this, tag, out collidedEntity);
+            return Physics.Physics.Instance.Collides(this, tag, out collidedEntity);
         }
 
         public bool Collides<T>(System.Enum tag, out T collidedEntity) where T : Entity {
@@ -197,7 +197,7 @@ namespace Raccoon.Components {
         #region Collides [Single Tag] [Multiple Output]
 
         public bool Collides(Vector2 position, string tag, out List<Collider> collidedColliders) {
-            return Physics.Instance.Collides(position, this, tag, out collidedColliders);
+            return Physics.Physics.Instance.Collides(position, this, tag, out collidedColliders);
         }
 
         public bool Collides(Vector2 position, System.Enum tag, out List<Collider> collidedColliders) {
@@ -205,7 +205,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(Vector2 position, string tag, out List<T> collidedEntities) where T : Entity {
-            return Physics.Instance.Collides(position, this, tag, out collidedEntities);
+            return Physics.Physics.Instance.Collides(position, this, tag, out collidedEntities);
         }
 
         public bool Collides<T>(Vector2 position, System.Enum tag, out List<T> collidedEntities) where T : Entity {
@@ -213,7 +213,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(string tag, out List<Collider> collidedColliders) {
-            return Physics.Instance.Collides(this, tag, out collidedColliders);
+            return Physics.Physics.Instance.Collides(this, tag, out collidedColliders);
         }
 
         public bool Collides(System.Enum tag, out List<Collider> collidedColliders) {
@@ -221,7 +221,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(string tag, out List<T> collidedEntities) where T : Entity {
-            return Physics.Instance.Collides(this, tag, out collidedEntities);
+            return Physics.Physics.Instance.Collides(this, tag, out collidedEntities);
         }
 
         public bool Collides<T>(System.Enum tag, out List<T> collidedEntities) where T : Entity {
@@ -233,7 +233,7 @@ namespace Raccoon.Components {
         #region Collides [Multiple Tag] [Single Output]
 
         public bool Collides(Vector2 position, IEnumerable<string> tags) {
-            return Physics.Instance.Collides(position, this, tags);
+            return Physics.Physics.Instance.Collides(position, this, tags);
         }
 
         public bool Collides(Vector2 position, IEnumerable<System.Enum> tags) {
@@ -247,7 +247,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(Vector2 position, IEnumerable<string> tags, out Collider collidedCollider) {
-            return Physics.Instance.Collides(position, this, tags, out collidedCollider);
+            return Physics.Physics.Instance.Collides(position, this, tags, out collidedCollider);
         }
 
         public bool Collides(Vector2 position, IEnumerable<System.Enum> tags, out Collider collidedCollider) {
@@ -262,7 +262,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(Vector2 position, IEnumerable<string> tags, out T collidedEntity) where T : Entity {
-            return Physics.Instance.Collides(position, this, tags, out collidedEntity);
+            return Physics.Physics.Instance.Collides(position, this, tags, out collidedEntity);
         }
 
         public bool Collides<T>(Vector2 position, IEnumerable<System.Enum> tags, out T collidedEntity) where T : Entity {
@@ -277,7 +277,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(IEnumerable<string> tags) {
-            return Physics.Instance.Collides(this, tags);
+            return Physics.Physics.Instance.Collides(this, tags);
         }
 
         public bool Collides(IEnumerable<System.Enum> tags) {
@@ -291,7 +291,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(IEnumerable<string> tags, out Collider collidedCollider) {
-            return Physics.Instance.Collides(this, tags, out collidedCollider);
+            return Physics.Physics.Instance.Collides(this, tags, out collidedCollider);
         }
 
         public bool Collides(IEnumerable<System.Enum> tags, out Collider collidedCollider) {
@@ -306,7 +306,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(IEnumerable<string> tags, out T collidedEntity) where T : Entity {
-            return Physics.Instance.Collides(this, tags, out collidedEntity);
+            return Physics.Physics.Instance.Collides(this, tags, out collidedEntity);
         }
 
         public bool Collides<T>(IEnumerable<System.Enum> tags, out T collidedEntity) where T : Entity {
@@ -325,7 +325,7 @@ namespace Raccoon.Components {
         #region Collides [Multiple Tag] [Multiple Output]
 
         public bool Collides(Vector2 position, IEnumerable<string> tags, out List<Collider> collidedColliders) {
-            return Physics.Instance.Collides(position, this, tags, out collidedColliders);
+            return Physics.Physics.Instance.Collides(position, this, tags, out collidedColliders);
         }
 
         public bool Collides(Vector2 position, IEnumerable<System.Enum> tags, out List<Collider> collidedColliders) {
@@ -341,7 +341,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(Vector2 position, IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
-            return Physics.Instance.Collides(position, this, tags, out collidedEntities);
+            return Physics.Physics.Instance.Collides(position, this, tags, out collidedEntities);
         }
 
         public bool Collides<T>(Vector2 position, IEnumerable<System.Enum> tags, out List<T> collidedEntities) where T : Entity {
@@ -357,7 +357,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(IEnumerable<string> tags, out List<Collider> collidedColliders) {
-            return Physics.Instance.Collides(this, tags, out collidedColliders);
+            return Physics.Physics.Instance.Collides(this, tags, out collidedColliders);
         }
 
         public bool Collides(IEnumerable<System.Enum> tags, out List<Collider> collidedColliders) {
@@ -373,7 +373,7 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(IEnumerable<string> tags, out List<T> collidedEntities) where T : Entity {
-            return Physics.Instance.Collides(this, tags, out collidedEntities);
+            return Physics.Physics.Instance.Collides(this, tags, out collidedEntities);
         }
 
         public bool Collides<T>(IEnumerable<System.Enum> tags, out List<T> collidedEntities) where T : Entity {

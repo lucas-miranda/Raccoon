@@ -1,6 +1,6 @@
 ﻿using Raccoon.Components;
 
-namespace Raccoon {
+namespace Raccoon.Physics {
     public partial class Physics {
         #region Grid vs Grid
 

@@ -1,7 +1,7 @@
 ﻿using Raccoon.Components;
 using Raccoon.Graphics;
 
-namespace Raccoon.Constraints {
+namespace Raccoon.Physics {
     public abstract class Joint : IConstraint {
         public Joint(Collider colliderA, Collider colliderB) {
             if (colliderA == null || colliderB == null) {

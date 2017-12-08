@@ -3,7 +3,7 @@
 using Raccoon.Components;
 using Raccoon.Util;
 
-namespace Raccoon {
+namespace Raccoon.Physics {
     public partial class Physics {
         #region Public Members
 
@@ -200,7 +200,7 @@ namespace Raccoon {
                 // narrow phase
                 foreach (KeyValuePair<Collider, List<Collider>> query in _collisionQueries) {
                     foreach (Collider colliderCandidate in query.Value) {
-                        if (CheckCollision(query.Key, colliderCandidate)) {
+                        if (CheckCollision(query.Key, colliderCandidate, out Manifold collManifold)) {
                             query.Key.OnCollide(colliderCandidate);
                             colliderCandidate.OnCollide(query.Key);
                         }

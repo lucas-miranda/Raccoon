@@ -1,13 +1,33 @@
 ﻿using Raccoon.Components;
 
-namespace Raccoon {
+namespace Raccoon.Physics {
     public partial class Physics {
         #region Circle vs Circle
 
-        private bool CheckCircleCircle(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            CircleCollider circleA = colliderA as CircleCollider, circleB = colliderB as CircleCollider;
-            Vector2 centerDiff = (colliderBPos + circleB.Radius) - (colliderAPos + circleA.Radius);
-            return centerDiff.X * centerDiff.X + centerDiff.Y * centerDiff.Y <= (circleA.Radius + circleB.Radius) * (circleA.Radius + circleB.Radius);
+        private bool CheckCircleCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            CircleShape shapeA = A.Shape as CircleShape,
+                        shapeB = B.Shape as CircleShape;
+
+            Vector2 translation = BPos - APos;
+            float radius = shapeA.Radius + shapeB.Radius;
+            if (translation.LengthSquared() > radius * radius) {
+                manifold = null;
+                return false;
+            }
+
+            float dist = translation.Length();
+            manifold = new Manifold(A, B) {
+                Contacts = new Contact[1]
+            };
+
+            if (dist == 0) {
+                manifold.Contacts[0] = new Contact(APos, Vector2.Right, shapeA.Radius);
+            } else {
+                Vector2 normal = translation / dist;
+                manifold.Contacts[0] = new Contact(normal * shapeA.Radius + APos, normal, radius - dist);
+            }
+
+            return true;
         }
 
         #endregion Circle vs Circle
