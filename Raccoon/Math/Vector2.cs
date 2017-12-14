@@ -59,10 +59,21 @@ namespace Raccoon {
             return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
         }
 
-        public static Vector2 Normalize(Vector2 v) {
-            if ((int) v.X == 0 && (int) v.Y == 0) throw new System.ArgumentException("Both X and Y values can't be zero.", "v");
+        public static Vector2 Cross(Vector2 a, float n) {
+            return new Vector2(n * a.Y, -n * a.X);
+        }
 
-            return v * (1f / v.Length());
+        public static Vector2 Cross(float n, Vector2 a) {
+            return new Vector2(-n * a.Y, n * a.X);
+        }
+
+        public static Vector2 Normalize(Vector2 v) {
+            float length = v.Length();
+            if (length <= Math.Epsilon) {
+                return v;
+            }
+
+            return v * (1f / length);
         }
 
         public static Vector2 Lerp(Vector2 start, Vector2 end, float t) {
