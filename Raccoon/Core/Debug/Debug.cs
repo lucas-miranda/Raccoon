@@ -533,6 +533,14 @@ namespace Raccoon {
             return Game.Instance.DebugSurface.Transform(new Vector2(n), surface).X;
         }
 
+        public static Size Transform(Size size) {
+            return new Size(Transform(size.ToVector2()));
+        }
+
+        public static Size Transform(Size size, Surface surface) {
+            return new Size(Transform(size.ToVector2(), surface));
+        }
+
         #endregion Others
 
         #endregion Public Static Methods
