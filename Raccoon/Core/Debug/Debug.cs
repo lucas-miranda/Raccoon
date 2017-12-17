@@ -254,10 +254,10 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle, Color color) {
+        public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0) {
             rectangle = new Rectangle(rectangle.Position * (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale, rectangle.Size);
 
-            Game.Instance.Core.BasicEffect.World = Game.Instance.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-rectangle.Width / 2f, -rectangle.Height / 2f, 0f) * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Util.Math.ToRadians(rotation)) * Microsoft.Xna.Framework.Matrix.CreateTranslation(rectangle.X + rectangle.Width / 2f, rectangle.Y + rectangle.Height / 2f, 0f) * Game.Instance.DebugSurface.World;
             Game.Instance.Core.BasicEffect.View = Game.Instance.DebugSurface.View;
             Game.Instance.Core.BasicEffect.Projection = Game.Instance.DebugSurface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
@@ -266,11 +266,11 @@ namespace Raccoon {
             Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
             Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[5] {
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Top, 0f), Color.White),
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Right, rectangle.Top, 0f), Color.White),
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Right, rectangle.Bottom, 0f), Color.White),
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Bottom, 0f), Color.White),
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Left, rectangle.Top, 0f), Color.White)
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Width, 0f, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Width, rectangle.Height, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, rectangle.Height, 0f), Color.White),
+                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f), Color.White)
                 }, 0, 4);
 
             Game.Instance.Core.BasicEffect.Alpha = 1f;
@@ -278,23 +278,23 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle) {
-            DrawRectangle(rectangle, Color.White);
+        public static void DrawRectangle(Rectangle rectangle, float rotation = 0) {
+            DrawRectangle(rectangle, Color.White, rotation);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color) {
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0) {
             if (camera == null) {
-                DrawRectangle(rectangle, color);
+                DrawRectangle(rectangle, color, rotation);
                 return;
             }
 
-            DrawRectangle(new Rectangle(camera.Position + rectangle.Position / (camera.Zoom * Game.Instance.Scale), rectangle.Size), color);
+            DrawRectangle(new Rectangle(camera.Position + rectangle.Position / (camera.Zoom * Game.Instance.Scale), rectangle.Size), color, rotation);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Camera camera, Rectangle rectangle) {
-            DrawRectangle(camera, rectangle, Color.White);
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, float rotation) {
+            DrawRectangle(camera, rectangle, Color.White, rotation);
         }
 
         [Conditional("DEBUG")]
