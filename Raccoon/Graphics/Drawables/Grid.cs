@@ -23,8 +23,11 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X, Scale.Y, 1) * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X * Scroll.X, position.Y * Scroll.Y, 0f) * Microsoft.Xna.Framework.Matrix.CreateLookAt(new Microsoft.Xna.Framework.Vector3(0f, 0f, 1f), new Microsoft.Xna.Framework.Vector3(0f, 0f, -1f), Microsoft.Xna.Framework.Vector3.Up) * Surface.World;
-            Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.CreateScale(1f / Scroll.X, 1f / Scroll.Y, 1f) * Surface.View * Microsoft.Xna.Framework.Matrix.CreateScale(Scroll.X, Scroll.Y, 1f);
+            Vector2 scroll = Scroll.X == 0f && Scroll.Y == 0f ? new Vector2(Util.Math.Epsilon) : Scroll;
+            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X, Scale.Y, 1) * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Surface.World;
+            Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
             Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
