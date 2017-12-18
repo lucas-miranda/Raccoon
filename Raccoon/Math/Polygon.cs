@@ -251,8 +251,8 @@ namespace Raccoon {
         }
 
         public IEnumerable<Line> Edges() {
-            Vector2 previousVertex = _vertices[0];
-            for (int i = 1; i < VertexCount; i++) {
+            Vector2 previousVertex = _vertices[_vertices.Count - 1];
+            for (int i = 0; i < VertexCount; i++) {
                 Vector2 currentVertex = _vertices[i];
                 yield return new Line(previousVertex, currentVertex);
                 previousVertex = currentVertex;
