@@ -4,28 +4,32 @@ using System.Collections.Generic;
 using Raccoon.Util;
 
 namespace Raccoon {
-    public class Polygon : IEnumerable {
+    public struct Polygon : IEnumerable {
         #region Private Members
 
-        private List<Vector2> _vertices = new List<Vector2>();
-        private List<Polygon> _convexComponents = new List<Polygon>();
-        private bool _needRecalculateComponents = false;
+        private List<Vector2> _vertices;
+        private List<Polygon> _convexComponents;
+        private bool _needRecalculateComponents;
 
         #endregion Private Members
 
         #region Constructors
 
-        public Polygon() { }
-
         public Polygon(IEnumerable<Vector2> points) {
+            _vertices = new List<Vector2>();
+            _convexComponents = new List<Polygon>();
+            _needRecalculateComponents = false;
+            IsConvex = false;
+            Normals = new Vector2[0];
             AddVertices(points);
         }
 
         public Polygon(params Vector2[] points) : this((IEnumerable<Vector2>) points) { }
 
         public Polygon(Polygon polygon) {
-            _vertices.AddRange(polygon._vertices);
+            _vertices = new List<Vector2>(polygon._vertices);
 
+            _convexComponents = new List<Polygon>();
             foreach (Polygon convexComponent in polygon.GetConvexComponents()) {
                 _convexComponents.Add(new Polygon(convexComponent._vertices));
             }
@@ -106,6 +110,24 @@ namespace Raccoon {
 
         public void Translate(float x, float y) {
             Translate(new Vector2(x, y));
+        }
+
+        public void Scale(Vector2 factor, Vector2 origin) {
+            for (int i = 0; i < VertexCount; i++) {
+                _vertices[i] = (_vertices[i] - origin) * factor + origin;
+            }
+        }
+
+        public void Scale(float factor, Vector2 origin) {
+            Scale(new Vector2(factor), origin);
+        }
+
+        public void Scale(Vector2 factor) {
+            Scale(factor, _vertices[0]);
+        }
+
+        public void Scale(float factor) {
+            Scale(new Vector2(factor), _vertices[0]);
         }
 
         public void RotateAround(float degrees, Vector2 origin) {
@@ -235,10 +257,6 @@ namespace Raccoon {
                 yield return new Line(previousVertex, currentVertex);
                 previousVertex = currentVertex;
             }
-        }
-
-        public Polygon Clone() {
-            return new Polygon(this);
         }
 
         public IEnumerator GetEnumerator() {
