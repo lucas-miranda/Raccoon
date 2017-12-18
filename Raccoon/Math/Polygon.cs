@@ -31,6 +31,10 @@ namespace Raccoon {
             }
 
             IsConvex = polygon.IsConvex;
+
+            Normals = new Vector2[polygon.Normals.Length];
+            polygon.Normals.CopyTo(Normals, 0);
+
             _needRecalculateComponents = polygon._needRecalculateComponents;
         }
 
@@ -40,6 +44,7 @@ namespace Raccoon {
 
         public int VertexCount { get { return _vertices.Count; } }
         public bool IsConvex { get; private set; }
+        public Vector2[] Normals { get; private set; }
 
         public Vector2 this [int index] {
             get {
@@ -223,6 +228,15 @@ namespace Raccoon {
             return triangles;
         }
 
+        public IEnumerable<Line> Edges() {
+            Vector2 previousVertex = _vertices[0];
+            for (int i = 1; i < VertexCount; i++) {
+                Vector2 currentVertex = _vertices[i];
+                yield return new Line(previousVertex, currentVertex);
+                previousVertex = currentVertex;
+            }
+        }
+
         public Polygon Clone() {
             return new Polygon(this);
         }
@@ -241,9 +255,10 @@ namespace Raccoon {
 
         private void Verify() {
             if (VertexCount < 3) {
-                return;
+                throw new System.InvalidOperationException("Polygon must have at least 3 vertices.");
             }
 
+            // convexity test
             IsConvex = true;
 
             // algorithm to determine if it's convex: http://stackoverflow.com/a/1881201
@@ -260,6 +275,14 @@ namespace Raccoon {
                 }
 
                 previous = center;
+            }
+
+            // calculate normals
+            Normals = new Vector2[VertexCount];
+            int j = 0;
+            foreach (Line line in Edges()) {
+                Normals[j] = line.ToVector2().Perpendicular().Normalized();
+                j++;
             }
 
             _needRecalculateComponents = true;
