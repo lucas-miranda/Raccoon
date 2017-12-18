@@ -472,6 +472,55 @@ namespace Raccoon {
             DrawTriangle(camera, triangle, Color.White);
         }
 
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Polygon polygon, Color color) {
+            float correction = (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.DebugSurface.Projection;
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+
+            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[polygon.VertexCount + 1];
+            int i = 0;
+            foreach (Vector2 vertexPos in polygon) {
+                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(vertexPos.X * correction, vertexPos.Y * correction , 0f), Color.White);
+                i++;
+            }
+
+            vertices[i] = vertices[0];
+
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+                pass.Apply();
+                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, vertices.Length - 1);
+            }
+
+            Game.Instance.Core.BasicEffect.Alpha = 1f;
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Polygon polygon) {
+            DrawPolygon(polygon, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Camera camera, Polygon polygon, Color color) {
+            if (camera == null) {
+                DrawPolygon(polygon, color);
+                return;
+            }
+
+            polygon.Translate(camera.Position);
+            DrawPolygon(polygon, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Camera camera, Polygon polygon) {
+            DrawPolygon(camera, polygon, Color.White);
+        }
+
         #endregion Primitives
 
         #region Log
