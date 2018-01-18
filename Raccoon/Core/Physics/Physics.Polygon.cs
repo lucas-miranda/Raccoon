@@ -3,33 +3,27 @@ using Raccoon.Components;
 
 namespace Raccoon {
     public sealed partial class Physics {
-        /*
         #region Polygon vs Polygon
 
-        private bool CheckPolygonPolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            /*PolygonCollider polygonAColl = colliderA as PolygonCollider, polygonBColl = colliderB as PolygonCollider;
+        private bool CheckPolygonPolygon(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            PolygonShape shapeA = A.Shape as PolygonShape,
+                         shapeB = B.Shape as PolygonShape;
 
-            // polygon A collider polygon
-            Polygon polygonA = polygonAColl.Polygon.Clone();
-            polygonA.Translate(colliderAPos);
+            Polygon polygonA = new Polygon(shapeA.Shape), polygonB = new Polygon(shapeB.Shape);
+            polygonA.Translate(APos);
+            polygonB.Translate(BPos);
 
-            // polygon B collider polygon
-            Polygon polygonB = polygonBColl.Polygon.Clone();
-            polygonB.Translate(colliderBPos);
+            if (TestSAT(polygonA, polygonB, out Contact? contact)) {
+                manifold = new Manifold(A, B) {
+                    Contacts = new Contact[] {
+                        contact.Value
+                    }
+                };
 
-            List<Vector2> axes = new List<Vector2>();
-
-            // polygon A axes
-            for (int i = 0; i < polygonA.VertexCount; i++) {
-                axes.Add((polygonA[i] - polygonA[(i + 1) % polygonA.VertexCount]).Perpendicular());
+                return true;
             }
 
-            // polygon B axes
-            for (int i = 0; i < polygonB.VertexCount; i++) {
-                axes.Add((polygonB[i] - polygonB[(i + 1) % polygonB.VertexCount]).Perpendicular());
-            }
-
-            return CheckPolygonsIntersection(polygonA, polygonB, axes);
+            manifold = null;
             return false;
         }
 
@@ -37,39 +31,58 @@ namespace Raccoon {
 
         #region Polygon vs Box
 
-        private bool CheckPolygonBox(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return CheckBoxPolygon(colliderB, colliderBPos, colliderA, colliderAPos);
+        private bool CheckPolygonBox(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            return CheckBoxPolygon(B, BPos, A, APos, out manifold);
         }
 
         #endregion Polygon vs Box
 
-        private bool CheckPolygonGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return false;
-        }
-
         #region Polygon vs Circle
 
-        private bool CheckPolygonCircle(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return CheckCirclePolygon(colliderB, colliderBPos, colliderA, colliderAPos);
+        private bool CheckPolygonCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            return CheckCirclePolygon(B, BPos, A, APos, out manifold);
         }
 
         #endregion Polygon vs Circle
 
-        #region Polygon vs Line
+        #region Polygon vs Grid
 
-        private bool CheckPolygonLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return CheckLinePolygon(colliderB, colliderBPos, colliderA, colliderAPos);
-        }
+        private bool CheckPolygonGrid(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            PolygonShape polygonShapeA = A.Shape as PolygonShape;
+            GridShape gridB = B.Shape as GridShape;
 
-        #endregion Polygon vs Line
+            Rectangle polygonBoundingBox = new Rectangle(APos - polygonShapeA.BoundingBox / 2f, polygonShapeA.BoundingBox),
+                      gridBoundingBox = new Rectangle(BPos, gridB.BoundingBox);
 
-        #region Polygon vs RichGrid
+            // test grid bounds
+            if (!gridBoundingBox.Intersects(polygonBoundingBox)) {
+                manifold = null;
+                return false;
+            }
 
-        private bool CheckPolygonRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            Polygon polygonA = new Polygon(polygonShapeA.Shape);
+            polygonA.Translate(APos);
+
+            Contact? contact = TestGrid(gridB, BPos, polygonBoundingBox, 
+                (Polygon tilePolygon) => {
+                    TestSAT(polygonA, tilePolygon, out Contact? tileContact);
+                    return tileContact;
+                }
+            );
+
+            if (contact != null) {
+                manifold = new Manifold(A, B) {
+                    Contacts = new Contact[] {
+                        contact.Value
+                    }
+                };
+                return true;
+            }
+
+            manifold = null;
             return false;
         }
 
-        #endregion Polygon vs RichGrid
-        */
+        #endregion Polygon vs Grid
     }
 }

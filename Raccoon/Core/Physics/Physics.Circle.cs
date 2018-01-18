@@ -1,15 +1,16 @@
-﻿using Raccoon.Components;
+﻿using System.Collections.Generic;
+using Raccoon.Components;
 
 namespace Raccoon {
     public sealed partial class Physics {
         #region Circle vs Circle
 
         private bool CheckCircleCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            CircleShape shapeA = A.Shape as CircleShape,
-                        shapeB = B.Shape as CircleShape;
+            CircleShape circleA = A.Shape as CircleShape,
+                        circleB = B.Shape as CircleShape;
 
             Vector2 translation = BPos - APos;
-            float radius = shapeA.Radius + shapeB.Radius;
+            float radius = circleA.Radius + circleB.Radius;
             if (translation.LengthSquared() > radius * radius) {
                 manifold = null;
                 return false;
@@ -21,10 +22,10 @@ namespace Raccoon {
             };
 
             if (dist == 0) {
-                manifold.Contacts[0] = new Contact(APos, Vector2.Right, shapeA.Radius);
+                manifold.Contacts[0] = new Contact(APos, Vector2.Right, circleA.Radius);
             } else {
                 Vector2 normal = translation / dist;
-                manifold.Contacts[0] = new Contact(APos + normal * shapeA.Radius, normal, radius - dist);
+                manifold.Contacts[0] = new Contact(APos + normal * circleA.Radius, normal, radius - dist);
             }
 
             return true;
@@ -32,66 +33,80 @@ namespace Raccoon {
 
         #endregion Circle vs Circle
 
-        /*
-
         #region Circle vs Box
 
-        private bool CheckCircleBox(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return CheckBoxCircle(colliderB, colliderBPos, colliderA, colliderAPos);
+        private bool CheckCircleBox(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            return CheckBoxCircle(B, BPos, A, APos, out manifold);
         }
 
         #endregion Circle vs Box
 
-        #region Circle vs Grid
-
-        private bool CheckCircleGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            return false;
-        }
-
-        #endregion Circle vs Grid
-
-        #region Circle vs Line
-
-        private bool CheckCircleLine(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            /*CircleCollider circleColl = colliderA as CircleCollider;
-            LineCollider lineColl = colliderB as LineCollider;
-
-            if (Util.Math.DistanceSquared(new Line(colliderBPos + lineColl.From, colliderBPos + lineColl.To), circleColl.Position) < circleColl.Radius * circleColl.Radius) {
-                return true;
-            }
-            
-            return false;
-        }
-
-        #endregion Circle vs Line
-
         #region Circle vs Polygon
 
-        private bool CheckCirclePolygon(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
-            /*CircleCollider circleColl = colliderA as CircleCollider;
-            PolygonCollider polygonColl = colliderB as PolygonCollider;
+        private bool CheckCirclePolygon(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            CircleShape circleA = A.Shape as CircleShape;
+            PolygonShape polyB = B.Shape as PolygonShape;
 
-            float radiusSquared = circleColl.Radius * circleColl.Radius;
-            Polygon polygon = polygonColl.Polygon.Clone();
-            polygon.Translate(colliderBPos);
-            for (int i = 0; i < polygon.VertexCount; i++) {
-                if (Util.Math.DistanceSquared(new Line(polygon[i], polygon[(i + 1) % polygon.VertexCount]), circleColl.Position) < radiusSquared) {
-                    return true;
-                }
+            Polygon polygonB = new Polygon(polyB.Shape);
+            polygonB.Translate(BPos);
+
+            Vector2 closestPoint = polygonB.ClosestPoint(APos);
+            Vector2 d = closestPoint - APos;
+            if (Vector2.Dot(d, d) > circleA.Radius * circleA.Radius) {
+                manifold = null;
+                return false;
             }
-            
+
+            if (TestSAT(circleA, polyB, polygonB.Normals, out Contact? contact)) {
+                manifold = new Manifold(A, B) {
+                    Contacts = new Contact[] {
+                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
+                    }
+                };
+
+                return true;
+            }
+
+            manifold = null;
             return false;
         }
 
         #endregion Circle vs Polygon
+        
+        #region Circle vs Grid
 
-        #region Circle vs RichGrid
+        private bool CheckCircleGrid(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
+            CircleShape circleA = A.Shape as CircleShape;
+            GridShape gridB = B.Shape as GridShape;
 
-        private bool CheckCircleRichGrid(Collider colliderA, Vector2 colliderAPos, Collider colliderB, Vector2 colliderBPos) {
+            // test grid bounds
+            Vector2 closestPoint = new Rectangle(BPos, gridB.Size).ClosestPoint(APos);
+            Vector2 diff = closestPoint - APos;
+            if (Vector2.Dot(diff, diff) > circleA.Radius * circleA.Radius) {
+                manifold = null;
+                return false;
+            }
+
+            Contact? contact = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius), 
+                (Polygon tilePolygon) => {
+                    TestSAT(circleA, tilePolygon, out Contact? tileContact);
+                    return new Contact(closestPoint, tileContact.Value.Normal, tileContact.Value.PenetrationDepth);
+                }
+            );
+
+            if (contact != null) {
+                manifold = new Manifold(A, B) {
+                    Contacts = new Contact[] {
+                        contact.Value
+                    }
+                };
+                return true;
+            }
+
+            manifold = null;
             return false;
         }
 
-        #endregion Circle vs RichGrid
-    */
+        #endregion Circle vs Grid
     }
 }

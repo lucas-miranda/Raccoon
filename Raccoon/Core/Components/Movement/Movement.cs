@@ -1,66 +1,108 @@
 ﻿namespace Raccoon.Components {
-    public abstract class Movement : Component {
+    public abstract class Movement {
+        public event System.Action OnMove = delegate { };
+
+        private uint _axesSnap;
+
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
-        /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
-        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="body">Collider used to detect end of movement.</param>
-        public Movement(Vector2 maxSpeed, Vector2 acceleration, Body body) {
-            MaxSpeed = maxSpeed;
+        /// <param name="acceleration">Speed increase.</param>
+        public Movement(Vector2 acceleration) {
             Acceleration = acceleration;
-            Body = body;
-            IgnoreDebugRender = true;
         }
 
-        public Body Body { get; private set; }
-        public Vector2 LastPosition { get; protected set; }
-        public Vector2 CurrentSpeed { get { return Util.Math.Clamp(Entity.Position - LastPosition, -MaxSpeed, MaxSpeed); } }
-        public Vector2 MaxSpeed { get; set; }
-        //public Vector2 TargetSpeed { get; protected set; }
-        public Vector2 Acceleration { get; set; }
-        public Vector2 AccumulatedForce { get; protected set; }
+        /// <summary>
+        /// A component that handles movements, providing methods and properties to deal with speed.
+        /// </summary>
+        /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
+        /// <param name="acceleration">Speed increase.</param>
+        public Movement(Vector2 maxVelocity, Vector2 acceleration) {
+            MaxVelocity = maxVelocity;
+            Acceleration = acceleration;
+        }
+
+        /// <summary>
+        /// A component that handles movements, providing methods and properties to deal with speed.
+        /// </summary>
+        /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
+        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
+        public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
+            MaxVelocity = maxVelocity;
+            Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity / Physics.FixedDeltaTime);
+        }
+
+        public Body Body { get; set; }
         public Vector2 Axis { get; set; }
+        public Vector2 Velocity { get { return Body.Velocity; } }
+        public Vector2 MaxVelocity { get; set; }
+        public Vector2 TargetVelocity { get; protected set; }
+        public Vector2 Acceleration { get; set; }
         public Vector2 LastAxis { get; protected set; }
         public float DragForce { get; set; } = .8f;
-        public bool HorizontalAxisSnap { get; set; }
-        public bool VerticalAxisSnap { get; set; }
-        public bool AxesSnap { get { return HorizontalAxisSnap && VerticalAxisSnap; } set { HorizontalAxisSnap = VerticalAxisSnap = value; } }
+        public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
-        public bool Sleeping { get; protected set; }
+
+        public bool SnapHorizontalAxis {
+            get {
+                return Util.Bit.HasSet(ref _axesSnap, 0);
+            }
+
+            set {
+                if (value) {
+                    Util.Bit.Set(ref _axesSnap, 0);
+                } else {
+                    Util.Bit.Clear(ref _axesSnap, 0);
+                }
+            }
+        }
+
+        public bool SnapVerticalAxis {
+            get {
+                return Util.Bit.HasSet(ref _axesSnap, 1);
+            }
+
+            set {
+                if (value) {
+                    Util.Bit.Set(ref _axesSnap, 1);
+                } else {
+                    Util.Bit.Clear(ref _axesSnap, 1);
+                }
+            }
+        }
+
+        public bool SnapAxes {
+            get {
+                return Util.Bit.HasSet(ref _axesSnap, 0) && Util.Bit.HasSet(ref _axesSnap, 1);
+            }
+
+            set {
+                if (value) {
+                    Util.Bit.Set(ref _axesSnap, 0);
+                    Util.Bit.Set(ref _axesSnap, 1);
+                } else {
+                    Util.Bit.Clear(ref _axesSnap, 0);
+                    Util.Bit.Clear(ref _axesSnap, 1);
+                }
+            }
+        }
+
+#if DEBUG
+        public bool IsDebugRenderEnabled { get; set; }
+#endif
 
         protected Vector2 NextAxis { get; set; }
-        protected float MoveHorizontalBuffer { get; set; }
-        protected float MoveVerticalBuffer { get; set; }
 
-        public override void OnAdded(Entity entity) {
-            base.OnAdded(entity);
-            LastPosition = Entity.Position;
-
-            // register collider, if isn't already registered
-            if (Body.Entity != Entity) {
-                Entity.AddComponent(Body);
+        public virtual void Update(int delta) {
+            if (!Enabled) {
+                return;
             }
 
-            Physics.Instance.AddMovement(this);
-        }
-
-        public override void OnRemoved() {
-            base.OnRemoved();
-            if (Body.Entity != null) {
-                Entity.RemoveComponent(Body);
-            }
-
-            Physics.Instance.RemoveMovement(this);
-        }
-
-        public override void Update(int delta) {
             Axis = NextAxis;
             NextAxis = Vector2.Zero;
         }
 
-        public override void Render() { }
-        public override void DebugRender() { }
+        public virtual void DebugRender() { }
 
         /*public bool HasCollisionTag(string tag) {
             return CollisionTags.Contains(tag);
@@ -94,23 +136,43 @@
             CollisionTags.Clear();
         }*/
 
-        //public abstract void OnCollide(Vector2 moveDirection);
-        public abstract void OnMoveUpdate(float dt);
+        public abstract Vector2 HandleVelocity(Vector2 velocity, float dt);
 
-        public void ApplyForce(Vector2 force) {
-            if (!CanMove) {
+        public virtual void LateHandleVelocity(Vector2 velocity) {
+            if (!Enabled || !CanMove) {
                 return;
             }
 
-            AccumulatedForce += force / Body.Mass;
+            if (velocity.LengthSquared() >= 0) {
+                OnMove();
+            }
+        }
+
+        public virtual Vector2 HandleForce(Vector2 force) {
+            if (!Enabled || !CanMove) {
+                return Vector2.Zero;
+            }
+
+            return force;
+        }
+
+        public virtual Vector2 HandleImpulse(Vector2 impulse) {
+            if (!Enabled || !CanMove) {
+                return Vector2.Zero;
+            }
+
+            return impulse;
+        }
+
+        public virtual void OnCollide() {
         }
 
         public virtual void Move(Vector2 axis) {
-            if (!CanMove) {
+            if (!Enabled || !CanMove) {
                 return;
             }
 
-            axis = Util.Math.Clamp(axis, new Vector2(-1, -1), new Vector2(1, 1));
+            axis = Util.Math.Clamp(axis, -Vector2.One, Vector2.One);
             if (axis != Vector2.Zero) {
                 LastAxis = axis;
             }
@@ -118,15 +180,15 @@
             NextAxis = axis;
         }
 
-        public virtual void Move(float x, float y) {
+        public void Move(float x, float y) {
             Move(new Vector2(x, y));
         }
 
-        public virtual void MoveHorizontal(float x) {
+        public void MoveHorizontal(float x) {
             Move(new Vector2(x, LastAxis.Y));
         }
 
-        public virtual void MoveVertical(float y) {
+        public void MoveVertical(float y) {
             Move(new Vector2(LastAxis.X, y));
         }
     }

@@ -9,32 +9,40 @@ namespace Raccoon {
         public Manifold(Body a, Body b) {
             A = a;
             B = b;
+            AverageRestitution = Math.Min(A.Material.Restitution, B.Material.Restitution);
         }
 
         public Body A { get; private set; }
         public Body B { get; private set; }
         public Contact[] Contacts { get; set; }
+        public float AverageRestitution { get; private set; }
 
         public void ImpulseResolution() {
-            Contact? contact = FindLeastPenetrationContact();
-            if (contact == null) {
+            if (A.InverseMass == 0f && B.InverseMass == 0f) {
+                A.Force = B.Force = Vector2.Zero;
+                A.LastPosition = A.Position;
+                B.LastPosition = B.Position;
                 return;
             }
 
-            Vector2 relativeVelocity = B.Velocity - A.Velocity;
-            float contactVelocity = Vector2.Dot(relativeVelocity, contact.Value.Normal);
+            float totalInvMass = A.InverseMass + B.InverseMass;
+            foreach (Contact contact in Contacts) {
 
-            // velocities are separating
-            if (contactVelocity > 0) {
-                return;
+
+                /*Vector2 relativeVelocity = B.Velocity - A.Velocity;
+                float contactVelocity = Vector2.Dot(relativeVelocity, contact.Normal);
+
+                // bodies are separating
+                if (contactVelocity > 0f) {
+                    return;
+                }
+
+                float impulseScalar = (-(1.0f + AverageRestitution) * contactVelocity) / (A.InverseMass + B.InverseMass);
+
+                Vector2 impulse = impulseScalar * contact.Normal;
+                A.Position -= A.InverseMass * impulse;
+                B.Position += B.InverseMass * impulse;*/
             }
-
-            float e = Math.Min(A.Material.Restitution, B.Material.Restitution);
-            float impulseScalar = (-(1.0f + e) * contactVelocity) / (A.InverseMass + B.InverseMass);
-
-            Vector2 impulse = impulseScalar * contact.Value.Normal;
-            A.Velocity -= A.InverseMass * impulse;
-            B.Velocity += B.InverseMass * impulse;
         }
 
         public void PositionCorrection() {
@@ -44,8 +52,14 @@ namespace Raccoon {
             }
 
             Vector2 correction = (Math.Max(contact.Value.PenetrationDepth - PenetrationAllowance, 0f) / (A.InverseMass + B.InverseMass)) * PenetrationPercentageToCorrect * contact.Value.Normal;
-            A.Position -= A.InverseMass * correction;
-            B.Position -= B.InverseMass * correction;
+
+            Vector2 aCorrection = A.InverseMass * correction,
+                    bCorrection = B.InverseMass * correction;
+
+            A.Position -= aCorrection;
+            A.LastPosition -= aCorrection;
+            B.Position -= bCorrection;
+            B.LastPosition -= bCorrection;
         }
 
         public Contact? FindLeastPenetrationContact() {
@@ -64,6 +78,10 @@ namespace Raccoon {
             }
 
             return contact;
+        }
+
+        public override string ToString() {
+            return $"[Contacts: {string.Join(", ", Contacts)}, AverageRestitution: {AverageRestitution}]";
         }
     }
 }

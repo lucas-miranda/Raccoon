@@ -24,11 +24,13 @@ namespace Raccoon {
         // colliders register
         private Dictionary<string, HashSet<string>> _collisionTagTable = new Dictionary<string, HashSet<string>>();
         private Dictionary<string, List<Body>> _collidersByTag = new Dictionary<string, List<Body>>();
-        private List<Body> _colliders = new List<Body>();
-        private List<Movement> _movements = new List<Movement>();
+        private List<Body> _bodies = new List<Body>();
+        private List<Movement> _movements = new List<Movement>(); // REMOVE
 
         // collision checking
         private int _leftOverDeltaTime;
+        private List<Manifold> _contactManifolds = new List<Manifold>();
+
         private List<Body> _collisionCandidates = new List<Body>();
         private Dictionary<string, List<Body>> _candidatesByTag = new Dictionary<string, List<Body>>();
         private Dictionary<Body, List<Body>> _collisionQueries = new Dictionary<Body, List<Body>>();
@@ -39,16 +41,16 @@ namespace Raccoon {
 
         private Physics() {
             // collision functions dictionary
-            System.Type circle = typeof(CircleShape);
+            System.Type box = typeof(BoxShape),
+                        circle = typeof(CircleShape),
+                        polygon = typeof(PolygonShape),
+                        grid = typeof(GridShape);
 
             System.Type[] colliderTypes = {
-                /*typeof(BoxCollider),
-                typeof(GridCollider),
-                typeof(CircleCollider),
-                typeof(LineCollider),
-                typeof(PolygonCollider),
-                typeof(RichGridCollider)*/
-                circle
+                box,
+                circle,
+                polygon,
+                grid
             };
 
             foreach (System.Type type in colliderTypes) {
@@ -56,53 +58,28 @@ namespace Raccoon {
             }
 
             // box vs others
-            /*_collisionFunctions[typeof(BoxCollider)].Add(typeof(BoxCollider), CheckBoxBox);
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(GridCollider), CheckBoxGrid);
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(CircleCollider), CheckBoxCircle);
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(LineCollider), CheckBoxLine);
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(PolygonCollider), CheckBoxPolygon);
-            _collisionFunctions[typeof(BoxCollider)].Add(typeof(RichGridCollider), CheckBoxRichGrid);
+            _collisionFunctions[box].Add(box, CheckBoxBox);
+            _collisionFunctions[box].Add(circle, CheckBoxCircle);
+            _collisionFunctions[box].Add(polygon, CheckBoxPolygon);
+            _collisionFunctions[box].Add(grid, CheckBoxGrid);
 
             // grid vs others
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(GridCollider), CheckGridGrid);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(BoxCollider), CheckGridBox);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(CircleCollider), CheckGridCircle);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(LineCollider), CheckGridLine);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(PolygonCollider), CheckGridPolygon);
-            _collisionFunctions[typeof(GridCollider)].Add(typeof(RichGridCollider), CheckGridRichGrid);*/
+            _collisionFunctions[grid].Add(grid, CheckGridGrid);
+            _collisionFunctions[grid].Add(box, CheckGridBox);
+            _collisionFunctions[grid].Add(circle, CheckGridCircle);
+            _collisionFunctions[grid].Add(polygon, CheckGridPolygon);
 
             // circle vs others
             _collisionFunctions[circle].Add(circle, CheckCircleCircle);
-            /*_collisionFunctions[typeof(CircleCollider)].Add(typeof(CircleCollider), CheckCircleCircle);
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(BoxCollider), CheckCircleBox);
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(GridCollider), CheckCircleGrid);
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(LineCollider), CheckCircleLine);
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(PolygonCollider), CheckCirclePolygon);
-            _collisionFunctions[typeof(CircleCollider)].Add(typeof(RichGridCollider), CheckCircleRichGrid);
-
-            // line vs others
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(LineCollider), CheckLineLine);
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(BoxCollider), CheckLineBox);
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(GridCollider), CheckLineGrid);
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(CircleCollider), CheckLineCircle);
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(PolygonCollider), CheckLinePolygon);
-            _collisionFunctions[typeof(LineCollider)].Add(typeof(RichGridCollider), CheckLineRichGrid);
+            _collisionFunctions[circle].Add(box, CheckCircleBox);
+            _collisionFunctions[circle].Add(polygon, CheckCirclePolygon);
+            _collisionFunctions[circle].Add(grid, CheckCircleGrid);
 
             // polygon vs others
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(PolygonCollider), CheckPolygonPolygon);
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(BoxCollider), CheckPolygonBox);
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(GridCollider), CheckPolygonGrid);
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(CircleCollider), CheckPolygonCircle);
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(LineCollider), CheckPolygonLine);
-            _collisionFunctions[typeof(PolygonCollider)].Add(typeof(RichGridCollider), CheckPolygonRichGrid);
-
-            // rich grid vs others
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(RichGridCollider), CheckRichGridRichGrid);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(PolygonCollider), CheckRichGridPolygon);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(BoxCollider), CheckRichGridBox);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(GridCollider), CheckRichGridGrid);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(CircleCollider), CheckRichGridCircle);
-            _collisionFunctions[typeof(RichGridCollider)].Add(typeof(LineCollider), CheckRichGridLine);*/
+            _collisionFunctions[polygon].Add(polygon, CheckPolygonPolygon);
+            _collisionFunctions[polygon].Add(box, CheckPolygonBox);
+            _collisionFunctions[polygon].Add(circle, CheckPolygonCircle);
+            _collisionFunctions[polygon].Add(grid, CheckPolygonGrid);
         }
 
         #endregion Constructors
@@ -135,96 +112,7 @@ namespace Raccoon {
             _leftOverDeltaTime = Math.Max(0, delta - (timesteps * FixedDeltaTime));
 
             for (int i = 0; i < timesteps; i++) {
-#if DEBUG
-                Time.StartStopwatch();
-#endif
-
-                // update position
-                foreach (Movement movement in _movements) {
-                    movement.OnMoveUpdate(FixedDeltaTimeSeconds);
-                }
-
-#if DEBUG
-                UpdatePositionExecutionTime += Time.EndStopwatch();
-                Time.StartStopwatch();
-#endif
-
-                // solve constraints
-                /*for (int j = 0; j < ConstraintSolverAccuracy; j++) {
-                    foreach (Body collider in _colliders) {
-                        collider.SolveConstraints();
-                    }
-                }*/
-
-#if DEBUG
-                SolveConstraintsExecutionTime += Time.EndStopwatch();
-                CollidersBroadPhaseCount = _colliders.Count;
-                Time.StartStopwatch();
-#endif
-
-                // collision detection
-                _collisionCandidates.Clear();
-                _collisionQueries.Clear();
-                foreach (List<Body> candidatesList in _candidatesByTag.Values) {
-                    candidatesList.Clear();
-                }
-
-                // broad phase
-                // choose candidate colliders
-                foreach (Body collider in _colliders) {
-                    _collisionCandidates.Add(collider);
-
-                    /*foreach (string tag in collider.Tags) {
-                        _candidatesByTag[tag].Add(collider);
-                    }*/
-                }
-
-                // prepare queries
-                // TODO: optimize this section
-                foreach (Body collider in _collisionCandidates) {
-                    _collisionQueries.Add(collider, new List<Body>());
-
-                    foreach (Body colliderB in _collisionCandidates) {
-                        if (colliderB == collider || _collisionQueries.ContainsKey(colliderB)) {
-                            continue;
-                        }
-
-                        _collisionQueries[collider].Add(colliderB);
-                    }
-
-                    /*foreach (string tag in collider.Tags) {
-                        foreach (string collisionTag in _collisionTagTable[tag]) {
-                            foreach (Collider candidateCollider in _candidatesByTag[collisionTag]) {
-                                if (_collisionQueries.ContainsKey(candidateCollider)) {
-                                    continue;
-                                }
-
-                                _collisionQueries[collider].Add(candidateCollider);
-                            }
-                        }
-                    }*/
-                }
-
-#if DEBUG
-                CollisionDetectionBroadPhaseExecutionTime += Time.EndStopwatch();
-                CollidersNarrowPhaseCount = _collisionCandidates.Count;
-                Time.StartStopwatch();
-#endif
-
-                // narrow phase
-                foreach (KeyValuePair<Body, List<Body>> query in _collisionQueries) {
-                    foreach (Body colliderCandidate in query.Value) {
-                        if (CheckCollision(query.Key, colliderCandidate, out Manifold manifold)) {
-                            //Debug.WriteLine($"Collision with {query.Key.Entity.Name} and {colliderCandidate.Entity.Name}");
-                            query.Key.OnCollide(colliderCandidate, manifold);
-                            colliderCandidate.OnCollide(query.Key, manifold);
-                        }
-                    }
-                }
-
-#if DEBUG
-                CollisionDetectionNarrowPhaseExecutionTime += Time.EndStopwatch();
-#endif
+                Step(FixedDeltaTimeSeconds);
             }
         }
 
@@ -330,7 +218,7 @@ namespace Raccoon {
                 AddCollider(collider, tag);
             }*/
 
-            _colliders.Add(collider);
+            _bodies.Add(collider);
         }
 
         public void AddMovement(Movement movement) {
@@ -342,7 +230,7 @@ namespace Raccoon {
                 RemoveCollider(collider, tag);
             }*/
 
-            _colliders.Remove(collider);
+            _bodies.Remove(collider);
         }
 
         public void RemoveMovement(Movement movement) {
@@ -556,6 +444,58 @@ namespace Raccoon {
         #endregion Public Methods
 
         #region Private Methods
+
+        private void Step(float dt) {
+            // solve constraints
+            for (int i = 0; i < ConstraintSolverAccuracy; i++) {
+                foreach (Body body in _bodies) {
+                    body.SolveConstraints();
+                }
+            }
+
+            // generate contacts
+            _contactManifolds.Clear();
+            for (int i = 0; i < _bodies.Count; i++) {
+                Body A = _bodies[i];
+                for (int j = i + 1; j < _bodies.Count; j++) {
+                    Body B = _bodies[j];
+                    
+                    // if both mass are infinite, doesn't need to solve collision
+                    if (A.InverseMass == 0 && B.InverseMass == 0) {
+                        continue;
+                    }
+
+                    if (CheckCollision(A, B, out Manifold manifold)) {
+                        _contactManifolds.Add(manifold);
+                        A.OnCollide(B, manifold);
+                        B.OnCollide(A, manifold);
+#if DEBUG
+                        A.Color = B.Color = Graphics.Color.Red;
+                        continue;
+#endif
+                    }
+
+#if DEBUG
+                    A.Color = B.Color = Graphics.Color.White;
+#endif
+                }
+            }
+
+            // integrate position
+            foreach (Body body in _bodies) {
+                body.Integrate(dt);
+            }
+
+            for (int i = 0; i < ConstraintSolverAccuracy; i++) {
+                foreach (Manifold manifold in _contactManifolds) {
+                    manifold.ImpulseResolution();
+                }
+            }
+
+            foreach (Manifold manifold in _contactManifolds) {
+                manifold.PositionCorrection();
+            }
+        }
 
         private void AddCollider(Body collider, string tagName) {
             RegisterTag(tagName);

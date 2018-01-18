@@ -1,5 +1,6 @@
 ﻿namespace Raccoon {
     public interface IMaterial {
-        float Restitution { get; set; }
+        float Density { get; }
+        float Restitution { get; }
     }
 }

@@ -1,9 +1,17 @@
-﻿namespace Raccoon {
-    public interface IShape {
-        Rectangle BoundingBox { get; }
+﻿using Raccoon.Components;
+using Raccoon.Graphics;
+using Raccoon.Util;
 
-        void DebugRender(Vector2 position);
+namespace Raccoon {
+    public interface IShape {
+        Body Body { get; set; }
+        int Area { get; }
+        Size BoundingBox { get; }
+
+        void DebugRender(Vector2 position, Color color);
         bool ContainsPoint(Vector2 point);
         bool Intersects(Line line);
+        float ComputeMass(float density);
+        Range Projection(Vector2 axis);
     }
 }

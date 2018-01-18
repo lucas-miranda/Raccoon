@@ -1,69 +1,51 @@
 ﻿namespace Raccoon.Components {
     public class BasicMovement : Movement {
-        public event System.Action OnMove;
+        /// <summary>
+        /// A component that handles simple top-down movement.
+        /// </summary>
+        /// <param name="acceleration">Speed increase.</param>
+        public BasicMovement(Vector2 acceleration) : base(acceleration) {
+            SnapAxes = true;
+        }
 
         /// <summary>
         /// A component that handles simple top-down movement.
         /// </summary>
-        /// <param name="maxSpeed">Max horizontal and vertical speed. (in pixels/sec)</param>
-        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="body">Collider used to detect end of movement.</param>
-        public BasicMovement(Vector2 maxSpeed, Vector2 acceleration, Body body) : base(maxSpeed, acceleration, body) {
+        /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
+        /// <param name="acceleration">Speed increase.</param>
+        public BasicMovement(Vector2 maxVelocity, Vector2 acceleration) : base(maxVelocity, acceleration) {
+            SnapAxes = true;
         }
 
-        public BasicMovement(Vector2 maxSpeed, float timeToMaxSpeed, Body body) : base(maxSpeed, maxSpeed / timeToMaxSpeed, body) {
+        /// <summary>
+        /// A component that handles simple top-down movement.
+        /// </summary>
+        /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
+        /// <param name="timeToAchieveMaxSpeed">Time (in miliseconds) to reach max velocity.</param>
+        public BasicMovement(Vector2 maxVelocity, int timeToAchieveMaxSpeed) : base(maxVelocity, timeToAchieveMaxSpeed) {
+            SnapAxes = true;
         }
 
-        public override void OnMoveUpdate(float dt) {
-            /*
-                verlet integration
-                ----------------------
-                speed = pos - lastPos
-                nextPos = pos + speed + acc * timestep
-                lastPos = pos
-                pos = nextPos
-            */
-
-            Vector2 speed = CurrentSpeed;
-            float speedX = speed.X, speedY = speed.Y;
-
-            // apply drag force, if it's necessary
-            speedX = Axis.X == 0f ? speedX * DragForce : speedX;
-            speedY = Axis.Y == 0f ? speedY * DragForce : speedY;
-
-            // axes snap 
-            // ignore speed if it's too low
-            if (System.Math.Abs(speedX) < 0.001f || (HorizontalAxisSnap && System.Math.Sign(speed.X) != System.Math.Sign(Axis.X))) {
-                speedX = 0;
+        public override Vector2 HandleVelocity(Vector2 velocity, float dt) {
+            float horizontalVelocity = velocity.X;
+            if (Axis.X == 0f) {
+                horizontalVelocity = velocity.X * DragForce;
+            } else if (SnapHorizontalAxis && System.Math.Sign(Axis.X) != System.Math.Sign(velocity.X)) {
+                horizontalVelocity = 0f;
+            } else if (MaxVelocity.X > 0f) {
+                horizontalVelocity = Util.Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
             }
 
-            if (System.Math.Abs(speedY) < 0.001f || (VerticalAxisSnap && System.Math.Sign(speed.Y) != System.Math.Sign(Axis.Y))) {
-                speedY = 0;
+            float verticalVelocity = velocity.Y;
+            if (Axis.Y == 0f) {
+                verticalVelocity = velocity.Y * DragForce;
+            } else if (SnapVerticalAxis && System.Math.Sign(Axis.Y) != System.Math.Sign(velocity.Y)) {
+                verticalVelocity = 0f;
+            } else if (MaxVelocity.Y > 0f) {
+                verticalVelocity = Util.Math.Clamp(velocity.Y, -MaxVelocity.Y, MaxVelocity.Y);
             }
 
-            speed = new Vector2(speedX, speedY);
-
-            Vector2 nextPos = Entity.Position + speed + AccumulatedForce * dt * dt;
-            LastPosition = Entity.Position;
-            Entity.Position = nextPos;
-            AccumulatedForce = Vector2.Zero;
-
-            if (speed.LengthSquared() != 0) {
-                OnMove?.Invoke();
-            }
-        }
-
-        public override void DebugRender() {
-            base.DebugRender();
-            string message = $"Position: {Entity.Position}\nLastPosition: {LastPosition}]\nAxis: {Axis} [Last: {LastAxis}]\nCurrentSpeed: {CurrentSpeed} [Max: {MaxSpeed}]\nAcceleration: {Acceleration}\nAccumulatedForce: {AccumulatedForce}\nDragForce: {DragForce}\nH-Snap? {HorizontalAxisSnap}, V-Snap? {VerticalAxisSnap}\nEnabled? {Enabled}, CanMove? {CanMove}, Sleeping? {Sleeping}\nBuffer: [{MoveHorizontalBuffer}, {MoveVerticalBuffer}]";
-            Vector2 pos = new Vector2(Game.Instance.WindowWidth - 350, Game.Instance.WindowHeight / 2);
-
-            if (Camera.Current != null) {
-                Debug.DrawString(Camera.Current, pos, message);
-                return;
-            }
-
-            Debug.DrawString(pos, message);
+            return new Vector2(horizontalVelocity, verticalVelocity);
         }
 
         public override void Move(Vector2 axis) {
@@ -72,7 +54,13 @@
                 return;
             }
 
-            ApplyForce(NextAxis * Acceleration);
+            Body.ApplyImpulse(NextAxis * Acceleration);
+        }
+
+        public override void DebugRender() {
+            base.DebugRender();
+            string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})";
+            Debug.DrawString(Camera.Current, new Vector2(16, Game.Instance.ScreenHeight / 2f), info);
         }
     }
 }

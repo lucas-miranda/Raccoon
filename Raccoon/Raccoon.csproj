@@ -44,6 +44,8 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
+    <Compile Include="Core\Physics\Shapes\GridShape.cs" />
+    <Compile Include="Core\Physics\Shapes\PolygonShape.cs" />
     <Compile Include="Core\Physics\Shapes\BoxShape.cs" />
     <Compile Include="Core\Components\StateMachine\State.cs" />
     <Compile Include="Core\Components\StateMachine\Transition.cs" />
@@ -67,6 +69,8 @@
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />
+    <Compile Include="Test\Util\HelperTest.cs" />
+    <Compile Include="Util\Bit.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />
@@ -130,10 +134,12 @@
     </Compile>
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Graphics\Color.cs" />
+    <Compile Include="Util\Helper.cs" />
     <Compile Include="Util\Math.cs" />
     <Compile Include="Util\Random.cs" />
     <Compile Include="Util\Range.cs" />
     <Compile Include="Util\Routines.cs" />
+    <Compile Include="Util\Simplify.cs" />
     <Compile Include="Util\Tiled\Tileset\TiledAnimation.cs" />
     <Compile Include="Util\Tiled\TiledData.cs" />
     <Compile Include="Util\Tiled\TiledImage.cs" />

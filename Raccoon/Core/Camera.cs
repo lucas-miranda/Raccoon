@@ -37,7 +37,7 @@ namespace Raccoon {
         public float Right { get { return X + Width; } }
         public float Bottom { get { return Y + Height; } }
         public bool UseBounds { get; set; }
-        public bool ClampValues { get; set; } = true;
+        public bool ClampValues { get; set; }
         public Rectangle Bounds { get; set; }
         public Vector2 Center { get { return Position + Game.Instance.ScreenSize / (2f * _zoom); } set { Position = value - Game.Instance.ScreenSize / (2f * _zoom); } }
 

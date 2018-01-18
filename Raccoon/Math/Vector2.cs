@@ -84,6 +84,10 @@ namespace Raccoon {
             return new Vector2(Math.CatmullRom(v1.X, v2.X, v3.X, v4.X, amount), Math.CatmullRom(v1.Y, v2.Y, v3.Y, v4.Y, amount));
         }
 
+        public static bool EqualsEstimate(Vector2 v1, Vector2 v2, float tolerance = Math.Epsilon) {
+            return Math.EqualsEstimate(v1.X, v2.X, tolerance) && Math.EqualsEstimate(v1.Y, v2.Y, tolerance);
+        }
+
         #endregion Public Static Methods
 
         #region Public Methods
@@ -101,7 +105,7 @@ namespace Raccoon {
         }
 
         public Vector2 Perpendicular() {
-            return new Vector2(-Y, X);
+            return new Vector2(Y, -X);
         }
 
         public Range Projection(ICollection<Vector2> points) {
@@ -177,7 +181,7 @@ namespace Raccoon {
         #region Operators
 
         public static bool operator ==(Vector2 l, Vector2 r) {
-            return l.X == r.X && l.Y == r.Y;
+            return EqualsEstimate(l, r);
         }
 
         public static bool operator !=(Vector2 l, Vector2 r) {

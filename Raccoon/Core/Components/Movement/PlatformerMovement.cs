@@ -1,27 +1,56 @@
-﻿using Raccoon.Util;
-
-namespace Raccoon.Components {
+﻿namespace Raccoon.Components {
     public class PlatformerMovement : Movement {
+        public static Vector2 GravityForce;
         public static int LedgeJumpMaxTime = (int) (12f / 60f * 1000f);
 
-        public event System.Action OnMove = delegate { }, OnJumpBegin = delegate { }, OnJumpEnd = delegate { }, OnFallingBegin = delegate { };
+        public event System.Action OnJumpBegin = delegate { },
+                                   OnJumpEnd = delegate { },
+                                   OnFallingBegin = delegate { };
 
         private bool _canJump = true, _nextJumpReady = true, _requestedJump;
         private int _jumpDistanceBuffer, _ledgeJumpTime;
 
+        /*/// <summary>
+        /// A component that handles platformer movement.
+        /// </summary>
+        /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
+        public PlatformerMovement(float horizontalAcceleration, float jumpWidth, float jumpHeight) : base(new Vector2(horizontalAcceleration, 0)) {
+            JumpWidth = jumpWidth;
+            JumpHeight = jumpHeight;
+            JumpHorizontalDistanceToPeak = JumpWidth / 2f;
+            OnFallingBegin += () => {
+                _ledgeJumpTime = 0;
+            };
+        }*/
+
         /// <summary>
         /// A component that handles platformer movement.
         /// </summary>
-        /// <param name="maxSpeed">Max horizontal and vertical speed (affects gravity and jumping). (in pixels/sec)</param>
-        /// <param name="acceleration">Speed increase. (in pixels/sec)</param>
-        /// <param name="body">Collider used to detect end of movement.</param>
-        public PlatformerMovement(Vector2 maxSpeed, Vector2 acceleration, Body body = null) : base(maxSpeed, acceleration, body) {
+        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+        /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
+        public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpWidth, float jumpHeight) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, 0)) {
+            SnapHorizontalAxis = true;
+            JumpWidth = jumpWidth;
+            JumpHeight = jumpHeight;
+            JumpHorizontalDistanceToPeak = JumpWidth / 2f;
             OnFallingBegin += () => {
                 _ledgeJumpTime = 0;
             };
         }
 
-        public PlatformerMovement(Vector2 maxSpeed, float timeToMaxSpeed, Body body = null) : this(maxSpeed, maxSpeed / timeToMaxSpeed, body) {
+        /// <summary>
+        /// A component that handles platformer movement.
+        /// </summary>
+        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
+        public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpWidth, float jumpHeight) : base(new Vector2(maxHorizontalVelocity, 0), timeToAchieveMaxVelocity) {
+            SnapHorizontalAxis = true;
+            JumpWidth = jumpWidth;
+            JumpHeight = jumpHeight;
+            JumpHorizontalDistanceToPeak = JumpWidth / 2f;
+            OnFallingBegin += () => {
+                _ledgeJumpTime = 0;
+            };
         }
 
         public bool OnGround { get; protected set; }
@@ -30,98 +59,45 @@ namespace Raccoon.Components {
         public bool IsJumping { get; protected set; }
         public bool IsFalling { get; protected set; } = true;
         public int MaxJumps { get; set; } = 1;
-        public int Jumps { get; set; }
-        public int JumpHeight { get; set; } = 19;
-        public float JumpStartExplosionRate { get; set; } = 0.6f;
-        public Vector2 GravityForce { get; set; } = new Vector2(0, 450);
+        public int Jumps { get; protected set; } = 1;
+        public float JumpWidth { get; private set; }
+        public float JumpHeight { get; private set; }
+        public float JumpHorizontalDistanceToPeak { get; private set; }
+        //public float JumpStartExplosionRate { get; set; } = 0.6f;
+        public float GravityScale { get; set; } = 1f;
 
         protected bool IsStillJumping { get; set; }
 
-        /*public override void OnCollide(Vector2 moveDirection) {
-            if (moveDirection.Y > 0) { // falling and reach the ground
-                OnGround = true;
-                IsStillJumping = IsJumping = IsFalling = false;
-                Jumps = MaxJumps;
-                _jumpDistanceBuffer = 0;
-                OnJumpEnd.Invoke();
-            } else if (moveDirection.Y < 0) { // jumping and reach a ceiling
-                IsStillJumping = IsJumping = false;
-                IsFalling = true;
-                OnFallingBegin.Invoke();
-            }
-        }*/
+        public override void Update(int delta) {
+            base.Update(delta);
+            IsStillJumping = false;
 
-        public override void OnMoveUpdate(float dt) {
-            /*int x = (int) Entity.X, y = (int) Entity.Y;
-            float speedX = CurrentSpeed.X, speedY = CurrentSpeed.Y;
+            float verticalVelocity = Body.Velocity.Y;
+            if (!IsStillJumping) {
+                //verticalMoveDirection = -1;
+                //speedY = Math.Approach(CurrentSpeed.Y, verticalMoveDirection * TargetSpeed.Y, Acceleration.Y * dt);
+                //Body.ApplyImpulse(new Vector2(0, (-2 * JumpHeight * MaxVelocity.X) / JumpHorizontalDistanceToPeak)); // (2hVx) / (Xh)
 
-            // determine TargetSpeed
-            Vector2 oldTargetSpeed = TargetSpeed;
-            TargetSpeed = new Vector2(Axis.X * MaxSpeed.X, MaxSpeed.Y);
-            if (HorizontalAxisSnap && System.Math.Sign(oldTargetSpeed.X) != System.Math.Sign(TargetSpeed.X)) {
-                speedX = 0;
-            }
-
-            // horizontal move
-            speedX = Math.Approach(speedX, TargetSpeed.X, (Axis.X != 0 ? Acceleration.X : Acceleration.X * DragForce) * dt);
-
-            if ((int) speedX != 0) {
-                MoveHorizontalBuffer += speedX * dt;
-                int hDir = System.Math.Sign(MoveHorizontalBuffer);
-                if (Collider == null) {
-                    int dist = (int) System.Math.Floor(System.Math.Abs(MoveHorizontalBuffer));
-                    x += dist * hDir;
-                    MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, dist);
-                } else {
-                    while (System.Math.Abs(MoveHorizontalBuffer) >= 1) {
-                        if (Collider.Collides(new Vector2(x + hDir, y), CollisionTags)) {
-                            // moving in up slopes
-                            if (OnGround && !Collider.Collides(new Vector2(x + hDir, y - 1), CollisionTags)) { 
-                                y--;
-                                continue;
-                            }
-
-                            OnCollide(new Vector2(hDir, 0));
-                            MoveHorizontalBuffer = 0;
-                            break;
-                        } else {
-                            x += hDir;
-                            MoveHorizontalBuffer = Math.Approach(MoveHorizontalBuffer, 0, 1);
-
-                            // moving in down slopes
-                            if (OnGround && !Collider.Collides(new Vector2(x, y + 1), CollisionTags)) {
-                                y++;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // vertical move
-            float yAxis = 0; // vertical axis direction
-            if (IsStillJumping) {
-                yAxis = -1;
-                speedY = Math.Approach(CurrentSpeed.Y, yAxis * TargetSpeed.Y, Acceleration.Y * dt);
-                IsStillJumping = false;
-            } else {
+                Body.ApplyForce(GravityForce);
                 if (OnGround) {
                     // checks the ground existence
-                    if (!Collider.Collides(new Vector2(x, y + 1), CollisionTags)) {
+                    if (verticalVelocity > 0) {
                         IsFalling = true;
                         OnGround = false;
                         OnFallingBegin.Invoke();
                     }
                 } else {
                     // falling & jump brake speed update
-                    yAxis = 1;
-                    speedY = Math.Approach(CurrentSpeed.Y, yAxis * TargetSpeed.Y, GravityForce.Y * dt);
-                    _ledgeJumpTime += (int) (dt * 1000);
+                    //verticalMoveDirection = 1;
+                    //speedY = Math.Approach(CurrentSpeed.Y, verticalMoveDirection * TargetSpeed.Y, GravityForce.Y * dt);
+                    //Body.ApplyImpulse(new Vector2(0, (-2 * JumpHeight * MaxVelocity.X) / JumpHorizontalDistanceToPeak)); // (2hVx) / (Xh)
+                    //_ledgeJumpTime += (int) (dt * 1000);
 
                     // reached jump max height
-                    if (IsJumping && speedY >= 0) {
+                    if (IsJumping && verticalVelocity >= 0) {
                         IsJumping = false;
                         IsFalling = true;
-                        Speed = new Vector2(CurrentSpeed.X, 0);
+                        //? Speed = new Vector2(CurrentSpeed.X, 0);
                         _nextJumpReady = false;
                         OnFallingBegin.Invoke();
                     }
@@ -134,41 +110,55 @@ namespace Raccoon.Components {
 
                 _requestedJump = false;
             }
+        }
 
-            if ((int) speedY != 0) {
-                MoveVerticalBuffer += speedY * dt;
-                int vDir = System.Math.Sign(MoveVerticalBuffer);
-                if (Collider == null) {
-                    int dist = (int) System.Math.Floor(System.Math.Abs(MoveVerticalBuffer));
-                    y += dist * vDir;
-                    MoveVerticalBuffer = Math.Approach(MoveVerticalBuffer, 0, dist);
-                } else {
-                    while (System.Math.Abs(MoveVerticalBuffer) >= 1) {
-                        if (Collider.Collides(new Vector2(x, y + vDir), CollisionTags)) {
-                            OnCollide(new Vector2(0, vDir));
-                            speedY = MoveVerticalBuffer = 0;
-                            break;
-                        } else {
-                            y += vDir;
-                            MoveVerticalBuffer = Math.Approach(MoveVerticalBuffer, 0, 1);
-
-                            // register jump distance to buffer
-                            if (IsJumping) {
-                                _jumpDistanceBuffer++;
-                            }
-                        }
-                    }
-                }
+        public override Vector2 HandleVelocity(Vector2 velocity, float dt) {
+            float horizontalVelocity = velocity.X;
+            if (Axis.X == 0f) {
+                horizontalVelocity *= DragForce;
+            } else if (SnapHorizontalAxis && System.Math.Sign(Axis.X) != System.Math.Sign(velocity.X)) {
+                horizontalVelocity = 0f;
+            } else if (MaxVelocity.X > 0f) {
+                horizontalVelocity = Util.Math.Clamp(horizontalVelocity, -MaxVelocity.X, MaxVelocity.X);
             }
 
-            // update entity values
-            Speed = new Vector2(speedX, speedY);
-            Vector2 oldPosition = Entity.Position;
-            Entity.Position = new Vector2(x, y);
-            if (x != oldPosition.X || y != oldPosition.Y) {
-                OnMove.Invoke();
+            float verticalVelocity = velocity.Y;
+
+            // vertical move
+            //float verticalMoveDirection = 0; // vertical axis direction
+            //Body.ApplyForce(GravityForce);
+
+            return new Vector2(horizontalVelocity, verticalVelocity);
+        }
+
+        public override void OnCollide() {
+            base.OnCollide();
+            Vector2 velocity = Body.Velocity;
+            if (velocity.Y > 0) { // falling and reach the ground
+                OnGround = true;
+                IsStillJumping = IsJumping = IsFalling = false;
+                Jumps = MaxJumps;
+                _jumpDistanceBuffer = 0;
+                OnJumpEnd.Invoke();
+            } else if (velocity.Y < 0) { // jumping and reach a ceiling
+                IsStillJumping = IsJumping = false;
+                IsFalling = true;
+                OnFallingBegin.Invoke();
+            } else {
+                OnGround = true;
+                IsStillJumping = IsJumping = IsFalling = false;
+                Jumps = MaxJumps;
+                _jumpDistanceBuffer = 0;
             }
-            */
+        }
+
+        public override void Move(Vector2 axis) {
+            base.Move(axis);
+            if (NextAxis == Vector2.Zero) {
+                return;
+            }
+
+            Body.ApplyImpulse(NextAxis * Acceleration);
         }
 
         public void Jump() {
@@ -184,30 +174,28 @@ namespace Raccoon.Components {
                 return;
             }
 
-            /*if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime) || Collider.Collides(new Vector2(Entity.X, Entity.Y - 1), CollisionTags)) {
+            if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime)) {
                 return;
-            }*/
+            }
             
             IsStillJumping = IsJumping = true;
             OnGround = IsFalling = false;
             Jumps--;
             _jumpDistanceBuffer = 0;
+            //var jumpValue = (-2 * JumpHeight * MaxVelocity.X) / JumpHorizontalDistanceToPeak;
+            float jumpValue = 100 * JumpHeight;
             //Speed = new Vector2(CurrentSpeed.X, -JumpStartExplosionRate * MaxSpeed.Y);
+            Body.ApplyImpulse(new Vector2(0, -jumpValue)); // v0 = (2hVx) / (Xh)
+            //Body.LastPosition = new Vector2(Body.LastPosition.X, Body.Position.Y);
+            //Body.Position = new Vector2(Body.Position.X, Body.Position.Y + jumpValue);
             OnJumpBegin.Invoke();
+            Debug.WriteLine("jump = " + jumpValue);
         }
 
-        /*public override void DebugRender() {
+        public override void DebugRender() {
             base.DebugRender();
-            Debug.DrawString(false, new Vector2(5, 30), @"- Platform Movement -
-Axis: {0}
-Speed: {1}
-OnGround: {2}, OnAir: {3}
-CanJump: {4}
-IsJumping: {5}, IsFalling: {6}
-Jumps: {7}, MaxJumps: {8}
-JumpHeight: {9}
-JumpDistanceBuffer: {10}
-NextJumpReady: {11}, RequestedJump: {12}", Axis, Speed, OnGround, OnAir, CanJump, IsJumping, IsFalling, Jumps, MaxJumps, JumpHeight, _jumpDistanceBuffer, _nextJumpReady, _requestedJump);
-        }*/
+            string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump}; IsJumping? {IsJumping}\nJumps: {Jumps}\nJump (W: {JumpWidth}, H: {JumpHeight}, DtP: {JumpHorizontalDistanceToPeak})\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_nextJumpReady}, justDistanceBuffer: {_jumpDistanceBuffer}";
+            Debug.DrawString(Camera.Current, new Vector2(16, Game.Instance.ScreenHeight / 2f), info);
+        }
     }
 }

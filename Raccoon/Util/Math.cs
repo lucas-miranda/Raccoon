@@ -118,6 +118,18 @@
             return (value - center) / center;
         }
 
+        public static Vector2 Round(Vector2 value) {
+            return new Vector2(System.Math.Round(value.X), System.Math.Round(value.Y));
+        }
+
+        public static bool EqualsEstimate(float a, float b, float tolerance = Epsilon) {
+            return System.Math.Abs(a - b) < tolerance;
+        }
+
+        public static bool EqualsEstimate(double a, double b, double tolerance = Epsilon) {
+            return System.Math.Abs(a - b) < tolerance;
+        }
+
         #endregion Numeric Stuff
 
         #region Geometry Stuff
@@ -200,7 +212,8 @@
         }
 
         public static float DistanceSquared(Vector2 from, Vector2 to) {
-            return (to - from).LengthSquared();
+            Vector2 diff = to - from;
+            return Vector2.Dot(diff, diff);
         }
 
         public static float DistanceSquared(Line line, Vector2 point) {
@@ -226,6 +239,36 @@
 
         public static float CatmullRom(float n1, float n2, float n3, float n4, float amount) {
             return Microsoft.Xna.Framework.MathHelper.CatmullRom(n1, n2, n3, n4, amount);
+        }
+
+        public static float Component(Vector2 v, Vector2 direction) {
+            double alpha = System.Math.Atan2(direction.Y, direction.X);
+            double theta = System.Math.Atan2(v.Y, v.X);
+            return (float) (v.Length() * System.Math.Cos(theta - alpha));
+        }
+
+        public static Vector2 ComponentVector(Vector2 v, Vector2 direction) {
+            return Component(v, direction) * direction.Normalized();
+        }
+
+        public static bool IsLeft(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) > 0f;
+        }
+
+        public static bool IsLeftOn(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) >= 0f;
+        }
+
+        public static bool IsRight(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) < 0f;
+        }
+
+        public static bool IsRightOn(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) <= 0f;
+        }
+
+        public static bool IsCollinear(Vector2 a, Vector2 b, Vector2 c, float tolerance = Epsilon) {
+            return EqualsEstimate(Triangle.SignedArea2(a, b, c), 0f, tolerance);
         }
 
         #endregion Trygonometric Stuff

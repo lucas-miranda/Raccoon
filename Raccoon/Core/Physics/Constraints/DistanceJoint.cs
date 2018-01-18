@@ -13,11 +13,10 @@ namespace Raccoon {
 
         public override void Solve() {
             Vector2 posDiff = A.Position - B.Position;
-            float distance = Math.Distance(A.Position, B.Position);
-            float difference = (RestingDistance - distance) / distance;
+            float distance = Math.DistanceSquared(A.Position, B.Position);
+            float difference = ((RestingDistance * RestingDistance) - distance) / distance;
 
-            float invMassA = 1f / A.Mass, invMassB = 1f / B.Mass;
-            float scalarCollA = (invMassA / (invMassA + invMassB)) * Stiffness;
+            float scalarCollA = (A.InverseMass / (A.InverseMass + B.InverseMass)) * Stiffness;
             float scalarCollB = Stiffness - scalarCollA;
 
             // push/pull based on mass

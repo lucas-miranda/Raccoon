@@ -162,7 +162,7 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            Vector2 topLeftPos = Camera.Current != null ? Camera.Current.Position * Camera.Current.Zoom * Game.Instance.Scale : Vector2.Zero;
+            Vector2 topLeftPos = Camera.Current != null ? Debug.Transform(Camera.Current.Position) : Vector2.Zero;
             _background.Render(topLeftPos);
 
             // total messages
