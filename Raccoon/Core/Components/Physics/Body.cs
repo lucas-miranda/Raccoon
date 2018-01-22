@@ -13,6 +13,8 @@ namespace Raccoon.Components {
 
         private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
+        private Vector2 _movementBuffer;
+        private bool _isTryingToMove;
 
         #endregion Private Members
 
@@ -44,6 +46,7 @@ namespace Raccoon.Components {
         public Vector2 Velocity { get { return Position - LastPosition; } }
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
+        public bool IsResting { get; private set; } = true;
 
 #if DEBUG
         public Color Color { get; set; } = Color.White;
@@ -109,11 +112,7 @@ namespace Raccoon.Components {
         }
 #endif
 
-        public void OnCollide(Body otherBody, Manifold manifold) {
-#if DEBUG
-            m = manifold;
-#endif
-
+        public void OnCollide(Body otherBody) {
             Movement?.OnCollide();
         }
 
@@ -131,7 +130,7 @@ namespace Raccoon.Components {
             _constraints.Remove(constraint);
         }
 
-        public void Integrate(float dt) {
+        public Vector2 PrepareMovement(float dt) {
             Vector2 velocity = Velocity;
 
             // velocity correction
@@ -145,10 +144,19 @@ namespace Raccoon.Components {
 
             velocity = Movement?.HandleVelocity(velocity, dt) ?? velocity;
 
+            if (!_isTryingToMove) {
+                IsResting = true;
+                _movementBuffer = Vector2.Zero;
+            }
+
             // position
-            Vector2 nextPos = Position + velocity + Force * dt * dt;
+            return Position + _movementBuffer + velocity + Force * dt * dt;
+        }
+
+        public void AfterMovement(Vector2 nextPosition, Vector2 movementBuffer) {
+            _movementBuffer = movementBuffer;
             LastPosition = Entity.Position;
-            Position = nextPos;
+            Position = nextPosition;
 
             // orientation
             /*float nextAngle = Rotation + AngularVelocity + Torque * dt * dt;
@@ -159,16 +167,25 @@ namespace Raccoon.Components {
             Force = Vector2.Zero;
             //Torque = 0;
 
-            Movement?.LateHandleVelocity(velocity);
+            //Movement?.LateHandleVelocity(velocity);
+            _isTryingToMove = false;
         }
 
         public void ApplyForce(Vector2 force) {
             Force += Movement?.HandleForce(force) ?? force;
+            _isTryingToMove = true;
+            IsResting = false;
         }
 
         public void ApplyImpulse(Vector2 impulse) {
             Force += Movement?.HandleImpulse(impulse * InverseMass) ?? (impulse * InverseMass);
             //Torque += InverseInertia * Vector2.Cross(contactVector, impulse);
+            _isTryingToMove = true;
+            IsResting = false;
+        }
+
+        public override string ToString() {
+            return $"[Body | Shape: {Shape}, Movement: {Movement}]";
         }
 
         #endregion Public Methods

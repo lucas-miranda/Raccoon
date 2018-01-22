@@ -29,6 +29,7 @@ namespace Raccoon {
 
         // collision checking
         private int _leftOverDeltaTime;
+        private List<Body> _narrowPhaseBodies = new List<Body>();
         private List<Manifold> _contactManifolds = new List<Manifold>();
 
         private List<Body> _collisionCandidates = new List<Body>();
@@ -108,7 +109,7 @@ namespace Raccoon {
         public void Update(int delta) {
             // TODO: update using a float delta (increases precision)
             int timesteps = (int) System.Math.Floor((delta + _leftOverDeltaTime) / (float) FixedDeltaTime);
-            timesteps = Math.Min(3, timesteps); // prevents freezing
+            timesteps = Math.Min(5, timesteps); // prevents freezing
             _leftOverDeltaTime = Math.Max(0, delta - (timesteps * FixedDeltaTime));
 
             for (int i = 0; i < timesteps; i++) {
@@ -447,14 +448,14 @@ namespace Raccoon {
 
         private void Step(float dt) {
             // solve constraints
-            for (int i = 0; i < ConstraintSolverAccuracy; i++) {
+            /*for (int i = 0; i < ConstraintSolverAccuracy; i++) {
                 foreach (Body body in _bodies) {
                     body.SolveConstraints();
                 }
-            }
+            }*/
 
             // generate contacts
-            _contactManifolds.Clear();
+            /*_contactManifolds.Clear();
             for (int i = 0; i < _bodies.Count; i++) {
                 Body A = _bodies[i];
                 for (int j = i + 1; j < _bodies.Count; j++) {
@@ -479,14 +480,128 @@ namespace Raccoon {
                     A.Color = B.Color = Graphics.Color.White;
 #endif
                 }
-            }
+            }*/
 
             // integrate position
-            foreach (Body body in _bodies) {
+            /*foreach (Body body in _bodies) {
                 body.Integrate(dt);
-            }
+            }*/
+
+#if DEBUG
+            _bodies.ForEach((Body body) => body.Color = Graphics.Color.White);
+#endif
+
+            _narrowPhaseBodies.Clear();
+            _narrowPhaseBodies.AddRange(_bodies);
+
 
             for (int i = 0; i < 1; i++) {
+                for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
+                    // swap bodies
+                    Body body = _narrowPhaseBodies[j];
+
+                    if (body.Movement == null) {
+                        continue;
+                    }
+
+                    _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
+                    _narrowPhaseBodies[0] = body;
+
+                    Vector2 nextPosition = body.PrepareMovement(dt);
+
+                    // moving
+                    Vector2 currentMovementBuffer = Vector2.Zero;
+                    Vector2 currentPosition = body.Position;
+                    Vector2 distance = nextPosition - currentPosition;
+                    Vector2 direction = distance.Normalized();
+                    Vector2 movement = Vector2.Zero, movementBuffer = Vector2.Zero;
+
+                    //Debug.WriteLine($"distance: {distance}, direction: {direction}");
+
+                    while (distance.LengthSquared() >= 1f) {
+                        movementBuffer += direction;
+
+                        // check movement buffer for a valid movement
+                        if (System.Math.Abs(movementBuffer.X) >= 1f) {
+                            float moveX = System.Math.Sign(movementBuffer.X);
+                            movement.X = moveX;
+                            movementBuffer.X -= moveX;
+                        }
+
+                        if (System.Math.Abs(movementBuffer.Y) >= 1f) {
+                            float moveY = System.Math.Sign(movementBuffer.Y);
+                            movement.Y = moveY;
+                            movementBuffer.Y -= moveY;
+                        }
+
+                        //Debug.WriteLine($"Movement: {movement}, MovementBuffer: {movementBuffer}, Distance: {distance}");
+
+                        // check collision with current movement
+                        Vector2 moveHorizontalPos = currentPosition + new Vector2(movement.X, 0),
+                                moveVerticalPos = currentPosition + new Vector2(0, movement.Y);
+                        bool hasCollision = false;
+                        bool canMoveH = true, canMoveV = true;
+                        for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
+                            bool collidedH = false, collidedV = false;
+                            Body otherBody = _narrowPhaseBodies[k];
+
+                            if (movement.X != 0f && CheckCollision(body, moveHorizontalPos, otherBody, out Manifold manifoldHorizontal)) {
+                                collidedH = true;
+                                if (manifoldHorizontal.Contacts[0].PenetrationDepth > 0f) {
+                                    canMoveH = false;
+                                }
+                            }
+
+                            if (movement.Y != 0f && CheckCollision(body, moveVerticalPos, otherBody, out Manifold manifoldVertical)) {
+                                collidedV = true;
+                                if (manifoldVertical.Contacts[0].PenetrationDepth > 0f) {
+                                    canMoveV = false;
+                                }
+                            }
+
+                            if (collidedH || collidedV) {
+                                // stop moving
+                                hasCollision = true;
+                                body.OnCollide(otherBody);
+                                otherBody.OnCollide(body);
+
+#if DEBUG
+                                body.Color = otherBody.Color = Graphics.Color.Red;
+                                continue;
+#endif
+                            }
+                        }
+
+                        if (canMoveH) {
+                            currentPosition.X += movement.X;
+                        }
+
+                        if (canMoveV) {
+                            currentPosition.Y += movement.Y;
+                        }
+
+                        // has reached movement's limit
+                        if (hasCollision) {
+                            distance = Vector2.Zero;
+                            break;
+                        }
+
+                        distance -= movement;
+                        movement = Vector2.Zero;
+                    }
+
+                    //Debug.WriteLine($"end distance: {distance}");
+
+                    if (distance.LengthSquared() < 1f) {
+                        currentMovementBuffer = distance;
+                        //Debug.WriteLine("set buffer = " + bodyMovementBuffer);
+                    }
+
+                    body.AfterMovement(currentPosition, currentMovementBuffer);
+                }
+            }
+
+            /*for (int i = 0; i < 1; i++) {
                 foreach (Manifold manifold in _contactManifolds) {
                     manifold.ImpulseResolution();
                 }
@@ -494,7 +609,7 @@ namespace Raccoon {
 
             foreach (Manifold manifold in _contactManifolds) {
                 manifold.PositionCorrection();
-            }
+            }*/
         }
 
         private void AddCollider(Body collider, string tagName) {

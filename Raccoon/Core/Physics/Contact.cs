@@ -14,7 +14,7 @@ namespace Raccoon {
         public static Contact Sum(Contact contactA, Contact contactB) {
             Vector2 position = (contactA.Position + contactB.Position) / 2f;
             Vector2 normal = ((contactA.Normal + contactB.Normal) / 2f).Normalized();
-            float penetrationDepth = Math.Max(Vector2.Dot(contactA.PenetrationVector, normal), Vector2.Dot(contactB.PenetrationVector, normal));
+            float penetrationDepth = Math.Max(System.Math.Abs(Vector2.Dot(contactA.PenetrationVector, normal)), System.Math.Abs(Vector2.Dot(contactB.PenetrationVector, normal)));
 
             return new Contact(position, normal, penetrationDepth);
         }

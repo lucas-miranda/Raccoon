@@ -29,20 +29,20 @@
         public override Vector2 HandleVelocity(Vector2 velocity, float dt) {
             float horizontalVelocity = velocity.X;
             if (Axis.X == 0f) {
-                horizontalVelocity = velocity.X * DragForce;
-            } else if (SnapHorizontalAxis && System.Math.Sign(Axis.X) != System.Math.Sign(velocity.X)) {
+                horizontalVelocity = System.Math.Abs(horizontalVelocity) < Util.Math.Epsilon ? 0f : horizontalVelocity * DragForce;
+            } else if (SnapHorizontalAxis && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) {
                 horizontalVelocity = 0f;
             } else if (MaxVelocity.X > 0f) {
-                horizontalVelocity = Util.Math.Clamp(velocity.X, -MaxVelocity.X, MaxVelocity.X);
+                horizontalVelocity = Util.Math.Clamp(horizontalVelocity, -MaxVelocity.X, MaxVelocity.X);
             }
 
             float verticalVelocity = velocity.Y;
             if (Axis.Y == 0f) {
-                verticalVelocity = velocity.Y * DragForce;
-            } else if (SnapVerticalAxis && System.Math.Sign(Axis.Y) != System.Math.Sign(velocity.Y)) {
+                verticalVelocity = System.Math.Abs(verticalVelocity) < Util.Math.Epsilon ? 0f : verticalVelocity * DragForce;
+            } else if (SnapVerticalAxis && System.Math.Sign(Axis.Y) != System.Math.Sign(verticalVelocity)) {
                 verticalVelocity = 0f;
             } else if (MaxVelocity.Y > 0f) {
-                verticalVelocity = Util.Math.Clamp(velocity.Y, -MaxVelocity.Y, MaxVelocity.Y);
+                verticalVelocity = Util.Math.Clamp(verticalVelocity, -MaxVelocity.Y, MaxVelocity.Y);
             }
 
             return new Vector2(horizontalVelocity, verticalVelocity);

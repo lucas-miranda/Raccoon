@@ -49,5 +49,15 @@ namespace Raccoon {
         }
 
         #endregion Linked List
+
+        #region IList
+
+        public static void Swap<T>(this IList<T> list, int indexA, int indexB) {
+            T aux = list[indexA];
+            list[indexA] = list[indexB];
+            list[indexB] = aux;
+        }
+
+        #endregion IList
     }
 }

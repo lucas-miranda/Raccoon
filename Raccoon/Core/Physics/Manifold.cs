@@ -17,7 +17,7 @@ namespace Raccoon {
         public Contact[] Contacts { get; set; }
         public float AverageRestitution { get; private set; }
 
-        public void ImpulseResolution() {
+        /*public void ImpulseResolution() {
             if (A.InverseMass == 0f && B.InverseMass == 0f) {
                 A.Force = B.Force = Vector2.Zero;
                 A.LastPosition = A.Position;
@@ -32,7 +32,7 @@ namespace Raccoon {
                 A.LastPosition = A.Position;
                 B.Position += B.InverseMass * penVec;
                 B.LastPosition = B.Position;
-                A.Force = B.Force = Vector2.Zero;*/
+                A.Force = B.Force = Vector2.Zero;
 
 
                 Vector2 relativeVelocity = B.Velocity - A.Velocity;
@@ -87,7 +87,7 @@ namespace Raccoon {
             }
 
             return contact;
-        }
+        }*/
 
         public override string ToString() {
             return $"[Contacts: {string.Join(", ", Contacts)}, AverageRestitution: {AverageRestitution}]";

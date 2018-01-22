@@ -30,5 +30,11 @@ namespace Raccoon.Util {
         public static bool EqualsPermutation<T>(T itemA1, T itemA2, T itemB1, T itemB2) {
             return (itemA1.Equals(itemB1) && itemA2.Equals(itemB2)) || (itemA1.Equals(itemB2) && itemA2.Equals(itemB1));
         }
+
+        public static void Swap<T>(ref T itemA, ref T itemB) {
+            T aux = itemA;
+            itemA = itemB;
+            itemB = aux;
+        }
     }
 }
