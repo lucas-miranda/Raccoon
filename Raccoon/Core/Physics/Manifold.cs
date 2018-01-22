@@ -27,9 +27,15 @@ namespace Raccoon {
 
             float totalInvMass = A.InverseMass + B.InverseMass;
             foreach (Contact contact in Contacts) {
+                /*Vector2 penVec = contact.PenetrationVector / totalInvMass;
+                A.Position -= A.InverseMass * penVec;
+                A.LastPosition = A.Position;
+                B.Position += B.InverseMass * penVec;
+                B.LastPosition = B.Position;
+                A.Force = B.Force = Vector2.Zero;*/
 
 
-                /*Vector2 relativeVelocity = B.Velocity - A.Velocity;
+                Vector2 relativeVelocity = B.Velocity - A.Velocity;
                 float contactVelocity = Vector2.Dot(relativeVelocity, contact.Normal);
 
                 // bodies are separating
@@ -41,7 +47,10 @@ namespace Raccoon {
 
                 Vector2 impulse = impulseScalar * contact.Normal;
                 A.Position -= A.InverseMass * impulse;
-                B.Position += B.InverseMass * impulse;*/
+                A.LastPosition = A.Position;
+                B.Position += B.InverseMass * impulse;
+                B.LastPosition = B.Position;
+                //A.Force = B.Force = Vector2.Zero;
             }
         }
 

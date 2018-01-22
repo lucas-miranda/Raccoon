@@ -63,9 +63,7 @@
     <Compile Include="Core\Physics\Physics.Circle.cs" />
     <Compile Include="Core\Physics\Physics.Grid.cs" />
     <Compile Include="Core\Physics\Physics.Helper.cs" />
-    <Compile Include="Core\Physics\Physics.Line.cs" />
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
-    <Compile Include="Core\Physics\Physics.RichGrid.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />

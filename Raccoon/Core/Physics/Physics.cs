@@ -108,7 +108,7 @@ namespace Raccoon {
         public void Update(int delta) {
             // TODO: update using a float delta (increases precision)
             int timesteps = (int) System.Math.Floor((delta + _leftOverDeltaTime) / (float) FixedDeltaTime);
-            timesteps = Math.Min(5, timesteps); // prevents freezing
+            timesteps = Math.Min(3, timesteps); // prevents freezing
             _leftOverDeltaTime = Math.Max(0, delta - (timesteps * FixedDeltaTime));
 
             for (int i = 0; i < timesteps; i++) {
@@ -486,7 +486,7 @@ namespace Raccoon {
                 body.Integrate(dt);
             }
 
-            for (int i = 0; i < ConstraintSolverAccuracy; i++) {
+            for (int i = 0; i < 1; i++) {
                 foreach (Manifold manifold in _contactManifolds) {
                     manifold.ImpulseResolution();
                 }
