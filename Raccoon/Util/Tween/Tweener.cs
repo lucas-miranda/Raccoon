@@ -20,6 +20,7 @@ namespace Raccoon.Util.Tween {
             _tweens = new List<Tween>();
             _toAdd = new List<Tween>();
             _toRemove = new List<Tween>();
+            IsRunning = true;
         }
 
         #endregion Constructors
@@ -27,6 +28,7 @@ namespace Raccoon.Util.Tween {
         #region Public Static Properties
 
         public static Tweener Instance { get { return _instance; } }
+        public static bool IsRunning { get; set; }
 
         #endregion Public Static Properties
 
@@ -49,6 +51,10 @@ namespace Raccoon.Util.Tween {
         }
 
         public void Update(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
             if (_toAdd.Count > 0) {
                 _tweens.AddRange(_toAdd);
                 _toAdd.Clear();

@@ -52,6 +52,11 @@ namespace Raccoon {
         public bool HasStarted { get; private set; } 
 
         /// <summary>
+        /// If Scene is updating. 
+        /// </summary>
+        public bool IsRunning { get; set; }
+
+        /// <summary>
         /// Camera instance. 
         /// Can be changed for a custom Camera.
         /// </summary>
@@ -220,6 +225,7 @@ namespace Raccoon {
                 Start();
             }
 
+            IsRunning = true;
             Camera.Begin();
 
             foreach (Entity e in Entities) {
@@ -231,6 +237,7 @@ namespace Raccoon {
         /// Called every time Game switches to another Scene
         /// </summary>
         public virtual void End() {
+            IsRunning = false;
             foreach (Entity e in Entities) {
                 e.SceneEnd();
             }
@@ -257,6 +264,10 @@ namespace Raccoon {
         /// Runs before Update().
         /// </summary>
         public virtual void BeforeUpdate() {
+            if (!IsRunning) {
+                return;
+            }
+
             Entities.Upkeep();
             Graphics.Upkeep();
 
@@ -274,6 +285,10 @@ namespace Raccoon {
         /// </summary>
         /// <param name="delta">Time difference (in milliseconds) from previous update.</param>
         public virtual void Update(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
             Timer += (uint) delta;
 
             foreach (Graphic g in Graphics) {
@@ -298,6 +313,10 @@ namespace Raccoon {
         /// Runs after Update().
         /// </summary>
         public virtual void LateUpdate() {
+            if (!IsRunning) {
+                return;
+            }
+
             Camera.Update(Game.Instance.DeltaTime);
             foreach (Entity e in Entities) {
                 if (!e.Active || !e.AutoUpdate) {

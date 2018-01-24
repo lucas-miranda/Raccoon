@@ -41,6 +41,8 @@ namespace Raccoon {
         #region Constructors
 
         private Physics() {
+            IsRunning = true;
+
             // collision functions dictionary
             System.Type box = typeof(BoxShape),
                         circle = typeof(CircleShape),
@@ -88,6 +90,7 @@ namespace Raccoon {
         #region Public Static Properties
 
         public static Physics Instance { get { return _lazy.Value; } }
+        public static bool IsRunning { get; set; }
 
         #endregion Public Static Properties
 
@@ -107,6 +110,10 @@ namespace Raccoon {
         #region Public Methods
 
         public void Update(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
             // TODO: update using a float delta (increases precision)
             int timesteps = (int) System.Math.Floor((delta + _leftOverDeltaTime) / (float) FixedDeltaTime);
             timesteps = Math.Min(5, timesteps); // prevents freezing
