@@ -16,12 +16,13 @@ namespace Raccoon {
 
         #region Private Members
 
-        private string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
+        private string _title;
         private int _fpsCount, _fps;
         private float _scale = 1f;
         private TimeSpan _lastFpsTime;
 
 #if DEBUG
+        private string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
         private const int FramerateMonitorDataSpacing = 4;
 #endif
@@ -32,13 +33,6 @@ namespace Raccoon {
 
         public Core(string title, int width, int height, int targetFramerate, bool fullscreen, bool vsync) {
             Title = title;
-
-#if DEBUG
-            Window.Title = string.Format(_windowTitleDetailed, Title, 0, GC.GetTotalMemory(false) / 1048576f);
-#else
-            Window.Title = Title;
-#endif
-
             Content.RootDirectory = "Content/";
             TargetElapsedTime = TimeSpan.FromTicks((long) Math.Round(10000000 / (double) targetFramerate)); // time between frames
             Scale = 1f;
@@ -64,11 +58,25 @@ namespace Raccoon {
         public TimeSpan Time { get; private set; }
         public int DeltaTime { get; private set; }
         public Color BackgroundColor { get; set; }
-        public string Title { get; set; }
         public BasicEffect BasicEffect { get; private set; }
         public SpriteBatch MainSpriteBatch { get; private set; }
         public Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
         public Graphics.Canvas MainCanvas { get; private set; }
+
+        public string Title {
+            get {
+                return _title;
+            }
+
+            set {
+                _title = value;
+#if DEBUG
+                Window.Title = string.Format(_windowTitleDetailed, _title, _fps, GC.GetTotalMemory(false) / 1048576f);
+#else
+                Window.Title = _title;
+#endif
+            }
+        }
 
 #if DEBUG
         public Graphics.Canvas DebugCanvas { get; private set; }
@@ -184,8 +192,7 @@ namespace Raccoon {
 #if DEBUG
                 FramerateValues.RemoveAt(0);
                 FramerateValues.Add(_fps);
-
-                Window.Title = string.Format(_windowTitleDetailed, Title, _fps, GC.GetTotalMemory(false) / 1048576f);
+                Title = Title; // force update window title info
 #endif
             }
 
