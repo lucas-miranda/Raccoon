@@ -14,7 +14,6 @@ namespace Raccoon.Components {
         private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
         private Vector2 _movementBuffer;
-        private bool _isTryingToMove;
 
         #endregion Private Members
 
@@ -36,14 +35,9 @@ namespace Raccoon.Components {
         public IMaterial Material { get; set; }
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
-        /*public float Torque { get; private set; }
-        public float LastRotation { get; private set; }
-        public float Rotation { get { return Entity.Rotation; } set { Entity.Rotation = value; } }
-        public float AngularVelocity { get { return Rotation - LastRotation; } }*/
-        public Vector2 LastPosition { get; set; }
         public Vector2 Position { get { return Entity.Position - Origin; } set { Entity.Position = value + Origin; } }
         public Vector2 Origin { get; set; }
-        public Vector2 Velocity { get { return Position - LastPosition; } }
+        public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
         public bool IsResting { get; private set; } = true;
@@ -59,11 +53,11 @@ namespace Raccoon.Components {
 
             set {
                 if (_movement != null) {
-                    _movement.Body = null;
+                    _movement.OnRemoved();
                 }
 
                 _movement = value;
-                _movement.Body = this;
+                _movement.OnAdded(this);
             }
         }
 
@@ -73,8 +67,6 @@ namespace Raccoon.Components {
 
         public override void OnAdded(Entity entity) {
             base.OnAdded(entity);
-            LastPosition = Position;
-            //LastRotation = Rotation;
             Physics.Instance.AddCollider(this);
         }
 
@@ -84,7 +76,9 @@ namespace Raccoon.Components {
         }
 
         public override void Update(int delta) {
-            Movement?.Update(delta);
+            if (Movement != null && Movement.Enabled) {
+                Movement.Update(delta);
+            }
         }
         
         public override void Render() {
@@ -104,7 +98,7 @@ namespace Raccoon.Components {
             }
 
             // Position and Velocity
-            //Debug.DrawString(Debug.Transform(Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0)), string.Format("[{0:0.##}, {1:0.##}]\nVelocity: [{2:0.##}, {3:0.##}]\nM: {4}", Position.X, Position.Y, Velocity.X, Velocity.Y, Mass));
+            Debug.DrawString(Debug.Transform(Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0)), string.Format("[{0:0.##}, {1:0.##}]\nVelocity: [{2:0.##}, {3:0.##}]\nM: {4}", Position.X, Position.Y, Velocity.X, Velocity.Y, Mass));
 
             if (Movement != null && Movement.IsDebugRenderEnabled) {
                 Movement.DebugRender();
@@ -112,8 +106,8 @@ namespace Raccoon.Components {
         }
 #endif
 
-        public void OnCollide(Body otherBody) {
-            Movement?.OnCollide();
+        public void OnCollide(Body otherBody, Vector2 collisionAxes) {
+            Movement?.OnCollide(collisionAxes);
         }
 
         public void SolveConstraints() {
@@ -130,58 +124,49 @@ namespace Raccoon.Components {
             _constraints.Remove(constraint);
         }
 
-        public Vector2 PrepareMovement(float dt) {
+        internal Vector2 PrepareMovement(float dt) {
             Vector2 velocity = Velocity;
 
             // velocity correction
-            if (Util.Math.EqualsEstimate(velocity.X, 0)) {
+            if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
                 velocity.X = 0f;
             }
 
-            if (Util.Math.EqualsEstimate(velocity.Y, 0)) {
+            if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
                 velocity.Y = 0f;
             }
 
-            velocity = Movement?.HandleVelocity(velocity, dt) ?? velocity;
+            Velocity = (Movement?.HandleVelocity(velocity, dt) ?? velocity) + Force * dt;
 
-            if (!_isTryingToMove) {
-                IsResting = true;
-                _movementBuffer = Vector2.Zero;
-            }
-
-            // position
-            return Position + _movementBuffer + velocity + Force * dt * dt;
+            return Position + _movementBuffer + Velocity * dt;
         }
 
-        public void AfterMovement(Vector2 nextPosition, Vector2 movementBuffer) {
+        internal void AfterMovement(float dt, Vector2 nextPosition, (bool h, bool v) hasCollided, Vector2 movementBuffer) {
             _movementBuffer = movementBuffer;
-            LastPosition = Entity.Position;
+            Vector2 oldPosition = Position;
             Position = nextPosition;
 
-            // orientation
-            /*float nextAngle = Rotation + AngularVelocity + Torque * dt * dt;
-            LastRotation = Rotation;
-            Rotation = nextAngle;*/
+            Vector2 posDiff = Position - oldPosition;
+            float distance = posDiff.LengthSquared();
 
-            // clear values
-            Force = Vector2.Zero;
-            //Torque = 0;
+            IsResting = distance == 0f;
 
-            //Movement?.LateHandleVelocity(velocity);
-            _isTryingToMove = false;
+            if (Movement != null && Movement.Enabled) {
+                Movement.FixedUpdate(dt);
+                if (distance > 0f) {
+                    Movement.OnMoving(posDiff);
+                }
+            }
         }
 
         public void ApplyForce(Vector2 force) {
             Force += Movement?.HandleForce(force) ?? force;
-            _isTryingToMove = true;
-            IsResting = false;
         }
 
-        public void ApplyImpulse(Vector2 impulse) {
-            Force += Movement?.HandleImpulse(impulse * InverseMass) ?? (impulse * InverseMass);
-            //Torque += InverseInertia * Vector2.Cross(contactVector, impulse);
-            _isTryingToMove = true;
-            IsResting = false;
+        public void SetStaticPosition(Vector2 staticPosition) {
+            staticPosition = Util.Math.Floor(staticPosition);
+            Position = staticPosition;
+            Velocity = Vector2.Zero;
         }
 
         public override string ToString() {

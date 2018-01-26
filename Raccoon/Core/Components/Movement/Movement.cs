@@ -1,6 +1,6 @@
 ﻿namespace Raccoon.Components {
     public abstract class Movement {
-        public event System.Action OnMove = delegate { };
+        public System.Action OnMove = delegate { };
 
         private uint _axesSnap;
 
@@ -29,12 +29,12 @@
         /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
         public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
             MaxVelocity = maxVelocity;
-            Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity / Physics.FixedDeltaTime);
+            Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
         }
 
-        public Body Body { get; set; }
+        public Body Body { get; private set; }
         public Vector2 Axis { get; set; }
-        public Vector2 Velocity { get { return Body.Velocity; } }
+        public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
         public Vector2 MaxVelocity { get; set; }
         public Vector2 TargetVelocity { get; protected set; }
         public Vector2 Acceleration { get; set; }
@@ -93,16 +93,25 @@
 
         protected Vector2 NextAxis { get; set; }
 
-        public virtual void Update(int delta) {
-            if (!Enabled) {
-                return;
-            }
+        public virtual void OnAdded(Body body) {
+            Body = body;
+        }
 
+        public virtual void OnRemoved() {
+            Body = null;
+        }
+
+        public virtual void Update(int delta) {
             Axis = NextAxis;
+            TargetVelocity = Axis * MaxVelocity;
             NextAxis = Vector2.Zero;
         }
 
-        public virtual void DebugRender() { }
+        public virtual void FixedUpdate(float dt) {
+        }
+
+        public virtual void DebugRender() {
+        }
 
         /*public bool HasCollisionTag(string tag) {
             return CollisionTags.Contains(tag);
@@ -137,16 +146,7 @@
         }*/
 
         public abstract Vector2 HandleVelocity(Vector2 velocity, float dt);
-
-        public virtual void LateHandleVelocity(Vector2 velocity) {
-            if (!Enabled || !CanMove) {
-                return;
-            }
-
-            if (velocity.LengthSquared() >= 0) {
-                OnMove();
-            }
-        }
+        public abstract void OnMoving(Vector2 distance);
 
         public virtual Vector2 HandleForce(Vector2 force) {
             if (!Enabled || !CanMove) {
@@ -164,7 +164,7 @@
             return impulse;
         }
 
-        public virtual void OnCollide() {
+        public virtual void OnCollide(Vector2 collisionAxes) {
         }
 
         public virtual void Move(Vector2 axis) {
