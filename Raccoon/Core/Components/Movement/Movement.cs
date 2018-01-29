@@ -42,6 +42,10 @@
         public float DragForce { get; set; } = .8f;
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
+        public bool TouchedTop { get; private set; }
+        public bool TouchedRight { get; private set; }
+        public bool TouchedBottom { get; private set; }
+        public bool TouchedLeft { get; private set; }
 
         public bool SnapHorizontalAxis {
             get {
@@ -108,6 +112,10 @@
         }
 
         public virtual void FixedUpdate(float dt) {
+            TouchedTop = TouchedRight = TouchedBottom = TouchedLeft = false;
+        }
+
+        public virtual void FixedLateUpdate(float dt) {
         }
 
         public virtual void DebugRender() {
@@ -146,6 +154,21 @@
         }*/
 
         public abstract Vector2 HandleVelocity(Vector2 velocity, float dt);
+
+        public virtual void OnCollide(Vector2 collisionAxes) {
+            if (collisionAxes.Y < 0f) {
+                TouchedTop = true;
+            } else if (collisionAxes.Y > 0f) {
+                TouchedBottom = true;
+            }
+
+            if (collisionAxes.X < 0f) {
+                TouchedLeft = true;
+            } else if (collisionAxes.X > 0f) {
+                TouchedRight = true;
+            }
+        }
+
         public abstract void OnMoving(Vector2 distance);
 
         public virtual Vector2 HandleForce(Vector2 force) {
@@ -162,9 +185,6 @@
             }
 
             return impulse;
-        }
-
-        public virtual void OnCollide(Vector2 collisionAxes) {
         }
 
         public virtual void Move(Vector2 axis) {

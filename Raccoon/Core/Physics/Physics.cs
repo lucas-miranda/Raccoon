@@ -487,6 +487,8 @@ namespace Raccoon {
                         continue;
                     }
 
+                    body.Movement.FixedUpdate(dt);
+
                     // swap bodies
                     _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
                     _narrowPhaseBodies[0] = body;
@@ -497,37 +499,43 @@ namespace Raccoon {
                     Vector2 currentMovementBuffer = Vector2.Zero;
                     Vector2 currentPosition = body.Position;
                     Vector2 distance = nextPosition - currentPosition;
-                    //Vector2 direction = distance.Normalized();
                     float greatestAxis = System.Math.Max(System.Math.Abs(distance.X), System.Math.Abs(distance.Y));
                     Vector2 direction = new Vector2(distance.X / greatestAxis, distance.Y / greatestAxis);
                     Vector2 movement = Vector2.Zero, movementBuffer = Vector2.Zero;
-                    (bool horizontal, bool vertical) hasCollided = (false, false);
                     bool isFirstCheck = true;
 
-                    //Debug.WriteLine($"physics | dist: {distance}, dir: {direction}");
-
+                    bool canMoveH = true, canMoveV = true;
                     if (!Math.EqualsEstimate(distance.LengthSquared(), 0f)) {
                         do {
-                            movementBuffer += direction;
+                            //movementBuffer += direction;
 
                             // check movement buffer for a valid movement
-                            if (System.Math.Abs(movementBuffer.X) >= 1f) {
-                                float moveX = System.Math.Sign(movementBuffer.X);
-                                movement.X = moveX;
-                                movementBuffer.X -= moveX;
+                            if (canMoveH && System.Math.Abs(distance.X) >= 1f) {
+                                movementBuffer.X += direction.X;
+                                if (System.Math.Abs(movementBuffer.X) >= 1f) {
+                                    float moveX = System.Math.Sign(movementBuffer.X);
+                                    movement.X = moveX;
+                                    movementBuffer.X -= moveX;
+                                }
                             }
 
-                            if (System.Math.Abs(movementBuffer.Y) >= 1f) {
-                                float moveY = System.Math.Sign(movementBuffer.Y);
-                                movement.Y = moveY;
-                                movementBuffer.Y -= moveY;
+                            if (canMoveV && System.Math.Abs(distance.Y) >= 1f) {
+                                movementBuffer.Y += direction.Y;
+                                if (System.Math.Abs(movementBuffer.Y) >= 1f) {
+                                    float moveY = System.Math.Sign(movementBuffer.Y);
+                                    movement.Y = moveY;
+                                    movementBuffer.Y -= moveY;
+                                }
+                            }
+
+                            if (isFirstCheck && distance.LengthSquared() < 1f) {
+                                movement = new Vector2(System.Math.Sign(direction.X), System.Math.Sign(direction.Y));
                             }
 
                             // check collision with current movement
                             Vector2 moveHorizontalPos = currentPosition + new Vector2(movement.X, 0),
                                     moveVerticalPos = currentPosition + new Vector2(0, movement.Y);
-                            bool hasCollision = false;
-                            bool canMoveH = true, canMoveV = true;
+
                             for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
                                 bool collidedH = false, collidedV = false;
                                 Body otherBody = _narrowPhaseBodies[k];
@@ -535,30 +543,43 @@ namespace Raccoon {
                                 // test for horizontal collision (if it's moving horizontally)
                                 Manifold manifoldHorizontal = null;
                                 if (movement.X != 0f && CheckCollision(body, moveHorizontalPos, otherBody, out manifoldHorizontal)) {
-                                    collidedH = true;
-                                    hasCollided.horizontal = true;
                                     if (manifoldHorizontal.Contacts[0].PenetrationDepth > 0f) {
+                                        collidedH = true;
                                         canMoveH = false;
+                                        distance.X = 0f;
+                                        direction.Y = System.Math.Sign(direction.Y);
                                     }
                                 }
 
                                 // test for vertical collision (if it's moving vertically)
                                 Manifold manifoldVertical = null;
                                 if (movement.Y != 0f && CheckCollision(body, moveVerticalPos, otherBody, out manifoldVertical)) {
-                                    collidedV = true;
-                                    hasCollided.vertical = true;
                                     if (manifoldVertical.Contacts[0].PenetrationDepth > 0f) {
+                                        collidedV = true;
                                         canMoveV = false;
+                                        distance.Y = 0f;
+                                        direction.X = System.Math.Sign(direction.X);
                                     }
                                 }
 
                                 if (collidedH || collidedV) {
                                     // stop moving
-                                    hasCollision = true;
+                                    bool hasCollisionOnAxisH = manifoldHorizontal != null && manifoldHorizontal.Contacts[0].PenetrationDepth > 0f,
+                                         hasCollisionOnAxisV = manifoldVertical != null && manifoldVertical.Contacts[0].PenetrationDepth > 0f;
+
                                     Vector2 collisionAxes = new Vector2(
-                                        manifoldHorizontal != null && manifoldHorizontal.Contacts[0].PenetrationDepth > 0f ? movement.X : 0f, 
-                                        manifoldVertical != null && manifoldVertical.Contacts[0].PenetrationDepth > 0f ? movement.Y : 0f
+                                        hasCollisionOnAxisH ? movement.X : 0f,
+                                        hasCollisionOnAxisV ? movement.Y : 0f
                                     );
+
+                                    /*Contact? contact = null;
+                                    if (hasCollisionOnAxisH) {
+                                        contact = manifoldHorizontal.Contacts[0];
+                                    }
+
+                                    if (hasCollisionOnAxisV) {
+                                        contact = contact == null ? manifoldVertical.Contacts[0] : Contact.Sum(contact.Value, manifoldVertical.Contacts[0]);
+                                    }*/
 
                                     body.OnCollide(otherBody, collisionAxes);
                                     otherBody.OnCollide(body, -collisionAxes);
@@ -569,41 +590,36 @@ namespace Raccoon {
                                 }
                             }
 
-                            //Debug.WriteLine($"physics | isFirstCheck? {isFirstCheck}, cm(H: {canMoveH}, V: {canMoveV}), mv: {movement}");
-
                             // hack to force first movement check and doesn't commit move if distance is less than allowed
                             if (isFirstCheck && distance.LengthSquared() < 1f) {
                                 break;
                             }
 
                             // separated movement
-                            if (canMoveH) {
+                            if (canMoveH && movement.X != 0f) {
+                                distance.X -= movement.X;
                                 currentPosition.X += movement.X;
                             }
 
-                            if (canMoveV) {
+                            if (canMoveV && movement.Y != 0f) {
+                                distance.Y -= movement.Y;
                                 currentPosition.Y += movement.Y;
                             }
 
-                            // has reached movement's limit
-                            if (hasCollision && (!canMoveH || movement.X == 0f) && (!canMoveV || movement.Y == 0f)) {
-                                distance = Vector2.Zero;
-                                break;
-                            }
-
-                            distance -= movement;
                             movement = Vector2.Zero;
                             isFirstCheck = false;
-                        } while (distance.LengthSquared() >= 1f);
+                        } while ((canMoveH && System.Math.Abs(distance.X) >= 1f) || (canMoveV && System.Math.Abs(distance.Y) >= 1f));
+
+                        if (canMoveH && System.Math.Abs(distance.X) > 0f) {
+                            currentMovementBuffer.X = distance.X;
+                        }
+
+                        if (canMoveV && System.Math.Abs(distance.Y) > 0f) {
+                            currentMovementBuffer.Y = distance.Y;
+                        }
                     }
 
-                    //Debug.WriteLine($"physics | hasCollided? {hasCollided}");
-                    
-                    if (distance.LengthSquared() < 1f) {
-                        currentMovementBuffer = distance;
-                    }
-
-                    body.AfterMovement(dt, currentPosition, hasCollided, currentMovementBuffer);
+                    body.AfterMovement(dt, currentPosition, currentMovementBuffer);
                 }
             }
 

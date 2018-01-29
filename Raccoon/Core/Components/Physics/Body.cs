@@ -141,7 +141,7 @@ namespace Raccoon.Components {
             return Position + _movementBuffer + Velocity * dt;
         }
 
-        internal void AfterMovement(float dt, Vector2 nextPosition, (bool h, bool v) hasCollided, Vector2 movementBuffer) {
+        internal void AfterMovement(float dt, Vector2 nextPosition, Vector2 movementBuffer) {
             _movementBuffer = movementBuffer;
             Vector2 oldPosition = Position;
             Position = nextPosition;
@@ -151,12 +151,14 @@ namespace Raccoon.Components {
 
             IsResting = distance == 0f;
 
-            if (Movement != null && Movement.Enabled) {
-                Movement.FixedUpdate(dt);
-                if (distance > 0f) {
+            if (Movement != null) {
+                if (Movement.Enabled && distance > 0f) {
                     Movement.OnMoving(posDiff);
                 }
+
+                Movement.FixedLateUpdate(dt);
             }
+
         }
 
         public void ApplyForce(Vector2 force) {
