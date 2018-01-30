@@ -3,7 +3,7 @@
 namespace Raccoon.Components {
     public class PlatformerMovement : Movement {
         public static Vector2 GravityForce;
-        public static int LedgeJumpMaxTime = (int) (12f / 60f * 1000f);
+        public static int LedgeJumpMaxTime = 100; // in miliseconds
 
         public event System.Action OnJumpBegin = delegate { },
                                    OnTouchGround = delegate { },
@@ -54,13 +54,17 @@ namespace Raccoon.Components {
 
         public override void Update(int delta) {
             base.Update(delta);
-            if (!CanContinuousJump && OnGround) {
-                // continuous jump lock (must release and press jump button to jump again)
-                if (!_nextJumpReady && !_requestedJump) {
-                    _nextJumpReady = true;
-                }
+            if (OnGround) {
+                if (!CanContinuousJump) {
+                    // continuous jump lock (must release and press jump button to jump again)
+                    if (!_nextJumpReady && !_requestedJump) {
+                        _nextJumpReady = true;
+                    }
 
-                _requestedJump = false;
+                    _requestedJump = false;
+                }
+            } else if (IsFalling && _ledgeJumpTime <= LedgeJumpMaxTime) {
+                _ledgeJumpTime += delta;
             }
 
             IsStillJumping = false;
@@ -68,10 +72,9 @@ namespace Raccoon.Components {
 
         public override void FixedUpdate(float dt) {
             base.FixedUpdate(dt);
-            if (_lookingForRamp) {
-                if (System.Math.Sign(Axis.X) != _searchRampX) {
-                    ResetRampMovement();
-                }
+            if (_lookingForRamp && System.Math.Sign(Axis.X) != _searchRampX) {
+                // reset ramp movement, if looking for a ramp and Axis.X differs from seach ramp X
+                ResetRampMovement();
             }
         }
 
@@ -90,35 +93,37 @@ namespace Raccoon.Components {
 
         public override Vector2 HandleVelocity(Vector2 velocity, float dt) {
             float horizontalVelocity = velocity.X;
-            if (Axis.X == 0f) {
+            if (Axis.X == 0f) { // stopping from movement, drag force applies
                 horizontalVelocity = System.Math.Abs(horizontalVelocity) < Math.Epsilon ? 0f : horizontalVelocity * DragForce;
-            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) {
+            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
                 horizontalVelocity = 0f;
-            } else if (MaxVelocity.X > 0f) {
+            } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
                 horizontalVelocity = _lookingForRamp && _searchRampY < 0 ? TargetVelocity.X : Math.Approach(horizontalVelocity, TargetVelocity.X, Acceleration.X * dt);
-            } else {
+            } else { // velocity increasing without a limit
                 horizontalVelocity += System.Math.Sign(Axis.X) * Acceleration.X * dt;
             }
 
             float verticalVelocity = velocity.Y;
 
-            if (_lookingForRamp && _searchRampY < 0) {
+            if (_lookingForRamp && _searchRampY < 0) { // up ramp
+                // wait until a horizontal collision happens to move body up again
                 if (!_waitingForNextRampCollision) {
                     Body.Position = new Vector2(Body.Position.X, Body.Position.Y - 1);
                     _waitingForNextRampCollision = _canApplyRampCorrection = true;
                     _walkingOnRamp = false;
                 }
             } else {
-                // apply gravity
+                // apply gravity force
                 verticalVelocity += GravityScale * GravityForce.Y * dt;
 
                 if (IsStillJumping) {
-                    // apply jumping acceleration (sure, if it's jumping)
+                    // apply jumping acceleration if it's jumping
                     verticalVelocity -= Acceleration.Y * dt;
                 }
 
-                if (_lookingForRamp && _searchRampY > 0) {
-                    verticalVelocity = 6 / dt;
+                if (_lookingForRamp && _searchRampY > 0) { // down ramp
+                    // make a strong down force to make body gently walks on ramp
+                    verticalVelocity = 5 / dt;
                     _waitingForNextRampCollision = _canApplyRampCorrection = true;
                     _walkingOnRamp = false;
                 }
@@ -129,7 +134,8 @@ namespace Raccoon.Components {
 
         public override void OnCollide(Vector2 collisionAxes) {
             base.OnCollide(collisionAxes);
-            if (TouchedBottom) { // falling and reach the ground
+            if (TouchedBottom) { 
+                // falling and reach the ground
                 if (!OnGround) {
                     OnGround = true;
                     IsStillJumping = IsJumping = IsFalling = false;
@@ -137,29 +143,34 @@ namespace Raccoon.Components {
                     OnTouchGround();
                 }
 
+                // down ramp collision check
                 if (_lookingForRamp && _searchRampY > 0) {
                     _waitingForNextRampCollision = false;
                 }
 
                 Velocity = new Vector2(Velocity.X, 0f);
-            } else if (TouchedTop) { // jumping and reach a ceiling
+            } else if (TouchedTop) { 
+                // jumping and reached a ceiling
                 IsStillJumping = IsJumping = false;
                 IsFalling = true;
-                OnFallingBegin();
                 Velocity = new Vector2(Velocity.X, 0f);
+                OnFallingBegin();
             }
 
-            if (collisionAxes.X != 0f && _searchRampY < 1) {
+            if (collisionAxes.X != 0f && _searchRampY < 1) { // do nothing if it's on a down ramp
                 if (OnGround) {
+                    // start checking if it's on a up ramp
                     if (!_lookingForRamp) {
                         _lookingForRamp = true;
                         _walkingOnRamp = false;
                         _searchRampX = (int) collisionAxes.X;
                         _searchRampY = -1;
-                    } else {
+                    } else { 
+                        // up ramp collision check
                         _waitingForNextRampCollision = false;
                     }
                 } else {
+                    // commom behavior, clears Velocity.X if touching horizontal walls on air
                     Velocity = new Vector2(0f, Velocity.Y);
                 }
             }
@@ -167,42 +178,51 @@ namespace Raccoon.Components {
 
         public override void OnMoving(Vector2 distance) {
             if (_lookingForRamp && _searchRampY < 0) {
+                // up ramp final cycle checking
+                // checks for a valid horizontal movement
+                // if it doesn't occurs then a correction will be made on the late update 
                 if (System.Math.Sign(distance.X) == _searchRampX) {
                     ResetRampMovement();
                 }
             } else if (OnGround && _searchRampY < 1 && distance.X != 0) {
+                // start checking if it's on a down ramp
                 _lookingForRamp = true;
                 _walkingOnRamp = false;
                 _searchRampX = System.Math.Sign(distance.X);
                 _searchRampY = 1;
             } else {
                 if (distance.Y > 0) {
-                    bool forceFallingState = false;
+                    bool forceFallingState = false; // when down ramp correction must be applied
                     if (_canApplyRampCorrection && _searchRampY > 0 && _waitingForNextRampCollision) {
+                        // down ramp final cycle checking (cade A)
+                        // checks for a valid down ramp collision and immediately apply a correction
                         Velocity = new Vector2(Velocity.X, 0f);
                         Body.Position = new Vector2(Body.Position.X, Body.Position.Y - distance.Y);
-                        //ResetRampMovement();
+                        //ResetRampMovement(); // doesn't need to reset ramp movement here
                         forceFallingState = true;
                     }
 
-                    if ((_searchRampY == 0 && !IsFalling) || forceFallingState) { // check if it's moving down, so it's falling
+                    // standard checking for falling movement
+                    // checks if it's moving down, so it's falling
+                    if ((_searchRampY == 0 && !IsFalling) || forceFallingState) { 
                         ResetRampMovement();
                         IsFalling = true;
-                        OnGround = IsJumping = _nextJumpReady = false;
+                        OnGround = IsJumping = false;
                         OnFallingBegin();
                     }
                 } else if (distance.Y < 0) {
                     // checks if jump max distance has been reached
-                    if (IsStillJumping && OnAir) {
-                        if (Body.Position.Y <= _jumpMaxY) {
-                            _nextJumpReady = false;
-                        }
+                    if (IsStillJumping && OnAir && Body.Position.Y <= _jumpMaxY) {
+                        _nextJumpReady = false;
                     }
                 } else if (_searchRampY > 0 && !_waitingForNextRampCollision) {
+                    // down ramp final cycle checking (case B)
+                    // if tries to identify a down ramp and move distance is zero, already reached ground
                     ResetRampMovement();
                 }
             }
 
+            // platformer movement only triggers OnMove() on a horizontal movement
             if (Axis.X == 0f) {
                 return;
             }
@@ -223,6 +243,7 @@ namespace Raccoon.Components {
                 return;
             }
 
+            // checks if can jump and ledge jump time
             if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime)) {
                 return;
             }
@@ -234,8 +255,7 @@ namespace Raccoon.Components {
             OnGround = IsFalling = false;
             Jumps--;
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
-            float jumpForce = Acceleration.Y * JumpExplosionRate;
-            Velocity = new Vector2(Velocity.X, -jumpForce);
+            Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
             OnJumpBegin();
         }
 
