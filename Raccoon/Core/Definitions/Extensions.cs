@@ -5,16 +5,25 @@ namespace Raccoon {
     public static class Extensions {
         #region Enums
 
+        public static int GetUnderlyingNumericSize(this Enum e) {
+            return System.Runtime.InteropServices.Marshal.SizeOf(Enum.GetUnderlyingType(e.GetType()));
+        }
+
         public static List<Enum> GetFlagValues(this Enum enumFlags) {
             List<Enum> separatedFlagValues = new List<Enum>();
-            int enumFlagsAsNumber = Convert.ToInt32(enumFlags), enumSize = System.Runtime.InteropServices.Marshal.SizeOf(Enum.GetUnderlyingType(enumFlags.GetType()));
-            for (int i = 0; i < 8 * enumSize; i++) {
-                int bitValue = 1 << i;
-                if ((enumFlagsAsNumber & bitValue) == 0) {
+            long enumFlagsAsNumber = Convert.ToInt64(enumFlags);
+            int bits = 8 * enumFlags.GetUnderlyingNumericSize();
+            for (int i = 0; i < bits; i++) {
+                long bitValue = 1L << i;
+                if ((enumFlagsAsNumber & bitValue) == 0L) {
                     continue;
                 }
 
                 separatedFlagValues.Add((Enum) Enum.ToObject(enumFlags.GetType(), bitValue));
+            }
+
+            if (separatedFlagValues.Count == 0) {
+                separatedFlagValues.Add((Enum) Enum.ToObject(enumFlags.GetType(), 0L));
             }
 
             return separatedFlagValues;

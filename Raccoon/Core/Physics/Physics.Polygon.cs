@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Raccoon.Components;
+﻿using Raccoon.Components;
 
 namespace Raccoon {
     public sealed partial class Physics {

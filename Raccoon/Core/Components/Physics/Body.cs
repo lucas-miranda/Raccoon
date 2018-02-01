@@ -14,6 +14,8 @@ namespace Raccoon.Components {
         private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
         private Vector2 _movementBuffer;
+        private System.Enum _tags;
+        private bool _isPhysicsActive;
 
         #endregion Private Members
 
@@ -25,6 +27,7 @@ namespace Raccoon.Components {
             Material = material ?? StandardMaterial;
             Mass = Shape.ComputeMass(1f);
             InverseMass = Mass == 0f ? 0f : (1f / Mass);
+            _tags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         #endregion Constructors
@@ -45,6 +48,23 @@ namespace Raccoon.Components {
 #if DEBUG
         public Color Color { get; set; } = Color.White;
 #endif
+
+        public System.Enum Tags {
+            get {
+                return _tags;
+            }
+
+            set {
+                if (_isPhysicsActive) {
+                    System.Enum oldTags = _tags;
+                    _tags = value;
+                    Physics.Instance.UpdateColliderTagsEntry(this, oldTags);
+                    return;
+                }
+
+                _tags = value;
+            }
+        }
 
         public Movement Movement {
             get {
@@ -68,11 +88,13 @@ namespace Raccoon.Components {
         public override void OnAdded(Entity entity) {
             base.OnAdded(entity);
             Physics.Instance.AddCollider(this);
+            _isPhysicsActive = true;
         }
 
         public override void OnRemoved() {
             base.OnRemoved();
             Physics.Instance.RemoveCollider(this);
+            _isPhysicsActive = false;
         }
 
         public override void Update(int delta) {
@@ -127,16 +149,17 @@ namespace Raccoon.Components {
         internal Vector2 PrepareMovement(float dt) {
             Vector2 velocity = Velocity;
 
-            // velocity correction
+            // velocity X correction
             if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
                 velocity.X = 0f;
             }
 
+            // velocity Y correction
             if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
                 velocity.Y = 0f;
             }
 
-            Velocity = (Movement?.HandleVelocity(velocity, dt) ?? velocity) + Force * dt;
+            Velocity = Force * dt + (Movement != null && Movement.Enabled ? Movement.HandleVelocity(velocity, dt) : velocity);
 
             return Position + _movementBuffer + Velocity * dt;
         }
@@ -148,17 +171,15 @@ namespace Raccoon.Components {
 
             Vector2 posDiff = Position - oldPosition;
             float distance = posDiff.LengthSquared();
-
-            IsResting = distance == 0f;
-
-            if (Movement != null) {
-                if (Movement.Enabled && distance > 0f) {
+            if (Movement != null && Movement.Enabled) {
+                if (distance > 0f) {
                     Movement.OnMoving(posDiff);
                 }
 
                 Movement.FixedLateUpdate(dt);
             }
 
+            IsResting = (Position - oldPosition).LengthSquared() == 0f;
         }
 
         public void ApplyForce(Vector2 force) {

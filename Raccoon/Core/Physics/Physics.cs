@@ -19,22 +19,18 @@ namespace Raccoon {
 
         private static readonly System.Lazy<Physics> _lazy = new System.Lazy<Physics>(() => new Physics());
 
-        private Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>>();
+        // tags
+        private System.Enum _noneTag;
+        private Dictionary<System.Enum, HashSet<System.Enum>> _collisionTagTable = new Dictionary<System.Enum, HashSet<System.Enum>>();
 
-        // colliders register
-        private Dictionary<string, HashSet<string>> _collisionTagTable = new Dictionary<string, HashSet<string>>();
-        private Dictionary<string, List<Body>> _collidersByTag = new Dictionary<string, List<Body>>();
-        private List<Body> _bodies = new List<Body>();
-        private List<Movement> _movements = new List<Movement>(); // REMOVE
+        // colliders
+        private List<Body> _colliders = new List<Body>();
+        private Dictionary<System.Enum, List<Body>> _collidersByTag = new Dictionary<System.Enum, List<Body>>();
 
         // collision checking
+        private Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>>();
         private int _leftOverDeltaTime;
         private List<Body> _narrowPhaseBodies = new List<Body>();
-        private List<Manifold> _contactManifolds = new List<Manifold>();
-
-        private List<Body> _collisionCandidates = new List<Body>();
-        private Dictionary<string, List<Body>> _candidatesByTag = new Dictionary<string, List<Body>>();
-        private Dictionary<Body, List<Body>> _collisionQueries = new Dictionary<Body, List<Body>>();
 
         #endregion Private Members
 
@@ -91,6 +87,7 @@ namespace Raccoon {
 
         public static Physics Instance { get { return _lazy.Value; } }
         public static bool IsRunning { get; set; }
+        public static System.Type TagType { get; private set; }
 
         #endregion Public Static Properties
 
@@ -124,141 +121,157 @@ namespace Raccoon {
             }
         }
 
-        public void RegisterTag(string tagName) {
-            if (string.IsNullOrWhiteSpace(tagName)) {
-                throw new System.ArgumentException("Invalid tag name.", "tagName");
-            }
-
-            if (HasTag(tagName)) {
-                return;
-            }
-
-            _collidersByTag.Add(tagName, new List<Body>());
-            _collisionTagTable.Add(tagName, new HashSet<string>());
-            _candidatesByTag.Add(tagName, new List<Body>());
-        }
-
-        public void RegisterTag(System.Enum tag) {
-            RegisterTag(tag.ToString());
-        }
-
-        public bool HasTag(string tagName) {
-            return !string.IsNullOrWhiteSpace(tagName) && _collidersByTag.ContainsKey(tagName);
-        }
-
         public bool HasTag(System.Enum tag) {
-            return HasTag(tag.ToString());
-        }
-
-        public void RegisterTags(params string[] tags) {
-            foreach (string tagName in tags) {
-                RegisterTag(tagName);
+            if (tag.GetType() != TagType) {
+                throw new System.ArgumentException($"Type from '{tag}' is inconsistent with Tag Type {TagType.Name}.", "tag");
             }
-        }
 
-        public void RegisterTags(params System.Enum[] tags) {
-            foreach (System.Enum tag in tags) {
-                RegisterTag(tag);
-            }
+            return _collidersByTag.ContainsKey(tag);
         }
 
         public void RegisterTags<T>() {
             System.Type type = typeof(T);
             if (!type.IsEnum) {
-                throw new System.ArgumentException("Type must be a Enum.");
+                throw new System.ArgumentException("Tags Type must be a Enum.");
             }
 
-            RegisterTags(System.Enum.GetNames(type));
-        }
-
-        public void RegisterCollision(string tagNameA, string tagNameB) {
-            if (!HasTag(tagNameA)) {
-                throw new System.ArgumentException($"Tag '{tagNameA}' not found or it's invalid.", "tagA");
+            if (!type.IsDefined(typeof(System.FlagsAttribute), false)) {
+                throw new System.ArgumentException("Tags Type must contains System.FlagsAttribute and all values declared as power of 2.");
             }
 
-            if (!HasTag(tagNameB)) {
-                throw new System.ArgumentException($"Tag '{tagNameB}' not found or it's invalid.", "tagB");
+            TagType = type;
+            _noneTag = (System.Enum) System.Enum.ToObject(TagType, 0);
+            foreach (System.Enum enumValue in System.Enum.GetValues(TagType)) {
+                System.Enum tag = (System.Enum) System.Enum.ToObject(TagType, enumValue);
+                _collidersByTag.Add(tag, new List<Body>());
+                _collisionTagTable.Add(tag, new HashSet<System.Enum>());
             }
-
-            _collisionTagTable[tagNameA].Add(tagNameB);
-            _collisionTagTable[tagNameB].Add(tagNameA);
         }
 
         public void RegisterCollision(System.Enum tagA, System.Enum tagB) {
-            RegisterCollision(tagA.ToString(), tagB.ToString());
-        }
-
-        public void RemoveCollision(string tagNameA, string tagNameB) {
-            if (!HasTag(tagNameA)) {
-                throw new System.ArgumentException($"Tag '{tagNameA}' not found or it's invalid.", "tagNameA");
+            if (!HasTag(tagA)) {
+                throw new System.ArgumentException($"Tag '{tagA}' not found on Tag Type {TagType.Name}.", "tagA");
             }
 
-            if (!HasTag(tagNameB)) {
-                throw new System.ArgumentException($"Tag '{tagNameB}' not found or it's invalid.", "tagNameB");
+            if (!HasTag(tagB)) {
+                throw new System.ArgumentException($"Tag '{tagB}' not found on Tag Type {TagType.Name}.", "tagB");
             }
 
-            _collisionTagTable[tagNameA].Remove(tagNameB);
-            _collisionTagTable[tagNameB].Remove(tagNameA);
+            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
+                throw new System.ArgumentException($"Can't register a collision with special tag '{_noneTag}'.");
+            }
+
+            _collisionTagTable[tagA].Add(tagB);
+            _collisionTagTable[tagB].Add(tagA);
         }
 
         public void RemoveCollision(System.Enum tagA, System.Enum tagB) {
-            RemoveCollision(tagA.ToString(), tagB.ToString());
-        }
-
-        public bool IsCollidable(string tagNameA, string tagNameB) {
-            if (!HasTag(tagNameA)) {
-                throw new System.ArgumentException($"Tag '{tagNameA}' not found or it's invalid.", "tagNameA");
+            if (!HasTag(tagA)) {
+                throw new System.ArgumentException($"Tag '{tagA}' not found on Tag Type {TagType.Name}.", "tagA");
             }
 
-            if (!HasTag(tagNameB)) {
-                throw new System.ArgumentException($"Tag '{tagNameB}' not found or it's invalid.", "tagNameB");
+            if (!HasTag(tagB)) {
+                throw new System.ArgumentException($"Tag '{tagB}' not found on Tag Type {TagType.Name}.", "tagB");
             }
 
-            return _collisionTagTable[tagNameA].Contains(tagNameB) && _collisionTagTable[tagNameB].Contains(tagNameA);
+            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
+                return;
+            }
+
+            _collisionTagTable[tagA].Remove(tagB);
+            _collisionTagTable[tagB].Remove(tagA);
         }
 
         public bool IsCollidable(System.Enum tagA, System.Enum tagB) {
-            return IsCollidable(tagA.ToString(), tagB.ToString());
+            if (!HasTag(tagA)) {
+                throw new System.ArgumentException($"Tag '{tagA}' not found on Tag Type {TagType.Name}.", "tagA");
+            }
+
+            if (!HasTag(tagB)) {
+                throw new System.ArgumentException($"Tag '{tagB}' not found on Tag Type {TagType.Name}.", "tagB");
+            }
+
+            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
+                return false;
+            }
+
+            return _collisionTagTable[tagA].Contains(tagB);
+        }
+
+        public void SetCollisions(Dictionary<System.Enum, System.Array> collisions) {
+            foreach (HashSet<System.Enum> collidedTags in _collisionTagTable.Values) {
+                collidedTags.Clear();
+            }
+
+            foreach (KeyValuePair<System.Enum, System.Array> tagCollision in collisions) {
+                foreach (System.Enum otherTag in tagCollision.Value) {
+                    RegisterCollision(tagCollision.Key, otherTag);
+                }
+            }
         }
 
         public void AddCollider(Body collider) {
-            /*foreach (string tag in collider.Tags) {
+            foreach (System.Enum tag in collider.Tags.GetFlagValues()) {
                 AddCollider(collider, tag);
-            }*/
+            }
 
-            _bodies.Add(collider);
-        }
-
-        public void AddMovement(Movement movement) {
-            _movements.Add(movement);
+            _colliders.Add(collider);
         }
 
         public void RemoveCollider(Body collider) {
-            /*foreach (string tag in collider.Tags) {
+            foreach (System.Enum tag in collider.Tags.GetFlagValues()) {
                 RemoveCollider(collider, tag);
-            }*/
-
-            _bodies.Remove(collider);
-        }
-
-        public void RemoveMovement(Movement movement) {
-            _movements.Remove(movement);
-        }
-
-        public int GetCollidersCount(string tagName) {
-            if (!HasTag(tagName)) {
-                return 0;
             }
 
-            return _collidersByTag[tagName].Count;
+            _colliders.Remove(collider);
+        }
+
+        public void UpdateColliderTagsEntry(Body collider, System.Enum oldTags = null) {
+            if (oldTags == null) {
+                foreach (KeyValuePair<System.Enum, List<Body>> tagColliders in _collidersByTag) {
+                    tagColliders.Value.Remove(collider);
+                }
+            } else {
+                List<System.Enum> oldTagsList = oldTags.GetFlagValues();
+                foreach (System.Enum oldTag in oldTagsList) {
+                    RemoveCollider(collider, oldTag);
+                }
+            }
+
+            List<System.Enum> tags = collider.Tags.GetFlagValues();
+            foreach (System.Enum tag in tags) {
+                AddCollider(collider, tag);
+            }
         }
 
         public int GetCollidersCount(System.Enum tag) {
-            return GetCollidersCount(tag.ToString());
+            if (!HasTag(tag)) {
+                throw new System.ArgumentException($"Tag '{tag}' not found on Tag Type {TagType.Name}.", "tag");
+            }
+
+            int collidersCount = 0;
+            foreach (System.Enum t in tag.GetFlagValues()) {
+                collidersCount += _collidersByTag[t].Count;
+            }
+
+            return collidersCount;
+        }
+
+        public override string ToString() {
+            string info = $"Physics:\n  Colliders: {_colliders.Count}\n  Collision Tag Table:\n";
+            foreach (KeyValuePair<System.Enum, HashSet<System.Enum>> tagCollisionTable in _collisionTagTable) {
+                info += $"    {tagCollisionTable.Key} => {string.Join(", ", tagCollisionTable.Value)}\n"; 
+            }
+
+            info += "  Colliders By Tag:\n";
+            foreach (KeyValuePair<System.Enum, List<Body>> tagColliders in _collidersByTag) {
+                info += $"    {tagColliders.Key}: {tagColliders.Value.Count}\n";
+            }
+
+            return info;
         }
 
         /*
-
         #region Collides [Single Tag] [Single Output]
 
         public bool Collides(Vector2 position, Collider collider, string tag) {
@@ -453,16 +466,16 @@ namespace Raccoon {
         #region Private Methods
 
         private void Step(float dt) {
-
 #if DEBUG
-            _bodies.ForEach((Body body) => body.Color = Graphics.Color.White);
-            CollidersBroadPhaseCount = _bodies.Count;
+            _colliders.ForEach((Body body) => body.Color = Graphics.Color.White);
+            CollidersBroadPhaseCount = _colliders.Count;
             Time.StartStopwatch();
 #endif
 
             // Broad Phase
+            // TODO: Make a real broad phase algorithm, probaly using a quadtree
             _narrowPhaseBodies.Clear();
-            _narrowPhaseBodies.AddRange(_bodies);
+            _narrowPhaseBodies.AddRange(_colliders);
 
 #if DEBUG
             CollisionDetectionBroadPhaseExecutionTime = Time.EndStopwatch();
@@ -479,148 +492,138 @@ namespace Raccoon {
             }
 
             // movement with collision detection
-            for (int i = 0; i < 1; i++) {
-                for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
-                    Body body = _narrowPhaseBodies[j];
+            for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
+                Body body = _narrowPhaseBodies[j];
 
-                    if (body.Movement == null) {
-                        continue;
-                    }
+                if (body.Movement == null || !body.Enabled) {
+                    continue;
+                }
 
-                    body.Movement.FixedUpdate(dt);
+                body.Movement.FixedUpdate(dt);
 
-                    // swap bodies
-                    _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
-                    _narrowPhaseBodies[0] = body;
+                // swap bodies for fast collision check
+                _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
+                _narrowPhaseBodies[0] = body;
 
-                    Vector2 nextPosition = body.PrepareMovement(dt);
+                Vector2 nextPosition = body.PrepareMovement(dt);
 
-                    // moving
-                    Vector2 currentMovementBuffer = Vector2.Zero;
-                    Vector2 currentPosition = body.Position;
-                    Vector2 distance = nextPosition - currentPosition;
-                    float greatestAxis = System.Math.Max(System.Math.Abs(distance.X), System.Math.Abs(distance.Y));
-                    Vector2 direction = new Vector2(distance.X / greatestAxis, distance.Y / greatestAxis);
-                    Vector2 movement = Vector2.Zero, movementBuffer = Vector2.Zero;
-                    bool isFirstCheck = true;
+                // moving
+                Vector2 currentPosition = body.Position;
+                Vector2 distance = nextPosition - currentPosition;
+                float greatestAxis = System.Math.Max(System.Math.Abs(distance.X), System.Math.Abs(distance.Y));
+                Vector2 direction = new Vector2(distance.X / greatestAxis, distance.Y / greatestAxis); // here I'm using the greatest axis to find a relation to move the body each loop by 1px at least
+                Vector2 movement = Vector2.Zero, movementBuffer = Vector2.Zero;
+                bool isFirstCheck = true;
 
-                    bool canMoveH = true, canMoveV = true;
-                    if (!Math.EqualsEstimate(distance.LengthSquared(), 0f)) {
-                        do {
-                            //movementBuffer += direction;
+                bool canMoveH = true, canMoveV = true;
+                if (!Math.EqualsEstimate(distance.LengthSquared(), 0f)) {
+                    do {
+                        if (canMoveH && System.Math.Abs(distance.X) >= 1f) {
+                            movementBuffer.X += direction.X;
+                            // check movement buffer X for a valid movement
+                            if (System.Math.Abs(movementBuffer.X) >= 1f) {
+                                float moveX = System.Math.Sign(movementBuffer.X);
+                                movement.X = moveX;
+                                movementBuffer.X -= moveX;
+                            }
+                        }
 
-                            // check movement buffer for a valid movement
-                            if (canMoveH && System.Math.Abs(distance.X) >= 1f) {
-                                movementBuffer.X += direction.X;
-                                if (System.Math.Abs(movementBuffer.X) >= 1f) {
-                                    float moveX = System.Math.Sign(movementBuffer.X);
-                                    movement.X = moveX;
-                                    movementBuffer.X -= moveX;
+                        if (canMoveV && System.Math.Abs(distance.Y) >= 1f) {
+                            movementBuffer.Y += direction.Y;
+                            // check movement buffer Y for a valid movement
+                            if (System.Math.Abs(movementBuffer.Y) >= 1f) {
+                                float moveY = System.Math.Sign(movementBuffer.Y);
+                                movement.Y = moveY;
+                                movementBuffer.Y -= moveY;
+                            }
+                        }
+
+                        // hack to force a collision verification without moving
+                        if (isFirstCheck && distance.LengthSquared() < 1f) {
+                            movement = new Vector2(System.Math.Sign(direction.X), System.Math.Sign(direction.Y));
+                        }
+
+                        // check collision with current movement
+                        Vector2 moveHorizontalPos = currentPosition + new Vector2(movement.X, 0),
+                                moveVerticalPos = currentPosition + new Vector2(0, movement.Y);
+
+                        for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
+                            bool collidedH = false, collidedV = false;
+                            Body otherBody = _narrowPhaseBodies[k];
+
+                            // test for horizontal collision (if it's moving horizontally)
+                            Manifold manifoldHorizontal = null;
+                            if (movement.X != 0f && CheckCollision(body, moveHorizontalPos, otherBody, out manifoldHorizontal)) {
+                                if (manifoldHorizontal.Contacts[0].PenetrationDepth > 0f) {
+                                    collidedH = true;
+                                    canMoveH = false;
+                                    distance.X = 0f;
+                                    direction.Y = System.Math.Sign(direction.Y);
                                 }
                             }
 
-                            if (canMoveV && System.Math.Abs(distance.Y) >= 1f) {
-                                movementBuffer.Y += direction.Y;
-                                if (System.Math.Abs(movementBuffer.Y) >= 1f) {
-                                    float moveY = System.Math.Sign(movementBuffer.Y);
-                                    movement.Y = moveY;
-                                    movementBuffer.Y -= moveY;
+                            // test for vertical collision (if it's moving vertically)
+                            Manifold manifoldVertical = null;
+                            if (movement.Y != 0f && CheckCollision(body, moveVerticalPos, otherBody, out manifoldVertical)) {
+                                if (manifoldVertical.Contacts[0].PenetrationDepth > 0f) {
+                                    collidedV = true;
+                                    canMoveV = false;
+                                    distance.Y = 0f;
+                                    direction.X = System.Math.Sign(direction.X);
                                 }
                             }
 
-                            if (isFirstCheck && distance.LengthSquared() < 1f) {
-                                movement = new Vector2(System.Math.Sign(direction.X), System.Math.Sign(direction.Y));
-                            }
+                            if (collidedH || collidedV) {
+                                // stop moving
+                                bool hasCollisionOnAxisH = manifoldHorizontal != null && manifoldHorizontal.Contacts[0].PenetrationDepth > 0f,
+                                     hasCollisionOnAxisV = manifoldVertical != null && manifoldVertical.Contacts[0].PenetrationDepth > 0f;
 
-                            // check collision with current movement
-                            Vector2 moveHorizontalPos = currentPosition + new Vector2(movement.X, 0),
-                                    moveVerticalPos = currentPosition + new Vector2(0, movement.Y);
+                                Vector2 collisionAxes = new Vector2(
+                                    hasCollisionOnAxisH ? movement.X : 0f,
+                                    hasCollisionOnAxisV ? movement.Y : 0f
+                                );
 
-                            for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
-                                bool collidedH = false, collidedV = false;
-                                Body otherBody = _narrowPhaseBodies[k];
-
-                                // test for horizontal collision (if it's moving horizontally)
-                                Manifold manifoldHorizontal = null;
-                                if (movement.X != 0f && CheckCollision(body, moveHorizontalPos, otherBody, out manifoldHorizontal)) {
-                                    if (manifoldHorizontal.Contacts[0].PenetrationDepth > 0f) {
-                                        collidedH = true;
-                                        canMoveH = false;
-                                        distance.X = 0f;
-                                        direction.Y = System.Math.Sign(direction.Y);
-                                    }
-                                }
-
-                                // test for vertical collision (if it's moving vertically)
-                                Manifold manifoldVertical = null;
-                                if (movement.Y != 0f && CheckCollision(body, moveVerticalPos, otherBody, out manifoldVertical)) {
-                                    if (manifoldVertical.Contacts[0].PenetrationDepth > 0f) {
-                                        collidedV = true;
-                                        canMoveV = false;
-                                        distance.Y = 0f;
-                                        direction.X = System.Math.Sign(direction.X);
-                                    }
-                                }
-
-                                if (collidedH || collidedV) {
-                                    // stop moving
-                                    bool hasCollisionOnAxisH = manifoldHorizontal != null && manifoldHorizontal.Contacts[0].PenetrationDepth > 0f,
-                                         hasCollisionOnAxisV = manifoldVertical != null && manifoldVertical.Contacts[0].PenetrationDepth > 0f;
-
-                                    Vector2 collisionAxes = new Vector2(
-                                        hasCollisionOnAxisH ? movement.X : 0f,
-                                        hasCollisionOnAxisV ? movement.Y : 0f
-                                    );
-
-                                    /*Contact? contact = null;
-                                    if (hasCollisionOnAxisH) {
-                                        contact = manifoldHorizontal.Contacts[0];
-                                    }
-
-                                    if (hasCollisionOnAxisV) {
-                                        contact = contact == null ? manifoldVertical.Contacts[0] : Contact.Sum(contact.Value, manifoldVertical.Contacts[0]);
-                                    }*/
-
-                                    body.OnCollide(otherBody, collisionAxes);
-                                    otherBody.OnCollide(body, -collisionAxes);
+                                body.OnCollide(otherBody, collisionAxes);
+                                otherBody.OnCollide(body, -collisionAxes);
 
 #if DEBUG
-                                    body.Color = otherBody.Color = Graphics.Color.Red;
+                                body.Color = otherBody.Color = Graphics.Color.Red;
 #endif
-                                }
                             }
-
-                            // hack to force first movement check and doesn't commit move if distance is less than allowed
-                            if (isFirstCheck && distance.LengthSquared() < 1f) {
-                                break;
-                            }
-
-                            // separated movement
-                            if (canMoveH && movement.X != 0f) {
-                                distance.X -= movement.X;
-                                currentPosition.X += movement.X;
-                            }
-
-                            if (canMoveV && movement.Y != 0f) {
-                                distance.Y -= movement.Y;
-                                currentPosition.Y += movement.Y;
-                            }
-
-                            movement = Vector2.Zero;
-                            isFirstCheck = false;
-                        } while ((canMoveH && System.Math.Abs(distance.X) >= 1f) || (canMoveV && System.Math.Abs(distance.Y) >= 1f));
-
-                        if (canMoveH && System.Math.Abs(distance.X) > 0f) {
-                            currentMovementBuffer.X = distance.X;
                         }
 
-                        if (canMoveV && System.Math.Abs(distance.Y) > 0f) {
-                            currentMovementBuffer.Y = distance.Y;
+                        // hack to force a collision verification without moving
+                        if (isFirstCheck && distance.LengthSquared() < 1f) {
+                            break;
                         }
-                    }
 
-                    body.AfterMovement(dt, currentPosition, currentMovementBuffer);
+                        // separated axis movement
+                        if (canMoveH && movement.X != 0f) {
+                            distance.X -= movement.X;
+                            currentPosition.X += movement.X;
+                        }
+
+                        if (canMoveV && movement.Y != 0f) {
+                            distance.Y -= movement.Y;
+                            currentPosition.Y += movement.Y;
+                        }
+
+                        movement = Vector2.Zero;
+                        isFirstCheck = false;
+                    } while ((canMoveH && System.Math.Abs(distance.X) >= 1f) || (canMoveV && System.Math.Abs(distance.Y) >= 1f));
                 }
+
+                // checks for movement buffer to return to the body
+                Vector2 finalMovementBuffer = Vector2.Zero;
+                if (canMoveH && System.Math.Abs(distance.X) > 0f) {
+                    finalMovementBuffer.X = distance.X + movementBuffer.X;
+                }
+
+                if (canMoveV && System.Math.Abs(distance.Y) > 0f) {
+                    finalMovementBuffer.Y = distance.Y + movementBuffer.Y;
+                }
+
+                body.AfterMovement(dt, currentPosition, finalMovementBuffer);
             }
 
 #if DEBUG
@@ -628,25 +631,21 @@ namespace Raccoon {
 #endif
         }
 
-        private void AddCollider(Body collider, string tagName) {
-            RegisterTag(tagName);
-            if (_collidersByTag[tagName].Contains(collider)) {
+        private void AddCollider(Body collider, System.Enum tag) {
+            List<Body> collidersByTag = _collidersByTag[tag];
+            if (collidersByTag.Contains(collider)) {
                 return;
             }
 
-            _collidersByTag[tagName].Add(collider);
+            collidersByTag.Add(collider);
         }
 
-        private void RemoveCollider(Body collider, string tagName) {
-            if (string.IsNullOrWhiteSpace(tagName)) {
-                throw new System.ArgumentException("Tag can't be empty.", "tagName");
+        private void RemoveCollider(Body collider, System.Enum tag) {
+            if (!HasTag(tag)) {
+                throw new System.ArgumentException($"Tag '{tag}' not found on Tag Type {TagType.Name}.", "tag");
             }
 
-            if (!HasTag(tagName)) {
-                throw new System.ArgumentException($"Tag '{tagName}' not found. Register it first.", "tagName");
-            }
-
-            _collidersByTag[tagName].Remove(collider);
+            _collidersByTag[tag].Remove(collider);
         }
 
         private bool CheckCollision(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
@@ -659,6 +658,21 @@ namespace Raccoon {
 
         private bool CheckCollision(Body A, Body B, out Manifold manifold) {
             return CheckCollision(A, A.Position, B, B.Position, out manifold);
+        }
+        
+        private List<HashSet<System.Enum>> GetCollisionTagTables(System.Enum tag) {
+            List<HashSet<System.Enum>> tagsCollisionTables = new List<HashSet<System.Enum>>();
+
+            List<System.Enum> tags = tag.GetFlagValues();
+            foreach (System.Enum t in tags) {
+                if (!HasTag(t)) {
+                    throw new System.ArgumentException($"Tag '{t}' not found on Tag Type {TagType.Name}.", "tag");
+                }
+
+                tagsCollisionTables.Add(_collisionTagTable[t]);
+            }
+            
+            return tagsCollisionTables;
         }
 
         #endregion Private Methods

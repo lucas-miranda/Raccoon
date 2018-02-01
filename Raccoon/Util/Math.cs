@@ -76,6 +76,22 @@
             return Microsoft.Xna.Framework.MathHelper.LerpPrecise(start, end, t);
         }
 
+        public static bool IsPowerOfTwo(int n) {
+            return (n & (n - 1)) == 0;
+        }
+
+        public static bool IsPowerOfTwo(uint n) {
+            return (n & (n - 1)) == 0;
+        }
+
+        public static bool IsPowerOfTwo(long n) {
+            return (n & (n - 1)) == 0;
+        }
+
+        public static bool IsPowerOfTwo(ulong n) {
+            return (n & (n - 1)) == 0;
+        }
+
         public static float Min(float n1, float n2) {
             return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
         }
