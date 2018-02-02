@@ -85,11 +85,11 @@
         }
 
         public static bool IsPowerOfTwo(long n) {
-            return (n & (n - 1)) == 0;
+            return (n & (n - 1L)) == 0L;
         }
 
         public static bool IsPowerOfTwo(ulong n) {
-            return (n & (n - 1)) == 0;
+            return (n & (n - 1UL)) == 0UL;
         }
 
         public static float Min(float n1, float n2) {

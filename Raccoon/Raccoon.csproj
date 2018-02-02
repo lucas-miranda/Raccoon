@@ -66,6 +66,7 @@
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Math\Triangle.cs" />
+    <Compile Include="Test\Extensions\EnumTest.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />
     <Compile Include="Test\Util\HelperTest.cs" />
     <Compile Include="Util\Bit.cs" />

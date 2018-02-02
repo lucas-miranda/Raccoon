@@ -196,6 +196,94 @@ namespace Raccoon.Components {
             return $"[Body | Shape: {Shape}, Movement: {Movement}]";
         }
 
+        #region Collides [Single Output]
+
+        public bool Collides(Vector2 position, System.Enum tags, out Manifold manifold) {
+            return Physics.Instance.Collides(this, position, tags, out manifold);
+        }
+
+        public bool Collides(System.Enum tags, out Manifold manifold) {
+            return Physics.Instance.Collides(this, tags, out manifold);
+        }
+
+        public bool Collides(Vector2 position, out Manifold manifold) {
+            return Physics.Instance.Collides(this, Position, out manifold);
+        }
+
+        public bool Collides(out Manifold manifold) {
+            return Physics.Instance.Collides(this, out manifold);
+        }
+
+        public bool Collides(Vector2 position, System.Enum tags, out Body collidedCollider, out Manifold manifold) {
+            return Physics.Instance.Collides(this, position, tags, out collidedCollider, out manifold);
+        }
+
+        public bool Collides(System.Enum tags, out Body collidedCollider, out Manifold manifold) {
+            return Physics.Instance.Collides(this, tags, out collidedCollider, out manifold);
+        }
+
+        public bool Collides(Vector2 position, out Body collidedCollider, out Manifold manifold) {
+            return Physics.Instance.Collides(this, position, out collidedCollider, out manifold);
+        }
+
+        public bool Collides(out Body collidedCollider, out Manifold manifold) {
+            return Physics.Instance.Collides(this, out collidedCollider, out manifold);
+        }
+
+        public bool Collides<T>(Vector2 position, System.Enum tags, out T collidedEntity, out Manifold manifold) where T : Entity {
+            return Physics.Instance.Collides(this, position, tags, out collidedEntity, out manifold);
+        }
+
+        public bool Collides<T>(System.Enum tags, out T collidedEntity, out Manifold manifold) where T : Entity {
+            return Physics.Instance.Collides(this, tags, out collidedEntity, out manifold);
+        }
+
+        public bool Collides<T>(Vector2 position, out T collidedEntity, out Manifold manifold) where T : Entity {
+            return Physics.Instance.Collides(this, position, out collidedEntity, out manifold);
+        }
+
+        public bool Collides<T>(out T collidedEntity, out Manifold manifold) where T : Entity {
+            return Physics.Instance.Collides(this, out collidedEntity, out manifold);
+        }
+
+        #endregion Collides [Single Output]
+
+        #region Collides [Multiple Output]
+
+        public bool CollidesMultiple(Vector2 position, System.Enum tags, out List<(Body collider, Manifold manifold)> collidedColliders) {
+            return Physics.Instance.CollidesMultiple(this, position, tags, out collidedColliders);
+        }
+
+        public bool CollidesMultiple(System.Enum tags, out List<(Body collider, Manifold manifold)> collidedColliders) {
+            return Physics.Instance.CollidesMultiple(this, tags, out collidedColliders);
+        }
+
+        public bool CollidesMultiple(Vector2 position, out List<(Body collider, Manifold manifold)> collidedColliders) {
+            return Physics.Instance.CollidesMultiple(this, position, out collidedColliders);
+        }
+
+        public bool CollidesMultiple(out List<(Body collider, Manifold manifold)> collidedColliders) {
+            return Physics.Instance.CollidesMultiple(this, out collidedColliders);
+        }
+
+        public bool CollidesMultiple<T>(Vector2 position, System.Enum tags, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
+            return Physics.Instance.CollidesMultiple(this, position, tags, out collidedEntities);
+        }
+
+        public bool CollidesMultiple<T>(System.Enum tags, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
+            return Physics.Instance.CollidesMultiple(this, tags, out collidedEntities);
+        }
+
+        public bool CollidesMultiple<T>(Vector2 position, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
+            return Physics.Instance.CollidesMultiple(this, position, out collidedEntities);
+        }
+
+        public bool CollidesMultiple<T>(out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
+            return Physics.Instance.CollidesMultiple(this, out collidedEntities);
+        }
+
+        #endregion Collides [Multiple Output]
+
         #endregion Public Methods
     }
 }

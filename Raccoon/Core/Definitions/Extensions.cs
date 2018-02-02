@@ -1,32 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Raccoon.Util;
 
 namespace Raccoon {
     public static class Extensions {
         #region Enums
 
-        public static int GetUnderlyingNumericSize(this Enum e) {
-            return System.Runtime.InteropServices.Marshal.SizeOf(Enum.GetUnderlyingType(e.GetType()));
+        public static int GetUnderlyingNumericSize(this System.Enum e) {
+            return System.Runtime.InteropServices.Marshal.SizeOf(System.Enum.GetUnderlyingType(e.GetType()));
         }
 
-        public static List<Enum> GetFlagValues(this Enum enumFlags) {
-            List<Enum> separatedFlagValues = new List<Enum>();
-            long enumFlagsAsNumber = Convert.ToInt64(enumFlags);
-            int bits = 8 * enumFlags.GetUnderlyingNumericSize();
-            for (int i = 0; i < bits; i++) {
+        public static List<System.Enum> GetFlagValues(this System.Enum enumFlags) {
+            List<System.Enum> flagValues = new List<System.Enum>();
+            long flagsNumber = System.Convert.ToInt64(enumFlags);
+
+            if (Math.IsPowerOfTwo(flagsNumber)) {
+                flagValues.Add((System.Enum) System.Enum.ToObject(enumFlags.GetType(), flagsNumber));
+                return flagValues;
+            }
+
+            int bits = (int) System.Math.Ceiling(System.Math.Log(flagsNumber, 2));
+            for (int i = 0; i <= bits; i++) {
                 long bitValue = 1L << i;
-                if ((enumFlagsAsNumber & bitValue) == 0L) {
+                if ((flagsNumber & bitValue) == 0L) {
                     continue;
                 }
 
-                separatedFlagValues.Add((Enum) Enum.ToObject(enumFlags.GetType(), bitValue));
+                flagValues.Add((System.Enum) System.Enum.ToObject(enumFlags.GetType(), bitValue));
             }
 
-            if (separatedFlagValues.Count == 0) {
-                separatedFlagValues.Add((Enum) Enum.ToObject(enumFlags.GetType(), 0L));
-            }
-
-            return separatedFlagValues;
+            return flagValues;
         }
 
         #endregion Enums

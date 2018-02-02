@@ -121,38 +121,6 @@
         public virtual void DebugRender() {
         }
 
-        /*public bool HasCollisionTag(string tag) {
-            return CollisionTags.Contains(tag);
-        }
-
-        public bool HasCollisionTag(System.Enum tag) {
-            return HasCollisionTag(tag.ToString());
-        }
-
-        public void AddCollisionTag(string tag) {
-            if (HasCollisionTag(tag)) {
-                return;
-            }
-
-            CollisionTags.Add(tag);
-        }
-
-        public void AddCollisionTag(System.Enum tag) {
-            AddCollisionTag(tag.ToString());
-        }
-
-        public void RemoveCollisionTag(string tag) {
-            CollisionTags.Remove(tag);
-        }
-
-        public void RemoveCollisionTag(System.Enum tag) {
-            RemoveCollisionTag(tag.ToString());
-        }
-
-        public void ClearCollisionTags() {
-            CollisionTags.Clear();
-        }*/
-
         public abstract Vector2 HandleVelocity(Vector2 velocity, float dt);
 
         public virtual void OnCollide(Vector2 collisionAxes) {
