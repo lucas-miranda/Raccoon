@@ -59,10 +59,21 @@ namespace Raccoon {
             return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
         }
 
-        public static Vector2 Normalize(Vector2 v) {
-            if ((int) v.X == 0 && (int) v.Y == 0) throw new System.ArgumentException("Both X and Y values can't be zero.", "v");
+        public static Vector2 Cross(Vector2 a, float n) {
+            return new Vector2(n * a.Y, -n * a.X);
+        }
 
-            return v * (1f / v.Length());
+        public static Vector2 Cross(float n, Vector2 a) {
+            return new Vector2(-n * a.Y, n * a.X);
+        }
+
+        public static Vector2 Normalize(Vector2 v) {
+            float length = v.Length();
+            if (length <= Math.Epsilon) {
+                return v;
+            }
+
+            return v * (1f / length);
         }
 
         public static Vector2 Lerp(Vector2 start, Vector2 end, float t) {
@@ -71,6 +82,10 @@ namespace Raccoon {
 
         public static Vector2 CatmullRom(Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, float amount) {
             return new Vector2(Math.CatmullRom(v1.X, v2.X, v3.X, v4.X, amount), Math.CatmullRom(v1.Y, v2.Y, v3.Y, v4.Y, amount));
+        }
+
+        public static bool EqualsEstimate(Vector2 v1, Vector2 v2, float tolerance = Math.Epsilon) {
+            return Math.EqualsEstimate(v1.X, v2.X, tolerance) && Math.EqualsEstimate(v1.Y, v2.Y, tolerance);
         }
 
         #endregion Public Static Methods
@@ -90,7 +105,7 @@ namespace Raccoon {
         }
 
         public Vector2 Perpendicular() {
-            return new Vector2(-Y, X);
+            return new Vector2(Y, -X);
         }
 
         public Range Projection(ICollection<Vector2> points) {
@@ -166,7 +181,7 @@ namespace Raccoon {
         #region Operators
 
         public static bool operator ==(Vector2 l, Vector2 r) {
-            return l.X == r.X && l.Y == r.Y;
+            return EqualsEstimate(l, r);
         }
 
         public static bool operator !=(Vector2 l, Vector2 r) {

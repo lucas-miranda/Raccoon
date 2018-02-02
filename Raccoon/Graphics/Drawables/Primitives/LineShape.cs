@@ -1,14 +1,14 @@
 ﻿namespace Raccoon.Graphics.Primitives {
-    public class LineShape : Graphic {
+    public class LinePrimitive : Graphic {
         private Vector2 _to;
 
-        public LineShape(Vector2 from, Vector2 to, Color color) {
+        public LinePrimitive(Vector2 from, Vector2 to, Color color) {
             From = from;
             To = To;
             Color = color;
         }
 
-        public LineShape(Vector2 length, Color color) {
+        public LinePrimitive(Vector2 length, Color color) {
             From = Vector2.Zero;
             To = length;
             Color = color;

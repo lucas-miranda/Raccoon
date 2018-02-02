@@ -17,6 +17,7 @@ namespace Raccoon {
         #region Constructors
 
         private Coroutines() {
+            IsRunning = true;
         }
 
         #endregion Constructors
@@ -24,6 +25,7 @@ namespace Raccoon {
         #region Public Static Properties
 
         public static Coroutines Instance { get { return _lazy.Value; } }
+        public static bool IsRunning { get; set; }
 
         #endregion Public Static Properties
 
@@ -38,6 +40,10 @@ namespace Raccoon {
         #region Public Methods
 
         public void Update(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
             foreach (Coroutine coroutine in _pausedCoroutines) {
                 if (coroutine.IsRunning) {
                     _pausedCoroutines.Remove(coroutine);

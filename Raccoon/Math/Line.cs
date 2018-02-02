@@ -53,6 +53,7 @@ namespace Raccoon {
         public float LengthSquared { get { return Math.DistanceSquared(PointA, PointB); } }
         public float Slope { get { return PointB.X - PointA.X != 0 ? (PointB.Y - PointA.Y) / (PointB.X - PointA.X) : float.PositiveInfinity; } }
         public float YIntercept { get { return PointB.X - PointA.X != 0 ? (PointA.Y * PointB.X - PointA.X * PointB.Y) / (PointB.X - PointA.X) : float.PositiveInfinity; } }
+        public float Angle { get { return Math.WrapAngle(Math.Angle(PointA, PointB)); } }
         /*public float M { get { return Slope; } }
         public float A { get; }
         public float B { get; }
@@ -106,6 +107,29 @@ namespace Raccoon {
             float SignedTriangleArea(Vector2 a, Vector2 b, Vector2 c) {
                 return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
             }
+        }
+
+        public Vector2 ClosestPoint(Vector2 point) {
+            Vector2 ab = ToVector2();
+            float t = Math.Clamp(Vector2.Dot(point - PointA, ab) / Vector2.Dot(ab, ab), 0.0f, 1.0f);
+            return GetPointNormalized(t);
+        }
+
+        public float Distance(Vector2 point) {
+            return Math.Distance(ClosestPoint(point), point);
+        }
+
+        public float DistanceSquared(Vector2 point) {
+            return Math.DistanceSquared(ClosestPoint(point), point);
+        }
+
+        public int Side(Vector2 point) {
+            float cross = Vector2.Cross(PointB - PointA, point - PointA);
+            if (cross == 0) {
+                return 0;
+            }
+
+            return cross < 0 ? -1 : 1;
         }
 
         public Range Projection(ICollection<Vector2> points) {

@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics.Primitives {
-    public class CircleShape : Graphic {
+    public class CirclePrimitive : Graphic {
         #region Constructors
 
-        public CircleShape(int radius, Color color) {
+        public CirclePrimitive(int radius, Color color) {
             Radius = radius;
             Size = new Size(2 * Radius);
             Color = color;

@@ -1,5 +1,6 @@
 ﻿namespace Raccoon.Util {
     public static class Math {
+        public const float Epsilon = 0.0001f;
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
         public const double DoublePI = 2.0 * PI;
         public const double TriplePI = 3.0 * PI;
@@ -75,6 +76,22 @@
             return Microsoft.Xna.Framework.MathHelper.LerpPrecise(start, end, t);
         }
 
+        public static bool IsPowerOfTwo(int n) {
+            return (n & (n - 1)) == 0;
+        }
+
+        public static bool IsPowerOfTwo(uint n) {
+            return (n & (n - 1)) == 0;
+        }
+
+        public static bool IsPowerOfTwo(long n) {
+            return (n & (n - 1L)) == 0L;
+        }
+
+        public static bool IsPowerOfTwo(ulong n) {
+            return (n & (n - 1UL)) == 0UL;
+        }
+
         public static float Min(float n1, float n2) {
             return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
         }
@@ -115,6 +132,18 @@
         public static Vector2 NormalizeInRange(Vector2 value, Vector2 min, Vector2 max) {
             Vector2 center = min + (max - min) / 2f;
             return (value - center) / center;
+        }
+
+        public static Vector2 Round(Vector2 value) {
+            return new Vector2(System.Math.Round(value.X), System.Math.Round(value.Y));
+        }
+
+        public static bool EqualsEstimate(float a, float b, float tolerance = Epsilon) {
+            return System.Math.Abs(a - b) < tolerance;
+        }
+
+        public static bool EqualsEstimate(double a, double b, double tolerance = Epsilon) {
+            return System.Math.Abs(a - b) < tolerance;
         }
 
         #endregion Numeric Stuff
@@ -199,7 +228,8 @@
         }
 
         public static float DistanceSquared(Vector2 from, Vector2 to) {
-            return (to - from).LengthSquared();
+            Vector2 diff = to - from;
+            return Vector2.Dot(diff, diff);
         }
 
         public static float DistanceSquared(Line line, Vector2 point) {
@@ -220,13 +250,41 @@
         }
 
         public static Vector2 RotateAround(Vector2 point, Vector2 origin, float degrees) {
-            float cos = Cos(degrees), sin = Sin(degrees);
-            point -= origin;
-            return origin + new Vector2(point.X * cos - point.Y * sin, point.X * sin + point.Y * cos);
+            return origin + Rotate(point - origin, degrees);
         }
 
         public static float CatmullRom(float n1, float n2, float n3, float n4, float amount) {
             return Microsoft.Xna.Framework.MathHelper.CatmullRom(n1, n2, n3, n4, amount);
+        }
+
+        public static float Component(Vector2 v, Vector2 direction) {
+            double alpha = System.Math.Atan2(direction.Y, direction.X);
+            double theta = System.Math.Atan2(v.Y, v.X);
+            return (float) (v.Length() * System.Math.Cos(theta - alpha));
+        }
+
+        public static Vector2 ComponentVector(Vector2 v, Vector2 direction) {
+            return Component(v, direction) * direction.Normalized();
+        }
+
+        public static bool IsLeft(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) > 0f;
+        }
+
+        public static bool IsLeftOn(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) >= 0f;
+        }
+
+        public static bool IsRight(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) < 0f;
+        }
+
+        public static bool IsRightOn(Vector2 a, Vector2 b, Vector2 c) {
+            return Triangle.SignedArea2(a, b, c) <= 0f;
+        }
+
+        public static bool IsCollinear(Vector2 a, Vector2 b, Vector2 c, float tolerance = Epsilon) {
+            return EqualsEstimate(Triangle.SignedArea2(a, b, c), 0f, tolerance);
         }
 
         #endregion Trygonometric Stuff

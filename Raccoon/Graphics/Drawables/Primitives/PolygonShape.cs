@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
 namespace Raccoon.Graphics.Primitives {
-    public class PolygonShape : Graphic {
-        public PolygonShape(Polygon polygon, Color color) {
+    public class PolygonPrimitive : Graphic {
+        public PolygonPrimitive(Polygon polygon, Color color) {
             Shape = polygon;
             Color = color;
         }
 
-        public PolygonShape(IEnumerable<Vector2> points, Color color) : this(new Raccoon.Polygon(points), color) { }
+        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Raccoon.Polygon(points), color) { }
 
         public Polygon Shape { get; set; }
 

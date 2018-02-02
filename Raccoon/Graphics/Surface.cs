@@ -53,6 +53,7 @@ namespace Raccoon.Graphics {
         public Vector2 Transform(Vector2 position, Surface surface) {
             return (position * surface.Scale) / Scale;
         }
+
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2? scroll = null, Shader shader = null) {
             Prepare(destinationRectangle.Position, scroll, shader);
             SpriteBatch.Draw(texture.XNATexture, new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), color);
@@ -120,10 +121,15 @@ namespace Raccoon.Graphics {
 
         internal void Prepare(Vector2 position, Vector2? scrollFactor, Shader shader = null) {
             Vector2 scroll = scrollFactor ?? Vector2.One;
+            if (scroll.X == 0f && scroll.Y == 0f) {
+                scroll = new Vector2(Util.Math.Epsilon);
+            }
+
             position = new Vector2(System.Math.Round(position.X), System.Math.Round(position.Y)); // HACK: Do this using a pixel-perfect shader
 
-            Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X * scroll.X, position.Y * scroll.Y, 0f) * World;
-            Game.Instance.Core.BasicEffect.View = Matrix.CreateScale(1f / scroll.X, 1f / scroll.Y, 1f) * View * Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+            Matrix scrollMatrix = Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+            Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X, position.Y, 0f) * World;
+            Game.Instance.Core.BasicEffect.View = Matrix.Invert(scrollMatrix) * View * scrollMatrix;
             Game.Instance.Core.BasicEffect.Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
 

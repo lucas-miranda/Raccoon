@@ -116,6 +116,10 @@ namespace Raccoon.Util {
             Max = Math.Max(Max, range.Max);
         }
 
+        public override string ToString() {
+            return $"[Min: {Min}, Max: {Max}, Length: {Length}]";
+        }
+
         #endregion Public Methods
     }
 }

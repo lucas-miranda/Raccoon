@@ -1,37 +1,51 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-
+using System.Collections.ObjectModel;
 using Raccoon.Util;
 
 namespace Raccoon {
     public class Polygon : IEnumerable {
         #region Private Members
 
-        private List<Vector2> _vertices = new List<Vector2>();
-        private List<Polygon> _convexComponents = new List<Polygon>();
-        private bool _needRecalculateComponents = false;
+        private List<Vector2> _vertices;
+        private List<Polygon> _convexComponents;
+        private bool _needRecalculateComponents;
 
         #endregion Private Members
 
         #region Constructors
 
-        public Polygon() { }
-
         public Polygon(IEnumerable<Vector2> points) {
-            AddVertices(points);
+            _vertices = new List<Vector2>(points);
+            _convexComponents = new List<Polygon>();
+            IsConvex = false;
+            Normals = new Vector2[0];
+            Center = Vector2.Zero;
+
+            Verify();
         }
 
         public Polygon(params Vector2[] points) : this((IEnumerable<Vector2>) points) { }
 
         public Polygon(Polygon polygon) {
-            _vertices.AddRange(polygon._vertices);
+            _vertices = new List<Vector2>(polygon._vertices);
 
-            foreach (Polygon convexComponent in polygon.GetConvexComponents()) {
-                _convexComponents.Add(new Polygon(convexComponent._vertices));
+            _convexComponents = new List<Polygon>();
+            foreach (Polygon convexComponent in polygon.ConvexComponents()) {
+                _convexComponents.Add(new Polygon(convexComponent));
             }
 
             IsConvex = polygon.IsConvex;
+
+            Normals = new Vector2[polygon.Normals.Length];
+            polygon.Normals.CopyTo(Normals, 0);
+
+            Center = polygon.Center;
+
             _needRecalculateComponents = polygon._needRecalculateComponents;
+        }
+
+        public Polygon(Triangle triangle) : this(triangle.A, triangle.B, triangle.C) {
         }
 
         #endregion Constructors
@@ -40,6 +54,9 @@ namespace Raccoon {
 
         public int VertexCount { get { return _vertices.Count; } }
         public bool IsConvex { get; private set; }
+        public Vector2[] Normals { get; private set; }
+        public Vector2 Center { get; private set; }
+        public ReadOnlyCollection<Vector2> Vertices { get { return _vertices.AsReadOnly(); } }
 
         public Vector2 this [int index] {
             get {
@@ -57,20 +74,117 @@ namespace Raccoon {
         #region Public Static Methods
 
         public static Polygon RotateAround(Polygon polygon, float degrees, Vector2 origin) {
-            List<Vector2> _rotatedVertices = new List<Vector2>(polygon._vertices.Count);
+            List<Vector2> _rotatedVertices = new List<Vector2>(polygon.VertexCount);
             foreach (Vector2 vertex in polygon._vertices) {
-                _rotatedVertices.Add(Util.Math.RotateAround(vertex, origin, degrees));
+                _rotatedVertices.Add(Math.RotateAround(vertex, origin, degrees));
             }
 
             return new Polygon(_rotatedVertices);
         }
 
         public static Polygon Rotate(Polygon polygon, float degrees) {
-            return RotateAround(polygon, degrees, polygon[0]);
+            return RotateAround(polygon, degrees, polygon.Center);
+        }
+
+        public static int Orientation(IList<Vector2> vertices) {
+            int rMin = 0;
+            Vector2 vertexMin = vertices[0];
+
+            for (int i = 1; i < vertices.Count; i++) {
+                Vector2 vertex = vertices[i];
+                if (vertex.Y > vertexMin.Y) {
+                    continue;
+                }
+
+                if (vertex.Y == vertexMin.Y && vertex.X > vertexMin.X) {
+                    continue;
+                }
+
+                rMin = i;
+                vertexMin = vertex;
+            }
+
+            return Triangle.Orientation(Helper.At(vertices, rMin - 1), Helper.At(vertices, rMin), Helper.At(vertices, rMin + 1));
+        }
+
+        public static bool IsClockwise(IList<Vector2> vertices) {
+            return Orientation(vertices) > 0;
+        }
+
+        public static bool IsCounterClockwise(IList<Vector2> vertices) {
+            return Orientation(vertices) < 0;
+        }
+
+        public static bool IsDegenerate(IList<Vector2> vertices) {
+            return Orientation(vertices) == 0;
+        }
+
+        public static List<Vector2> ConvexHull(ICollection<Vector2> points) {
+            // using jarvis (gift wrapping) algorithm
+            List<Vector2> convexHull = new List<Vector2>();
+
+            if (points.Count < 3) {
+                convexHull.AddRange(points);
+                return convexHull;
+            }
+
+            Vector2? firstPoint = null,
+                     leftmostPoint = null;
+
+            // find leftmostPoint
+            foreach (Vector2 point in points) {
+                if (firstPoint == null) {
+                    firstPoint = leftmostPoint = point;
+                }
+
+                if (point.X < leftmostPoint.Value.X) {
+                    leftmostPoint = point;
+                }
+            }
+
+            Vector2 endPoint, pointOnHull = leftmostPoint.Value;
+            do {
+                convexHull.Add(pointOnHull);
+                endPoint = firstPoint.Value;
+                foreach (Vector2 point in points) {
+                    if (endPoint == pointOnHull || Math.IsLeft(pointOnHull, endPoint, point)) {
+                        endPoint = point; 
+                    }
+                }
+
+                pointOnHull = endPoint;
+            } while (endPoint != convexHull[0]);
+
+            return convexHull;
+        }
+
+        public static Polygon Merge(Polygon polygonA, Polygon polygonB) {
+            List<Vector2> vertices = new List<Vector2>(polygonA.Vertices);
+            vertices.AddRange(polygonB.Vertices);
+            List<Vector2> convexHullVertices = ConvexHull(vertices);
+            return new Polygon(convexHullVertices);
+        }
+
+        public static Line? FindSharedEdge(Polygon polygonA, Polygon polygonB) {
+            Line? line = null;
+            foreach (Line aEdge in polygonA.Edges()) {
+                foreach (Line bEdge in polygonB.Edges()) {
+                    if (Helper.EqualsPermutation(aEdge.PointA, aEdge.PointB, bEdge.PointA, bEdge.PointB)) {
+                        line = new Line(aEdge.PointA, aEdge.PointB);
+                        break;
+                    }
+                }
+
+                if (line != null) {
+                    break;
+                }
+            }
+
+            return line;
         }
 
         #endregion Public Static Methods
-
+        
         #region Public Methods
 
         public void AddVertex(Vector2 vertex) {
@@ -97,10 +211,32 @@ namespace Raccoon {
             for (int i = 0; i < VertexCount; i++) {
                 _vertices[i] += dist;
             }
+
+            CalculateCentroid();
         }
 
         public void Translate(float x, float y) {
             Translate(new Vector2(x, y));
+        }
+
+        public void Scale(Vector2 factor, Vector2 origin) {
+            for (int i = 0; i < VertexCount; i++) {
+                _vertices[i] = (_vertices[i] - origin) * factor + origin;
+            }
+
+            CalculateCentroid();
+        }
+
+        public void Scale(float factor, Vector2 origin) {
+            Scale(new Vector2(factor), origin);
+        }
+
+        public void Scale(Vector2 factor) {
+            Scale(factor, Center);
+        }
+
+        public void Scale(float factor) {
+            Scale(new Vector2(factor), Center);
         }
 
         public void RotateAround(float degrees, Vector2 origin) {
@@ -108,17 +244,17 @@ namespace Raccoon {
                 return;
             }
 
-            List<Vector2> _rotatedVertices = new List<Vector2>(_vertices.Count);
-            foreach (Vector2 vertex in _vertices) {
-                _rotatedVertices.Add(Util.Math.RotateAround(vertex, origin, degrees));
+            for (int i = 0; i < VertexCount; i++) {
+                _vertices[i] = Math.RotateAround(_vertices[i], origin, degrees);
             }
 
-            _vertices = _rotatedVertices;
+            CalculateCentroid();
+            CalculateNormals();
             _needRecalculateComponents = true;
         }
 
         public void Rotate(float degrees) {
-            RotateAround(degrees, _vertices[0]);
+            RotateAround(degrees, Center);
         }
 
         public void Reflect(Vector2 axis) {
@@ -127,6 +263,8 @@ namespace Raccoon {
                 _vertices[i] = new Vector2(2 * axis.X - vertex.X, 2 * axis.Y - vertex.Y);
             }
 
+            CalculateCentroid();
+            CalculateNormals();
             _needRecalculateComponents = true;
         }
 
@@ -136,6 +274,8 @@ namespace Raccoon {
                 _vertices[i] = new Vector2(2 * axis - vertex.X, vertex.Y);
             }
 
+            CalculateCentroid();
+            CalculateNormals();
             _needRecalculateComponents = true;
         }
 
@@ -145,6 +285,8 @@ namespace Raccoon {
                 _vertices[i] = new Vector2(vertex.X, 2 * axis - vertex.Y);
             }
 
+            CalculateCentroid();
+            CalculateNormals();
             _needRecalculateComponents = true;
         }
 
@@ -152,79 +294,187 @@ namespace Raccoon {
             return axis.Projection(_vertices);
         }
 
-        public List<Polygon> GetConvexComponents() {
+        public Size BoundingBox() {
+            Rectangle boundingBox = new Rectangle();
+
+            foreach (Vector2 vertex in _vertices) {
+                if (vertex.X < boundingBox.Left) {
+                    boundingBox.Left = vertex.X;
+                } else if (vertex.X > boundingBox.Right) {
+                    boundingBox.Right = vertex.X;
+                }
+
+                if (vertex.Y < boundingBox.Top) {
+                    boundingBox.Top = vertex.Y;
+                } else if (vertex.Y > boundingBox.Bottom) {
+                    boundingBox.Bottom = vertex.Y;
+                }
+            }
+
+            return boundingBox.Size;
+        }
+
+        public Vector2 ClosestPoint(Vector2 point) {
+            if (IsInside(point)) {
+                return point;
+            }
+
+            Vector2 closestPoint = Center;
+            float closestSquaredDist = float.PositiveInfinity;
+            foreach (Line edge in Edges()) {
+                Vector2 p = edge.ClosestPoint(point);
+                float squaredDist = Math.DistanceSquared(p, point);
+                if (squaredDist < closestSquaredDist) {
+                    closestPoint = p;
+                    closestSquaredDist = squaredDist;
+                }
+            }
+
+            return closestPoint;
+        }
+
+        public float Area() {
+            if (VertexCount < 3) {
+                return 0;
+            }
+
+            float area = 0;
+            for (int i = 1, j = 2, k = 0; i < VertexCount; i++, j++, k++) {
+                area += Helper.At(_vertices, i).X * (Helper.At(_vertices, j).Y - Helper.At(_vertices, k).Y);
+            }
+
+            area += _vertices[0].X * (_vertices[1].Y - _vertices[VertexCount - 1].Y);
+            return area / 2.0f;
+        }
+
+        public float DistanceSquared(Vector2 point) {
+            Vector2 closestPoint = ClosestPoint(point);
+            return Vector2.Dot(closestPoint - point, closestPoint - point);
+        }
+
+        public bool IsInside(Vector2 point) {
+            // ref: http://geomalgorithms.com/a03-_inclusion.html
+            int windNumber = 0;
+            foreach (Line edge in Edges()) {
+                if (edge.PointA.Y <= point.Y) {
+                    if (edge.PointB.Y > point.Y && isLeft(edge, point) > 0) {
+                        ++windNumber;
+                    }
+                } else {
+                    if (edge.PointB.Y <= point.Y && isLeft(edge, point) < 0) {
+                        --windNumber;
+                    }
+                }
+            }
+
+            return windNumber > 0;
+
+            int isLeft(Line line, Vector2 p) {
+                return (int) System.Math.Round((line.PointB.X - line.PointA.X) * (p.Y - line.PointA.Y) - (p.X - line.PointA.X) * (line.PointB.Y - line.PointA.Y));
+            }
+        }
+
+        public List<Polygon> ConvexComponents() {
             if (_needRecalculateComponents) {
-                RecalculateComponents();
                 _needRecalculateComponents = false;
+                CalculateComponents();
             }
 
             return _convexComponents;
         }
 
-        public List<Polygon> Triangulate() {
-            // detemine if vertices are in clockwise or anti-clockwise format
-            bool clockwise = true;
-            int verticesSum = 0;
-
-            Vector2 a, b;
-            for (int i = 0; i < VertexCount; i++) {
-                a = _vertices[i];
-                b = _vertices[(i + 1) % VertexCount];
-                verticesSum += (int) ((b.X - a.X) * (b.Y + a.Y));
+        public List<Triangle> Triangulate() {
+            // force counterclockwise (as it's a precondition to ear clipping algorithm)
+            LinkedList<Vector2> vertices = new LinkedList<Vector2>();
+            if (IsCounterClockwise(_vertices)) {
+                foreach (Vector2 vertex in _vertices) {
+                    vertices.AddLast(vertex);
+                }
+            } else {
+                foreach (Vector2 vertex in _vertices) {
+                    vertices.AddFirst(vertex);
+                }
             }
 
-            clockwise = verticesSum < 0;
-
             // triangulate using ear clipping
-            List<Polygon> triangles = new List<Polygon>();
+            List<Triangle> triangles = new List<Triangle>();
             Stack<LinkedListNode<Vector2>> ears = new Stack<LinkedListNode<Vector2>>();
 
-            LinkedList<Vector2> vertices = new LinkedList<Vector2>(_vertices);
             LinkedListNode<Vector2> current = vertices.First;
-            while (current != null) {
-                LinkedListNode<Vector2> previous = current.Previous ?? vertices.Last,
-                                        next = current.Next ?? vertices.First;
 
-                // is current vertex an ear?
-                if (IsEar(previous.Value, current.Value, next.Value, clockwise)) {
+            while (current != null) {
+                if (IsInternalDiagonal(current.PreviousOrLast(), current.NextOrFirst())) {
                     ears.Push(current);
                 }
 
                 current = current.Next;
             }
 
-            while (true) {
-                current = vertices.Count == 3 ? vertices.First : ears.Pop();
+            LinkedListNode<Vector2> prev2, prev, next, next2;
 
-                LinkedListNode<Vector2> previous = current.Previous ?? vertices.Last,
-                                        next = current.Next ?? vertices.First;
+            while (vertices.Count > 3) {
+                Debug.Assert(ears.Count > 0, "Error in Triangulate: No ear found.");
 
-                triangles.Add(new Polygon(previous.Value, current.Value, next.Value));
+                current = ears.Pop();
+                prev = current.PreviousOrLast();
+                prev2 = prev.PreviousOrLast();
+                next = current.NextOrFirst();
+                next2 = next.NextOrFirst();
 
-                if (vertices.Count == 3) {
-                    break;
+                triangles.Add(new Triangle(current.Value, prev.Value, next.Value));
+
+                if (IsInternalDiagonal(prev2, next)) {
+                    ears.Push(prev);
+                }
+
+                if (IsInternalDiagonal(prev, next2)) {
+                    ears.Push(next);
                 }
 
                 vertices.Remove(current);
-
-                if (previous != next) {
-                    // is previous vertex an ear?
-                    if (IsEar((previous.Previous ?? vertices.Last).Value, previous.Value, next.Value, clockwise)) {
-                        ears.Push(previous);
-                    }
-
-                    // is next vertex an ear?
-                    if (IsEar(previous.Value, next.Value, (next.Next ?? vertices.First).Value, clockwise)) {
-                        ears.Push(next);
-                    }
-                }
             }
+
+            current = vertices.First;
+            triangles.Add(new Triangle(current.PreviousOrLast().Value, current.Value, current.NextOrFirst().Value));
 
             return triangles;
         }
 
-        public Polygon Clone() {
-            return new Polygon(this);
+        public void Merge(Triangle triangle) {
+            Vector2[] triangleVertices = triangle.Vertices;
+            Vector2? vertexToMerge = null;
+            int i;
+            for (i = 0; i < VertexCount; i++) {
+                Vector2 vertex = _vertices[i],
+                        nextVertex = Helper.At(_vertices, i + 1);
+
+                for (int j = 0; j < triangleVertices.Length; j++) {
+                    if (vertex == triangleVertices[j]) {
+                        if (nextVertex == Helper.At(triangleVertices, j + 1)) {
+                            vertexToMerge = Helper.At(triangleVertices, j + 2);
+                            break;
+                        } else if (nextVertex == Helper.At(triangleVertices, j + 2)) {
+                            vertexToMerge = Helper.At(triangleVertices, j + 1);
+                            break;
+                        }
+                    }
+                }
+
+                if (vertexToMerge != null) {
+                    break;
+                }
+            }
+
+            if (vertexToMerge != null) {
+                _vertices.Insert(Helper.Index(i + 1, VertexCount), triangle.C);
+                Verify();
+            }
+        }
+
+        public IEnumerable<Line> Edges() {
+            for (int i = 0; i < VertexCount; i++) {
+                yield return new Line(_vertices[i], _vertices[(i + 1) % VertexCount]);
+            }
         }
 
         public IEnumerator GetEnumerator() {
@@ -241,105 +491,211 @@ namespace Raccoon {
 
         private void Verify() {
             if (VertexCount < 3) {
-                return;
+                throw new System.InvalidOperationException("Polygon must have at least 3 vertices.");
             }
 
+            CalculateCentroid();
+            CalculateConvexity();
+            CalculateNormals();
+            _needRecalculateComponents = true;
+        }
+
+        private void CalculateCentroid() {
+            Vector2 pointsSum = Vector2.Zero;
+            foreach (Vector2 vertex in _vertices) {
+                pointsSum += vertex;
+            }
+
+            Center = pointsSum / VertexCount;
+        }
+
+        private void CalculateConvexity() {
+            // convexity test
             IsConvex = true;
 
             // algorithm to determine if it's convex: http://stackoverflow.com/a/1881201
             Vector2 previous = _vertices[_vertices.Count - 1], center = _vertices[0], next = _vertices[1];
-            int sign = System.Math.Sign((center.X - previous.X) * (next.Y - center.Y) - (center.Y - previous.Y) * (next.X - center.X));
+            int sign = System.Math.Sign(Triangle.SignedArea2(previous, center, next));
 
             previous = center;
             for (int i = 1; i < VertexCount; i++) {
                 center = _vertices[i];
                 next = _vertices[(i + 1) % _vertices.Count];
-                if (sign != System.Math.Sign((center.X - previous.X) * (next.Y - center.Y) - (center.Y - previous.Y) * (next.X - center.X))) {
+                if (sign != System.Math.Sign(Triangle.SignedArea2(previous, center, next))) {
                     IsConvex = false;
                     break;
                 }
 
                 previous = center;
             }
-
-            _needRecalculateComponents = true;
         }
 
-        private void RecalculateComponents() {
+        private void CalculateNormals() {
+            if (Normals.Length != VertexCount) {
+                Normals = new Vector2[VertexCount];
+            }
+
+            int i = 0;
+            foreach (Line line in Edges()) {
+                Normals[i] = line.ToVector2().Perpendicular().Normalized();
+                i++;
+            }
+        }
+
+        private void CalculateComponents() {
             _convexComponents.Clear();
+            CalculateConvexity();
             if (IsConvex) {
+                _convexComponents.Add(new Polygon(this));
                 return;
             }
 
-            List<Polygon> triangles = Triangulate();
+            List<Triangle> triangles = Triangulate();
+            List<(int, int)> exclusionList = new List<(int, int)>();
+            List<Polygon> components = new List<Polygon>();
+            triangles.ForEach((Triangle t) => components.Add(new Polygon(t)));
 
-            Polygon currentComponent;
-            List<int> trianglesUsed = new List<int>();
-            int verticesConnecting = 0, cadidateVertexId = -1;
-            while (triangles.Count > 0) {
-                currentComponent = new Polygon(triangles[0]);
-                trianglesUsed.Add(0);
+            Vector2 sharedVertexA = Vector2.Zero, sharedVertexB = Vector2.Zero;
+            List<Vector2> verticesToConvexHull = new List<Vector2>();
 
-                for (int i = 1; i < triangles.Count; i++) {
-                    Polygon triangle = triangles[i];
-                    verticesConnecting = 0;
+            int mergeTries = 0;
+            while (components.Count >= 2 && mergeTries < components.Count - 1) {
+                (int poly1Index, int poly2Index) = FindGreatestSharedEdgePolygons(out Polygon poly1, out Polygon poly2);
 
-                    for (int j = 0; j < triangle.VertexCount; j++) {
-                        for (int k = 0; k < currentComponent.VertexCount; k++) {
-                            if (currentComponent[k] == triangle[j]) {
-                                verticesConnecting++;
-                            } else {
-                                cadidateVertexId = j;
+                verticesToConvexHull.Clear();
+                verticesToConvexHull.AddRange(poly1.Vertices);
+                verticesToConvexHull.AddRange(poly2.Vertices);
+                List<Vector2> componentConvexHull = ConvexHull(verticesToConvexHull);
+                int indexSharedVertexA = componentConvexHull.IndexOf(sharedVertexA),
+                    indexSharedVertexB = componentConvexHull.IndexOf(sharedVertexB);
+
+                // test if it's a valid convex hull
+                if (indexSharedVertexA != -1 && indexSharedVertexB != -1 && Math.IsLeft(Helper.At(componentConvexHull, indexSharedVertexA - 1), Helper.At(componentConvexHull, indexSharedVertexA + 1), Helper.At(componentConvexHull, indexSharedVertexA)) && Math.IsLeft(Helper.At(componentConvexHull, indexSharedVertexB - 1), Helper.At(componentConvexHull, indexSharedVertexB + 1), Helper.At(componentConvexHull, indexSharedVertexB))) {
+                    if (poly1Index > poly2Index) {
+                        components.RemoveAt(poly1Index);
+                        components.RemoveAt(poly2Index);
+                    } else {
+                        components.RemoveAt(poly2Index);
+                        components.RemoveAt(poly1Index);
+                    }
+
+                    components.Add(new Polygon(componentConvexHull));
+                    mergeTries = 0;
+                    exclusionList.Clear();
+                } else {
+                    mergeTries++;
+                    exclusionList.Add((poly1Index, poly2Index));
+                }
+            }
+
+            _convexComponents.AddRange(components);
+
+            return;
+
+            (int p1Index, int p2Index) FindGreatestSharedEdgePolygons(out Polygon p1, out Polygon p2) {
+                (int, int) indexes = (-1, -1);
+                p1 = p2 = null;
+                float greatestEdgeLength = 0;
+
+                for (int a = 0; a < components.Count; a++) {
+                    Polygon tmpP1 = components[a];
+                    for (int b = a + 1; b < components.Count; b++) {
+                        Polygon tmpP2 = components[b];
+
+                        if (exclusionList.FindIndex(p => Helper.EqualsPermutation(p.Item1, p.Item2, a, b)) != -1) {
+                            continue;
+                        }
+
+                        Line? sharedEdge = FindSharedEdge(tmpP1, tmpP2);
+                        if (sharedEdge != null) {
+                            float d = sharedEdge.Value.LengthSquared;
+                            if (d <= greatestEdgeLength) {
+                                continue;
                             }
-                        }
-                    }
 
-                    if (verticesConnecting == 2) {
-                        Vector2 candidateVertex = triangle[cadidateVertexId];
-                        currentComponent.AddVertex(candidateVertex);
-
-                        if (currentComponent.IsConvex) {
-                            trianglesUsed.Add(i);
-                        } else {
-                            currentComponent.RemoveVertex(candidateVertex);
+                            indexes = (a, b);
+                            greatestEdgeLength = d;
+                            p1 = tmpP1;
+                            p2 = tmpP2;
+                            sharedVertexA = sharedEdge.Value.PointA;
+                            sharedVertexB = sharedEdge.Value.PointB;
                         }
                     }
                 }
 
-                for (int j = trianglesUsed.Count - 1; j >= 0; j--) {
-                    triangles.RemoveAt(trianglesUsed[j]);
-                }
-
-                trianglesUsed.Clear();
-
-                _convexComponents.Add(currentComponent);
+                return indexes;
             }
         }
 
-        private bool IsEar(Vector2 previous, Vector2 center, Vector2 next, bool clockwise) {
-            float x1 = next.X - center.X, y1 = next.Y - center.Y,
-                  x2 = previous.X - center.X, y2 = previous.Y - center.Y;
+        #region Triangulate Helper 
 
-            bool crossSign = (x1 * y2 > x2 * y1) == clockwise;
-            float angle = System.Math.Abs(Util.Math.Angle(previous, center, next));
+        private bool InCone(LinkedListNode<Vector2> A, LinkedListNode<Vector2> B) {
 
-            if (!crossSign || angle == 180) {
-                return false;
+            Vector2 prevA = A.PreviousOrLast().Value,
+                    a = A.Value,
+                    nextA = A.NextOrFirst().Value,
+                    b = B.Value;
+
+            // if A is a convex vertex
+            if (Math.IsLeftOn(a, nextA, prevA)) {
+                return Math.IsLeft(a, b, prevA) && Math.IsLeft(b, a, nextA);
             }
 
-            // test if some other points lies inside (if so triangle isn't an ear)
-            foreach (Vector2 point in _vertices) {
-                if (point == previous || point == center || point == next) {
-                    continue;
-                }
+            // else A is reflex 
+            return Math.IsLeftOn(a, b, nextA) || Math.IsLeftOn(b, a, prevA);
+        }
 
-                if (new Triangle(previous, center, next).Contains(point)) {
+        private bool IsDiagonalie(LinkedListNode<Vector2> A, LinkedListNode<Vector2> B) {
+            Vector2 a = A.Value, b = B.Value;
+            for (int i = 0; i < VertexCount; i++) {
+                Vector2 c = Helper.At(_vertices, i),
+                        c1 = Helper.At(_vertices, i + 1);
+
+                if (c != a && c1 != a && c != b && c1 != b && Intersect(a, b, c, c1)) {
                     return false;
                 }
             }
 
             return true;
         }
+
+        private bool IsInternalDiagonal(LinkedListNode<Vector2> A, LinkedListNode<Vector2> B) {
+            return InCone(A, B) && InCone(B, A) && IsDiagonalie(A, B);
+        }
+
+        private bool Intersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
+            if (IntersectProp(a, b, c, d)) {
+                return true;
+            }
+
+            if (IsBetween(a, b, c) || IsBetween(a, b, d) || IsBetween(c, d, a) || IsBetween(c, d, b)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsBetween(Vector2 a, Vector2 b, Vector2 c) {
+            if (!Math.IsCollinear(a, b, c)) {
+                return false;
+            }
+
+            if (a.X != b.X) {
+                return (a.X <= c.X && c.X <= b.X) || (a.X >= c.X && c.X >= b.X);
+            }
+
+            return (a.Y <= c.Y && c.Y <= b.Y) || (a.Y >= c.Y && c.Y >= b.Y);
+        }
+
+        private bool IntersectProp(Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
+            if (Math.IsCollinear(a, b, c) || Math.IsCollinear(a, b, d) || Math.IsCollinear(c, d, a) || Math.IsCollinear(c, d, b)) {
+                return false;
+            }
+
+            return (!Math.IsLeft(a, b, c) ^ !Math.IsLeft(a, b, d)) && (!Math.IsLeft(c, d, a) ^ !Math.IsLeft(c, d, b));
+        }
+
+        #endregion Triangulate Helper 
 
         #endregion Private Methods
     }

@@ -39,8 +39,8 @@
         public float Area { get { return System.Math.Abs(Width * Height); } }
         public Vector2 Position { get { return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
         public Size Size { get { return new Size(Width, Height); } set { Width = value.Width; Height = value.Height; } }
-        public float Left { get { return X; } set { X = value; } }
-        public float Top { get { return Y; } set { Y = value; } }
+        public float Left { get { return X; } set { Width = Right - value; X = value; } }
+        public float Top { get { return Y; } set { Height = Bottom - value; Y = value; } }
         public float Right { get { return X + Width; } set { Width = value - X; } }
         public float Bottom { get { return Y + Height; } set { Height = value - Y; } }
         public Vector2 Center { get { return new Vector2(X + Width / 2f, Y + Height / 2f); } }
@@ -80,6 +80,10 @@
 
         public bool Intersects(Rectangle r) {
             return !(r.Right <= Left || r.Left >= Right || r.Bottom <= Top || r.Top >= Bottom);
+        }
+
+        public Vector2 ClosestPoint(Vector2 point) {
+            return Util.Math.Clamp(point, this);
         }
 
         public void Inflate(float w, float h) {

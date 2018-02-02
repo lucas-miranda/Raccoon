@@ -31,13 +31,45 @@ namespace Raccoon {
         #region Public Properties
 
         public bool IsValid { get; }
+        public Vector2[] Vertices { get { return new Vector2[] { A, B, C }; } }
 
         #endregion Public Properties
 
         #region Public Static Methods
 
+        public static float SignedArea2(Vector2 a, Vector2 b, Vector2 c) {
+            return Vector2.Cross(a, b, c);
+        }
+
+        public static float SignedArea(Vector2 a, Vector2 b, Vector2 c) {
+            return SignedArea2(a, b, c) / 2f;
+        }
+
+        /// <summary>
+        /// Triangle vertices orientation.
+        /// </summary>
+        /// <param name="a">Point A.</param>
+        /// <param name="b">Point B.</param>
+        /// <param name="c">Point C.</param>
+        /// <returns> greater than 0 if clockwise, equals 0 if none and less than 0 if counterclockwise.</returns>
+        public static int Orientation(Vector2 a, Vector2 b, Vector2 c) {
+            return (int) -System.Math.Round(SignedArea2(a, b, c));
+        }
+
+        public static bool IsClockwise(Vector2 a, Vector2 b, Vector2 c) {
+            return Orientation(a, b, c) > 0;
+        }
+
+        public static bool IsCounterClockwise(Vector2 a, Vector2 b, Vector2 c) {
+            return Orientation(a, b, c) < 0;
+        }
+
+        public static bool IsDegenerate(Vector2 a, Vector2 b, Vector2 c) {
+            return Orientation(a, b, c) == 0;
+        }
+
         public static bool Validate(Vector2 a, Vector2 b, Vector2 c) {
-            return Vector2.Cross(a, b, c) != 0;
+            return !Util.Math.IsCollinear(a, b, c);
         }
 
         #endregion Public Static Methods

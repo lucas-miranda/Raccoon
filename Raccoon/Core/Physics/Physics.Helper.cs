@@ -2,36 +2,111 @@
 using Raccoon.Util;
 
 namespace Raccoon {
-    public partial class Physics {
-        private bool CheckPolygonsIntersection(Polygon polygonA, Polygon polygonB, IEnumerable<Vector2> axes) {
+    public sealed partial class Physics {
+        private bool TestSAT(Polygon A, Polygon B, IEnumerable<Vector2> axes, out Contact? contact) {
+            Contact leastPenetrationContact = new Contact {
+                Position = A[0],
+                PenetrationDepth = float.PositiveInfinity
+            };
+
             foreach (Vector2 axis in axes) {
-                Range projectionA = polygonA.Projection(axis), projectionB = polygonB.Projection(axis);
-                if (projectionA.Min >= projectionB.Max || projectionB.Min >= projectionA.Max) {
+                Range projectionA = A.Projection(axis), projectionB = B.Projection(axis);
+                if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
+                    contact = null;
                     return false;
+                }
+
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                    leastPenetrationContact.PenetrationDepth = penetrationDepth;
+                    leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
             }
 
+            contact = leastPenetrationContact;
             return true;
         }
 
-        private bool CheckPolygonsIntersection(Polygon polygonA, Polygon polygonB) {
-            List<Vector2> axes = new List<Vector2>();
+        private bool TestSAT(Polygon A, Polygon B, out Contact? contact) {
+            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length + 1];
+            int i = 0;
 
             // polygon A axes
-            Vector2 previousVertex = polygonA[0];
-            for (int i = 1; i < polygonA.VertexCount; i++) {
-                axes.Add((polygonA[i] - previousVertex).Perpendicular());
-                previousVertex = polygonA[i];
+            foreach (Vector2 normal in A.Normals) {
+                axes[i] = normal;
+                i++;
             }
 
             // polygon B axes
-            previousVertex = polygonB[0];
-            for (int i = 1; i < polygonB.VertexCount; i++) {
-                axes.Add((polygonB[i] - previousVertex).Perpendicular());
-                previousVertex = polygonB[i];
+            foreach (Vector2 normal in B.Normals) {
+                axes[i] = normal;
+                i++;
             }
 
-            return CheckPolygonsIntersection(polygonA, polygonB, axes);
+            axes[axes.Length - 1] = (B.Center - A.Center).Normalized();
+            return TestSAT(A, B, axes, out contact);
+        }
+
+        private bool TestSAT(IShape shapeA, IShape shapeB, ICollection<Vector2> axes, out Contact? contact) {
+            Contact leastPenetrationContact = new Contact {
+                Position = shapeA.Body.Position,
+                PenetrationDepth = float.PositiveInfinity
+            };
+
+            Vector2[] a = new Vector2[axes.Count + 1];
+            axes.CopyTo(a, 0);
+            a[a.Length - 1] = (shapeB.Body.Position - shapeA.Body.Position).Normalized();
+
+            foreach (Vector2 axis in a) {
+                Range projectionA = shapeA.Projection(axis), projectionB = shapeB.Projection(axis);
+                if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
+                    contact = null;
+                    return false;
+                }
+
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                    leastPenetrationContact.PenetrationDepth = penetrationDepth;
+                    leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
+                }
+            }
+
+            contact = leastPenetrationContact;
+            return true;
+        }
+
+        private bool TestSAT(IShape shape, Polygon polygon, ICollection<Vector2> axes, out Contact? contact) {
+            Contact leastPenetrationContact = new Contact {
+                Position = shape.Body.Position,
+                PenetrationDepth = float.PositiveInfinity
+            };
+
+            Vector2[] a = new Vector2[polygon.Normals.Length + axes.Count + 1];
+            polygon.Normals.CopyTo(a, 0);
+            axes.CopyTo(a, polygon.Normals.Length);
+            a[a.Length - 1] = (shape.Body.Position - polygon.Center).Normalized();
+
+            foreach (Vector2 axis in a) {
+                Range projectionA = shape.Projection(axis), projectionB = polygon.Projection(axis);
+                if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
+                    contact = null;
+                    return false;
+                }
+
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                    leastPenetrationContact.PenetrationDepth = penetrationDepth;
+                    leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
+                }
+            }
+
+            contact = leastPenetrationContact;
+            return true;
+        }
+
+        private bool TestSAT(IShape shape, Polygon polygon, out Contact? contact) {
+            return TestSAT(shape, polygon, new Vector2[] { }, out contact);
+        }
+
+        private bool BiasGreaterThan(float a, float b) {
+          return a >= (b * .95f + a * .01f);
         }
     }
 }

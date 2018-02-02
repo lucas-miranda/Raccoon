@@ -1,9 +1,9 @@
 ﻿using Raccoon.Components;
 using Raccoon.Util;
 
-namespace Raccoon.Constraints {
+namespace Raccoon {
     public class DistanceJoint : Joint {
-        public DistanceJoint(Collider colliderA, Collider colliderB, float restingDistance, float stiffness) : base(colliderA, colliderB) {
+        public DistanceJoint(Body a, Body b, float restingDistance, float stiffness) : base(a, b) {
             RestingDistance = restingDistance;
             Stiffness = stiffness;
         }
@@ -12,17 +12,16 @@ namespace Raccoon.Constraints {
         public float Stiffness { get; set; }
 
         public override void Solve() {
-            Vector2 posDiff = ColliderA.Position - ColliderB.Position;
-            float distance = Math.Distance(ColliderA.Position, ColliderB.Position);
-            float difference = (RestingDistance - distance) / distance;
+            Vector2 posDiff = A.Position - B.Position;
+            float distance = Math.DistanceSquared(A.Position, B.Position);
+            float difference = ((RestingDistance * RestingDistance) - distance) / distance;
 
-            float invMassA = 1f / ColliderA.Mass, invMassB = 1f / ColliderB.Mass;
-            float scalarCollA = (invMassA / (invMassA + invMassB)) * Stiffness;
+            float scalarCollA = (A.InverseMass / (A.InverseMass + B.InverseMass)) * Stiffness;
             float scalarCollB = Stiffness - scalarCollA;
 
             // push/pull based on mass
-            ColliderA.Position += posDiff * scalarCollA * difference;
-            ColliderB.Position -= posDiff * scalarCollB * difference;
+            A.Position += posDiff * scalarCollA * difference;
+            B.Position -= posDiff * scalarCollB * difference;
         }
     }
 }

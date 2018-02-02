@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 
 using Raccoon.Graphics;
-using Raccoon.Constraints;
 
 namespace Raccoon.Components {
     public abstract class Collider : Component {
@@ -142,6 +141,7 @@ namespace Raccoon.Components {
             RegisterCallback(callback, tagNames);
         }
 
+        /*
         #region Collides [Single Tag] [Single Output]
 
         public bool Collides(Vector2 position, string tag) {
@@ -389,6 +389,7 @@ namespace Raccoon.Components {
         }
 
         #endregion Collides [Multiple Tag] [Multiple Output]
+        */
 
         #endregion Public Methods
     }

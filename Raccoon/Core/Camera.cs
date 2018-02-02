@@ -3,10 +3,27 @@ using Microsoft.Xna.Framework;
 
 namespace Raccoon {
     public class Camera {
+        #region Public Members
+
         public event Action OnUpdate;
+
+        #endregion Public Members
+
+        #region Private Members
 
         private Vector2 _position;
         private float _zoom = 1f;
+
+        #endregion Private Members
+
+        #region Constructors
+
+        public Camera() {
+        }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public static Camera Current { get; private set; }
 
@@ -20,9 +37,9 @@ namespace Raccoon {
         public float Right { get { return X + Width; } }
         public float Bottom { get { return Y + Height; } }
         public bool UseBounds { get; set; }
-        public bool ClampValues { get; set; } = true;
+        public bool ClampValues { get; set; }
         public Rectangle Bounds { get; set; }
-        public Vector2 Center { get { return Position + Game.Instance.ScreenSize / (2 * _zoom); } set { Position = value - Game.Instance.ScreenSize / (2 * _zoom); } }
+        public Vector2 Center { get { return Position + Game.Instance.ScreenSize / (2f * _zoom); } set { Position = value - Game.Instance.ScreenSize / (2f * _zoom); } }
 
         public Vector2 Position {
             get {
@@ -50,8 +67,13 @@ namespace Raccoon {
             }
         }
 
+        #endregion Public Properties
+
+        #region Public Methods
+
         public virtual void Start() {
             Current = this;
+            Refresh();
         }
         
         public virtual void Begin() {
@@ -70,13 +92,19 @@ namespace Raccoon {
 
         public virtual void DebugRender() { }
 
-        public void Refresh() {
-            Game.Instance.Core.MainSurface.Scale = Game.Instance.Scale * new Vector2(Zoom);
-            Game.Instance.Core.MainSurface.View = Matrix.CreateTranslation(-X, -Y, 0) * Game.Instance.Core.MainSurface.View;
+        #endregion Public Methods
+
+        #region Private Members
+
+        private void Refresh() {
+            Game.Instance.MainSurface.Scale = new Vector2(Zoom * Game.Instance.Scale);
+            Game.Instance.MainSurface.View = Matrix.CreateTranslation(-X, -Y, 0f) * Game.Instance.MainSurface.View;
 
 #if DEBUG
-            Game.Instance.Core.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * Zoom, -Y * Game.Instance.Scale * Zoom, 0);
+            Game.Instance.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * Zoom, -Y * Game.Instance.Scale * Zoom, 0);
 #endif
         }
+
+        #endregion Private Members
     }
 }

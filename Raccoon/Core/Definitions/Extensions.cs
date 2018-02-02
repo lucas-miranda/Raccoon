@@ -1,23 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Raccoon.Util;
 
 namespace Raccoon {
     public static class Extensions {
         #region Enums
 
-        public static List<Enum> GetFlagValues(this Enum enumFlags) {
-            List<Enum> separatedFlagValues = new List<Enum>();
-            int enumFlagsAsNumber = Convert.ToInt32(enumFlags), enumSize = System.Runtime.InteropServices.Marshal.SizeOf(Enum.GetUnderlyingType(enumFlags.GetType()));
-            for (int i = 0; i < 8 * enumSize; i++) {
-                int bitValue = 1 << i;
-                if ((enumFlagsAsNumber & bitValue) == 0) {
+        public static int GetUnderlyingNumericSize(this System.Enum e) {
+            return System.Runtime.InteropServices.Marshal.SizeOf(System.Enum.GetUnderlyingType(e.GetType()));
+        }
+
+        public static List<System.Enum> GetFlagValues(this System.Enum enumFlags) {
+            List<System.Enum> flagValues = new List<System.Enum>();
+            long flagsNumber = System.Convert.ToInt64(enumFlags);
+
+            if (Math.IsPowerOfTwo(flagsNumber)) {
+                flagValues.Add((System.Enum) System.Enum.ToObject(enumFlags.GetType(), flagsNumber));
+                return flagValues;
+            }
+
+            int bits = (int) System.Math.Ceiling(System.Math.Log(flagsNumber, 2));
+            for (int i = 0; i <= bits; i++) {
+                long bitValue = 1L << i;
+                if ((flagsNumber & bitValue) == 0L) {
                     continue;
                 }
 
-                separatedFlagValues.Add((Enum) Enum.ToObject(enumFlags.GetType(), bitValue));
+                flagValues.Add((System.Enum) System.Enum.ToObject(enumFlags.GetType(), bitValue));
             }
 
-            return separatedFlagValues;
+            return flagValues;
         }
 
         #endregion Enums
@@ -37,5 +48,27 @@ namespace Raccoon {
         }
 
         #endregion String
+
+        #region Linked List
+
+        public static LinkedListNode<T> NextOrFirst<T>(this LinkedListNode<T> current) {
+            return current.Next ?? current.List.First;
+        }
+
+        public static LinkedListNode<T> PreviousOrLast<T>(this LinkedListNode<T> current) {
+            return current.Previous ?? current.List.Last;
+        }
+
+        #endregion Linked List
+
+        #region IList
+
+        public static void Swap<T>(this IList<T> list, int indexA, int indexB) {
+            T aux = list[indexA];
+            list[indexA] = list[indexB];
+            list[indexB] = aux;
+        }
+
+        #endregion IList
     }
 }
