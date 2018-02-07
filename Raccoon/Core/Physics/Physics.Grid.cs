@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using Raccoon.Components;
 
 namespace Raccoon {
     public sealed partial class Physics {
         #region Grid vs Grid
 
-        private bool CheckGridGrid(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            manifold = null;
+        private bool CheckGridGrid(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            contacts = null;
             return false;
         }
 
@@ -14,24 +13,24 @@ namespace Raccoon {
 
         #region Grid vs Box
 
-        private bool CheckGridBox(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return CheckBoxGrid(B, BPos, A, APos, out manifold);
+        private bool CheckGridBox(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return CheckBoxGrid(B, BPos, A, APos, out contacts);
         }
 
         #endregion Grid vs Box
 
         #region Grid vs Circle
 
-        private bool CheckGridCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return CheckCircleGrid(B, BPos, A, APos, out manifold);
+        private bool CheckGridCircle(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return CheckCircleGrid(B, BPos, A, APos, out contacts);
         }
 
         #endregion Grid vs Circle
 
         #region Grid vs Polygon
 
-        private bool CheckGridPolygon(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return CheckPolygonGrid(B, BPos, A, APos, out manifold);
+        private bool CheckGridPolygon(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return CheckPolygonGrid(B, BPos, A, APos, out contacts);
         }
 
         #endregion Grid vs Polygon
@@ -49,10 +48,12 @@ namespace Raccoon {
 
             foreach ((int column, int row, GridShape.TileShape shape) in grid.Tiles(start, end)) {
                 tilePolygons.Clear();
+
                 switch (shape) {
                     case GridShape.BoxTileShape boxShape:
-                        tilePolygons.Add(new Polygon(boxTilePolygon));
-                        tilePolygons[0].Translate(grid.ConvertTilePosition(column, row));
+                        Polygon boxPolygon = new Polygon(boxTilePolygon);
+                        boxPolygon.Translate(grid.ConvertTilePosition(column, row));
+                        tilePolygons.Add(boxPolygon);
                         break;
 
                     case GridShape.PolygonTileShape polygonShape:

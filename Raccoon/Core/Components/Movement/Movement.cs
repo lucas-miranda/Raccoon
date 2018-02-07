@@ -39,7 +39,7 @@
         public Vector2 TargetVelocity { get; protected set; }
         public Vector2 Acceleration { get; set; }
         public Vector2 LastAxis { get; protected set; }
-        public float DragForce { get; set; } = .8f;
+        public float DragForce { get; set; } = .1f;
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
         public bool TouchedTop { get; private set; }

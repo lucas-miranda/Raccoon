@@ -15,7 +15,7 @@ namespace Raccoon {
 
         #region Private Members
 
-        private delegate bool CollisionCheckDelegate(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold);
+        private delegate bool CollisionCheckDelegate(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts);
 
         private static readonly System.Lazy<Physics> _lazy = new System.Lazy<Physics>(() => new Physics());
 
@@ -254,11 +254,11 @@ namespace Raccoon {
             return info;
         }
 
-        #region Collides [Single Output]
+        #region Queries [Single Output]
 
-        public bool Collides(Body collider, Vector2 position, System.Enum tags, out Manifold manifold) {
+        public bool QueryCollision(IShape shape, Vector2 position, System.Enum tags, out Contact[] contacts) {
             if (tags.Equals(_noneTag)) {
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
@@ -266,36 +266,24 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider == collider) {
+                    if (otherCollider.Shape == shape) {
                         continue;
                     }
 
-                    if (CheckCollision(collider, position, otherCollider, out manifold)) {
+                    if (CheckCollision(shape, position, otherCollider, out contacts)) {
                         return true;
                     }
                 }
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 
-        public bool Collides(Body collider, System.Enum tags, out Manifold manifold) {
-            return Collides(collider, collider.Position, tags, out manifold);
-        }
-        
-        public bool Collides(Body collider, Vector2 position, out Manifold manifold) {
-            return Collides(collider, position, GetCollidableTags(collider.Tags), out manifold);
-        }
-
-        public bool Collides(Body collider, out Manifold manifold) {
-            return Collides(collider, collider.Position, out manifold);
-        }
-
-        public bool Collides(Body collider, Vector2 position, System.Enum tags, out Body collidedCollider, out Manifold manifold) {
+        public bool QueryCollision(IShape shape, Vector2 position, System.Enum tags, out Body collidedCollider, out Contact[] contacts) {
             if (tags.Equals(_noneTag)) {
                 collidedCollider = null;
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
@@ -303,11 +291,11 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider == collider) {
+                    if (otherCollider.Shape == shape) {
                         continue;
                     }
 
-                    if (CheckCollision(collider, position, otherCollider, out manifold)) {
+                    if (CheckCollision(shape, position, otherCollider, out contacts)) {
                         collidedCollider = otherCollider;
                         return true;
                     }
@@ -315,26 +303,14 @@ namespace Raccoon {
             }
 
             collidedCollider = null;
-            manifold = null;
+            contacts = null;
             return false;
         }
 
-        public bool Collides(Body collider, System.Enum tags, out Body collidedCollider, out Manifold manifold) {
-            return Collides(collider, collider.Position, tags, out collidedCollider, out manifold);
-        }
-        
-        public bool Collides(Body collider, Vector2 position, out Body collidedCollider, out Manifold manifold) {
-            return Collides(collider, position, GetCollidableTags(collider.Tags), out collidedCollider, out manifold);
-        }
-
-        public bool Collides(Body collider, out Body collidedCollider, out Manifold manifold) {
-            return Collides(collider, collider.Position, out collidedCollider, out manifold);
-        }
-
-        public bool Collides<T>(Body collider, Vector2 position, System.Enum tags, out T collidedEntity, out Manifold manifold) where T : Entity {
+        public bool QueryCollision<T>(IShape shape, Vector2 position, System.Enum tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
             if (tags.Equals(_noneTag)) {
                 collidedEntity = null;
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
@@ -342,11 +318,11 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider == collider) {
+                    if (otherCollider.Shape == shape) {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T && CheckCollision(collider, position, otherCollider, out manifold)) {
+                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out contacts)) {
                         collidedEntity = otherCollider.Entity as T;
                         return true;
                     }
@@ -354,42 +330,30 @@ namespace Raccoon {
             }
 
             collidedEntity = null;
-            manifold = null;
+            contacts = null;
             return false;
         }
 
-        public bool Collides<T>(Body collider, System.Enum tags, out T collidedEntity, out Manifold manifold) where T : Entity {
-            return Collides(collider, collider.Position, tags, out collidedEntity, out manifold);
-        }
-        
-        public bool Collides<T>(Body collider, Vector2 position, out T collidedEntity, out Manifold manifold) where T : Entity {
-            return Collides(collider, position, GetCollidableTags(collider.Tags), out collidedEntity, out manifold);
-        }
+        #endregion Queries [Single Output]
 
-        public bool Collides<T>(Body collider, out T collidedEntity, out Manifold manifold) where T : Entity {
-            return Collides(collider, collider.Position, out collidedEntity, out manifold);
-        }
+        #region Queries [Multiple Output]
 
-        #endregion Collides [Single Output]
-
-        #region Collides [Multiple Output]
-
-        public bool CollidesMultiple(Body collider, Vector2 position, System.Enum tags, out List<(Body collider, Manifold manifold)> collidedColliders) {
+        public bool QueryMultipleCollision(IShape shape, Vector2 position, System.Enum tags, out List<(Body collider, Contact[] contact)> collidedColliders) {
             if (tags.Equals(_noneTag)) {
                 collidedColliders = null;
                 return false;
             }
 
-            collidedColliders = new List<(Body, Manifold)>();
+            collidedColliders = new List<(Body, Contact[])>();
             foreach (System.Enum tag in tags.GetFlagValues()) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider == collider) {
+                    if (otherCollider.Shape == shape) {
                         continue;
                     }
 
-                    if (CheckCollision(collider, position, otherCollider, out Manifold manifold)) {
-                        collidedColliders.Add((otherCollider, manifold));
+                    if (CheckCollision(shape, position, otherCollider, out Contact[] contact)) {
+                        collidedColliders.Add((otherCollider, contact));
                     }
                 }
             }
@@ -397,34 +361,22 @@ namespace Raccoon {
             return collidedColliders.Count > 0;
         }
 
-        public bool CollidesMultiple(Body collider, System.Enum tags, out List<(Body collider, Manifold manifold)> collidedColliders) {
-            return CollidesMultiple(collider, collider.Position, tags, out collidedColliders);
-        }
-        
-        public bool CollidesMultiple(Body collider, Vector2 position, out List<(Body collider, Manifold manifold)> collidedColliders) {
-            return CollidesMultiple(collider, position, GetCollidableTags(collider.Tags), out collidedColliders);
-        }
-
-        public bool CollidesMultiple(Body collider, out List<(Body collider, Manifold manifold)> collidedColliders) {
-            return CollidesMultiple(collider, collider.Position, out collidedColliders);
-        }
-
-        public bool CollidesMultiple<T>(Body collider, Vector2 position, System.Enum tags, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
+        public bool QueryMultipleCollision<T>(IShape shape, Vector2 position, System.Enum tags, out List<(T entity, Contact[] contact)> collidedEntities) where T : Entity {
             if (tags.Equals(_noneTag)) {
                 collidedEntities = null;
                 return false;
             }
 
-            collidedEntities = new List<(T, Manifold)>();
+            collidedEntities = new List<(T, Contact[])>();
             foreach (System.Enum tag in tags.GetFlagValues()) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider == collider) {
+                    if (otherCollider.Shape == shape) {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T && CheckCollision(collider, position, otherCollider, out Manifold manifold)) {
-                        collidedEntities.Add((otherCollider.Entity as T, manifold));
+                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                        collidedEntities.Add((otherCollider.Entity as T, contacts));
                     }
                 }
             }
@@ -432,19 +384,7 @@ namespace Raccoon {
             return collidedEntities.Count > 0;
         }
 
-        public bool CollidesMultiple<T>(Body collider, System.Enum tags, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
-            return CollidesMultiple(collider, collider.Position, tags, out collidedEntities);
-        }
-
-        public bool CollidesMultiple<T>(Body collider, Vector2 position, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
-            return CollidesMultiple(collider, position, GetCollidableTags(collider.Tags), out collidedEntities);
-        }
-
-        public bool CollidesMultiple<T>(Body collider, out List<(T entity, Manifold manifold)> collidedEntities) where T : Entity {
-            return CollidesMultiple(collider, collider.Position, out collidedEntities);
-        }
-
-        #endregion Collides [Multiple Output]
+        #endregion Queries [Multiple Output]
 
         #endregion Public Methods
 
@@ -510,9 +450,8 @@ namespace Raccoon {
                             movementBuffer.X += direction.X;
                             // check movement buffer X for a valid movement
                             if (System.Math.Abs(movementBuffer.X) >= 1f) {
-                                float moveX = System.Math.Sign(movementBuffer.X);
-                                movement.X = moveX;
-                                movementBuffer.X -= moveX;
+                                movement.X = System.Math.Sign(movementBuffer.X);
+                                movementBuffer.X -= movement.X;
                             }
                         }
 
@@ -520,9 +459,8 @@ namespace Raccoon {
                             movementBuffer.Y += direction.Y;
                             // check movement buffer Y for a valid movement
                             if (System.Math.Abs(movementBuffer.Y) >= 1f) {
-                                float moveY = System.Math.Sign(movementBuffer.Y);
-                                movement.Y = moveY;
-                                movementBuffer.Y -= moveY;
+                                movement.Y = System.Math.Sign(movementBuffer.Y);
+                                movementBuffer.Y -= movement.Y;
                             }
                         }
 
@@ -532,8 +470,8 @@ namespace Raccoon {
                         }
 
                         // check collision with current movement
-                        Vector2 moveHorizontalPos = currentPosition + new Vector2(movement.X, 0),
-                                moveVerticalPos = currentPosition + new Vector2(0, movement.Y);
+                        Vector2 moveHorizontalPos = new Vector2(currentPosition.X + movement.X, currentPosition.Y),
+                                moveVerticalPos = new Vector2((canMoveH ? currentPosition.X + movement.X : currentPosition.X), currentPosition.Y + movement.Y);
 
                         if (!collidableTags.Equals(_noneTag)) {
                             for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
@@ -547,20 +485,21 @@ namespace Raccoon {
                                 bool collidedH = false, collidedV = false;
 
                                 // test for horizontal collision (if it's moving horizontally)
-                                Manifold manifoldHorizontal = null;
-                                if (movement.X != 0f && CheckCollision(body, moveHorizontalPos, otherBody, out manifoldHorizontal)) {
-                                    if (manifoldHorizontal.Contacts[0].PenetrationDepth > 0f) {
+                                Contact[] contactsHorizontal = null;
+                                if (movement.X != 0f && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out contactsHorizontal)) {
+                                    if (contactsHorizontal[0].PenetrationDepth > 0f) {
                                         collidedH = true;
                                         canMoveH = false;
                                         distance.X = 0f;
                                         direction.Y = System.Math.Sign(direction.Y);
+                                        moveVerticalPos = new Vector2(currentPosition.X, currentPosition.Y + movement.Y);
                                     }
                                 }
 
                                 // test for vertical collision (if it's moving vertically)
-                                Manifold manifoldVertical = null;
-                                if (movement.Y != 0f && CheckCollision(body, moveVerticalPos, otherBody, out manifoldVertical)) {
-                                    if (manifoldVertical.Contacts[0].PenetrationDepth > 0f) {
+                                Contact[] contactsVertical = null;
+                                if (movement.Y != 0f && CheckCollision(body.Shape, moveVerticalPos, otherBody, out contactsVertical)) {
+                                    if (contactsVertical[0].PenetrationDepth > 0f) {
                                         collidedV = true;
                                         canMoveV = false;
                                         distance.Y = 0f;
@@ -570,8 +509,8 @@ namespace Raccoon {
 
                                 if (collidedH || collidedV) {
                                     // stop moving
-                                    bool hasCollisionOnAxisH = manifoldHorizontal != null && manifoldHorizontal.Contacts[0].PenetrationDepth > 0f,
-                                         hasCollisionOnAxisV = manifoldVertical != null && manifoldVertical.Contacts[0].PenetrationDepth > 0f;
+                                    bool hasCollisionOnAxisH = contactsHorizontal != null && contactsHorizontal[0].PenetrationDepth > 0f,
+                                         hasCollisionOnAxisV = contactsVertical != null && contactsVertical[0].PenetrationDepth > 0f;
 
                                     Vector2 collisionAxes = new Vector2(
                                         hasCollisionOnAxisH ? movement.X : 0f,
@@ -641,16 +580,16 @@ namespace Raccoon {
             _collidersByTag[tag].Remove(collider);
         }
 
-        private bool CheckCollision(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return _collisionFunctions[A.Shape.GetType()][B.Shape.GetType()](A, APos, B, BPos, out manifold);
+        private bool CheckCollision(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return _collisionFunctions[A.GetType()][B.GetType()](A, APos, B, BPos, out contacts);
         }
 
-        private bool CheckCollision(Body A, Vector2 APos, Body B, out Manifold manifold) {
-            return CheckCollision(A, APos, B, B.Position, out manifold);
+        private bool CheckCollision(IShape A, Vector2 APos, Body B, out Contact[] contacts) {
+            return CheckCollision(A, APos, B.Shape, B.Position, out contacts);
         }
 
-        private bool CheckCollision(Body A, Body B, out Manifold manifold) {
-            return CheckCollision(A, A.Position, B, B.Position, out manifold);
+        private bool CheckCollision(Body A, Body B, out Contact[] contacts) {
+            return CheckCollision(A.Shape, A.Position, B.Shape, B.Position, out contacts);
         }
 
         private void ValidateTag(System.Enum tag, string paramName = "tag") {
@@ -663,7 +602,11 @@ namespace Raccoon {
             return Math.IsPowerOfTwo(System.Convert.ToInt64(tags));
         }
 
-        private long GetCollidableTagsAsNumber(System.Enum tags) {
+        #endregion Private Methods
+
+        #region Internal Methods
+
+        internal long GetCollidableTagsAsNumber(System.Enum tags) {
             long tagsValue = 0;
             foreach (System.Enum tag in tags.GetFlagValues()) {
                 foreach (System.Enum collidableTag in _collisionTagTable[tag]) {
@@ -674,25 +617,9 @@ namespace Raccoon {
             return tagsValue;
         }
 
-        private System.Enum GetCollidableTags(System.Enum tags) {
+        internal System.Enum GetCollidableTags(System.Enum tags) {
             return (System.Enum) System.Enum.ToObject(TagType, GetCollidableTagsAsNumber(tags));
         }
-        
-        private List<HashSet<System.Enum>> GetCollisionTagTables(System.Enum tag) {
-            List<HashSet<System.Enum>> tagsCollisionTables = new List<HashSet<System.Enum>>();
-
-            List<System.Enum> tags = tag.GetFlagValues();
-            foreach (System.Enum t in tags) {
-                ValidateTag(t);
-                tagsCollisionTables.Add(_collisionTagTable[t]);
-            }
-            
-            return tagsCollisionTables;
-        }
-
-        #endregion Private Methods
-
-        #region Internal Methods
 
 #if DEBUG
         internal void ClearTimers() {

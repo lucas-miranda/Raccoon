@@ -5,6 +5,7 @@ using Raccoon.Util;
 namespace Raccoon {
     public class BoxShape : IShape {
         private Polygon _normalizedPolygon;
+        private Vector2 _origin;
 
         public BoxShape(int width, int height) {
             Width = width;
@@ -48,6 +49,19 @@ namespace Raccoon {
         public float[] Extents { get; }
         public Polygon Shape { get; private set; }
 
+        public Vector2 Origin {
+            get {
+                return _origin;
+            }
+
+            set {
+                _origin = value;
+                Shape = new Polygon(_normalizedPolygon);
+                Shape.RotateAround(Rotation, Shape.Center - Origin);
+                BoundingBox = Shape.BoundingBox();
+            }
+        }
+
         public float Rotation {
             get {
                 return Math.Angle(Axes[0]);
@@ -58,7 +72,7 @@ namespace Raccoon {
                 Axes[1] = Math.Rotate(Vector2.Up, value);
 
                 Shape = new Polygon(_normalizedPolygon);
-                Shape.Rotate(value);
+                Shape.RotateAround(value, Shape.Center - Origin);
                 BoundingBox = Shape.BoundingBox();
             }
         }
@@ -73,13 +87,13 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
+            Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
 
             //Debug.DrawRectangle(new Rectangle(position - HalwidthExtents, Debug.Transform(BoundingBox)), color, Rotation);
 
             // draw using Polygon
             Polygon polygon = new Polygon(Shape);
-            polygon.Translate(position);
+            polygon.Translate(position - Origin);
             Debug.DrawPolygon(polygon, color);
 
             // normals
@@ -90,7 +104,7 @@ namespace Raccoon {
             }
 
             // centroid
-            Debug.DrawCircle(position, 1, 10, Color.White);
+            Debug.DrawCircle(position - Origin, 1, 10, Color.White);
         }
 
         public bool ContainsPoint(Vector2 point) {

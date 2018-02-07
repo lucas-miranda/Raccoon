@@ -21,8 +21,7 @@ namespace Raccoon {
 
         public Vector2 PenetrationVector {
             get {
-                float angle = Math.Angle(Normal);
-                return new Vector2(Math.Sin(angle) * PenetrationDepth, Math.Cos(angle) * PenetrationDepth);
+                return Math.PolarToCartesian(PenetrationDepth, Math.Angle(Normal));
             }
         }
 

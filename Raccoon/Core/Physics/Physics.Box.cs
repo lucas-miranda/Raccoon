@@ -5,9 +5,9 @@ namespace Raccoon {
     public sealed partial class Physics {
         #region Box vs Box
 
-        private bool CheckBoxBox(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            BoxShape boxA = A.Shape as BoxShape,
-                     shapeB = B.Shape as BoxShape;
+        private bool CheckBoxBox(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            BoxShape boxA = A as BoxShape,
+                     shapeB = B as BoxShape;
 
             // AABB x AABB
             if (System.Math.Abs(boxA.Rotation) < Math.Epsilon && System.Math.Abs(shapeB.Rotation) < Math.Epsilon) {
@@ -15,13 +15,11 @@ namespace Raccoon {
                 Vector2 overlap = boxA.HalwidthExtents + shapeB.HalwidthExtents - Math.Abs(translation);
 
                 if (overlap.X < 0f || overlap.Y < 0f) {
-                    manifold = null;
+                    contacts = null;
                     return false;
                 }
 
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[2]
-                };
+                contacts = new Contact[2];
 
                 Contact contact1 = new Contact {
                     Position = Math.Max(APos - boxA.HalwidthExtents, BPos - shapeB.HalwidthExtents)
@@ -38,8 +36,8 @@ namespace Raccoon {
                     contact1.PenetrationDepth = contact2.PenetrationDepth = overlap.Y;
                 }
 
-                manifold.Contacts[0] = contact1;
-                manifold.Contacts[1] = contact2;
+                contacts[0] = contact1;
+                contacts[1] = contact2;
                 return true;
             }
 
@@ -49,16 +47,14 @@ namespace Raccoon {
             polygonB.Translate(BPos);
 
             if (TestSAT(polygonA, polygonB, out Contact? contact)) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        contact.Value
-                    }
+                contacts = new Contact[] {
+                    contact.Value
                 };
 
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 
@@ -66,28 +62,26 @@ namespace Raccoon {
 
         #region Box vs Circle
 
-        private bool CheckBoxCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            BoxShape boxA = A.Shape as BoxShape;
-            CircleShape circleB = B.Shape as CircleShape;
+        private bool CheckBoxCircle(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            BoxShape boxA = A as BoxShape;
+            CircleShape circleB = B as CircleShape;
 
             Vector2 closestPoint = boxA.ClosestPoint(BPos);
             Vector2 diff = closestPoint - BPos;
             if (Vector2.Dot(diff, diff) > circleB.Radius * circleB.Radius) {
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
             if (TestSAT(boxA, circleB, boxA.Axes, out Contact? contact)) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
-                    }
+                contacts = new Contact[] {
+                    new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
                 };
 
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 
@@ -95,25 +89,23 @@ namespace Raccoon {
 
         #region Box vs Polygon
 
-        private bool CheckBoxPolygon(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            BoxShape boxA = A.Shape as BoxShape;
-            PolygonShape polyB = B.Shape as PolygonShape;
+        private bool CheckBoxPolygon(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            BoxShape boxA = A as BoxShape;
+            PolygonShape polyB = B as PolygonShape;
 
             Polygon polygonA = new Polygon(boxA.Shape), polygonB = new Polygon(polyB.Shape);
             polygonA.Translate(APos);
             polygonB.Translate(BPos);
 
             if (TestSAT(polygonA, polygonB, out Contact? contact)) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        contact.Value
-                    }
+                contacts = new Contact[] {
+                    contact.Value
                 };
 
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 
@@ -121,16 +113,16 @@ namespace Raccoon {
 
         #region Box vs Grid
 
-        private bool CheckBoxGrid(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            BoxShape boxA = A.Shape as BoxShape;
-            GridShape gridB = B.Shape as GridShape;
+        private bool CheckBoxGrid(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            BoxShape boxA = A as BoxShape;
+            GridShape gridB = B as GridShape;
 
             Rectangle boxBoundingBox = new Rectangle(APos - boxA.BoundingBox / 2f, boxA.BoundingBox),
                       gridBoundingBox = new Rectangle(BPos, gridB.BoundingBox);
 
             // test grid bounds
             if (!gridBoundingBox.Intersects(boxBoundingBox)) {
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
@@ -145,15 +137,13 @@ namespace Raccoon {
             );
 
             if (contact != null) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        contact.Value
-                    }
+                contacts = new Contact[] {
+                    contact.Value
                 };
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 

@@ -4,25 +4,23 @@ namespace Raccoon {
     public sealed partial class Physics {
         #region Polygon vs Polygon
 
-        private bool CheckPolygonPolygon(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            PolygonShape shapeA = A.Shape as PolygonShape,
-                         shapeB = B.Shape as PolygonShape;
+        private bool CheckPolygonPolygon(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            PolygonShape shapeA = A as PolygonShape,
+                         shapeB = B as PolygonShape;
 
             Polygon polygonA = new Polygon(shapeA.Shape), polygonB = new Polygon(shapeB.Shape);
             polygonA.Translate(APos);
             polygonB.Translate(BPos);
 
             if (TestSAT(polygonA, polygonB, out Contact? contact)) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        contact.Value
-                    }
+                contacts = new Contact[] {
+                    contact.Value
                 };
 
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 
@@ -30,32 +28,32 @@ namespace Raccoon {
 
         #region Polygon vs Box
 
-        private bool CheckPolygonBox(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return CheckBoxPolygon(B, BPos, A, APos, out manifold);
+        private bool CheckPolygonBox(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return CheckBoxPolygon(B, BPos, A, APos, out contacts);
         }
 
         #endregion Polygon vs Box
 
         #region Polygon vs Circle
 
-        private bool CheckPolygonCircle(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            return CheckCirclePolygon(B, BPos, A, APos, out manifold);
+        private bool CheckPolygonCircle(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            return CheckCirclePolygon(B, BPos, A, APos, out contacts);
         }
 
         #endregion Polygon vs Circle
 
         #region Polygon vs Grid
 
-        private bool CheckPolygonGrid(Body A, Vector2 APos, Body B, Vector2 BPos, out Manifold manifold) {
-            PolygonShape polygonShapeA = A.Shape as PolygonShape;
-            GridShape gridB = B.Shape as GridShape;
+        private bool CheckPolygonGrid(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
+            PolygonShape polygonShapeA = A as PolygonShape;
+            GridShape gridB = B as GridShape;
 
             Rectangle polygonBoundingBox = new Rectangle(APos - polygonShapeA.BoundingBox / 2f, polygonShapeA.BoundingBox),
                       gridBoundingBox = new Rectangle(BPos, gridB.BoundingBox);
 
             // test grid bounds
             if (!gridBoundingBox.Intersects(polygonBoundingBox)) {
-                manifold = null;
+                contacts = null;
                 return false;
             }
 
@@ -70,15 +68,13 @@ namespace Raccoon {
             );
 
             if (contact != null) {
-                manifold = new Manifold(A, B) {
-                    Contacts = new Contact[] {
-                        contact.Value
-                    }
+                contacts = new Contact[] {
+                    contact.Value
                 };
                 return true;
             }
 
-            manifold = null;
+            contacts = null;
             return false;
         }
 

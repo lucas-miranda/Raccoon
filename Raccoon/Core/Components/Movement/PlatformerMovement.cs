@@ -44,6 +44,7 @@ namespace Raccoon.Components {
         public bool IsJumping { get; protected set; }
         public bool IsFalling { get; protected set; } = true;
         public bool CanContinuousJump { get; set; } = false;
+        public bool JustJumped { get; private set; }
         public int MaxJumps { get; set; } = 1;
         public int Jumps { get; protected set; }
         public float JumpHeight { get; private set; }
@@ -83,11 +84,15 @@ namespace Raccoon.Components {
                 // not successfully made a expected horizontal move and a correction must be done
                 if (_searchRampY < 0) {
                     Velocity = Vector2.Zero;
-                    Body.Position = new Vector2(Body.Position.X, Body.Position.Y + 1);
+                    Body.Position = new Vector2(Body.Position.X, Body.Position.Y + 2);
                 }
 
                 ResetRampMovement();
                 _canApplyRampCorrection = false;
+            }
+
+            if (IsStillJumping && !OnAir) {
+                Velocity = new Vector2(Velocity.X, 0f);
             }
         }
 
@@ -108,7 +113,7 @@ namespace Raccoon.Components {
             if (_lookingForRamp && _searchRampY < 0) { // up ramp
                 // wait until a horizontal collision happens to move body up again
                 if (!_waitingForNextRampCollision) {
-                    Body.Position = new Vector2(Body.Position.X, Body.Position.Y - 1);
+                    Body.Position = new Vector2(Body.Position.X, Body.Position.Y - 2);
                     _waitingForNextRampCollision = _canApplyRampCorrection = true;
                     _walkingOnRamp = false;
                 }
@@ -123,7 +128,7 @@ namespace Raccoon.Components {
 
                 if (_lookingForRamp && _searchRampY > 0) { // down ramp
                     // make a strong down force to make body gently walks on ramp
-                    verticalVelocity = 5 / dt;
+                    verticalVelocity = 8 / dt;
                     _waitingForNextRampCollision = _canApplyRampCorrection = true;
                     _walkingOnRamp = false;
                 }
@@ -134,6 +139,7 @@ namespace Raccoon.Components {
 
         public override void OnCollide(Vector2 collisionAxes) {
             base.OnCollide(collisionAxes);
+
             if (TouchedBottom) { 
                 // falling and reach the ground
                 if (!OnGround) {
@@ -151,14 +157,16 @@ namespace Raccoon.Components {
                 Velocity = new Vector2(Velocity.X, 0f);
             } else if (TouchedTop) { 
                 // jumping and reached a ceiling
-                IsStillJumping = IsJumping = false;
-                IsFalling = true;
-                Velocity = new Vector2(Velocity.X, 0f);
-                OnFallingBegin();
+                if (IsJumping) {
+                    IsStillJumping = IsJumping = false;
+                    IsFalling = true;
+                    Velocity = new Vector2(Velocity.X, 0f);
+                    OnFallingBegin();
+                }
             }
 
             if (collisionAxes.X != 0f && _searchRampY < 1) { // do nothing if it's on a down ramp
-                if (OnGround) {
+                if (OnGround && !IsStillJumping) {
                     // start checking if it's on a up ramp
                     if (!_lookingForRamp) {
                         _lookingForRamp = true;
@@ -184,7 +192,7 @@ namespace Raccoon.Components {
                 if (System.Math.Sign(distance.X) == _searchRampX) {
                     ResetRampMovement();
                 }
-            } else if (OnGround && _searchRampY < 1 && distance.X != 0) {
+            } else if (OnGround && !IsStillJumping && _searchRampY < 1 && distance.X != 0) {
                 // start checking if it's on a down ramp
                 _lookingForRamp = true;
                 _walkingOnRamp = false;
@@ -211,9 +219,25 @@ namespace Raccoon.Components {
                         OnFallingBegin();
                     }
                 } else if (distance.Y < 0) {
-                    // checks if jump max distance has been reached
-                    if (IsStillJumping && OnAir && Body.Position.Y <= _jumpMaxY) {
-                        _nextJumpReady = false;
+                    if (IsStillJumping) {
+                        if (JustJumped) {
+                            JustJumped = false;
+                        }
+
+                        if (!IsJumping) {
+                            // reset ramp movement
+                            ResetRampMovement();
+
+                            IsJumping = JustJumped = true;
+                            OnGround = IsFalling = false;
+                            Jumps--;
+                            OnJumpBegin();
+                        }
+
+                        // checks if jump max distance has been reached
+                        if (OnAir && Body.Position.Y <= _jumpMaxY) {
+                            _nextJumpReady = false;
+                        }
                     }
                 } else if (_searchRampY > 0 && !_waitingForNextRampCollision) {
                     // down ramp final cycle checking (case B)
@@ -250,13 +274,10 @@ namespace Raccoon.Components {
 
             // reset ramp movement
             ResetRampMovement();
-            
-            IsStillJumping = IsJumping = true;
-            OnGround = IsFalling = false;
-            Jumps--;
+
+            IsStillJumping = true;
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
-            OnJumpBegin();
         }
 
         public override void DebugRender() {

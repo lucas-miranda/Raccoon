@@ -51,7 +51,6 @@
     <Compile Include="Core\Components\StateMachine\Transition.cs" />
     <Compile Include="Core\Components\StateMachine\Trigger.cs" />
     <Compile Include="Core\Components\Physics\Body.cs" />
-    <Compile Include="Core\Physics\Manifold.cs" />
     <Compile Include="Core\Physics\Constraints\DistanceJoint.cs" />
     <Compile Include="Core\Physics\Constraints\IConstraint.cs" />
     <Compile Include="Core\Physics\Constraints\Joint.cs" />

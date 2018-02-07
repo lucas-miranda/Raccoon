@@ -28,7 +28,9 @@ namespace Raccoon {
 
         private bool TestSAT(Polygon A, Polygon B, out Contact? contact) {
             Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length + 1];
-            int i = 0;
+            
+            axes[0] = (B.Center - A.Center).Normalized();
+            int i = 1;
 
             // polygon A axes
             foreach (Vector2 normal in A.Normals) {
@@ -42,7 +44,6 @@ namespace Raccoon {
                 i++;
             }
 
-            axes[axes.Length - 1] = (B.Center - A.Center).Normalized();
             return TestSAT(A, B, axes, out contact);
         }
 
@@ -53,8 +54,8 @@ namespace Raccoon {
             };
 
             Vector2[] a = new Vector2[axes.Count + 1];
-            axes.CopyTo(a, 0);
-            a[a.Length - 1] = (shapeB.Body.Position - shapeA.Body.Position).Normalized();
+            a[0] = (shapeB.Body.Position - shapeA.Body.Position).Normalized();
+            axes.CopyTo(a, 1);
 
             foreach (Vector2 axis in a) {
                 Range projectionA = shapeA.Projection(axis), projectionB = shapeB.Projection(axis);
@@ -80,9 +81,9 @@ namespace Raccoon {
             };
 
             Vector2[] a = new Vector2[polygon.Normals.Length + axes.Count + 1];
-            polygon.Normals.CopyTo(a, 0);
-            axes.CopyTo(a, polygon.Normals.Length);
-            a[a.Length - 1] = (shape.Body.Position - polygon.Center).Normalized();
+            a[0] = (shape.Body.Position - polygon.Center).Normalized();
+            polygon.Normals.CopyTo(a, 1);
+            axes.CopyTo(a, polygon.Normals.Length + 1);
 
             foreach (Vector2 axis in a) {
                 Range projectionA = shape.Projection(axis), projectionB = polygon.Projection(axis);

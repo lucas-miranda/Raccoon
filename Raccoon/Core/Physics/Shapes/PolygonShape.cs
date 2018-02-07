@@ -5,6 +5,7 @@ using Raccoon.Util;
 namespace Raccoon {
     public class PolygonShape : IShape {
         private Polygon _normalizedPolygon;
+        private Vector2 _origin;
         private float _rotation;
 
         public PolygonShape(params Vector2[] points) {
@@ -26,6 +27,19 @@ namespace Raccoon {
         public Size BoundingBox { get; private set; }
         public Polygon Shape { get; private set; }
 
+        public Vector2 Origin {
+            get {
+                return _origin;
+            }
+
+            set {
+                _origin = value;
+                Shape = new Polygon(_normalizedPolygon);
+                Shape.RotateAround(Rotation, Shape.Center - _origin);
+                BoundingBox = Shape.BoundingBox();
+            }
+        }
+
         public float Rotation {
             get {
                 return _rotation;
@@ -34,7 +48,7 @@ namespace Raccoon {
             set {
                 _rotation = value;
                 Shape = new Polygon(_normalizedPolygon);
-                Shape.Rotate(_rotation);
+                Shape.RotateAround(_rotation, Shape.Center - Origin);
                 BoundingBox = Shape.BoundingBox();
             }
         }
@@ -49,10 +63,10 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
+            Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
 
             Polygon polygon = new Polygon(Shape);
-            polygon.Translate(position);
+            polygon.Translate(position - Origin);
             Debug.DrawPolygon(polygon, color);
 
             // normals
@@ -63,7 +77,7 @@ namespace Raccoon {
             }
 
             // centroid
-            Debug.DrawCircle(position, 1, 10, Color.White);
+            Debug.DrawCircle(position - Origin, 1, 10, Color.White);
         }
 
         public bool ContainsPoint(Vector2 point) {
@@ -84,7 +98,7 @@ namespace Raccoon {
 
         public void Rotate(float degrees) {
             _rotation += degrees;
-            Shape.Rotate(degrees);
+            Shape.RotateAround(degrees, Shape.Center - Origin);
             BoundingBox = Shape.BoundingBox();
         }
     }

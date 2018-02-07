@@ -13,14 +13,15 @@ namespace Raccoon {
         public Body Body { get; set; }
         public int Radius { get; }
         public int Area { get; }
+        public Vector2 Origin { get; set; }
         public Size BoundingBox { get; }
 
         public void DebugRender(Vector2 position, Color color) {
             // boundingBox
-            Debug.DrawRectangle(new Rectangle(position - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
+            Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
 
             float gameWorldRadius = Debug.Transform(Radius);
-            Debug.DrawCircle(position, gameWorldRadius, (int) (gameWorldRadius * gameWorldRadius), color);
+            Debug.DrawCircle(position - Origin, gameWorldRadius, (int) (gameWorldRadius * gameWorldRadius), color);
         }
 
         public bool ContainsPoint(Vector2 point) {

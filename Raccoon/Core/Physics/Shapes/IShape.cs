@@ -7,6 +7,7 @@ namespace Raccoon {
         Body Body { get; set; }
         int Area { get; }
         Size BoundingBox { get; }
+        Vector2 Origin { get; set; }
 
         void DebugRender(Vector2 position, Color color);
         bool ContainsPoint(Vector2 point);

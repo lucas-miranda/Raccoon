@@ -30,6 +30,7 @@ namespace Raccoon {
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public int Area { get; }
+        public Vector2 Origin { get; set; }
         public Size BoundingBox { get; private set; }
         public Rectangle TileBounds { get; private set; }
         public Polygon BoxTilePolygon { get; private set; }
@@ -44,7 +45,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                Vector2 tilePos = position + new Vector2(column * TileSize.Width, row * TileSize.Height);
+                Vector2 tilePos = position - Origin + new Vector2(column * TileSize.Width, row * TileSize.Height);
                 if (tile is BoxTileShape boxTile) {
                     Debug.DrawRectangle(new Rectangle(tilePos, Debug.Transform(TileSize)), Color.Red);
                 } else if (tile is PolygonTileShape polygonTile) {
