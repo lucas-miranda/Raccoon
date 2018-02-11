@@ -257,6 +257,62 @@ namespace Raccoon {
 
         #endregion Line
 
+        #region Lines
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(Vector2[] points, Color color) {
+            float correction = (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
+
+            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[points.Length];
+            for (int i = 0; i < points.Length; i++) {
+                Vector2 point = points[i];
+                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(correction * new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
+            }
+
+            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugSurface.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugSurface.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugSurface.Projection;
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+                pass.Apply();
+                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, points.Length - 1);
+            }
+
+
+            Game.Instance.Core.BasicEffect.Alpha = 1f;
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(Vector2[] points) {
+            DrawLines(points, Color.White);
+        }
+        
+        [Conditional("DEBUG")]
+        public static void DrawLines(Camera camera, Vector2[] points, Color color) {
+            if (camera == null) {
+                DrawLines(points, color);
+                return;
+            }
+
+            float scaleFactor = camera.Zoom * Game.Instance.Scale;
+            Vector2[] correctedPoints = new Vector2[points.Length];
+            for (int i = 0; i < points.Length; i++) {
+                correctedPoints[i] = camera.Position + points[i] / scaleFactor;
+            }
+
+            DrawLines(correctedPoints, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(Camera camera, Vector2[] points) {
+            DrawLines(camera, points, Color.White);
+        }
+
+        #endregion Line
+
         #region Rectangle
 
         [Conditional("DEBUG")]
