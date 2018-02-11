@@ -21,7 +21,6 @@ namespace Raccoon.Graphics {
         private uint[] _tilesIds = new uint[0];
         private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[0];
         //private Vector2 _texSpriteCount;
-        private Microsoft.Xna.Framework.Matrix _lastWorldMatrix;
 
         #endregion Private Members
 
@@ -76,7 +75,7 @@ namespace Raccoon.Graphics {
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
-            Game.Instance.Core.BasicEffect.World = _lastWorldMatrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Surface.World;
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Surface.World;
             Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
             Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
             

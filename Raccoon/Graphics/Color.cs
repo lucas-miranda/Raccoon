@@ -71,10 +71,13 @@ namespace Raccoon.Graphics {
         }
 
         public Color(float r, float g, float b, float a = 1f) {
-            R = (byte) Util.Math.Clamp(r * byte.MaxValue, byte.MinValue, byte.MaxValue);
-            G = (byte) Util.Math.Clamp(g * byte.MaxValue, byte.MinValue, byte.MaxValue);
-            B = (byte) Util.Math.Clamp(b * byte.MaxValue, byte.MinValue, byte.MaxValue);
-            A = (byte) Util.Math.Clamp(a * byte.MaxValue, byte.MinValue, byte.MaxValue);
+            R = (byte) ((r * byte.MaxValue) % 255);
+            G = (byte) ((g * byte.MaxValue) % 255);
+            B = (byte) ((b * byte.MaxValue) % 255);
+            A = (byte) ((r * byte.MaxValue) % 255);
+        }
+
+        public Color(Color color, float alpha) : this (color.R, color.G, color.B, (byte) ((alpha * byte.MaxValue) % 255)) {
         }
 
         #endregion Constructors

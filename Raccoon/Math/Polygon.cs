@@ -537,7 +537,7 @@ namespace Raccoon {
 
             int i = 0;
             foreach (Line line in Edges()) {
-                Normals[i] = line.ToVector2().Perpendicular().Normalized();
+                Normals[i] = line.ToVector2().PerpendicularCCW().Normalized();
                 i++;
             }
         }

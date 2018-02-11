@@ -104,8 +104,12 @@ namespace Raccoon {
             return Normalize(this);
         }
 
-        public Vector2 Perpendicular() {
+        public Vector2 PerpendicularCCW() {
             return new Vector2(Y, -X);
+        }
+
+        public Vector2 PerpendicularCW() {
+            return new Vector2(-Y, X);
         }
 
         public Range Projection(ICollection<Vector2> points) {
