@@ -287,6 +287,15 @@
             return EqualsEstimate(Triangle.SignedArea2(a, b, c), 0f, tolerance);
         }
 
+        public static Vector2 BezierCurve(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t) {
+            float iv_t = 1f - t;
+            return iv_t * iv_t * iv_t * p0 + 3f * iv_t * iv_t * t * p1 + 3f * iv_t * t * t * p2 + t * t * t * p3;
+        }
+
+        public static Vector2 BezierCurve(Vector2 p0, Vector2 p1, Vector2 p2, float t) {
+            return (1f - t) * (1f - t) * p0 + 2f * (1f - t) * t * p1 + t * t * p2;
+        }
+
         #endregion Trygonometric Stuff
     }
 }
