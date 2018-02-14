@@ -151,20 +151,20 @@ namespace Raccoon {
         public virtual void Update(int delta) {
             Timer += (uint) delta;
 
-            foreach (Component c in _components) {
-                if (!c.Enabled) {
-                    continue;
-                }
-
-                c.Update(delta);
-            }
-
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
                 }
 
                 g.Update(delta);
+            }
+
+            foreach (Component c in _components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.Update(delta);
             }
 
             OnUpdate();
@@ -181,6 +181,14 @@ namespace Raccoon {
                 }
 
                 g.Render(Position + g.Position, Rotation + g.Rotation);
+            }
+
+            foreach (Component c in _components) {
+                if (!c.Visible) {
+                    continue;
+                }
+
+                c.Render();
             }
 
             OnRender();

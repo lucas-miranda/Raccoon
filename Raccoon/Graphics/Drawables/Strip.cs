@@ -157,7 +157,7 @@ namespace Raccoon.Graphics {
         }
 
         public override string ToString() {
-            return $"[ChordImage | Position: {Position}, Texture: {Texture}]";
+            return $"[Strip | Position: {Position}, Texture: {Texture}]";
         }
 
         private void SetupSections(int sections) {
