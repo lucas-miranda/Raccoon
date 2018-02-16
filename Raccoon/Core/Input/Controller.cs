@@ -68,20 +68,24 @@ namespace Raccoon.Input {
             return Buttons[label.ToString()];
         }
 
-        public void AddButton(string label, Button button) {
+        public Controller AddButton(string label, Button button) {
             Buttons.Add(label, button);
+            return this;
         }
 
-        public void AddButton(Enum label, Button button) {
+        public Controller AddButton(Enum label, Button button) {
             AddButton(label.ToString(), button);
+            return this;
         }
 
-        public void AddAxis(string label, Axis axis) {
+        public Controller AddAxis(string label, Axis axis) {
             Axes.Add(label, axis);
+            return this;
         }
 
-        public void AddAxis(Enum label, Axis axis) {
+        public Controller AddAxis(Enum label, Axis axis) {
             AddAxis(label.ToString(), axis);
+            return this;
         }
 
         public override string ToString() {
