@@ -45,7 +45,7 @@ namespace Raccoon {
             }
 
             foreach (Coroutine coroutine in _pausedCoroutines) {
-                if (coroutine.IsRunning) {
+                if (coroutine.IsRunning) { // checks if a coroutine it's running again
                     _pausedCoroutines.Remove(coroutine);
                     _runningCoroutines.Add(coroutine);
                 }
@@ -54,9 +54,9 @@ namespace Raccoon {
             foreach (Coroutine coroutine in _runningCoroutines) {
                 coroutine.Update(delta);
 
-                if (coroutine.HasEnded) {
+                if (coroutine.HasEnded) { // remove ended coroutine
                     _runningCoroutines.Remove(coroutine);
-                } else if (!coroutine.IsRunning) {
+                } else if (!coroutine.IsRunning) { // move paused coroutine to the proper list
                     _runningCoroutines.Remove(coroutine);
                     _pausedCoroutines.Add(coroutine);
                 }
@@ -66,14 +66,21 @@ namespace Raccoon {
             _pausedCoroutines.Upkeep();
         }
 
-        public Coroutine Start(IEnumerator coroutine) {
+        public Coroutine Start(Func<IEnumerator> coroutine) {
             Coroutine c = new Coroutine(coroutine);
             _runningCoroutines.Add(c);
             return c;
         }
 
-        public Coroutine Start(Func<IEnumerator> coroutine) {
-            return Start(coroutine());
+        public void Start(Coroutine coroutine) {
+            if (_runningCoroutines.Contains(coroutine)) {
+                return;
+            } else if (_pausedCoroutines.Contains(coroutine)) {
+                coroutine.Resume();
+                return;
+            }
+
+            _runningCoroutines.Add(coroutine);
         }
 
         public void ClearAll() {
@@ -86,10 +93,12 @@ namespace Raccoon {
         #region Class Coroutine
 
         public class Coroutine {
-            public Coroutine(IEnumerator enumerator) {
-                Enumerator = enumerator;
+            public Coroutine(Func<IEnumerator> generator) {
+                Generator = generator;
+                Enumerator = Generator();
             }
 
+            public Func<IEnumerator> Generator { get; private set; }
             public IEnumerator Enumerator { get; private set; }
             public bool IsRunning { get; private set; } = true;
             public bool HasEnded { get; private set; }
@@ -152,7 +161,13 @@ namespace Raccoon {
             }
 
             public void Reset() {
-                Enumerator.Reset();
+                if (HasEnded) {
+                    throw new System.InvalidOperationException($"Can't reset a ended coroutine from itself. Please register a new coroutine using 'Coroutines.Instance.Start(coroutine)'.");
+                }
+
+                Enumerator = Generator();
+                Timer = 0;
+                DelayInterval = 0;
                 HasEnded = false;
                 IsRunning = true;
             }
