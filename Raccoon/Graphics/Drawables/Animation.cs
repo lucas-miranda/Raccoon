@@ -40,7 +40,7 @@ namespace Raccoon.Graphics {
         public Animation(AtlasAnimation animTexture) {
             // TODO: support KeyType with AtlasAnimation, converting string animations label to KeyType enum
             if (typeof(KeyType) != typeof(string)) {
-                throw new NotSupportedException("KeyType " + typeof(KeyType) + " doesn't support AtlasAnimationTexture, switch to string");
+                throw new NotSupportedException($"KeyType '{typeof(KeyType)}' doesn't support AtlasAnimationTexture, switching to string.");
             }
 
             Texture = animTexture.Texture;
@@ -84,7 +84,15 @@ namespace Raccoon.Graphics {
         public int ElapsedTime { get; private set; }
         public float PlaybackSpeed { get; set; } = 1f;
 
-        public Track this[KeyType key] { get { return _tracks[key]; } }
+        public Track this[KeyType key] {
+            get {
+                try {
+                    return _tracks[key];
+                } catch (KeyNotFoundException e) {
+                    throw new KeyNotFoundException($"Animation frame Key '{key}' not found.", e);
+                }
+            }
+        }
 
         #endregion Public Properties
 
