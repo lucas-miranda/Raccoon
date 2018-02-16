@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Microsoft.Xna.Framework.Input;
 
@@ -13,7 +12,7 @@ namespace Raccoon.Input {
     }
 
     public class Input {
-        private static readonly Lazy<Input> _lazy = new Lazy<Input>(() => new Input());
+        private static readonly System.Lazy<Input> _lazy = new System.Lazy<Input>(() => new Input());
 
         private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
         private KeyboardState _keyboardState, _keyboardPreviousState;
@@ -44,8 +43,11 @@ namespace Raccoon.Input {
         public static Input Instance { get { return _lazy.Value; } }
         public static int JoysticksConnected { get; private set; }
         public static Vector2 MousePosition { get { return Instance._mousePosition; } set { Mouse.SetPosition((int) (Util.Math.Clamp(value.X, 0, Game.Instance.ScreenWidth) * Game.Instance.Scale), (int) (Util.Math.Clamp(value.Y, 0, Game.Instance.ScreenHeight) * Game.Instance.Scale)); } }
+        public static Vector2 MouseMovement { get; private set; }
         public static int MouseScrollWheel { get; private set; }
         public static int MouseScrollWheelDelta { get; private set; }
+        public static bool LockMouseOnWindow { get; set; }
+        public static bool LockMouseOnCenter { get; set; }
         public static string KeyboardText { get; private set; } = "";
         public static Key[] PressedKeys { get; private set; } = new Key[0];
 
@@ -153,7 +155,15 @@ namespace Raccoon.Input {
             MouseState XNAMouseState = Mouse.GetState();
 
             // positions
-            _mousePosition = new Vector2(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+            Vector2 newMousePosition = new Vector2(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+            MouseMovement = newMousePosition - _mousePosition;
+
+            if (LockMouseOnCenter) {
+                _mousePosition = new Vector2(Game.Instance.WindowWidth / (2 * Game.Instance.Scale), Game.Instance.WindowHeight / (2 * Game.Instance.Scale));
+                Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
+            } else {
+                _mousePosition = newMousePosition;
+            }
 
             // buttons
             foreach (KeyValuePair<MouseButton, ButtonState> button in _mouseButtonsState) {
@@ -164,6 +174,10 @@ namespace Raccoon.Input {
             if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
                 _mouseButtonsState[MouseButton.Left] = _mouseButtonsState[MouseButton.Middle] = _mouseButtonsState[MouseButton.Right] = _mouseButtonsState[MouseButton.M4] = _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
                 MouseScrollWheelDelta = 0;
+
+                if (LockMouseOnWindow) {
+                    Mouse.SetPosition(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth), Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight));
+                }
                 return;
             }
 
