@@ -31,6 +31,7 @@ namespace Raccoon.Components {
         #region Public Properties
 
         public State<T> StartState { get; private set; }
+        public State<T> PreviousState { get; private set; }
         public State<T> CurrentState { get; private set; }
         public bool KeepTriggerValuesBetweenStates { get; set; } = false;
 
@@ -85,30 +86,30 @@ namespace Raccoon.Components {
         public override void DebugRender() {
         }
 
-        public void Start(T name) {
+        public void Start(T label) {
             if (StartState != null) {
                 return;
             }
 
-            CurrentState = StartState = _states[name];
+            PreviousState = CurrentState = StartState = _states[label];
             CurrentState.OnEnter();
             _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
 
-        public void ChangeState(T name) {
-            NextState = _states[name];
+        public void ChangeState(T label) {
+            NextState = _states[label];
         }
 
-        public void AddState(T name) {
-            if (_states.ContainsKey(name)) {
-                throw new System.ArgumentException($"StateMachine already contains a State '{name}'");
+        public void AddState(T label) {
+            if (_states.ContainsKey(label)) {
+                throw new System.ArgumentException($"StateMachine already contains a State '{label}'");
             }
 
             // searches for OnEnterState, OnUpdateState and OnLeaveState on Entity's methods
             System.Reflection.MethodInfo onEnterStateMethodInfo = null, onUpdateStateMethodInfo = null, onLeaveStateMethodInfo = null;
-            string onEnterStateMethodName = OnEnterStateName + name.ToString(), 
-                   onUpdateStateMethodName = OnUpdateStateName + name.ToString(), 
-                   onLeaveStateMethodName = OnLeaveStateName + name.ToString();
+            string onEnterStateMethodName = OnEnterStateName + label.ToString(), 
+                   onUpdateStateMethodName = OnUpdateStateName + label.ToString(), 
+                   onLeaveStateMethodName = OnLeaveStateName + label.ToString();
 
             foreach (System.Reflection.MethodInfo methodInfo in Entity.GetType().GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)) {
                 if (methodInfo.Name == onEnterStateMethodName) {
@@ -129,57 +130,57 @@ namespace Raccoon.Components {
             }
 
             State<T> state = new State<T>(
-                                name,
+                                label,
                                 (System.Action) onEnterStateMethodInfo.CreateDelegate(typeof(System.Action), Entity),
                                 (System.Func<IEnumerator>) onUpdateStateMethodInfo.CreateDelegate(typeof(System.Func<IEnumerator>), Entity),
                                 (System.Action) onLeaveStateMethodInfo.CreateDelegate(typeof(System.Action), Entity)
                               );
 
-            _states.Add(name, state);
+            _states.Add(label, state);
         }
 
-        public void AddStates(params T[] names) {
-            foreach (T name in names) {
-                AddState(name);
+        public void AddStates(params T[] labels) {
+            foreach (T label in labels) {
+                AddState(label);
             }
         }
 
-        public Transition<T> AddTransition(T fromStateName, T toStateName) {
-            if (fromStateName.Equals(toStateName)) {
+        public Transition<T> AddTransition(T fromStateLabel, T toStateLabel) {
+            if (fromStateLabel.Equals(toStateLabel)) {
                 throw new System.InvalidOperationException($"Can't add a transition from a state to itself.");
             }
 
-            if (!_states.TryGetValue(fromStateName, out State<T> fromState)) {
-                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{fromStateName}");
+            if (!_states.TryGetValue(fromStateLabel, out State<T> fromState)) {
+                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{fromStateLabel}");
             }
 
-            if (!_states.TryGetValue(toStateName, out State<T> toState)) {
-                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{toStateName}");
+            if (!_states.TryGetValue(toStateLabel, out State<T> toState)) {
+                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{toStateLabel}");
             }
 
-            if (fromState.Transitions.Find(p => p.TargetStateName.Equals(toStateName)) != null) {
-                throw new System.InvalidOperationException($"StateMachine already have a transition from '{fromStateName}' to '{toStateName}'");
+            if (fromState.Transitions.Find(p => p.TargetStateName.Equals(toStateLabel)) != null) {
+                throw new System.InvalidOperationException($"StateMachine already have a transition from '{fromStateLabel}' to '{toStateLabel}'");
             }
 
-            Transition<T> transition = new Transition<T>(toStateName);
+            Transition<T> transition = new Transition<T>(toStateLabel);
             fromState.Transitions.Add(transition);
             return transition;
         }
 
-        public void SetTrigger<K>(string name, K value) where K : System.IComparable {
-            _triggerValues[name] = value;
+        public void SetTrigger<K>(string label, K value) where K : System.IComparable {
+            _triggerValues[label] = value;
         }
 
-        public K GetTrigger<K>(string name) where K : System.IComparable {
-            if (_triggerValues.TryGetValue(name, out System.IComparable value)) {
+        public K GetTrigger<K>(string label) where K : System.IComparable {
+            if (_triggerValues.TryGetValue(label, out System.IComparable value)) {
                 return (K) value;
             }
 
             return default(K);
         }
 
-        public void RemoveTrigger(string name) {
-            _triggerValues.Remove(name);
+        public void RemoveTrigger(string label) {
+            _triggerValues.Remove(label);
         }
 
         public void ClearTriggers() {
@@ -198,6 +199,7 @@ namespace Raccoon.Components {
                 ClearTriggers();
             }
 
+            PreviousState = CurrentState;
             CurrentState = NextState;
             NextState = null;
             CurrentState.OnEnter();
