@@ -42,7 +42,6 @@ namespace Raccoon.Input {
 
         public static Input Instance { get { return _lazy.Value; } }
         public static int JoysticksConnected { get; private set; }
-        public static Vector2 MousePosition { get { return Instance._mousePosition; } set { Mouse.SetPosition((int) (Util.Math.Clamp(value.X, 0, Game.Instance.ScreenWidth) * Game.Instance.Scale), (int) (Util.Math.Clamp(value.Y, 0, Game.Instance.ScreenHeight) * Game.Instance.Scale)); } }
         public static Vector2 MouseMovement { get; private set; }
         public static int MouseScrollWheel { get; private set; }
         public static int MouseScrollWheelDelta { get; private set; }
@@ -50,6 +49,17 @@ namespace Raccoon.Input {
         public static bool LockMouseOnCenter { get; set; }
         public static string KeyboardText { get; private set; } = "";
         public static Key[] PressedKeys { get; private set; } = new Key[0];
+
+        public static Vector2 MousePosition {
+            get {
+                return Instance._mousePosition;
+            }
+
+            set {
+                Instance._mousePosition = new Vector2(Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+                Mouse.SetPosition((int) Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth), (int) Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight));
+            }
+        }
 
         public static bool IsKeyPressed(Key key) {
             return Instance._keyboardPreviousState[(Keys) key] == KeyState.Up && Instance._keyboardState[(Keys) key] == KeyState.Down;
@@ -154,17 +164,6 @@ namespace Raccoon.Input {
             // mouse
             MouseState XNAMouseState = Mouse.GetState();
 
-            // positions
-            Vector2 newMousePosition = new Vector2(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
-            MouseMovement = newMousePosition - _mousePosition;
-
-            if (LockMouseOnCenter) {
-                _mousePosition = new Vector2(Game.Instance.WindowWidth / (2 * Game.Instance.Scale), Game.Instance.WindowHeight / (2 * Game.Instance.Scale));
-                Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
-            } else {
-                _mousePosition = newMousePosition;
-            }
-
             // buttons
             foreach (KeyValuePair<MouseButton, ButtonState> button in _mouseButtonsState) {
                 _mouseButtonsLastState[button.Key] = button.Value;
@@ -179,6 +178,17 @@ namespace Raccoon.Input {
                     Mouse.SetPosition(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth), Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight));
                 }
                 return;
+            }
+
+            // positions
+            Vector2 newMousePosition = new Vector2(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+            MouseMovement = newMousePosition - _mousePosition;
+
+            if (LockMouseOnCenter) {
+                _mousePosition = new Vector2(Game.Instance.WindowWidth / (2 * Game.Instance.Scale), Game.Instance.WindowHeight / (2 * Game.Instance.Scale));
+                Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
+            } else {
+                _mousePosition = newMousePosition;
             }
 
             _mouseButtonsState[MouseButton.Left] = XNAMouseState.LeftButton;
