@@ -29,13 +29,15 @@ namespace Raccoon.Util {
             }
         }
 
-        public static IEnumerator WaitFor<T>(Animation<T> animation, T trackName, bool autoPlay = false) {
+        public static IEnumerator WaitEndOf<T>(Animation<T> animation, T trackName, bool autoPlay = false) {
             if (animation == null || !animation.ContainsTrack(trackName)) {
                 yield break;
             }
 
             if (autoPlay) {
                 animation.Play(trackName);
+            } else if (!animation.CurrentKey.Equals(trackName)) {
+                yield break;
             }
 
             Animation<T>.Track track = animation[trackName];

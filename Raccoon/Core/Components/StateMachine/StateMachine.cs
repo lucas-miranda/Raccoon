@@ -33,15 +33,10 @@ namespace Raccoon.Components {
         public State<T> StartState { get; private set; }
         public State<T> PreviousState { get; private set; }
         public State<T> CurrentState { get; private set; }
+        public State<T> NextState { get; private set; } = null;
         public bool KeepTriggerValuesBetweenStates { get; set; } = false;
 
         #endregion Public Properties
-
-        #region Protected Properties
-
-        protected State<T> NextState { get; private set; } = null;
-
-        #endregion Protected Properties
 
         #region Public Methods
 
@@ -84,6 +79,7 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
+            Debug.DrawString(Debug.Transform(Entity.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0)), $"State:\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
         }
 
         public void Start(T label) {
@@ -194,6 +190,8 @@ namespace Raccoon.Components {
         private void UpdateState() {
             CurrentState.OnLeave();
             _onUpdateCoroutine.Stop();
+
+            Debug.WriteLine($"StateMachine - From: {CurrentState.Label}, To: {NextState.Label}");
 
             if (!KeepTriggerValuesBetweenStates) {
                 ClearTriggers();

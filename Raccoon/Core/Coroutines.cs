@@ -93,6 +93,8 @@ namespace Raccoon {
         #region Class Coroutine
 
         public class Coroutine {
+            private bool _waitingDelay;
+
             public Coroutine(Func<IEnumerator> generator) {
                 Generator = generator;
                 Enumerator = Generator();
@@ -117,7 +119,7 @@ namespace Raccoon {
                     DelayInterval = Math.Max(0, DelayInterval - delta);
                     return;
                 }
-
+                
                 if (!MoveNext(Enumerator)) {
                     Stop();
                 }
@@ -150,6 +152,7 @@ namespace Raccoon {
                 }
 
                 DelayInterval += mili;
+                _waitingDelay = true;
             }
 
             public void Wait(uint mili) {
@@ -157,7 +160,7 @@ namespace Raccoon {
             }
 
             public void Wait(float seconds) {
-                Wait((uint) (seconds * Util.Time.SecToMili));
+                Wait((int) (seconds * Util.Time.SecToMili));
             }
 
             public void Reset() {
@@ -181,14 +184,29 @@ namespace Raccoon {
                 // special Current values
                 switch (enumerator.Current) {
                     case float seconds:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+                        
                         Wait(seconds);
                         return true;
 
                     case int miliI:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+
                         Wait(miliI);
                         return true;
 
                     case uint miliU:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+
                         Wait(miliU);
                         return true;
 
