@@ -114,12 +114,10 @@ namespace Raccoon.Util.Collections {
                 return false;
             }
 
-            if (!_items.Contains(item)) {
-                return false;
+            if (_items.Remove(item)) {
+                OnRemoved(item);
             }
 
-            _items.Remove(item);
-            OnRemoved(item);
             return true;
         }
 
