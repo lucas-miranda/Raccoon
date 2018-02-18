@@ -59,7 +59,7 @@ namespace Raccoon.Components {
             // default triggers
             SetTrigger("Timer", GetTrigger<uint>("Timer") + (uint) delta);
 
-            if (NextState != CurrentState && NextState != null) {
+            if (NextState != null && NextState != CurrentState) {
                 UpdateState();
                 return;
             }
@@ -83,13 +83,22 @@ namespace Raccoon.Components {
         }
 
         public void Start(T label) {
-            if (StartState != null) {
+            if (CurrentState != null) {
                 return;
             }
 
             PreviousState = CurrentState = StartState = _states[label];
             CurrentState.OnEnter();
             _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
+        }
+
+        public void Stop() {
+            NextState = PreviousState = CurrentState = StartState = null;
+            if (_onUpdateCoroutine != null) {
+                _onUpdateCoroutine.Stop();
+            }
+
+            ClearTriggers();
         }
 
         public void ChangeState(T label) {
@@ -191,8 +200,6 @@ namespace Raccoon.Components {
             CurrentState.OnLeave();
             _onUpdateCoroutine.Stop();
 
-            Debug.WriteLine($"StateMachine - From: {CurrentState.Label}, To: {NextState.Label}");
-
             if (!KeepTriggerValuesBetweenStates) {
                 ClearTriggers();
             }
@@ -200,6 +207,11 @@ namespace Raccoon.Components {
             PreviousState = CurrentState;
             CurrentState = NextState;
             NextState = null;
+
+            if (CurrentState == null) {
+                return;
+            }
+
             CurrentState.OnEnter();
             _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
