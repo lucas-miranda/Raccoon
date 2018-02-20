@@ -10,6 +10,7 @@
         /// <param name="acceleration">Speed increase.</param>
         public Movement(Vector2 acceleration) {
             Acceleration = acceleration;
+            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         /// <summary>
@@ -20,19 +21,22 @@
         public Movement(Vector2 maxVelocity, Vector2 acceleration) {
             MaxVelocity = maxVelocity;
             Acceleration = acceleration;
+            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
-        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
+        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>                 
         public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
             MaxVelocity = maxVelocity;
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
+            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         public Body Body { get; private set; }
+        public System.Enum CollisionTags { get; set; }
         public Vector2 Axis { get; set; }
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
         public Vector2 MaxVelocity { get; set; }

@@ -136,7 +136,9 @@ namespace Raccoon.Components {
 
         public void OnCollide(Body otherBody, Vector2 collisionAxes) {
             OnCollided?.Invoke(otherBody, collisionAxes);
-            Movement?.OnCollide(collisionAxes);
+            if (Movement != null && otherBody.Tags.HasFlag(Movement.CollisionTags)) {
+                Movement.OnCollide(collisionAxes);
+            }
         }
 
         public void SolveConstraints() {
