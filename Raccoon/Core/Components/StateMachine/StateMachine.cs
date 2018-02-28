@@ -17,7 +17,6 @@ namespace Raccoon.Components {
 
         private Dictionary<T, State<T>> _states = new Dictionary<T, State<T>>();
         private Dictionary<string, System.IComparable> _triggerValues = new Dictionary<string, System.IComparable>();
-        private Coroutines.Coroutine _onUpdateCoroutine;
 
         #endregion Private Members
 
@@ -35,6 +34,7 @@ namespace Raccoon.Components {
         public State<T> CurrentState { get; private set; }
         public State<T> NextState { get; private set; } = null;
         public bool KeepTriggerValuesBetweenStates { get; set; } = false;
+        public Coroutines.Coroutine CurrentCoroutine { get; private set; }
 
         #endregion Public Properties
 
@@ -89,13 +89,13 @@ namespace Raccoon.Components {
 
             PreviousState = CurrentState = StartState = _states[label];
             CurrentState.OnEnter();
-            _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
+            CurrentCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
 
         public void Stop() {
             NextState = PreviousState = CurrentState = StartState = null;
-            if (_onUpdateCoroutine != null) {
-                _onUpdateCoroutine.Stop();
+            if (CurrentCoroutine != null) {
+                CurrentCoroutine.Stop();
             }
 
             ClearTriggers();
@@ -198,7 +198,7 @@ namespace Raccoon.Components {
 
         private void UpdateState() {
             CurrentState.OnLeave();
-            _onUpdateCoroutine.Stop();
+            CurrentCoroutine.Stop();
 
             if (!KeepTriggerValuesBetweenStates) {
                 ClearTriggers();
@@ -213,7 +213,7 @@ namespace Raccoon.Components {
             }
 
             CurrentState.OnEnter();
-            _onUpdateCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
+            CurrentCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
         }
 
         #endregion Private Methods

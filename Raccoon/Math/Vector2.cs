@@ -68,12 +68,8 @@ namespace Raccoon {
         }
 
         public static Vector2 Normalize(Vector2 v) {
-            float length = v.Length();
-            if (length <= Math.Epsilon) {
-                return v;
-            }
-
-            return v * (1f / length);
+            float invLength = 1.0f / (float) System.Math.Sqrt(v.X * v.X + v.Y * v.Y);
+            return new Vector2(v.X * invLength, v.Y * invLength);
         }
 
         public static Vector2 Lerp(Vector2 start, Vector2 end, float t) {
