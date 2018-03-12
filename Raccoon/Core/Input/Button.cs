@@ -1,5 +1,7 @@
 ﻿namespace Raccoon.Input {
     public class Button {
+        public static readonly Button None = new Button();
+
         private bool _forceState, _usingMouseButton;
 
         public Button() { }
