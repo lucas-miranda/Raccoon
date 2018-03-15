@@ -24,6 +24,7 @@ namespace Raccoon.Graphics {
         public static readonly Color Violet = new Color(0x7F00FFFF);
         public static readonly Color Indigo = new Color(0x4B0082FF);
         public static readonly Color Purple = new Color(0x800080FF);
+        public static readonly Color Lime = new Color(0xBFFF00FF);
         
         #endregion
 
