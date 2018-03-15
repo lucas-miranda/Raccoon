@@ -1,11 +1,11 @@
 ﻿namespace Raccoon.Components {
     public class Alarm : Component {
-        public Alarm(uint interval, System.Action<int> action) {
+        public Alarm(uint interval, System.Action action) {
             NextActivationTimer = Interval = interval;
             Action = action;
         }
 
-        public System.Action<int> Action { get; set; }
+        public System.Action Action { get; set; }
         public uint Timer { get; private set; }
         public uint NextActivationTimer { get; private set; }
         public uint Interval { get; set; }
@@ -19,7 +19,7 @@
                 return;
             }
 
-            Action(delta);
+            Action();
 
             if (RepeatCount < RepeatTimes) {
                 RepeatCount++;
