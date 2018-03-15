@@ -115,21 +115,37 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Critical(string message) {
+            if (!Console.Visible) {
+                Console.Show();
+            }
+
             WriteLine(message, "Critical");
         }
 
         [Conditional("DEBUG")]
         public static void Warning(string message) {
+            if (!Console.Visible) {
+                Console.Show();
+            }
+
             WriteLine(message, "Warning");
         }
 
         [Conditional("DEBUG")]
         public static void Error(string message) {
+            if (!Console.Visible) {
+                Console.Show();
+            }
+
             WriteLine(message, "Error");
         }
 
         [Conditional("DEBUG")]
         public static void Error(string message, string detailMessage) {
+            if (!Console.Visible) {
+                Console.Show();
+            }
+
             WriteLine($"{message}\n{detailMessage}", "Error");
         }
 
