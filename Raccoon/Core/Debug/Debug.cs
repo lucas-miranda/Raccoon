@@ -55,6 +55,7 @@ namespace Raccoon {
 
 #if DEBUG
         public static bool ShowPerformanceDiagnostics { get; set; }
+        public static bool AutoRaiseConsole { get; set; } = true;
         public static Console Console { get; private set; } = new Console();
 
         public static bool UseLogToFile {
@@ -115,7 +116,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Critical(string message) {
-            if (!Console.Visible) {
+            if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
@@ -124,7 +125,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Warning(string message) {
-            if (!Console.Visible) {
+            if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
@@ -133,7 +134,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Error(string message) {
-            if (!Console.Visible) {
+            if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
@@ -142,7 +143,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Error(string message, string detailMessage) {
-            if (!Console.Visible) {
+            if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
