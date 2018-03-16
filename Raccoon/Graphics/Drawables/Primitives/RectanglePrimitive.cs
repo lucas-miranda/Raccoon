@@ -84,7 +84,7 @@ namespace Raccoon.Graphics.Primitives {
                 throw new NoSuitableGraphicsDeviceException("Rectangle needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            if (Filled) {
+            if (Filled || (int) Width * (int) Height == 0) {
                 Texture = Texture.White;
             } else {
                 if (Texture != null && Texture != Texture.White && Texture != Texture.Black) {
