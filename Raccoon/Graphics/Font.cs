@@ -12,6 +12,7 @@ namespace Raccoon.Graphics {
 
         internal Font(SpriteFont spriteFont) {
             SpriteFont = spriteFont;
+            DefaultCharacter = '?';
         }
 
         #endregion Constructors
@@ -49,6 +50,7 @@ namespace Raccoon.Graphics {
             }
 
             SpriteFont = Game.Instance.Core.Content.Load<SpriteFont>(Name);
+            DefaultCharacter = '?';
         }
 
         #endregion Internal Methods
