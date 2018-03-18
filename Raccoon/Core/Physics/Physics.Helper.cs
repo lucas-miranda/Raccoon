@@ -47,18 +47,18 @@ namespace Raccoon {
             return TestSAT(A, B, axes, out contact);
         }
 
-        private bool TestSAT(IShape shapeA, IShape shapeB, ICollection<Vector2> axes, out Contact? contact) {
+        private bool TestSAT(IShape shapeA, Vector2 posA, IShape shapeB, Vector2 posB, ICollection<Vector2> axes, out Contact? contact) {
             Contact leastPenetrationContact = new Contact {
-                Position = shapeA.Body.Position,
+                Position = posA,
                 PenetrationDepth = float.PositiveInfinity
             };
 
             Vector2[] a = new Vector2[axes.Count + 1];
-            a[0] = (shapeB.Body.Position - shapeA.Body.Position).Normalized();
+            a[0] = (posB - posA).Normalized();
             axes.CopyTo(a, 1);
 
             foreach (Vector2 axis in a) {
-                Range projectionA = shapeA.Projection(axis), projectionB = shapeB.Projection(axis);
+                Range projectionA = shapeA.Projection(posA, axis), projectionB = shapeB.Projection(posB, axis);
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
                     return false;
@@ -74,19 +74,19 @@ namespace Raccoon {
             return true;
         }
 
-        private bool TestSAT(IShape shape, Polygon polygon, ICollection<Vector2> axes, out Contact? contact) {
+        private bool TestSAT(IShape shape, Vector2 shapePos, Polygon polygon, ICollection<Vector2> axes, out Contact? contact) {
             Contact leastPenetrationContact = new Contact {
-                Position = shape.Body.Position,
+                Position = shapePos,
                 PenetrationDepth = float.PositiveInfinity
             };
 
             Vector2[] a = new Vector2[polygon.Normals.Length + axes.Count + 1];
-            a[0] = (shape.Body.Position - polygon.Center).Normalized();
+            a[0] = (shapePos - polygon.Center).Normalized();
             polygon.Normals.CopyTo(a, 1);
             axes.CopyTo(a, polygon.Normals.Length + 1);
 
             foreach (Vector2 axis in a) {
-                Range projectionA = shape.Projection(axis), projectionB = polygon.Projection(axis);
+                Range projectionA = shape.Projection(shapePos, axis), projectionB = polygon.Projection(axis);
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
                     return false;
@@ -102,8 +102,8 @@ namespace Raccoon {
             return true;
         }
 
-        private bool TestSAT(IShape shape, Polygon polygon, out Contact? contact) {
-            return TestSAT(shape, polygon, new Vector2[] { }, out contact);
+        private bool TestSAT(IShape shape, Vector2 shapePos, Polygon polygon, out Contact? contact) {
+            return TestSAT(shape, shapePos, polygon, new Vector2[] { }, out contact);
         }
 
         private bool BiasGreaterThan(float a, float b) {

@@ -40,8 +40,8 @@ namespace Raccoon {
             Polygon boxTilePolygon = new Polygon(grid.BoxTilePolygon);
             boxTilePolygon.Translate(gridPos);
 
-            (int column, int row) start = grid.ConvertPosition(otherBoundingBox.TopLeft),
-                                  end = grid.ConvertPosition(otherBoundingBox.BottomRight);
+            (int column, int row) start = grid.ConvertPosition(gridPos, otherBoundingBox.TopLeft),
+                                  end = grid.ConvertPosition(gridPos, otherBoundingBox.BottomRight);
 
             //List<Contact> contacts = new List<Contact>();
             List<Polygon> tilePolygons = new List<Polygon>();
@@ -52,14 +52,14 @@ namespace Raccoon {
                 switch (shape) {
                     case GridShape.BoxTileShape boxShape:
                         Polygon boxPolygon = new Polygon(boxTilePolygon);
-                        boxPolygon.Translate(grid.ConvertTilePosition(column, row));
+                        boxPolygon.Translate(grid.ConvertTilePosition(gridPos, column, row));
                         tilePolygons.Add(boxPolygon);
                         break;
 
                     case GridShape.PolygonTileShape polygonShape:
                         foreach (Polygon componentPolygon in polygonShape.Polygon.ConvexComponents()) {
                             Polygon p = new Polygon(componentPolygon);
-                            p.Translate(gridPos + grid.ConvertTilePosition(column, row));
+                            p.Translate(gridPos + grid.ConvertTilePosition(gridPos, column, row));
                             tilePolygons.Add(p);
                         }
                         break;

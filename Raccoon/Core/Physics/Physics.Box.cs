@@ -66,14 +66,14 @@ namespace Raccoon {
             BoxShape boxA = A as BoxShape;
             CircleShape circleB = B as CircleShape;
 
-            Vector2 closestPoint = boxA.ClosestPoint(BPos);
+            Vector2 closestPoint = boxA.ClosestPoint(APos, BPos);
             Vector2 diff = closestPoint - BPos;
             if (Vector2.Dot(diff, diff) > circleB.Radius * circleB.Radius) {
                 contacts = null;
                 return false;
             }
 
-            if (TestSAT(boxA, circleB, boxA.Axes, out Contact? contact)) {
+            if (TestSAT(boxA, APos, circleB, BPos, boxA.Axes, out Contact? contact)) {
                 contacts = new Contact[] {
                     new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
                 };

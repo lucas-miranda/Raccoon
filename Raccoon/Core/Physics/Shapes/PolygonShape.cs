@@ -22,7 +22,6 @@ namespace Raccoon {
             BoundingBox = Shape.BoundingBox();
         }
 
-        public Body Body { get; set; }
         public int Area { get { return (int) (BoundingBox.Width * BoundingBox.Height); } }
         public Size BoundingBox { get; private set; }
         public Polygon Shape { get; private set; }
@@ -50,14 +49,6 @@ namespace Raccoon {
                 Shape = new Polygon(_normalizedPolygon);
                 Shape.RotateAround(_rotation, Shape.Center - Origin);
                 BoundingBox = Shape.BoundingBox();
-            }
-        }
-
-        internal Polygon Polygon {
-            get {
-                Polygon polygon = new Polygon(Shape);
-                polygon.Translate(Body.Position);
-                return polygon;
             }
         }
 
@@ -92,8 +83,10 @@ namespace Raccoon {
             return density;
         }
 
-        public Range Projection(Vector2 axis) {
-            return Polygon.Projection(axis);
+        public Range Projection(Vector2 shapePosition, Vector2 axis) {
+            Polygon polygon = new Polygon(Shape);
+            polygon.Translate(shapePosition);
+            return polygon.Projection(axis);
         }
 
         public void Rotate(float degrees) {

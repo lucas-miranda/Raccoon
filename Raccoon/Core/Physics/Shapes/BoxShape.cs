@@ -38,7 +38,6 @@ namespace Raccoon {
         public BoxShape(int wh) : this(wh, wh) {
         }
 
-        public Body Body { get; set; }
         public int Width { get; }
         public int Height { get; }
         public int Area { get; }
@@ -77,14 +76,6 @@ namespace Raccoon {
             }
         }
 
-        internal Polygon Polygon {
-            get {
-                Polygon polygon = new Polygon(Shape);
-                polygon.Translate(Body.Position);
-                return polygon;
-            }
-        }
-
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
             Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
@@ -119,8 +110,10 @@ namespace Raccoon {
             return density;
         }
 
-        public Range Projection(Vector2 axis) {
-            return Polygon.Projection(axis);
+        public Range Projection(Vector2 shapePosition, Vector2 axis) {
+            Polygon polygon = new Polygon(Shape);
+            polygon.Translate(shapePosition);
+            return polygon.Projection(axis);
         }
 
         public void Rotate(float degrees) {
@@ -132,9 +125,9 @@ namespace Raccoon {
             BoundingBox = Shape.BoundingBox();
         }
 
-        public Vector2 ClosestPoint(Vector2 point) {
-            Vector2 diff = point - Body.Position,
-                    closestPoint = Body.Position;
+        public Vector2 ClosestPoint(Vector2 shapePosition, Vector2 point) {
+            Vector2 diff = point - shapePosition,
+                    closestPoint = shapePosition;
 
             for (int i = 0; i < Axes.Length; i++) {
                 Vector2 axis = Axes[i];
@@ -154,8 +147,8 @@ namespace Raccoon {
             return closestPoint;
         }
 
-        public float DistanceSquared(Vector2 point) {
-            Vector2 closestPoint = ClosestPoint(point);
+        public float DistanceSquared(Vector2 shapePosition, Vector2 point) {
+            Vector2 closestPoint = ClosestPoint(shapePosition, point);
             return Vector2.Dot(closestPoint - point, closestPoint - point);
         }
     }

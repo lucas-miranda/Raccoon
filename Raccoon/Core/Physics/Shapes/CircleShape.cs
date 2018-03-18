@@ -10,7 +10,6 @@ namespace Raccoon {
             Area = (int) (Math.PI * Radius * Radius);
         }
 
-        public Body Body { get; set; }
         public int Radius { get; }
         public int Area { get; }
         public Vector2 Origin { get; set; }
@@ -38,8 +37,8 @@ namespace Raccoon {
             return density;
         }
 
-        public Range Projection(Vector2 axis) {
-            float p = Vector2.Dot(Body.Position, axis);
+        public Range Projection(Vector2 position, Vector2 axis) {
+            float p = Vector2.Dot(position, axis);
             return new Range(p - Radius, p + Radius);
         }
     }

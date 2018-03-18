@@ -28,7 +28,6 @@ namespace Raccoon.Components {
 
         public Body(IShape shape, IMaterial material = null) {
             Shape = shape;
-            Shape.Body = this;
             Material = material ?? StandardMaterial;
             Mass = Shape.ComputeMass(1f);
             InverseMass = Mass == 0f ? 0f : (1f / Mass);

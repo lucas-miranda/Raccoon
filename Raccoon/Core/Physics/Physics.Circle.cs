@@ -52,7 +52,7 @@ namespace Raccoon {
                 return false;
             }
 
-            if (TestSAT(circleA, polyB, polygonB.Normals, out Contact? contact)) {
+            if (TestSAT(circleA, APos, polyB, BPos, polygonB.Normals, out Contact? contact)) {
                 contacts = new Contact[] {
                     new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
                 };
@@ -82,7 +82,7 @@ namespace Raccoon {
 
             Contact? contact = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius), 
                 (Polygon tilePolygon) => {
-                    TestSAT(circleA, tilePolygon, out Contact? tileContact);
+                    TestSAT(circleA, APos, tilePolygon, out Contact? tileContact);
                     return new Contact(closestPoint, tileContact.Value.Normal, tileContact.Value.PenetrationDepth);
                 }
             );

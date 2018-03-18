@@ -22,7 +22,6 @@ namespace Raccoon {
             BoxTilePolygon = new Polygon(Vector2.Zero, new Vector2(TileSize.Width, 0), TileSize.ToVector2(), new Vector2(0, TileSize.Height));
         }
 
-        public Body Body { get; set; }
         public float Width { get { return BoundingBox.Width; } }
         public float Height { get { return BoundingBox.Height; } }
         public Size Size { get { return BoundingBox; } }
@@ -80,7 +79,7 @@ namespace Raccoon {
             return 0f;
         }
 
-        public Range Projection(Vector2 axis) {
+        public Range Projection(Vector2 position, Vector2 axis) {
             return null;
         }
 
@@ -178,13 +177,13 @@ namespace Raccoon {
             }
         }
 
-        public (int column, int row) ConvertPosition(Vector2 position) {
-            position -= Body.Position;
+        public (int column, int row) ConvertPosition(Vector2 shapePosition, Vector2 position) {
+            position -= shapePosition;
             return ((int) (position.X / TileSize.Width), (int) (position.Y / TileSize.Height));
         }
 
-        public Vector2 ConvertTilePosition(int column, int row) {
-            return Body.Position + new Vector2(column * TileSize.Width, row * TileSize.Height);
+        public Vector2 ConvertTilePosition(Vector2 shapePosition, int column, int row) {
+            return shapePosition + new Vector2(column * TileSize.Width, row * TileSize.Height);
         }
 
         public IEnumerable<(int column, int row, TileShape shape)> Tiles(int startColumn, int startRow, int endColumn, int endRow) {
