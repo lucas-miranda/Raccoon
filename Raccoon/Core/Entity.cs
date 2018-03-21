@@ -28,12 +28,6 @@ namespace Raccoon {
         #region Constructors
 
         public Entity() {
-            _components.OnAdded += (Component c) => c.OnAdded(this);
-            _components.OnRemoved += (Component c) => c.OnRemoved();
-
-            Graphics = new Locker<Graphic>(new Graphic.LayerComparer());
-            Graphics.OnAdded += (Graphic g) => g.Surface = Surface;
-
             Name = "Entity";
             Surface = Game.Instance.Core.MainSurface;
         }
@@ -56,7 +50,7 @@ namespace Raccoon {
         public float Rotation { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
-        public Locker<Graphic> Graphics { get; private set; }
+        public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(new Graphic.LayerComparer());
         public Scene Scene { get; private set; }
 
         public Graphic Graphic {
@@ -143,8 +137,6 @@ namespace Raccoon {
         }
 
         public virtual void BeforeUpdate() {
-            Graphics.Upkeep();
-            _components.Upkeep();
             OnBeforeUpdate();
         }
 
@@ -219,10 +211,14 @@ namespace Raccoon {
 
         public void AddGraphic(Graphic graphic) {
             Graphics.Add(graphic);
+            graphic.Surface = Surface;
         }
 
         public void AddGraphics(IEnumerable<Graphic> graphics) {
             Graphics.AddRange(graphics);
+            foreach (Graphic g in graphics) {
+                g.Surface = Surface;
+            }
         }
 
         public void AddGraphics(params Graphic[] graphics) {
@@ -231,6 +227,7 @@ namespace Raccoon {
 
         public void AddComponent(Component component) {
             _components.Add(component);
+            component.OnAdded(this);
         }
 
         public void RemoveGraphic(Graphic graphic) {
@@ -246,13 +243,15 @@ namespace Raccoon {
         }
 
         public void RemoveComponent(Component component) {
-            _components.Remove(component);
+            if (_components.Remove(component)) {
+                component.OnRemoved();
+            }
         }
 
         public T GetComponent<T>() where T : Component {
             foreach (Component c in _components) {
-                if (c is T) {
-                    return c as T;
+                if (c is T ct) {
+                    return ct;
                 }
             }
 
@@ -262,8 +261,8 @@ namespace Raccoon {
         public List<T> GetComponents<T>() where T : Component {
             List<T> components = new List<T>();
             foreach (Component c in _components) {
-                if (c is T) {
-                    components.Add(c as T);
+                if (c is T ct) {
+                    components.Add(ct);
                 }
             }
 
@@ -272,8 +271,8 @@ namespace Raccoon {
 
         public void RemoveComponents<T>() {
             foreach (Component c in _components) {
-                if (c is T) {
-                    _components.Remove(c);
+                if (c is T && _components.Remove(c)) {
+                    c.OnRemoved();
                 }
             }
         }
@@ -283,6 +282,20 @@ namespace Raccoon {
         }
 
         public void ClearComponents() {
+            if (_components.IsLocked) {
+                foreach (Component c in _components.ToAdd) {
+                    c.OnRemoved();
+                }
+
+                foreach (Component c in _components.ToRemove) {
+                    c.OnRemoved();
+                }
+            }
+
+            foreach (Component c in _components.Items) {
+                c.OnRemoved();
+            }
+
             _components.Clear();
         }
 

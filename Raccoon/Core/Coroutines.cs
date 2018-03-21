@@ -61,9 +61,6 @@ namespace Raccoon {
                     _pausedCoroutines.Add(coroutine);
                 }
             }
-
-            _runningCoroutines.Upkeep();
-            _pausedCoroutines.Upkeep();
         }
 
         public Coroutine Start(Func<IEnumerator> coroutine) {

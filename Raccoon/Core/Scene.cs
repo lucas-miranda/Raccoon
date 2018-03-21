@@ -9,6 +9,17 @@ namespace Raccoon {
 
         private Camera _camera;
 
+
+        /// <summary>
+        /// Graphics sorted by Graphic.Layer in Scene.
+        /// </summary>
+        private Locker<Graphic> _graphics = new Locker<Graphic>(new Graphic.LayerComparer());
+
+        /// <summary>
+        /// Entities sorted by Entity.Layer in Scene.
+        /// </summary>
+        private Locker<Entity> _entities = new Locker<Entity>(new Entity.LayerComparer());
+
         #endregion Private Members
 
         #region Constructor
@@ -18,11 +29,6 @@ namespace Raccoon {
         /// Must be added via Game.AddScene()
         /// </summary>
         public Scene() {
-            Graphics = new Locker<Graphic>(new Graphic.LayerComparer());
-            Entities = new Locker<Entity>(new Entity.LayerComparer());
-            Entities.OnAdded += (Entity e) => e.SceneAdded(this);
-            Entities.OnRemoved += (Entity e) => e.SceneRemoved();
-
             Camera = new Camera();
         }
 
@@ -31,14 +37,14 @@ namespace Raccoon {
         #region Public Properties
 
         /// <summary>
-        /// Graphics sorted by Graphic.Layer in Scene.
+        /// Entity count in this Scene.
         /// </summary>
-        public Locker<Graphic> Graphics { get; protected set; }
+        public int EntitiesCount { get { return _entities.Count; } }
 
         /// <summary>
-        /// Entities sorted by Entity.Layer in Scene.
+        /// Graphic count in this Scene.
         /// </summary>
-        public Locker<Entity> Entities { get; protected set; }
+        public int GraphicsCount { get { return _graphics.Count; } }
 
         /// <summary>
         /// Current Scene Time (in milliseconds), increments in every Update() when Scene is running.
@@ -81,32 +87,33 @@ namespace Raccoon {
         /// Add a Graphic to the Scene.
         /// </summary>
         /// <param name="graphic">The graphic to be added.</param>
-        public void Add(Graphic graphic) {
-            Graphics.Add(graphic);
+        public void AddGraphic(Graphic graphic) {
+            _graphics.Add(graphic);
         }
 
         /// <summary>
         /// Add multiple graphics to the Scene. 
         /// </summary>
         /// <param name="graphics">The IEnumerable containing graphics.</param>
-        public void Add(IEnumerable<Graphic> graphics) {
-            Graphics.AddRange(graphics);
+        public void AddGraphics(IEnumerable<Graphic> graphics) {
+            _graphics.AddRange(graphics);
         }
 
         /// <summary>
         /// Add multiple graphics to the Scene. 
         /// </summary>
         /// <param name="graphics">Graphics as variable number of arguments.</param>
-        public void Add(params Graphic[] graphics) {
-            Add((IEnumerable<Graphic>) graphics);
+        public void AddGraphics(params Graphic[] graphics) {
+            AddGraphics((IEnumerable<Graphic>) graphics);
         }
 
         /// <summary>
         /// Add an Entity to the Scene.
         /// </summary>
         /// <param name="entity">The Entity to be added.</param>
-        public void Add(Entity entity) {
-            Entities.Add(entity);
+        public void AddEntity(Entity entity) {
+            _entities.Add(entity);
+            entity.SceneAdded(this);
             if (HasStarted) {
                 entity.Start();
             }
@@ -116,9 +123,10 @@ namespace Raccoon {
         /// Add multiple entities to the Scene.
         /// </summary>
         /// <param name="entities">The IEnumerable containing entities.</param>
-        public void Add(IEnumerable<Entity> entities) {
-            Entities.AddRange(entities);
+        public void AddEntities(IEnumerable<Entity> entities) {
+            _entities.AddRange(entities);
             foreach (Entity e in entities) {
+                e.SceneAdded(this);
                 if (HasStarted) {
                     e.Start();
                 }
@@ -129,70 +137,104 @@ namespace Raccoon {
         /// Add multiple entities to the Scene.
         /// </summary>
         /// <param name="entities">Entities as variable number of arguments.</param>
-        public void Add(params Entity[] entities) {
-            Add((IEnumerable<Entity>) entities);
+        public void AddEntities(params Entity[] entities) {
+            AddEntities((IEnumerable<Entity>) entities);
         }
 
         /// <summary>
         /// Remove a Graphic from Scene.
         /// </summary>
         /// <param name="graphic">The Graphic to be removed.</param>
-        public void Remove(Graphic graphic) {
-            Graphics.Remove(graphic);
+        public void RemoveGraphic(Graphic graphic) {
+            _graphics.Remove(graphic);
         }
 
         /// <summary>
         /// Remove multiple graphics from the Scene.
         /// </summary>
         /// <param name="graphics">The IEnumerable containing graphics.</param>
-        public void Remove(IEnumerable<Graphic> graphics) {
-            Graphics.RemoveRange(graphics);
+        public void RemoveGraphics(IEnumerable<Graphic> graphics) {
+            _graphics.RemoveRange(graphics);
         }
 
         /// <summary>
         /// Remove multiple graphics from the Scene.
         /// </summary>
         /// <param name="graphics">Graphics as variable number of arguments.</param>
-        public void Remove(params Graphic[] graphics) {
-            Remove((IEnumerable<Graphic>) graphics);
+        public void RemoveGraphics(params Graphic[] graphics) {
+            RemoveGraphics((IEnumerable<Graphic>) graphics);
         }
 
         /// <summary>
         /// Remove an Entity from the Scene.
         /// </summary>
         /// <param name="entity">The Entity to be removed.</param>
-        public void Remove(Entity entity) {
-            Entities.Remove(entity);
+        public void RemoveEntity(Entity entity) {
+            if (_entities.Remove(entity)) {
+                entity.SceneRemoved();
+            }
         }
 
         /// <summary>
         /// Remove multiple entities from the Scene.
         /// </summary>
         /// <param name="entities">The IEnumerable containing entities.</param>
-        public void Remove(IEnumerable<Entity> entities) {
-            Entities.RemoveRange(entities);
+        public void RemoveEntities(IEnumerable<Entity> entities) {
+            foreach (Entity entity in entities) {
+                if (_entities.Remove(entity)) {
+                    entity.SceneRemoved();
+                }
+            }
         }
 
         /// <summary>
         /// Remove multiple entities from the Scene.
         /// </summary>
         /// <param name="entities">Entities as variable number of arguments.</param>
-        public void Remove(params Entity[] entities) {
-            Remove((IEnumerable<Entity>) entities);
+        public void RemoveEntities(params Entity[] entities) {
+            RemoveEntities((IEnumerable<Entity>) entities);
+        }
+
+        /// <summary>
+        /// Remove multiple Entity using a System.Predicate.
+        /// </summary>
+        /// <param name="match">A filter to find entities.</param>
+        /// <returns>How many entities were removed.</returns>
+        public int RemoveEntitiesWhere(System.Predicate<Entity> match) {
+            List<Entity> removed = _entities.RemoveWhere(match);
+            foreach (Entity entity in removed) {
+                entity.OnSceneRemoved();
+            }
+
+            return removed.Count;
         }
 
         /// <summary>
         /// Remove all entities from the Scene.
         /// </summary>
         public void ClearEntities() {
-            Entities.Clear();
+            if (_entities.IsLocked) {
+                foreach (Entity entity in _entities.ToAdd) {
+                    entity.SceneRemoved();
+                }
+
+                foreach (Entity entity in _entities.ToRemove) {
+                    entity.SceneRemoved();
+                }
+            }
+
+            foreach (Entity entity in _entities.Items) {
+                entity.SceneRemoved();
+            }
+
+            _entities.Clear();
         }
 
         /// <summary>
         /// Remove all graphics from the Scene.
         /// </summary>
         public void ClearGraphics() {
-            Graphics.Clear();
+            _graphics.Clear();
         }
 
         #endregion Public Methods
@@ -210,7 +252,7 @@ namespace Raccoon {
         /// </summary>
         public virtual void Start() {
             HasStarted = true;
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 e.Start();
             }
 
@@ -228,7 +270,7 @@ namespace Raccoon {
             IsRunning = true;
             Camera.Begin();
 
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 e.SceneBegin();
             }
         }
@@ -238,7 +280,7 @@ namespace Raccoon {
         /// </summary>
         public virtual void End() {
             IsRunning = false;
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 e.SceneEnd();
             }
 
@@ -249,11 +291,11 @@ namespace Raccoon {
         /// Called when Scene is disposed to unload all resources.
         /// </summary>
         public virtual void UnloadContent() {
-            foreach (Graphic g in Graphics) {
+            foreach (Graphic g in _graphics) {
                 g.Dispose();
             }
 
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 foreach (Graphic g in e.Graphics) {
                     g.Dispose();
                 }
@@ -268,10 +310,7 @@ namespace Raccoon {
                 return;
             }
 
-            Entities.Upkeep();
-            Graphics.Upkeep();
-
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 if (!e.Active || !e.AutoUpdate) {
                     continue;
                 }
@@ -291,7 +330,7 @@ namespace Raccoon {
 
             Timer += (uint) delta;
 
-            foreach (Graphic g in Graphics) {
+            foreach (Graphic g in _graphics) {
                 if (!g.Visible) {
                     continue;
                 }
@@ -299,7 +338,7 @@ namespace Raccoon {
                 g.Update(delta);
             }
 
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 if (!e.Active || !e.AutoUpdate) {
                     continue;
                 }
@@ -318,7 +357,7 @@ namespace Raccoon {
             }
 
             Camera.Update(Game.Instance.DeltaTime);
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 if (!e.Active || !e.AutoUpdate) {
                     continue;
                 }
@@ -331,7 +370,7 @@ namespace Raccoon {
         /// Render Graphics and Entities. (In this specific order)
         /// </summary>
         public virtual void Render() {
-            foreach (Graphic g in Graphics) {
+            foreach (Graphic g in _graphics) {
                 if (!g.Visible) {
                     continue;
                 }
@@ -339,7 +378,7 @@ namespace Raccoon {
                 g.Render();
             }
 
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 if (!e.Visible || !e.AutoRender) {
                     continue;
                 }
@@ -353,7 +392,7 @@ namespace Raccoon {
         /// Everything rendered here doesn't suffer from Game.Scale factor.
         /// </summary>
         public virtual void DebugRender() {
-            foreach (Graphic g in Graphics) {
+            foreach (Graphic g in _graphics) {
                 if (!g.Visible || g.IgnoreDebugRender) {
                     continue;
                 }
@@ -361,7 +400,7 @@ namespace Raccoon {
                 g.DebugRender();
             }
 
-            foreach (Entity e in Entities) {
+            foreach (Entity e in _entities) {
                 if (!e.Visible || !e.AutoRender || e.IgnoreDebugRender) {
                     continue;
                 }
