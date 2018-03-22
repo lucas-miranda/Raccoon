@@ -299,6 +299,14 @@ namespace Raccoon {
             _components.Clear();
         }
 
+        public void RemoveSelf() {
+            if (Scene == null) {
+                return;
+            }
+
+            Scene.RemoveEntity(this);
+        }
+
         public override string ToString() {
             return $"[Entity '{Name}' | X: {X} Y: {Y} Graphics: {Graphics.Count} Components: {_components.Count}]";
         }
@@ -306,7 +314,6 @@ namespace Raccoon {
         #endregion Public Methods
 
         #region Private Methods
-
 
         #endregion Private Methods
 
