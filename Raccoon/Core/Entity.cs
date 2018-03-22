@@ -43,7 +43,6 @@ namespace Raccoon {
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
-        public bool HasStarted { get; private set; }
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -120,11 +119,6 @@ namespace Raccoon {
         }
 
         public virtual void Start() {
-            if (HasStarted) {
-                return; 
-            }
-
-            HasStarted = true;
             OnStart();
         }
 

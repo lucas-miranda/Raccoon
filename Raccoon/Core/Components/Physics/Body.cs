@@ -89,6 +89,10 @@ namespace Raccoon.Components {
         #region Public Methods
 
         public override void OnAdded(Entity entity) {
+            if (entity.Scene == null) {
+                return;
+            }
+
             base.OnAdded(entity);
             Physics.Instance.AddCollider(this);
             _isPhysicsActive = true;
