@@ -51,6 +51,11 @@ namespace Raccoon.Components {
             }
         }
 
+        public override void OnRemoved() {
+            base.OnRemoved();
+            Stop();
+        }
+
         public override void Update(int delta) {
             if (CurrentState == null) {
                 return;
