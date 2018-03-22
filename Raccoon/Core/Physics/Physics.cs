@@ -148,6 +148,13 @@ namespace Raccoon {
             }
         }
 
+        public void ClearTags() {
+            TagType = null;
+            _noneTag = null;
+            _collidersByTag.Clear();
+            _collisionTagTable.Clear();
+        }
+
         public void RegisterCollision(System.Enum tagA, System.Enum tagB) {
             ValidateTag(tagA, "tagA");
             ValidateTag(tagB, "tagB");
@@ -183,6 +190,12 @@ namespace Raccoon {
             return _collisionTagTable[tagA].Contains(tagB);
         }
 
+        public void ClearCollisions() {
+            foreach (HashSet<System.Enum> collisionTags in _collisionTagTable.Values) {
+                collisionTags.Clear();
+            }
+        }
+
         public void SetCollisions(Dictionary<System.Enum, System.Array> collisions) {
             foreach (HashSet<System.Enum> collidedTags in _collisionTagTable.Values) {
                 collidedTags.Clear();
@@ -209,6 +222,14 @@ namespace Raccoon {
             }
 
             _colliders.Remove(collider);
+        }
+
+        public void ClearColliders() {
+            foreach (List<Body> bodies in _collidersByTag.Values) {
+                bodies.Clear();
+            }
+
+            _colliders.Clear();
         }
 
         public void UpdateColliderTagsEntry(Body collider, System.Enum oldTags = null) {
