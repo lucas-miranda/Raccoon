@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -8,7 +9,7 @@ namespace Raccoon {
         #region Private Members
 
         private List<Vector2> _vertices;
-        private List<Polygon> _convexComponents;
+        private List<Vector2[]> _convexComponents = new List<Vector2[]>();
         private bool _needRecalculateComponents;
 
         #endregion Private Members
@@ -17,7 +18,6 @@ namespace Raccoon {
 
         public Polygon(IEnumerable<Vector2> points) {
             _vertices = new List<Vector2>(points);
-            _convexComponents = new List<Polygon>();
             IsConvex = false;
             Normals = new Vector2[0];
             Center = Vector2.Zero;
@@ -30,9 +30,8 @@ namespace Raccoon {
         public Polygon(Polygon polygon) {
             _vertices = new List<Vector2>(polygon._vertices);
 
-            _convexComponents = new List<Polygon>();
-            foreach (Polygon convexComponent in polygon.ConvexComponents()) {
-                _convexComponents.Add(new Polygon(convexComponent));
+            foreach (Vector2[] component in polygon.ConvexComponents()) {
+                _convexComponents.Add(component);
             }
 
             IsConvex = polygon.IsConvex;
@@ -165,12 +164,17 @@ namespace Raccoon {
             return new Polygon(convexHullVertices);
         }
 
-        public static Line? FindSharedEdge(Polygon polygonA, Polygon polygonB) {
+        public static Line? FindSharedEdge(Vector2[] polygonA, Vector2[] polygonB) {
             Line? line = null;
-            foreach (Line aEdge in polygonA.Edges()) {
-                foreach (Line bEdge in polygonB.Edges()) {
-                    if (Helper.EqualsPermutation(aEdge.PointA, aEdge.PointB, bEdge.PointA, bEdge.PointB)) {
-                        line = new Line(aEdge.PointA, aEdge.PointB);
+            Vector2 edgeAPointA = polygonA[0],
+                    edgeBPointA = polygonB[0];
+
+            for (int i = 1; i < polygonA.Length; i++) {
+                Vector2 edgeAPointB = polygonA[i];
+                for (int j = 1; j < polygonB.Length; j++) {
+                    Vector2 edgeBPointB = polygonB[i];
+                    if (Helper.EqualsPermutation(edgeAPointA, edgeAPointB, edgeBPointA, edgeBPointB)) {
+                        line = new Line(edgeAPointA, edgeAPointB);
                         break;
                     }
                 }
@@ -181,6 +185,10 @@ namespace Raccoon {
             }
 
             return line;
+        }
+
+        public static Line? FindSharedEdge(Polygon polygonA, Polygon polygonB) {
+            return FindSharedEdge(polygonA._vertices.ToArray(), polygonB._vertices.ToArray());
         }
 
         #endregion Public Static Methods
@@ -374,7 +382,7 @@ namespace Raccoon {
             }
         }
 
-        public List<Polygon> ConvexComponents() {
+        public List<Vector2[]> ConvexComponents() {
             if (_needRecalculateComponents) {
                 _needRecalculateComponents = false;
                 CalculateComponents();
@@ -546,25 +554,37 @@ namespace Raccoon {
             _convexComponents.Clear();
             CalculateConvexity();
             if (IsConvex) {
-                _convexComponents.Add(new Polygon(this));
+                _convexComponents.Add(_vertices.ToArray());
                 return;
             }
 
             List<Triangle> triangles = Triangulate();
             List<(int, int)> exclusionList = new List<(int, int)>();
-            List<Polygon> components = new List<Polygon>();
-            triangles.ForEach((Triangle t) => components.Add(new Polygon(t)));
+            List<Vector2[]> components = new List<Vector2[]>();
+            triangles.ForEach(
+                (Triangle t) => {
+                    Vector2[] vertices = new Vector2[t.Vertices.Length];
+                    t.Vertices.CopyTo(vertices, 0);
+                    components.Add(vertices);
+                }
+            );
 
             Vector2 sharedVertexA = Vector2.Zero, sharedVertexB = Vector2.Zero;
             List<Vector2> verticesToConvexHull = new List<Vector2>();
 
             int mergeTries = 0;
             while (components.Count >= 2 && mergeTries < components.Count - 1) {
-                (int poly1Index, int poly2Index) = FindGreatestSharedEdgePolygons(out Polygon poly1, out Polygon poly2);
+                (int poly1Index, int poly2Index) = FindGreatestSharedEdgePolygons(out Vector2[] component1, out Vector2[] component2);
+
+                // just ignore if no valid index has been found
+                if (poly1Index == -1 || poly2Index == -1) {
+                    mergeTries++;
+                    continue;
+                }
 
                 verticesToConvexHull.Clear();
-                verticesToConvexHull.AddRange(poly1.Vertices);
-                verticesToConvexHull.AddRange(poly2.Vertices);
+                verticesToConvexHull.AddRange(component1);
+                verticesToConvexHull.AddRange(component2);
                 List<Vector2> componentConvexHull = ConvexHull(verticesToConvexHull);
                 int indexSharedVertexA = componentConvexHull.IndexOf(sharedVertexA),
                     indexSharedVertexB = componentConvexHull.IndexOf(sharedVertexB);
@@ -579,7 +599,7 @@ namespace Raccoon {
                         components.RemoveAt(poly1Index);
                     }
 
-                    components.Add(new Polygon(componentConvexHull));
+                    components.Add(componentConvexHull.ToArray());
                     mergeTries = 0;
                     exclusionList.Clear();
                 } else {
@@ -592,21 +612,21 @@ namespace Raccoon {
 
             return;
 
-            (int p1Index, int p2Index) FindGreatestSharedEdgePolygons(out Polygon p1, out Polygon p2) {
+            (int p1Index, int p2Index) FindGreatestSharedEdgePolygons(out Vector2[] component1, out Vector2[] component2) {
                 (int, int) indexes = (-1, -1);
-                p1 = p2 = null;
+                component1 = component2 = null;
                 float greatestEdgeLength = 0;
 
                 for (int a = 0; a < components.Count; a++) {
-                    Polygon tmpP1 = components[a];
+                    Vector2[] componentA = components[a];
                     for (int b = a + 1; b < components.Count; b++) {
-                        Polygon tmpP2 = components[b];
+                        Vector2[] componentB = components[b];
 
                         if (exclusionList.FindIndex(p => Helper.EqualsPermutation(p.Item1, p.Item2, a, b)) != -1) {
                             continue;
                         }
 
-                        Line? sharedEdge = FindSharedEdge(tmpP1, tmpP2);
+                        Line? sharedEdge = FindSharedEdge(componentA, componentB);
                         if (sharedEdge != null) {
                             float d = sharedEdge.Value.LengthSquared;
                             if (d <= greatestEdgeLength) {
@@ -615,8 +635,8 @@ namespace Raccoon {
 
                             indexes = (a, b);
                             greatestEdgeLength = d;
-                            p1 = tmpP1;
-                            p2 = tmpP2;
+                            component1 = componentA;
+                            component2 = componentB;
                             sharedVertexA = sharedEdge.Value.PointA;
                             sharedVertexB = sharedEdge.Value.PointB;
                         }

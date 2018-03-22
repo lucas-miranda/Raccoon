@@ -53,6 +53,11 @@ namespace Raccoon.Components {
 
         protected bool IsStillJumping { get; set; }
 
+        public override void OnRemoved() {
+            base.OnRemoved();
+            OnJumpBegin = OnTouchGround = OnFallingBegin = null;
+        }
+
         public override void Update(int delta) {
             base.Update(delta);
             if (OnGround) {

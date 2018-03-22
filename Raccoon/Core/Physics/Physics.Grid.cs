@@ -57,11 +57,12 @@ namespace Raccoon {
                         break;
 
                     case GridShape.PolygonTileShape polygonShape:
-                        foreach (Polygon componentPolygon in polygonShape.Polygon.ConvexComponents()) {
-                            Polygon p = new Polygon(componentPolygon);
+                        foreach (Vector2[] component in polygonShape.Polygon.ConvexComponents()) {
+                            Polygon p = new Polygon(component);
                             p.Translate(gridPos + grid.ConvertTilePosition(gridPos, column, row));
                             tilePolygons.Add(p);
                         }
+
                         break;
 
                     case null:

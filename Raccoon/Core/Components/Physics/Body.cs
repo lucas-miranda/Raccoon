@@ -92,12 +92,20 @@ namespace Raccoon.Components {
             base.OnAdded(entity);
             Physics.Instance.AddCollider(this);
             _isPhysicsActive = true;
+
+            if (Movement != null && Movement.Body != this) {
+                Movement.OnAdded(this);
+            }
         }
 
         public override void OnRemoved() {
             base.OnRemoved();
             Physics.Instance.RemoveCollider(this);
             _isPhysicsActive = false;
+
+            if (Movement != null) {
+                Movement.OnRemoved();
+            }
         }
 
         public override void Update(int delta) {

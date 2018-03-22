@@ -56,6 +56,7 @@ namespace Raccoon {
 
                 if (coroutine.HasEnded) { // remove ended coroutine
                     _runningCoroutines.Remove(coroutine);
+                    coroutine.Generator = null;
                 } else if (!coroutine.IsRunning) { // move paused coroutine to the proper list
                     _runningCoroutines.Remove(coroutine);
                     _pausedCoroutines.Add(coroutine);
@@ -81,6 +82,14 @@ namespace Raccoon {
         }
 
         public void ClearAll() {
+            foreach (Coroutine coroutine in _runningCoroutines) {
+                coroutine.Generator = null;
+            }
+
+            foreach (Coroutine coroutine in _pausedCoroutines) {
+                coroutine.Generator = null;
+            }
+
             _runningCoroutines.Clear();
             _pausedCoroutines.Clear();
         }
@@ -97,7 +106,7 @@ namespace Raccoon {
                 Enumerator = Generator();
             }
 
-            public Func<IEnumerator> Generator { get; private set; }
+            public Func<IEnumerator> Generator { get; set; }
             public IEnumerator Enumerator { get; private set; }
             public bool IsRunning { get; private set; } = true;
             public bool HasEnded { get; private set; }

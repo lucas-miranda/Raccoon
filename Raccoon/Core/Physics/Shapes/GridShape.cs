@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using Raccoon.Graphics;
 using Raccoon.Util;
 
@@ -51,11 +52,15 @@ namespace Raccoon {
                     p.Translate(tilePos);
                     Debug.DrawPolygon(p, Color.Cyan);*/
 
-                    List<Polygon> components = polygonTile.Polygon.ConvexComponents();
-                    foreach (Polygon c in components) {
-                        Polygon p = new Polygon(c);
-                        p.Translate(tilePos);
-                        Debug.DrawPolygon(p, Color.Red);
+                    List<Vector2[]> components = polygonTile.Polygon.ConvexComponents();
+                    Vector2[] points;
+                    foreach (Vector2[] component in components) {
+                        points = new Vector2[component.Length];
+                        for (int i = 0; i < component.Length; i++) {
+                            points[i] = tilePos + component[i];
+                        }
+
+                        Debug.DrawLines(points, Color.Red);
                     }
 
                     //Debug.DrawString(Debug.Transform(tilePos + TileSize / 2f), $"{components.Count}");
