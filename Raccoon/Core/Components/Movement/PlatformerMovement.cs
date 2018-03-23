@@ -63,7 +63,7 @@ namespace Raccoon.Components {
             if (OnGround) {
                 if (!CanContinuousJump) {
                     // continuous jump lock (must release and press jump button to jump again)
-                    if (!_nextJumpReady && !_requestedJump) {
+                    if (!_nextJumpReady && !_requestedJump && (Jumps > 0 || OnGround)) {
                         _nextJumpReady = true;
                     }
 
@@ -163,8 +163,9 @@ namespace Raccoon.Components {
             } else if (TouchedTop) { 
                 // jumping and reached a ceiling
                 if (IsJumping) {
-                    IsStillJumping = IsJumping = false;
+                    IsJumping = false;
                     IsFalling = true;
+                    _nextJumpReady = false;
                     Velocity = new Vector2(Velocity.X, 0f);
                     OnFallingBegin();
                 }
