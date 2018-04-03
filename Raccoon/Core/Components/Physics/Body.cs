@@ -18,7 +18,6 @@ namespace Raccoon.Components {
 
         private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
-        private Vector2 _movementBuffer;
         private System.Enum _tags;
         private bool _isPhysicsActive;
 
@@ -42,6 +41,7 @@ namespace Raccoon.Components {
         public IMaterial Material { get; set; }
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
+        public Vector2 LastPosition { get; private set; }
         public Vector2 Position { get { return Entity.Position - Shape.Origin; } set { Entity.Position = value + Shape.Origin; } }
         public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
@@ -86,6 +86,12 @@ namespace Raccoon.Components {
 
         #endregion Public Properties
 
+        #region Internal Properties
+
+        internal Vector2 MovementBuffer { get; set; }
+
+        #endregion Internal Properties
+
         #region Public Methods
 
         public override void OnAdded(Entity entity) {
@@ -113,7 +119,7 @@ namespace Raccoon.Components {
         }
 
         public override void Update(int delta) {
-            if (Movement != null && Movement.Enabled) {
+            if (Movement != null) {
                 Movement.Update(delta);
             }
         }
@@ -145,11 +151,51 @@ namespace Raccoon.Components {
         }
 #endif
 
+        public void PhysicsUpdate(float dt) {
+            LastPosition = Position;
+            if (Movement != null) {
+                Movement.PhysicsUpdate(dt);
+            }
+        }
+
+        public void PhysicsLateUpdate() {
+            if (Movement != null) {
+                Debug.WriteLine("here");
+                Movement.PhysicsLateUpdate();
+            }
+
+            IsResting = (Position - LastPosition).LengthSquared() == 0f;
+        }
+
         public void OnCollide(Body otherBody, Vector2 collisionAxes) {
             OnCollided?.Invoke(otherBody, collisionAxes);
             if (Movement != null && otherBody.Tags.HasFlag(Movement.CollisionTags)) {
                 Movement.OnCollide(collisionAxes);
             }
+        }
+
+        public Vector2 Integrate(float dt) {
+            Vector2 velocity = Velocity;
+
+            // velocity X correction
+            if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
+                velocity.X = 0f;
+            }
+
+            // velocity Y correction
+            if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
+                velocity.Y = 0f;
+            }
+
+            Velocity = velocity;
+
+            if (Movement != null) {
+                return Position + MovementBuffer + Movement.Integrate(dt);
+            }
+
+            Velocity += Force * dt;
+
+            return Position + MovementBuffer + Velocity * dt;
         }
 
         public void SolveConstraints() {
@@ -166,45 +212,9 @@ namespace Raccoon.Components {
             _constraints.Remove(constraint);
         }
 
-        internal Vector2 PrepareMovement(float dt) {
-            Vector2 velocity = Velocity;
-
-            // velocity X correction
-            if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
-                velocity.X = 0f;
-            }
-
-            // velocity Y correction
-            if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
-                velocity.Y = 0f;
-            }
-
-            Velocity = Force * dt + (Movement != null && Movement.Enabled ? Movement.HandleVelocity(velocity, dt) : velocity);
-
-            return Position + _movementBuffer + Velocity * dt;
-        }
-
-        internal void AfterMovement(float dt, Vector2 nextPosition, Vector2 movementBuffer) {
-            _movementBuffer = movementBuffer;
-            Vector2 oldPosition = Position;
-            Position = nextPosition;
-
-            Vector2 posDiff = Position - oldPosition;
-            float distance = posDiff.LengthSquared();
-            if (Movement != null && Movement.Enabled) {
-                if (distance > 0f) {
-                    Movement.OnMoving(posDiff);
-                }
-
-                Movement.FixedLateUpdate(dt);
-            }
-
-            IsResting = (Position - oldPosition).LengthSquared() == 0f;
-        }
-
-        public void ApplyForce(Vector2 force) {
+        /*public void ApplyForce(Vector2 force) {
             Force += Movement?.HandleForce(force) ?? force;
-        }
+        }*/
 
         public void SetStaticPosition(Vector2 staticPosition) {
             staticPosition = Util.Math.Floor(staticPosition);

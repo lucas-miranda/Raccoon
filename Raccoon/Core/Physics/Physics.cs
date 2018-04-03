@@ -446,13 +446,13 @@ namespace Raccoon {
                     continue;
                 }
 
-                body.Movement.FixedUpdate(dt);
+                body.PhysicsUpdate(dt);
 
                 // swap bodies for fast collision check
                 _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
                 _narrowPhaseBodies[0] = body;
 
-                Vector2 nextPosition = body.PrepareMovement(dt);
+                Vector2 nextPosition = body.Integrate(dt);
 
                 // prepare collidable tags
                 long bodyCollidableTags = GetCollidableTagsAsNumber(body.Tags),
@@ -463,13 +463,18 @@ namespace Raccoon {
                 Vector2 distance = nextPosition - currentPosition;
 
                 if (Math.EqualsEstimate(distance.LengthSquared(), 0f)) {
-                    body.AfterMovement(dt, currentPosition, Vector2.Zero);
+                    body.MovementBuffer = Vector2.Zero;
+                    body.PhysicsLateUpdate();
                     continue;
                 }
 
                 // I'm using the greatest distance axis to find a relation to move the body each loop by 1px at least
-                float greatestAxis = System.Math.Max(System.Math.Abs(distance.X), System.Math.Abs(distance.Y));
-                Vector2 direction = new Vector2(distance.X / greatestAxis, distance.Y / greatestAxis); 
+                Vector2 direction; 
+                if (System.Math.Abs(distance.X) >= System.Math.Abs(distance.Y)) {
+                    direction = new Vector2(1f, distance.Y / System.Math.Abs(distance.X));
+                } else {
+                    direction = new Vector2(distance.X / System.Math.Abs(distance.Y), 1f);
+                }
 
                 Vector2 movement = Vector2.Zero, 
                         movementBuffer = Vector2.Zero;
@@ -600,7 +605,9 @@ namespace Raccoon {
                     finalMovementBuffer.Y = distance.Y + movementBuffer.Y;
                 }
 
-                body.AfterMovement(dt, currentPosition, finalMovementBuffer);
+                body.MovementBuffer = finalMovementBuffer;
+                body.Position = currentPosition;
+                body.PhysicsLateUpdate();
             }
 
 #if DEBUG

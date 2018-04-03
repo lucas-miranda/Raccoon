@@ -1,8 +1,18 @@
 ﻿namespace Raccoon.Components {
     public abstract class Movement {
+        #region Public Members
+
         public System.Action OnMove = delegate { };
 
+        #endregion Public Members
+
+        #region Private Members
+
         private uint _axesSnap;
+
+        #endregion Private Members
+
+        #region Constructors
 
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
@@ -34,6 +44,10 @@
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
             CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public Body Body { get; private set; }
         public System.Enum CollisionTags { get; set; }
@@ -101,6 +115,10 @@
 
         protected Vector2 NextAxis { get; set; }
 
+        #endregion Public Properties
+
+        #region Public Methods
+
         public virtual void OnAdded(Body body) {
             Body = body;
         }
@@ -116,17 +134,21 @@
             NextAxis = Vector2.Zero;
         }
 
-        public virtual void FixedUpdate(float dt) {
+        public virtual void DebugRender() {
+        }
+        
+        public virtual void PhysicsUpdate(float dt) {
             TouchedTop = TouchedRight = TouchedBottom = TouchedLeft = false;
         }
 
-        public virtual void FixedLateUpdate(float dt) {
+        public virtual void PhysicsLateUpdate() {
+            if (Body.LastPosition != Body.Position) {
+                Vector2 posDiff = Body.Position - Body.LastPosition;
+                if (posDiff.LengthSquared() > 0f) {
+                    OnMoving(posDiff);
+                }
+            }
         }
-
-        public virtual void DebugRender() {
-        }
-
-        public abstract Vector2 HandleVelocity(Vector2 velocity, float dt);
 
         public virtual void OnCollide(Vector2 collisionAxes) {
             if (collisionAxes.Y < 0f) {
@@ -142,23 +164,7 @@
             }
         }
 
-        public abstract void OnMoving(Vector2 distance);
-
-        public virtual Vector2 HandleForce(Vector2 force) {
-            if (!Enabled || !CanMove) {
-                return Vector2.Zero;
-            }
-
-            return force;
-        }
-
-        public virtual Vector2 HandleImpulse(Vector2 impulse) {
-            if (!Enabled || !CanMove) {
-                return Vector2.Zero;
-            }
-
-            return impulse;
-        }
+        public abstract Vector2 Integrate(float dt);
 
         public virtual void Move(Vector2 axis) {
             if (!Enabled || !CanMove) {
@@ -184,5 +190,30 @@
         public void MoveVertical(float y) {
             Move(new Vector2(LastAxis.X, y));
         }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        /*public virtual Vector2 HandleForce(Vector2 force) {
+            if (!Enabled || !CanMove) {
+                return Vector2.Zero;
+            }
+
+            return force;
+        }
+
+        public virtual Vector2 HandleImpulse(Vector2 impulse) {
+            if (!Enabled || !CanMove) {
+                return Vector2.Zero;
+            }
+
+            return impulse;
+        }*/
+
+
+        protected abstract void OnMoving(Vector2 distance);
+
+        #endregion Protected Methods
     }
 }
