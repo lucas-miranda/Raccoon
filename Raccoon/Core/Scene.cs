@@ -347,7 +347,6 @@ namespace Raccoon {
             }
         }
 
-
         /// <summary>
         /// Runs after Update().
         /// </summary>
@@ -356,7 +355,6 @@ namespace Raccoon {
                 return;
             }
 
-            Camera.Update(Game.Instance.DeltaTime);
             foreach (Entity e in _entities) {
                 if (!e.Active || !e.AutoUpdate) {
                     continue;
@@ -364,12 +362,16 @@ namespace Raccoon {
 
                 e.LateUpdate();
             }
+
+            Camera.Update(Game.Instance.DeltaTime);
         }
 
         /// <summary>
         /// Render Graphics and Entities. (In this specific order)
         /// </summary>
         public virtual void Render() {
+            Camera.PrepareRender();
+
             foreach (Graphic g in _graphics) {
                 if (!g.Visible) {
                     continue;

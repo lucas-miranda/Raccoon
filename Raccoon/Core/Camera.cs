@@ -1,4 +1,5 @@
 ﻿using System;
+
 using Microsoft.Xna.Framework;
 
 namespace Raccoon {
@@ -13,6 +14,7 @@ namespace Raccoon {
 
         private Vector2 _position;
         private float _zoom = 1f;
+        private bool _needViewRefresh;
 
         #endregion Private Members
 
@@ -27,8 +29,8 @@ namespace Raccoon {
 
         public static Camera Current { get; private set; }
 
-        public float X { get { return Position.X; } set { Position = new Vector2(!UseBounds ? value : Util.Math.Clamp(value, Bounds.Left, Bounds.Right - Width), Position.Y); } }
-        public float Y { get { return Position.Y; } set { Position = new Vector2(Position.X, !UseBounds ? value : Util.Math.Clamp(value, Bounds.Top, Bounds.Bottom - Height)); } }
+        public float X { get { return Position.X; } set { Position = new Vector2(value, Position.Y); } }
+        public float Y { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
         public Size Size { get { return Game.Instance.ScreenSize; } }
         public float Width { get { return Game.Instance.ScreenWidth; } }
         public float Height { get { return Game.Instance.ScreenHeight; } }
@@ -52,7 +54,7 @@ namespace Raccoon {
                 }
 
                 _position = !UseBounds ? value : Util.Math.Clamp(value, Bounds);
-                Refresh();
+                _needViewRefresh = true;
             }
         }
 
@@ -63,7 +65,7 @@ namespace Raccoon {
 
             set {
                 _zoom = value;
-                Refresh();
+                _needViewRefresh = true;
             }
         }
 
@@ -73,7 +75,7 @@ namespace Raccoon {
 
         public virtual void Start() {
             Current = this;
-            Refresh();
+            _needViewRefresh = true;
         }
         
         public virtual void Begin() {
@@ -81,7 +83,7 @@ namespace Raccoon {
                 Current = this;
             }
 
-            Refresh();
+            _needViewRefresh = true;
         }
 
         public virtual void End() { }
@@ -90,9 +92,23 @@ namespace Raccoon {
             OnUpdate?.Invoke();
         }
 
+        public virtual void PrepareRender() {
+            if (_needViewRefresh) {
+                Refresh();
+                _needViewRefresh = false;
+            }
+        }
+
         public virtual void DebugRender() { }
 
         #endregion Public Methods
+
+        #region Protected Methods
+
+        protected virtual void OnZoom(float previousZoom, float newZoom) {
+        }
+
+        #endregion Protected Methods
 
         #region Private Members
 

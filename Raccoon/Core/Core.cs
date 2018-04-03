@@ -176,8 +176,8 @@ namespace Raccoon {
             Util.Tween.Tweener.Instance.Update(delta);
             OnBeforeUpdate();
             OnUpdate(delta);
-            Coroutines.Instance.Update(delta);
             Physics.Instance.Update(delta);
+            Coroutines.Instance.Update(delta);
             OnLateUpdate();
 
 #if DEBUG
