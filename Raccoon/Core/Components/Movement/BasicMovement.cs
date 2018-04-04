@@ -37,7 +37,7 @@ namespace Raccoon.Components {
         public override Vector2 Integrate(float dt) {
             float horizontalVelocity = Velocity.X;
             if (Axis.X == 0f) { // stopping from movement, drag force applies
-                horizontalVelocity = System.Math.Abs(horizontalVelocity) < Math.Epsilon ? 0f : horizontalVelocity * DragForce;
+                horizontalVelocity = Math.EqualsEstimate(horizontalVelocity, 0f) ? 0f : horizontalVelocity * DragForce;
             } else if (SnapHorizontalAxis && horizontalVelocity != 0f && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
                 horizontalVelocity = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
@@ -48,7 +48,7 @@ namespace Raccoon.Components {
 
             float verticalVelocity = Velocity.Y;
             if (Axis.Y == 0f) { // stopping from movement, drag force applies
-                verticalVelocity = System.Math.Abs(verticalVelocity) < Math.Epsilon ? 0f : verticalVelocity * DragForce;
+                verticalVelocity = Math.EqualsEstimate(verticalVelocity, 0f) ? 0f : verticalVelocity * DragForce;
             } else if (SnapVerticalAxis && verticalVelocity != 0f && System.Math.Sign(Axis.Y) != System.Math.Sign(verticalVelocity)) { // snapping horizontal axis clears velocity
                 verticalVelocity = 0f;
             } else if (MaxVelocity.Y > 0f) { // velocity increasing until MaxVelocity.Y limit
@@ -57,7 +57,9 @@ namespace Raccoon.Components {
                 verticalVelocity += System.Math.Sign(Axis.Y) * Acceleration.Y * dt;
             }
 
-            return new Vector2(horizontalVelocity, verticalVelocity);
+            Velocity = Body.Force * dt + new Vector2(horizontalVelocity, verticalVelocity);
+
+            return Velocity * dt;
         }
 
         public override void DebugRender() {

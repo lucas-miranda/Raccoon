@@ -88,7 +88,8 @@ namespace Raccoon.Components {
 
         #region Internal Properties
 
-        internal Vector2 MovementBuffer { get; set; }
+        internal double MovementXBuffer { get; set; }
+        internal double MovementYBuffer { get; set; }
 
         #endregion Internal Properties
 
@@ -190,12 +191,12 @@ namespace Raccoon.Components {
             Velocity = velocity;
 
             if (Movement != null) {
-                return Position + MovementBuffer + Movement.Integrate(dt);
+                return Position + Movement.Integrate(dt);
             }
 
             Velocity += Force * dt;
 
-            return Position + MovementBuffer + Velocity * dt;
+            return Position + Velocity * dt;
         }
 
         public void SolveConstraints() {
