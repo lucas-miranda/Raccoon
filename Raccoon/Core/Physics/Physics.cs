@@ -469,11 +469,16 @@ namespace Raccoon {
                 }
 
                 // I'm using the greatest distance axis to find a relation to move the body each loop by 1px at least
-                Vector2 direction; 
-                if (System.Math.Abs(distance.X) >= System.Math.Abs(distance.Y)) {
-                    direction = new Vector2(1f, distance.Y / System.Math.Abs(distance.X));
-                } else {
-                    direction = new Vector2(distance.X / System.Math.Abs(distance.Y), 1f);
+                Vector2 direction = Vector2.Zero;
+                float dxAbs = System.Math.Abs(distance.X),
+                      dyAbs = System.Math.Abs(distance.Y);
+
+                if (Math.EqualsEstimate(dxAbs, dyAbs)) {
+                    direction = new Vector2(System.Math.Sign(distance.X), System.Math.Sign(distance.Y));
+                } else if (dxAbs > dyAbs) {
+                    direction = new Vector2(System.Math.Sign(distance.X), distance.Y / dxAbs);
+                } else if (dxAbs < dyAbs) {
+                    direction = new Vector2(distance.X / dyAbs, System.Math.Sign(distance.Y));
                 }
 
                 Vector2 movement = Vector2.Zero, 
@@ -501,7 +506,7 @@ namespace Raccoon {
                         }
                     }
 
-                    // hack to force a collision verification without moving
+                    // hack to force a collision verification even if not mean to move at all
                     if (isFirstCheck && distance.LengthSquared() < 1f) {
                         movement = new Vector2(System.Math.Sign(direction.X), System.Math.Sign(direction.Y));
                     }
@@ -538,7 +543,7 @@ namespace Raccoon {
                                     canMoveH = false;
                                     distance.X = 0f;
                                     direction.Y = System.Math.Sign(direction.Y);
-                                    moveVerticalPos = new Vector2(currentPosition.X, currentPosition.Y + movement.Y);
+                                    moveVerticalPos.X = currentPosition.X;
                                 }
                             }
 
@@ -572,7 +577,7 @@ namespace Raccoon {
                         }
                     }
 
-                    // hack to force a collision verification without moving
+                    // hack to force a collision verification even if not mean to move at all
                     if (isFirstCheck && distance.LengthSquared() < 1f) {
                         break;
                     }
@@ -596,16 +601,16 @@ namespace Raccoon {
                 );
 
                 // checks for movement buffer to return to the body
-                Vector2 finalMovementBuffer = Vector2.Zero;
+                Vector2 remainderMovementBuffer = Vector2.Zero;
                 if (canMoveH && System.Math.Abs(distance.X) > 0f) {
-                    finalMovementBuffer.X = distance.X + movementBuffer.X;
+                    remainderMovementBuffer.X = distance.X + movementBuffer.X;
                 }
 
                 if (canMoveV && System.Math.Abs(distance.Y) > 0f) {
-                    finalMovementBuffer.Y = distance.Y + movementBuffer.Y;
+                    remainderMovementBuffer.Y = distance.Y + movementBuffer.Y;
                 }
 
-                body.MovementBuffer = finalMovementBuffer;
+                body.MovementBuffer = remainderMovementBuffer;
                 body.Position = currentPosition;
                 body.PhysicsLateUpdate();
             }
