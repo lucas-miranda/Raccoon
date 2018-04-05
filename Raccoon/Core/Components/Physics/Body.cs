@@ -47,6 +47,10 @@ namespace Raccoon.Components {
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
         public bool IsResting { get; private set; } = true;
+        public float Top { get { return Shape != null ? Position.Y - Shape.BoundingBox.Height / 2f : Position.Y; } }
+        public float Right { get { return Shape != null ? Position.X + Shape.BoundingBox.Width / 2f : Position.X; } }
+        public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Height / 2f : Position.Y; } }
+        public float Left { get { return Shape != null ? Position.X - Shape.BoundingBox.Width / 2f : Position.X; } }
 
 #if DEBUG
         public Color Color { get; set; } = Color.White;
@@ -88,8 +92,8 @@ namespace Raccoon.Components {
 
         #region Internal Properties
 
-        internal double MovementXBuffer { get; set; }
-        internal double MovementYBuffer { get; set; }
+        internal double MoveBufferX { get; set; }
+        internal double MoveBufferY { get; set; }
 
         #endregion Internal Properties
 
@@ -161,7 +165,6 @@ namespace Raccoon.Components {
 
         public void PhysicsLateUpdate() {
             if (Movement != null) {
-                Debug.WriteLine("here");
                 Movement.PhysicsLateUpdate();
             }
 

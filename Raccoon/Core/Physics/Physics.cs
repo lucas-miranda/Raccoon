@@ -442,10 +442,6 @@ namespace Raccoon {
             for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
                 Body body = _narrowPhaseBodies[j];
 
-                if (body.Movement == null || !body.Enabled) {
-                    continue;
-                }
-
                 body.PhysicsUpdate(dt);
 
                 // swap bodies for fast collision check
@@ -456,71 +452,73 @@ namespace Raccoon {
 
                 // prepare collidable tags
                 long bodyCollidableTags = GetCollidableTagsAsNumber(body.Tags),
-                     movementCollidableTags = System.Convert.ToInt64(body.Movement.CollisionTags);
+                     movementCollidableTags = body.Movement == null ? 0L : System.Convert.ToInt64(body.Movement.CollisionTags);
 
                 // initial body vars
                 int currentX = (int) body.Position.X,
                     currentY = (int) body.Position.Y;
 
-                double diffX = (nextPosition.X + body.MovementXBuffer) - currentX,
-                       diffY = (nextPosition.Y + body.MovementYBuffer) - currentY;
+                double diffX = (nextPosition.X + body.MoveBufferX) - currentX,
+                       diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
 
+                // early exit if next and current positions are the same
                 if (Math.EqualsEstimate(diffX * diffX + diffY * diffY, 0.0)) {
-                    body.MovementXBuffer = body.MovementYBuffer = 0.0;
+                    body.MoveBufferX = body.MoveBufferY = 0.0;
                     body.PhysicsLateUpdate();
                     continue;
                 }
 
-                int distanceX = System.Math.Sign(diffX) * (int) System.Math.Truncate(System.Math.Abs(diffX)),
-                    distanceY = System.Math.Sign(diffY) * (int) System.Math.Truncate(System.Math.Abs(diffY));
+                // signed distance in pixels
+                int distanceX = Math.Sign(diffX) * (int) Math.Truncate(Math.Abs(diffX)),
+                    distanceY = Math.Sign(diffY) * (int) Math.Truncate(Math.Abs(diffY));
 
                 // I'm using the greatest distance axis to find a relation to move the body each loop by 1px at least
                 double directionX = 0,
                        directionY = 0,
-                       dxAbs = System.Math.Abs(distanceX),
-                       dyAbs = System.Math.Abs(distanceY);
+                       dxAbs = Math.Abs(distanceX),
+                       dyAbs = Math.Abs(distanceY);
 
                 if (Math.EqualsEstimate(dxAbs, dyAbs)) {
-                    directionX = System.Math.Sign(distanceX);
-                    directionY = System.Math.Sign(distanceY);
+                    directionX = Math.Sign(distanceX);
+                    directionY = Math.Sign(distanceY);
                 } else if (dxAbs > dyAbs) {
-                    directionX = System.Math.Sign(distanceX);
+                    directionX = Math.Sign(distanceX);
                     directionY = distanceY / dxAbs;
                 } else if (dxAbs < dyAbs) {
                     directionX = distanceX / dyAbs;
-                    directionY = System.Math.Sign(distanceY);
+                    directionY = Math.Sign(distanceY);
                 }
 
                 int movementX = 0,
                     movementY = 0;
 
-                double movementXBuffer = diffX - System.Math.Truncate(diffX),
-                       movementYBuffer = diffY - System.Math.Truncate(diffY);
+                double movementXBuffer = diffX - Math.Truncate(diffX),
+                       movementYBuffer = diffY - Math.Truncate(diffY);
 
                 bool canMoveH = true, 
                      canMoveV = true,
                      singleCheck = distanceX * distanceX + distanceY * distanceY < 1;
 
                 if (singleCheck) {
-                    movementX = System.Math.Sign(directionX);
-                    movementY = System.Math.Sign(directionY);
+                    movementX = Math.Sign(directionX);
+                    movementY = Math.Sign(directionY);
                 }
 
                 do {
-                    if (canMoveH && System.Math.Abs(distanceX) >= 1) {
+                    if (canMoveH && Math.Abs(distanceX) >= 1) {
                         movementXBuffer += directionX;
                         // check movement buffer X for a valid movement
-                        if (System.Math.Abs(movementXBuffer) >= 1.0) {
-                            movementX = System.Math.Sign(movementXBuffer);
+                        if (Math.Abs(movementXBuffer) >= 1.0) {
+                            movementX = Math.Sign(movementXBuffer);
                             movementXBuffer -= movementX;
                         }
                     }
 
-                    if (canMoveV && System.Math.Abs(distanceY) >= 1) {
+                    if (canMoveV && Math.Abs(distanceY) >= 1) {
                         movementYBuffer += directionY;
                         // check movement buffer Y for a valid movement
-                        if (System.Math.Abs(movementYBuffer) >= 1.0) {
-                            movementY = System.Math.Sign(movementYBuffer);
+                        if (Math.Abs(movementYBuffer) >= 1.0) {
+                            movementY = Math.Sign(movementYBuffer);
                             movementYBuffer -= movementY;
                         }
                     }
@@ -556,7 +554,7 @@ namespace Raccoon {
                                 if (isMovementCollidable) {
                                     canMoveH = false;
                                     distanceX = 0;
-                                    directionY = System.Math.Sign(directionY);
+                                    directionY = Math.Sign(directionY);
                                     moveVerticalPos.X = currentX;
                                 }
                             }
@@ -570,7 +568,7 @@ namespace Raccoon {
                                 if (isMovementCollidable) {
                                     canMoveV = false;
                                     distanceY = 0;
-                                    directionX = System.Math.Sign(directionX);
+                                    directionX = Math.Sign(directionX);
                                 }
                             }
 
@@ -608,26 +606,25 @@ namespace Raccoon {
                     }
 
                     movementX = movementY = 0;
-                    singleCheck = false;
                 } while (
-                     (canMoveH && System.Math.Abs(distanceX) >= 1) 
-                  || (canMoveV && System.Math.Abs(distanceY) >= 1)
+                     (canMoveH && Math.Abs(distanceX) >= 1) 
+                  || (canMoveV && Math.Abs(distanceY) >= 1)
                 );
 
                 // checks for movement buffer to return to the body
                 double remainderMovementXBuffer = 0.0,
                        remainderMovementYBuffer = 0.0;
 
-                if (canMoveH && System.Math.Abs(distanceX) > 0) {
+                if (canMoveH && Math.Abs(distanceX) > 0) {
                     remainderMovementXBuffer = distanceX + movementXBuffer;
                 }
 
-                if (canMoveV && System.Math.Abs(distanceY) > 0) {
+                if (canMoveV && Math.Abs(distanceY) > 0) {
                     remainderMovementYBuffer = distanceY + movementYBuffer;
                 }
 
-                body.MovementXBuffer = remainderMovementXBuffer;
-                body.MovementYBuffer = remainderMovementYBuffer;
+                body.MoveBufferX = remainderMovementXBuffer;
+                body.MoveBufferY = remainderMovementYBuffer;
                 body.Position = new Vector2(currentX, currentY);
                 body.PhysicsLateUpdate();
             }
