@@ -166,7 +166,7 @@ namespace Raccoon.Components {
             base.OnCollide(collisionAxes);
 
             if (TouchedBottom) { 
-                // falling and reach the ground
+                // falling and reached the ground
                 if (!OnGround) {
                     OnGround = true;
                     IsStillJumping = IsJumping = IsFalling = false;
@@ -178,9 +178,8 @@ namespace Raccoon.Components {
             } else if (TouchedTop) { 
                 // jumping and reached a ceiling
                 if (IsJumping) {
-                    IsJumping = false;
+                    IsJumping = _canKeepCurrentJump = false;
                     IsFalling = true;
-                    _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
                     OnFallingBegin();
                 }
@@ -191,12 +190,12 @@ namespace Raccoon.Components {
             float horizontalVelocity = Velocity.X;
             if (Axis.X == 0f) { // stopping from movement, drag force applies
                 horizontalVelocity = Math.EqualsEstimate(horizontalVelocity, 0f) ? 0f : horizontalVelocity * DragForce;
-            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
+            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && Math.Sign(Axis.X) != Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
                 horizontalVelocity = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
                 horizontalVelocity = Math.Approach(horizontalVelocity, TargetVelocity.X, Acceleration.X * dt);
             } else { // velocity increasing without a limit
-                horizontalVelocity += System.Math.Sign(Axis.X) * Acceleration.X * dt;
+                horizontalVelocity += Math.Sign(Axis.X) * Acceleration.X * dt;
             }
 
             float verticalVelocity = Velocity.Y;
@@ -242,14 +241,14 @@ namespace Raccoon.Components {
         #region Protected Methods
 
         protected override void OnMoving(Vector2 distance) {
-            if (distance.Y > 0) {
-                // checks if it's moving down, so it's falling
+            if (distance.Y > 0f) {
+                // if it's moving down then it's falling
                 if (!IsFalling) { 
                     IsFalling = true;
-                    OnGround = IsJumping = false;
+                    OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
                     OnFallingBegin();
                 }
-            } else if (distance.Y < 0) {
+            } else if (distance.Y < 0f) {
                 if (IsStillJumping) {
                     if (!IsJumping) {
                         IsJumping = JustJumped = true;
