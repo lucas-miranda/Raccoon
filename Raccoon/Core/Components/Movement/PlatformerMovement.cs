@@ -52,23 +52,73 @@ namespace Raccoon.Components {
 
         #region Public Properties
 
+        /// <summary>
+        /// If it's resting on top of something.
+        /// </summary>
         public bool OnGround { get; protected set; }
+
+        /// <summary>
+        /// If it's doing any vertical movement, basically not resting on top of something.
+        /// </summary>
         public bool OnAir { get { return !OnGround; } }
+
+        /// <summary>
+        /// Can make a jump by having jumps left and is able to.
+        /// </summary>
         public bool CanJump { get { return _canJump && Jumps > 0; } set { _canJump = value; } }
+
+        /// <summary>
+        /// Holds True from leaving the ground, by jump, until before start falling.
+        /// </summary>
         public bool IsJumping { get; protected set; }
+
+        /// <summary>
+        /// If it's moving down, falling from a jump or from a higher place.
+        /// </summary>
         public bool IsFalling { get; protected set; } = true;
+
+        /// <summary>
+        /// Can continuously jump while calling Jump() or has to wait an update without calling it to jump again.
+        /// </summary>
         public bool CanContinuousJump { get; set; } = false;
+
+        /// <summary>
+        /// If jump happened just now, set to false after an update.
+        /// </summary>
         public bool JustJumped { get; private set; }
+
+        /// <summary>
+        /// How many jumps can happen until reaches ground again.
+        /// </summary>
         public int MaxJumps { get; set; } = 1;
+
+        /// <summary>
+        /// How many jumps are still left.
+        /// </summary>
         public int Jumps { get; protected set; }
+
+        /// <summary>
+        /// Jump max height (in pixels).
+        /// </summary>
         public float JumpHeight { get; private set; }
+
+        /// <summary>
+        /// Rate of explosion velocity when jump, based on vertical acceleration.
+        /// </summary>
         public float JumpExplosionRate { get; set; } = .5f;
+
+        /// <summary>
+        /// Scale of gravity to apply.
+        /// </summary>
         public float GravityScale { get; set; } = 1f;
 
         #endregion Public Properties
 
         #region Protected Properties
 
+        /// <summary>
+        /// If jump condition is renewed.
+        /// </summary>
         protected bool IsStillJumping { get; set; }
 
         #endregion Protected Properties

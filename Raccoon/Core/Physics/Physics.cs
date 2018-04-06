@@ -462,7 +462,7 @@ namespace Raccoon {
                        diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
 
                 // early exit if next and current positions are the same
-                if (Math.EqualsEstimate(diffX * diffX + diffY * diffY, 0.0)) {
+                if (Math.EqualsEstimate(Math.DistanceSquared(diffX, diffY, diffX, diffY), 0.0)) {
                     body.MoveBufferX = body.MoveBufferY = 0.0;
                     body.PhysicsLateUpdate();
                     continue;
@@ -497,7 +497,7 @@ namespace Raccoon {
 
                 bool canMoveH = true, 
                      canMoveV = true,
-                     singleCheck = distanceX * distanceX + distanceY * distanceY < 1;
+                     singleCheck = Math.DistanceSquared(distanceX, distanceY, distanceX, distanceY) < 1;
 
                 if (singleCheck) {
                     movementX = Math.Sign(directionX);
