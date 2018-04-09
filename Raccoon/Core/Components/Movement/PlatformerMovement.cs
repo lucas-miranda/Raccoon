@@ -152,14 +152,31 @@ namespace Raccoon.Components {
 
         public override void PhysicsUpdate(float dt) {
             base.PhysicsUpdate(dt);
+
+            if (Body.Shape == null) {
+                return;
+            }
+
+            if (OnGround) {
+                // checks if it's touching the ground
+                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)) {
+                    foreach (Contact contact in contacts) {
+                        if (Vector2.Dot(contact.Normal, Vector2.Down) <= 0f && contact.PenetrationDepth <= 1f) {
+                            OnGround = false;
+                        }
+                    }
+                } else {
+                    OnGround = false;
+                }
+            }
         }
 
         public override void PhysicsLateUpdate() {
             base.PhysicsLateUpdate();
 
-            if (IsStillJumping && !OnAir) {
+            /*if (IsStillJumping && !OnAir) {
                 Velocity = new Vector2(Velocity.X, 0f);
-            }
+            }*/
         }
 
         public override void OnCollide(Vector2 collisionAxes) {
@@ -201,7 +218,9 @@ namespace Raccoon.Components {
             float verticalVelocity = Velocity.Y;
 
             // apply gravity force
-            verticalVelocity += GravityScale * GravityForce.Y * dt;
+            if (!OnGround) {
+                verticalVelocity += GravityScale * GravityForce.Y * dt;
+            }
 
             if (IsStillJumping) {
                 // apply jumping acceleration if it's jumping
