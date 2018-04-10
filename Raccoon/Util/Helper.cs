@@ -36,5 +36,21 @@ namespace Raccoon.Util {
             itemA = itemB;
             itemB = aux;
         }
+
+        public static bool InRange(float value, float min, float max) {
+            return value >= min && value <= max;
+        }
+
+        public static bool InRangeExclusive(float value, float min, float max) {
+            return value > min && value < max;
+        }
+
+        public static bool InRangeRightExclusive(float value, float min, float max) {
+            return value >= min && value < max;
+        }
+
+        public static bool InRangeLeftExclusive(float value, float min, float max) {
+            return value > min && value <= max;
+        }
     }
 }
