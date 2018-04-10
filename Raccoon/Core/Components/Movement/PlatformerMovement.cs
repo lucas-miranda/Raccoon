@@ -201,9 +201,27 @@ namespace Raccoon.Components {
                     OnFallingBegin();
                 }
             }
+
+            if (!OnGround) {
+                return;
+            }
+
+            // ramps
+            /*if (TouchedRight) {
+                // 1 - look for a ascending ramp
+                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(2f * Math.Sign(Velocity.X), 0f), CollisionTags, out Contact[] contacts)) {
+                    foreach (Contact contact in contacts) {
+                        if (Vector2.Dot(contact.Normal, new Vector2(Math.Sign(Velocity.X), 1f)) <= 0f || contact.PenetrationDepth > 1f) {
+                            OnGround = false;
+                        }
+                    }
+                }
+            }*/
         }
 
         public override Vector2 Integrate(float dt) {
+            Vector2 displacement = Vector2.Zero;
+
             float horizontalVelocity = Velocity.X;
             if (Axis.X == 0f) { // stopping from movement, drag force applies
                 horizontalVelocity = Math.EqualsEstimate(horizontalVelocity, 0f) ? 0f : horizontalVelocity * DragForce;
@@ -215,21 +233,45 @@ namespace Raccoon.Components {
                 horizontalVelocity += Math.Sign(Axis.X) * Acceleration.X * dt;
             }
 
+            horizontalVelocity += Body.Force.X * dt;
+            displacement.X = horizontalVelocity * dt;
+
+            bool canMoveOnRamps = true;
             float verticalVelocity = Velocity.Y;
 
-            // apply gravity force
             if (!OnGround) {
+                // apply gravity force
                 verticalVelocity += GravityScale * GravityForce.Y * dt;
+                canMoveOnRamps = false;
             }
 
             if (IsStillJumping) {
                 // apply jumping acceleration if it's jumping
                 verticalVelocity -= Acceleration.Y * dt;
+                canMoveOnRamps = false;
             }
 
-            Velocity = Body.Force * dt + new Vector2(horizontalVelocity, verticalVelocity);
+            if (!canMoveOnRamps) {
+                verticalVelocity += Body.Force.Y * dt;
+                displacement.Y = verticalVelocity * dt;
+            } else if (!Math.EqualsEstimate(displacement.X, 0f)
+              && Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(displacement.X, 0f), CollisionTags, out Contact[] contacts)
+              && contacts.Length > 0) {
+                Contact contact = contacts[0];
+                Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}");
 
-            return Velocity * dt;
+                // check if it's on a valid ascending ramp
+                if (contact.PenetrationDepth > 0f
+                  && Helper.InRange(Vector2.Dot(contact.Normal, Vector2.Down), .4f, 1f)) {
+                    float rampAngle = -Math.Angle(new Vector2(contact.Normal.X, -contact.Normal.Y));
+                    Vector2 rampMoveDisplacement = Math.Rotate(new Vector2(displacement.X, 0f), displacement.X > 0f ? -rampAngle : (-rampAngle - 180));
+                    displacement = rampMoveDisplacement;
+                    Debug.WriteLine($"  angle: {rampAngle}, displacement: {rampMoveDisplacement}");
+                }
+            }
+
+            Velocity = new Vector2(horizontalVelocity, verticalVelocity);
+            return displacement;
         }
 
         public void Jump() {
