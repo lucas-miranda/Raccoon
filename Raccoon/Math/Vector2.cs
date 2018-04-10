@@ -157,7 +157,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"[{X} {Y}]";
+            return $"[{X.ToString("0.000")} {Y.ToString("0.000")}]";
         }
 
         public override int GetHashCode() {
