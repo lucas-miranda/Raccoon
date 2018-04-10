@@ -236,22 +236,22 @@ namespace Raccoon.Components {
             horizontalVelocity += Body.Force.X * dt;
             displacement.X = horizontalVelocity * dt;
 
-            bool canMoveOnRamps = true;
+            bool canCheckForRamp = true;
             float verticalVelocity = Velocity.Y;
 
             if (!OnGround) {
                 // apply gravity force
                 verticalVelocity += GravityScale * GravityForce.Y * dt;
-                canMoveOnRamps = false;
+                canCheckForRamp = false;
             }
 
             if (IsStillJumping) {
                 // apply jumping acceleration if it's jumping
                 verticalVelocity -= Acceleration.Y * dt;
-                canMoveOnRamps = false;
+                canCheckForRamp = false;
             }
 
-            if (!canMoveOnRamps) {
+            if (!canCheckForRamp) {
                 verticalVelocity += Body.Force.Y * dt;
                 displacement.Y = verticalVelocity * dt;
             } else if (!Math.EqualsEstimate(displacement.X, 0f)
@@ -261,10 +261,17 @@ namespace Raccoon.Components {
                 Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}");
 
                 // check if it's on a valid ascending ramp
+                float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
                 if (contact.PenetrationDepth > 0f
-                  && Helper.InRange(Vector2.Dot(contact.Normal, Vector2.Down), .4f, 1f)) {
+                  && Helper.InRange(rampSlope, .35f, 1f)) {
                     float rampAngle = -Math.Angle(new Vector2(contact.Normal.X, -contact.Normal.Y));
                     Vector2 rampMoveDisplacement = Math.Rotate(new Vector2(displacement.X, 0f), displacement.X > 0f ? -rampAngle : (-rampAngle - 180));
+
+                    // hack to ensure a smooth movement when going exclusively upwards
+                    if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f)) {
+                        rampMoveDisplacement.Y = Math.Clamp(rampMoveDisplacement.Y, -1f, 1f);
+                    }
+
                     displacement = rampMoveDisplacement;
                     Debug.WriteLine($"  angle: {rampAngle}, displacement: {rampMoveDisplacement}");
                 }
