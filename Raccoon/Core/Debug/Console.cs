@@ -79,13 +79,9 @@ namespace Raccoon {
 
             Message msg = null;
             if (MergeIdenticalMessages && isDefaultCategory) {
-                int messageIndex = _messages.FindIndex(m => m.Text == message);
-                if (messageIndex != -1) {
-                    msg = _messages[messageIndex];
+                if (_messages[0].Text == message) {
+                    msg = _messages[0];
                     msg.Repeat();
-
-                    _messages.RemoveAt(messageIndex);
-                    _messages.Insert(0, msg);
                 }
             }
 
