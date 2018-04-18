@@ -271,6 +271,14 @@
             return (float) (System.Math.Acos((bc + ba - ca) / System.Math.Sqrt(4 * bc * ba)) * RadToDeg);
         }
 
+        public static float AngleArc(Vector2 pointA, Vector2 pointB) {
+            return Angle(pointA, Vector2.Zero, pointB);
+        }
+
+        public static float AngleArc(Vector2 origin, Vector2 pointA, Vector2 pointB) {
+            return Angle(pointA, origin, pointB);
+        }
+
         public static float WrapAngle(float angle) {
             angle = (float) (Microsoft.Xna.Framework.MathHelper.WrapAngle(ToRadians(angle)) * RadToDeg);
             return angle >= 0 ? angle : 360 + angle;
