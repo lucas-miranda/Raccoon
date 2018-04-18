@@ -5,7 +5,8 @@ namespace Raccoon.Components {
         #region Public Members
 
         public static Vector2 GravityForce;
-        public static int LedgeJumpMaxTime = 100; // in miliseconds
+        public static int LedgeJumpMaxTime = 200; // in miliseconds
+        public static uint JumpInputBufferTime = 200; // milliseconds
 
         public event System.Action OnJumpBegin = delegate { },
                                    OnTouchGround = delegate { },
@@ -18,8 +19,10 @@ namespace Raccoon.Components {
         // jump
         private bool _canJump = true, _canKeepCurrentJump = true, _requestedJump;
         private int _jumpMaxY, _ledgeJumpTime;
+        private uint _lastTimeFirstRequestToJump;
 
         // ramp movement
+        private bool _walkingOnRamp;
         /*private bool _lookingForRamp, _walkingOnRamp, _waitingForNextRampCollision, _canApplyRampCorrection;
         private int _searchRampX, _searchRampY;*/
 
@@ -127,16 +130,20 @@ namespace Raccoon.Components {
 
         public override void Update(int delta) {
             base.Update(delta);
-            if (OnGround) {
-                if (!CanContinuousJump) {
+            if (!CanContinuousJump) {
+                if (!_canKeepCurrentJump && !_requestedJump) {
+                    _lastTimeFirstRequestToJump = 0;
+
                     // continuous jump lock (must release and press jump button to jump again)
-                    if (!_canKeepCurrentJump && !_requestedJump && (Jumps > 0 || OnGround)) {
+                    if (Jumps > 0 || OnGround) {
                         _canKeepCurrentJump = true;
                     }
-
-                    _requestedJump = false;
                 }
-            } else if (IsFalling && _ledgeJumpTime <= LedgeJumpMaxTime) {
+
+                _requestedJump = false;
+            }
+
+            if (IsFalling && _ledgeJumpTime <= LedgeJumpMaxTime) {
                 _ledgeJumpTime += delta;
             }
 
@@ -159,11 +166,12 @@ namespace Raccoon.Components {
 
             if (OnGround) {
                 // checks if it's touching the ground
-                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)) {
-                    foreach (Contact contact in contacts) {
-                        if (Vector2.Dot(contact.Normal, Vector2.Down) <= 0f && contact.PenetrationDepth <= 1f) {
-                            OnGround = false;
-                        }
+                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
+                  && contacts.Length > 0) {
+                    Contact contact = contacts[0];
+                    float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
+                    if (rampSlope <= 0f) { // || Math.EqualsEstimate(contact.PenetrationDepth, 0f)) {
+                        OnGround = false;
                     }
                 } else {
                     OnGround = false;
@@ -173,10 +181,6 @@ namespace Raccoon.Components {
 
         public override void PhysicsLateUpdate() {
             base.PhysicsLateUpdate();
-
-            /*if (IsStillJumping && !OnAir) {
-                Velocity = new Vector2(Velocity.X, 0f);
-            }*/
         }
 
         public override void OnCollide(Vector2 collisionAxes) {
@@ -188,6 +192,11 @@ namespace Raccoon.Components {
                     OnGround = true;
                     IsStillJumping = IsJumping = IsFalling = false;
                     Jumps = MaxJumps;
+
+                    if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                        _canKeepCurrentJump = true;
+                    }
+
                     OnTouchGround();
                 }
 
@@ -205,18 +214,6 @@ namespace Raccoon.Components {
             if (!OnGround) {
                 return;
             }
-
-            // ramps
-            /*if (TouchedRight) {
-                // 1 - look for a ascending ramp
-                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(2f * Math.Sign(Velocity.X), 0f), CollisionTags, out Contact[] contacts)) {
-                    foreach (Contact contact in contacts) {
-                        if (Vector2.Dot(contact.Normal, new Vector2(Math.Sign(Velocity.X), 1f)) <= 0f || contact.PenetrationDepth > 1f) {
-                            OnGround = false;
-                        }
-                    }
-                }
-            }*/
         }
 
         public override Vector2 Integrate(float dt) {
@@ -236,45 +233,92 @@ namespace Raccoon.Components {
             horizontalVelocity += Body.Force.X * dt;
             displacement.X = horizontalVelocity * dt;
 
-            bool canCheckForRamp = true;
             float verticalVelocity = Velocity.Y;
 
-            if (!OnGround) {
-                // apply gravity force
-                verticalVelocity += GravityScale * GravityForce.Y * dt;
-                canCheckForRamp = false;
+            float dX = displacement.X + (float) Body.MoveBufferX;
+            if (!Math.EqualsEstimate(displacement.X, 0f)) {
+                // Ascending Ramp
+                /*if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, -.7f), CollisionTags, out Contact[] ascContacts)
+                  && ascContacts.Length > 0) {
+                    Contact contact = ascContacts[0];
+
+                    // check if it's on a valid ascending ramp
+                    float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
+                    //Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {rampSlope}");
+                    if (contact.PenetrationDepth > 0f
+                      && Helper.InRange(rampSlope, .4f, 1f)) {
+                        int hSign = Math.Sign(dX);
+
+                        Vector2 contactNormalPerp = hSign > 0 ? contact.Normal.PerpendicularCCW() : contact.Normal.PerpendicularCW();
+                        float displacementProjection = Vector2.Dot(new Vector2(dX, 0f), contactNormalPerp);
+                        Vector2 rampMoveDisplacement = contactNormalPerp * displacementProjection;
+
+                        // hack to ensure a smooth movement when going exclusively upwards
+                        if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f) || Math.EqualsEstimate(rampMoveDisplacement.Y, 0f)) {
+                            rampMoveDisplacement.Y = -1f; // move just a single pixel
+                            displacement = rampMoveDisplacement;
+                        } else {
+                            displacement = rampMoveDisplacement + new Vector2(0f, -.7f);
+                        }
+
+                        Body.MoveBufferX = 0;
+                        //Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");
+                    }
+                } else */
+
+                // Descending Ramp
+                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, 3f), CollisionTags, out Contact[] descContacts)
+                  && descContacts.Length > 0) {
+                    int contactIndex = System.Array.FindIndex(descContacts, c => c.PenetrationDepth > 0f && Helper.InRangeExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
+
+                    // check if it's on a valid ascending ramp
+                    if (contactIndex > -1) {
+                        Contact contact = descContacts[contactIndex];
+                        Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
+
+                        int hSign = Math.Sign(dX);
+
+                        Vector2 contactNormalPerp = hSign > 0 ? contact.Normal.PerpendicularCCW() : contact.Normal.PerpendicularCW();
+                        float displacementProjection = Vector2.Dot(new Vector2(dX, 0f), contactNormalPerp);
+                        Vector2 rampMoveDisplacement = contactNormalPerp * displacementProjection;
+
+                        // hack to ensure a smooth movement when going exclusively upwards
+                        /*if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f) || Math.EqualsEstimate(rampMoveDisplacement.Y, 0f)) {
+                            rampMoveDisplacement.Y = 1f; // move just a single pixel
+                            displacement = rampMoveDisplacement;
+                        } else {
+                            displacement = rampMoveDisplacement + new Vector2(0f, 0f);
+                        }*/
+
+                        //displacement = new Vector2(rampMoveDisplacement.X, rampMoveDisplacement.Y > 1f ? 2f : rampMoveDisplacement.Y);
+                        displacement = rampMoveDisplacement;
+
+                        Body.MoveBufferX = 0;
+                        Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");
+                        _walkingOnRamp = true;
+                    } else {
+                        Debug.WriteLine("not a ramp");
+                        _walkingOnRamp = false;
+                    }
+                } else {
+                    _walkingOnRamp = false;
+                }
             }
 
-            if (IsStillJumping) {
-                // apply jumping acceleration if it's jumping
-                verticalVelocity -= Acceleration.Y * dt;
-                canCheckForRamp = false;
-            }
+            if (!_walkingOnRamp) {
+                if (!OnGround) {
+                    // apply gravity force
+                    verticalVelocity += GravityScale * GravityForce.Y * dt;
+                }
 
-            if (!canCheckForRamp) {
+                if (IsStillJumping) {
+                    // apply jumping acceleration if it's jumping
+                    verticalVelocity -= Acceleration.Y * dt;
+                }
+
                 verticalVelocity += Body.Force.Y * dt;
                 displacement.Y = verticalVelocity * dt;
-            } else if (!Math.EqualsEstimate(displacement.X, 0f)
-              && Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(displacement.X, 0f), CollisionTags, out Contact[] contacts)
-              && contacts.Length > 0) {
-                Contact contact = contacts[0];
-                Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}");
-
-                // check if it's on a valid ascending ramp
-                float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
-                if (contact.PenetrationDepth > 0f
-                  && Helper.InRange(rampSlope, .35f, 1f)) {
-                    float rampAngle = -Math.Angle(new Vector2(contact.Normal.X, -contact.Normal.Y));
-                    Vector2 rampMoveDisplacement = Math.Rotate(new Vector2(displacement.X, 0f), displacement.X > 0f ? -rampAngle : (-rampAngle - 180));
-
-                    // hack to ensure a smooth movement when going exclusively upwards
-                    if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f)) {
-                        rampMoveDisplacement.Y = Math.Clamp(rampMoveDisplacement.Y, -1f, 1f);
-                    }
-
-                    displacement = rampMoveDisplacement;
-                    Debug.WriteLine($"  angle: {rampAngle}, displacement: {rampMoveDisplacement}");
-                }
+                Debug.WriteLine("cant check for ramp");
             }
 
             Velocity = new Vector2(horizontalVelocity, verticalVelocity);
@@ -284,6 +328,10 @@ namespace Raccoon.Components {
         public void Jump() {
             // continuous jump lock (must release and press jump button to jump again)
             _requestedJump = true;
+            if (_lastTimeFirstRequestToJump == 0) {
+                _lastTimeFirstRequestToJump = Body.Entity.Timer;
+            }
+
             if (!_canKeepCurrentJump) {
                 return;
             }
