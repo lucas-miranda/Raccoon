@@ -27,10 +27,10 @@ namespace Raccoon {
         }
 
         private bool TestSAT(Polygon A, Polygon B, out Contact? contact) {
-            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length + 1];
-            
-            axes[0] = (B.Center - A.Center).Normalized();
-            int i = 1;
+            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length /*+ 1*/];
+
+            //axes[0] = (B.Center - A.Center).Normalized();
+            int i = 0; //1;
 
             // polygon A axes
             foreach (Vector2 normal in A.Normals) {

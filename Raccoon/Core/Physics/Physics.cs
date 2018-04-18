@@ -548,7 +548,7 @@ namespace Raccoon {
                             // test for horizontal collision (if it's moving horizontally)
                             if (movementX != 0
                               && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out Contact[] contactsH)
-                              && contactsH[0].PenetrationDepth > 0f) {
+                              && System.Array.Exists(contactsH, c => c.PenetrationDepth > 0f)) {
                                 collidedH = true;
 
                                 if (isMovementCollidable) {
@@ -562,9 +562,9 @@ namespace Raccoon {
                             // test for vertical collision (if it's moving vertically)
                             if (movementY != 0
                               && CheckCollision(body.Shape, moveVerticalPos, otherBody, out Contact[] contactsV)
-                              && contactsV[0].PenetrationDepth > 0f) {
+                              && System.Array.Exists(contactsV, c => c.PenetrationDepth > 0f)) {
                                 collidedV = true;
-
+                                
                                 if (isMovementCollidable) {
                                     canMoveV = false;
                                     distanceY = 0;
