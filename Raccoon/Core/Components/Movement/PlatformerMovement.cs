@@ -22,7 +22,7 @@ namespace Raccoon.Components {
         private uint _lastTimeFirstRequestToJump;
 
         // ramp movement
-        private bool _walkingOnRamp;
+        private bool _isWalkingOnRamp;
         /*private bool _lookingForRamp, _walkingOnRamp, _waitingForNextRampCollision, _canApplyRampCorrection;
         private int _searchRampX, _searchRampY;*/
 
@@ -164,7 +164,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (OnGround) {
+            if (OnGround && !_isWalkingOnRamp) {
                 // checks if it's touching the ground
                 if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
                   && contacts.Length > 0) {
@@ -295,17 +295,17 @@ namespace Raccoon.Components {
 
                         Body.MoveBufferX = 0;
                         Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");
-                        _walkingOnRamp = true;
+                        _isWalkingOnRamp = true;
                     } else {
                         Debug.WriteLine("not a ramp");
-                        _walkingOnRamp = false;
+                        _isWalkingOnRamp = false;
                     }
                 } else {
-                    _walkingOnRamp = false;
+                    _isWalkingOnRamp = false;
                 }
             }
 
-            if (!_walkingOnRamp) {
+            if (!_isWalkingOnRamp) {
                 if (!OnGround) {
                     // apply gravity force
                     verticalVelocity += GravityScale * GravityForce.Y * dt;
@@ -359,7 +359,7 @@ namespace Raccoon.Components {
         protected override void OnMoving(Vector2 distance) {
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
-                if (!IsFalling) { 
+                if (!IsFalling && !_isWalkingOnRamp) { 
                     IsFalling = true;
                     OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
                     OnFallingBegin();
