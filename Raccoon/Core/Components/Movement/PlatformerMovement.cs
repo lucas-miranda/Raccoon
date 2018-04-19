@@ -152,7 +152,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nForce: {Body.Force}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump};\nIsJumping? {IsJumping}; IsFalling: {IsFalling}\nJumps: {Jumps}\nJump Height: {JumpHeight}\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_canKeepCurrentJump}, jumpMaxY: {_jumpMaxY}"; //\nlookingForRamp? {_lookingForRamp}, walkingOnRamp: {_walkingOnRamp}, ramp X: {_searchRampX}, Y: {_searchRampY}\ncanApplyRampCorreciton? {_canApplyRampCorrection}";
+            string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nForce: {Body.Force}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump};\nIsJumping? {IsJumping}; IsFalling: {IsFalling}\nJumps: {Jumps}\nJump Height: {JumpHeight}\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_canKeepCurrentJump}, jumpMaxY: {_jumpMaxY}\n\n- Ramps\nisWalkingOnRamp? {_isWalkingOnRamp}";
             Debug.DrawString(Camera.Current, new Vector2(Game.Instance.ScreenWidth - 200f, Game.Instance.ScreenHeight / 2f), info);
             Debug.DrawLine(new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), Graphics.Color.Yellow);
         }
@@ -267,7 +267,7 @@ namespace Raccoon.Components {
                 } else */
 
                 // Descending Ramp
-                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, 3f), CollisionTags, out Contact[] descContacts)
+                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1.95f), CollisionTags, out Contact[] descContacts)
                   && descContacts.Length > 0) {
                     int contactIndex = System.Array.FindIndex(descContacts, c => c.PenetrationDepth > 0f && Helper.InRangeExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
 
@@ -302,6 +302,7 @@ namespace Raccoon.Components {
                     }
                 } else {
                     _isWalkingOnRamp = false;
+                    Debug.WriteLine($"check value => {Math.Max(1f, Math.Ceiling(dX) * 2f)}");
                 }
             }
 
@@ -348,6 +349,7 @@ namespace Raccoon.Components {
             }
 
             IsStillJumping = true;
+            _isWalkingOnRamp = false;
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
         }
