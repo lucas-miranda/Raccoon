@@ -7,6 +7,7 @@ namespace Raccoon {
     public class GridShape : IShape {
 #if DEBUG
         public static readonly Color BackgroundGridColor = new Color(0x9B999AFF);
+        public static bool DebugRenderDetailed = true;
 #endif
 
         private Dictionary<uint, TileShape> _collisionShapes = new Dictionary<uint, TileShape>();
@@ -35,6 +36,7 @@ namespace Raccoon {
         public Polygon BoxTilePolygon { get; private set; }
 
         public void DebugRender(Vector2 position, Color color) {
+#if DEBUG
             // background grid
             //Debug.DrawGrid(TileSize, Columns, Rows, position, BackgroundGridColor);
 
@@ -63,12 +65,15 @@ namespace Raccoon {
                         Debug.DrawLines(points, Color.Red);
                     }
 
-                    //Debug.DrawString(Debug.Transform(tilePos + TileSize / 2f), $"{components.Count}");
+                    if (DebugRenderDetailed) {
+                        Debug.DrawString(Debug.Transform(tilePos + TileSize / 2f), $"{components.Count}");
+                    }
                 }
             }
 
             // bounding box
             //Debug.DrawRectangle(new Rectangle(position, Debug.Transform(BoundingBox)), Color.Indigo);
+#endif
         }
 
         public bool ContainsPoint(Vector2 point) {
@@ -218,6 +223,11 @@ namespace Raccoon {
             }
 
             public uint Gid { get; private set; }
+            public uint Id { get { return Gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag); } }
+
+            public override string ToString() {
+                return $"[TileShape | Gid: {Gid}, Id: {Id}]";
+            }
         }
 
         #endregion TileShape Class
@@ -226,6 +236,10 @@ namespace Raccoon {
 
         public class BoxTileShape : TileShape {
             public BoxTileShape(uint gid) : base(gid) { }
+
+            public override string ToString() {
+                return $"[BoxTileShape | Gid: {Gid}, Id: {Id}]";
+            }
         }
 
         #endregion BoxTileShape Class
@@ -238,6 +252,10 @@ namespace Raccoon {
             }
 
             public Polygon Polygon { get; private set; }
+
+            public override string ToString() {
+                return $"[PolygonTileShape | Gid: {Gid}, Id: {Id}, Polygon: {Polygon}]";
+            }
         }
 
         #endregion PolygonTileShape Class

@@ -157,7 +157,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"[{X} {Y}]";
+            return $"[{X.ToString("0.###")} {Y.ToString("0.###")}]";
         }
 
         public override int GetHashCode() {
@@ -185,7 +185,7 @@ namespace Raccoon {
         }
 
         public static bool operator !=(Vector2 l, Vector2 r) {
-            return !(l == r);
+            return !EqualsEstimate(l, r); 
         }
 
         public static Vector2 operator -(Vector2 v) {

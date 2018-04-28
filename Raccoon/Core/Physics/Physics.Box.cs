@@ -1,4 +1,6 @@
-﻿using Raccoon.Util;
+﻿using System.Collections.Generic;
+
+using Raccoon.Util;
 
 namespace Raccoon {
     public sealed partial class Physics {
@@ -128,17 +130,15 @@ namespace Raccoon {
             Polygon polygonA = new Polygon(boxA.Shape);
             polygonA.Translate(APos);
 
-            Contact? contact = TestGrid(gridB, BPos, boxBoundingBox, 
+            List<Contact> gridContacts = TestGrid(gridB, BPos, boxBoundingBox, 
                 (Polygon tilePolygon) => {
                     TestSAT(polygonA, tilePolygon, out Contact? tileContact);
                     return tileContact;
                 }
             );
 
-            if (contact != null) {
-                contacts = new Contact[] {
-                    contact.Value
-                };
+            if (gridContacts.Count > 0) {
+                contacts = gridContacts.ToArray();
                 return true;
             }
 

@@ -1,4 +1,4 @@
-﻿using Raccoon.Components;
+﻿using System.Collections.Generic;
 
 namespace Raccoon {
     public sealed partial class Physics {
@@ -80,17 +80,15 @@ namespace Raccoon {
                 return false;
             }
 
-            Contact? contact = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius), 
+            List<Contact> gridContacts = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius), 
                 (Polygon tilePolygon) => {
                     TestSAT(circleA, APos, tilePolygon, out Contact? tileContact);
                     return new Contact(closestPoint, tileContact.Value.Normal, tileContact.Value.PenetrationDepth);
                 }
             );
 
-            if (contact != null) {
-                contacts = new Contact[] {
-                    contact.Value
-                };
+            if (gridContacts.Count > 0) {
+                contacts = gridContacts.ToArray();
                 return true;
             }
 

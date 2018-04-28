@@ -35,8 +35,8 @@ namespace Raccoon {
 
         #endregion Grid vs Polygon
 
-        private Contact? TestGrid(GridShape grid, Vector2 gridPos, Rectangle otherBoundingBox, System.Func<Polygon, Contact?> SAT) {
-            Contact? totalContact = null;
+        private List<Contact> TestGrid(GridShape grid, Vector2 gridPos, Rectangle otherBoundingBox, System.Func<Polygon, Contact?> SAT) {
+            List<Contact> contacts = new List<Contact>();
             Polygon boxTilePolygon = new Polygon(grid.BoxTilePolygon);
             boxTilePolygon.Translate(gridPos);
 
@@ -79,11 +79,13 @@ namespace Raccoon {
                         continue;
                     }
 
-                    totalContact = totalContact == null ? contact : Contact.Sum(contact.Value, totalContact.Value);
+                    //Debug.Info($"Collision with tile shape: {shape}");
+                    //totalContact = totalContact == null ? contact : Contact.Sum(contact.Value, totalContact.Value);
+                    contacts.Add(contact.Value);
                 }
             }
 
-            return totalContact;
+            return contacts;
         }
     }
 }

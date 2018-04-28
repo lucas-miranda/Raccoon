@@ -12,8 +12,21 @@
 
         #region Numeric Stuff
 
+
+        public static float Abs(float n) {
+            return System.Math.Abs(n);
+        }
+
+        public static double Abs(double n) {
+            return System.Math.Abs(n);
+        }
+
+        public static int Abs(int n) {
+            return System.Math.Abs(n);
+        }
+
         public static Vector2 Abs(Vector2 vec) {
-            return new Vector2(System.Math.Abs(vec.X), System.Math.Abs(vec.Y));
+            return new Vector2(Abs(vec.X), Abs(vec.Y));
         }
 
         public static float Approach(float start, float end, float amount) {
@@ -28,8 +41,16 @@
             return new Vector2(Approach(start.X, end.X, amount.X), Approach(start.Y, end.Y, amount.Y));
         }
 
+        public static float Ceiling(float n) {
+            return (float) System.Math.Ceiling(n);
+        }
+
+        public static double Ceiling(double n) {
+            return System.Math.Ceiling(n);
+        }
+
         public static Vector2 Ceiling(Vector2 value) {
-            return new Vector2((float) System.Math.Ceiling(value.X), (float) System.Math.Ceiling(value.Y));
+            return new Vector2(Ceiling(value.X), Ceiling(value.Y));
         }
 
         public static float Clamp(float value, float min, float max) {
@@ -64,8 +85,16 @@
             return (value - center) / center;
         }
 
+        public static float Floor(float n) {
+            return (float) System.Math.Floor(n);
+        }
+
+        public static double Floor(double n) {
+            return System.Math.Floor(n);
+        }
+
         public static Vector2 Floor(Vector2 value) {
-            return new Vector2((float) System.Math.Floor(value.X), (float) System.Math.Floor(value.Y));
+            return new Vector2(Floor(value.X), Floor(value.Y));
         }
 
         public static float Lerp(float start, float end, float t) {
@@ -134,17 +163,49 @@
             return (value - center) / center;
         }
 
-        public static Vector2 Round(Vector2 value) {
-            return new Vector2(System.Math.Round(value.X), System.Math.Round(value.Y));
+        public static float Round(float n) {
+            return (float) System.Math.Round(n);
         }
 
+        public static double Round(double n) {
+            return System.Math.Round(n);
+        }
+
+        public static Vector2 Round(Vector2 value) {
+            return new Vector2(Round(value.X), Round(value.Y));
+        }
+
+        public static int Sign(float n) {
+            return System.Math.Sign(n);
+        }
+
+        public static int Sign(double n) {
+            return System.Math.Sign(n);
+        }
+
+        public static int Sign(int n) {
+            return System.Math.Sign(n);
+        }
+
+        public static float Truncate(float n) {
+            return (float) System.Math.Truncate(n);
+        }
+
+        public static double Truncate(double n) {
+            return System.Math.Truncate(n);
+        }
+
+        #region Comparison
+
         public static bool EqualsEstimate(float a, float b, float tolerance = Epsilon) {
-            return System.Math.Abs(a - b) < tolerance;
+            return Abs(a - b) < tolerance;
         }
 
         public static bool EqualsEstimate(double a, double b, double tolerance = Epsilon) {
-            return System.Math.Abs(a - b) < tolerance;
+            return Abs(a - b) < tolerance;
         }
+
+        #endregion Comparison
 
         #endregion Numeric Stuff
 
@@ -210,6 +271,14 @@
             return (float) (System.Math.Acos((bc + ba - ca) / System.Math.Sqrt(4 * bc * ba)) * RadToDeg);
         }
 
+        public static float AngleArc(Vector2 pointA, Vector2 pointB) {
+            return Angle(pointA, Vector2.Zero, pointB);
+        }
+
+        public static float AngleArc(Vector2 origin, Vector2 pointA, Vector2 pointB) {
+            return Angle(pointA, origin, pointB);
+        }
+
         public static float WrapAngle(float angle) {
             angle = (float) (Microsoft.Xna.Framework.MathHelper.WrapAngle(ToRadians(angle)) * RadToDeg);
             return angle >= 0 ? angle : 360 + angle;
@@ -219,12 +288,36 @@
             return System.Math.Abs(to - from);
         }
 
+        public static float Distance(float x1, float y1, float x2, float y2) {
+            return (float) System.Math.Sqrt(DistanceSquared(x1, y1, x2, y2));
+        }
+
+        public static double Distance(double x1, double y1, double x2, double y2) {
+            return System.Math.Sqrt(DistanceSquared(x1, y1, x2, y2));
+        }
+
+        public static int Distance(int x1, int y1, int x2, int y2) {
+            return (int) System.Math.Sqrt(DistanceSquared(x1, y1, x2, y2));
+        }
+
         public static float Distance(Vector2 from, Vector2 to) {
             return (float) System.Math.Sqrt(DistanceSquared(from, to));
         }
 
         public static float Distance(Line line, Vector2 point) {
             return (float) System.Math.Sqrt(DistanceSquared(line, point));
+        }
+
+        public static float DistanceSquared(float x1, float y1, float x2, float y2) {
+            return x1 * x2 + y1 * y2;
+        }
+
+        public static double DistanceSquared(double x1, double y1, double x2, double y2) {
+            return x1 * x2 + y1 * y2;
+        }
+
+        public static int DistanceSquared(int x1, int y1, int x2, int y2) {
+            return x1 * x2 + y1 * y2;
         }
 
         public static float DistanceSquared(Vector2 from, Vector2 to) {
