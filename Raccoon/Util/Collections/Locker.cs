@@ -1,15 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace Raccoon.Util.Collections {
-    public class Locker<T> {
+    public class Locker<T> : ICollection<T> {
         #region Private Members
 
         private List<T> _toAdd = new List<T>(), 
                         _toRemove = new List<T>(), 
                         _items = new List<T>();
 
-        private IComparer<T> _sortComparer;
+        private System.Comparison<T> _sortComparer;
 
         #endregion Private Members
 
@@ -17,7 +18,7 @@ namespace Raccoon.Util.Collections {
 
         public Locker() { }
 
-        public Locker(IComparer<T> comparer) {
+        public Locker(System.Comparison<T> comparer) {
             _sortComparer = comparer;
         }
 
@@ -30,6 +31,8 @@ namespace Raccoon.Util.Collections {
         public ReadOnlyCollection<T> ToAdd { get { return _toAdd.AsReadOnly(); } }
         public ReadOnlyCollection<T> ToRemove { get { return _toRemove.AsReadOnly(); } }
         public ReadOnlyCollection<T> Items { get { return _items.AsReadOnly(); } }
+
+        public bool IsReadOnly => throw new System.NotImplementedException();
 
         public T this[int i] {
             get {
@@ -178,6 +181,7 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
+            Upkeep();
             Lock();
 
             using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
@@ -187,7 +191,12 @@ namespace Raccoon.Util.Collections {
             }
 
             Unlock();
-            Upkeep();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex) {
+            for (int i = 0; i < _items.Count; i++) {
+                array[arrayIndex + i] = _items[i];
+            }
         }
 
         public override string ToString() {
@@ -207,7 +216,10 @@ namespace Raccoon.Util.Collections {
         }
 
         private void Upkeep() {
+            bool modified = false;
+
             if (_toAdd.Count > 0) {
+                modified = true;
                 foreach (T item in _toAdd) {
                     AddItem(item);
                 }
@@ -216,6 +228,7 @@ namespace Raccoon.Util.Collections {
             }
 
             if (_toRemove.Count > 0) {
+                modified = true;
                 foreach (T item in _toRemove) {
                     RemoveItem(item);
                 }
@@ -223,7 +236,9 @@ namespace Raccoon.Util.Collections {
                 _toRemove.Clear();
             }
 
-            Sort();
+            if (modified) {
+                Sort();
+            }
         }
 
         private void AddItem(T item) {
@@ -240,6 +255,10 @@ namespace Raccoon.Util.Collections {
             }
 
             _items.Sort(_sortComparer);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
 
         #endregion Private Methods
