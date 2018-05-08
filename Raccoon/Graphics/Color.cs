@@ -72,10 +72,10 @@ namespace Raccoon.Graphics {
         }
 
         public Color(float r, float g, float b, float a = 1f) {
-            R = (byte) ((r * byte.MaxValue) % 255);
-            G = (byte) ((g * byte.MaxValue) % 255);
-            B = (byte) ((b * byte.MaxValue) % 255);
-            A = (byte) ((r * byte.MaxValue) % 255);
+            R = (byte) Util.Math.Clamp(r * byte.MaxValue, 0, 255);
+            G = (byte) Util.Math.Clamp(g * byte.MaxValue, 0, 255);
+            B = (byte) Util.Math.Clamp(b * byte.MaxValue, 0, 255);
+            A = (byte) Util.Math.Clamp(a * byte.MaxValue, 0, 255);
         }
 
         public Color(Color color, float alpha) : this (color.R, color.G, color.B, (byte) ((alpha * byte.MaxValue) % 255)) {
@@ -87,6 +87,17 @@ namespace Raccoon.Graphics {
 
         public uint RGBA { get { return ((uint) R << 24) | ((uint) G << 16) | ((uint) B << 8) | A; } }
         public uint ARGB { get { return ((uint) A << 24) | ((uint) R << 16) | ((uint) G << 8) | B; } }
+
+        public float[] Normalized {
+            get {
+                return new float[4] {
+                    R / 255f, 
+                    G / 255f, 
+                    B / 255f, 
+                    A / 255f
+                };
+            }
+        }
 
         #endregion Public Properties
 
@@ -172,6 +183,17 @@ namespace Raccoon.Graphics {
 
         public static Color operator -(Color l, Color r) {
             return new Color((byte) (l.R - r.R), (byte) (l.G - r.G), (byte) (l.B - r.B), (byte) (l.A - r.A));
+        }
+
+        public static Color operator *(Color l, Color r) {
+            float[] lNormalized = l.Normalized,
+                    rNormalized = r.Normalized;
+            return new Color(
+                lNormalized[0] * rNormalized[0], 
+                lNormalized[1] * rNormalized[1], 
+                lNormalized[2] * rNormalized[2], 
+                lNormalized[3] * rNormalized[3]
+            );
         }
 
         public static Color operator *(Color l, float n) {

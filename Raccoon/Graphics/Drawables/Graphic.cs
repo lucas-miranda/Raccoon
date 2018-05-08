@@ -7,6 +7,14 @@ namespace Raccoon.Graphics {
         private float _opacity = 1f;
         private Color _color = Color.White;
 
+#if DEBUG
+        private Vector2 _lastPosition, _lastScale;
+        private float _lastRotation;
+        private ImageFlip _lastFlip;
+        private Color _lastColor;
+        private Vector2 _lastScroll;
+#endif
+
         #endregion Private Members
 
         #region Constructors
@@ -23,8 +31,10 @@ namespace Raccoon.Graphics {
         public bool Visible { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
         public Vector2 Position { get; set; }
+        public Vector2 Center { get { return Position + Size / 2f; } set { Position = value - Size / 2f; } }
         public Vector2 Origin { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
+        public float ScaleXY { get { return Scale.X; } set { Scale = new Vector2(value); } }
         public int Layer { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -79,25 +89,9 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
-        public void Render() {
-            Render(Position, Color, Rotation);
+        public static int LayerComparer(Graphic a, Graphic b) {
+            return System.Math.Sign(a.Layer - b.Layer);
         }
-
-        public void Render(Vector2 position) {
-            Render(position, Color, Rotation);
-        }
-
-        public void Render(Vector2 position, Color color) {
-            Render(position, color, Rotation);
-        }
-
-        public void Render(Vector2 position, float rotation) {
-            Render(position, Color, rotation);
-        }
-
-        #endregion Public Methods
-
-        #region Public Virtual Methods
 
         public virtual void Update(int delta) {
             if (NeedsReload) {
@@ -106,31 +100,58 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public virtual void DebugRender() { }
+        public void Render() {
+            Render(Vector2.Zero, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+        }
 
-        #endregion Public Virtual Methods
+        public void Render(Vector2 position) {
+            Render(position, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+        }
 
-        #region Public Abstract Methods
+        public void Render(Vector2 position, float rotation) {
+            Render(position, rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+        }
 
-        public abstract void Render(Vector2 position, Color color, float rotation);
+        public void Render(Vector2 position, float rotation, Vector2 scale) {
+            Render(position, rotation, scale, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+        }
+
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip) {
+            Render(position, rotation, scale, flip, Color.White, Vector2.Zero, Shader);
+        }
+
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color) {
+            Render(position, rotation, scale, flip, color, Vector2.Zero, Shader);
+        }
+
+        public virtual void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+#if DEBUG
+            _lastPosition = position;
+            _lastRotation = rotation;
+            _lastScale = scale;
+            _lastFlip = flip;
+            _lastColor = color;
+            _lastScroll = scroll;
+#endif
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public void DebugRender() {
+            DebugRender(_lastPosition, _lastRotation, _lastScale, _lastFlip, _lastColor, _lastScroll);
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public virtual void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
+        }
+
         public abstract void Dispose();
 
-        #endregion Public Abstract Methods
+        #endregion Public Methods
 
         #region Protected Methods
 
         protected virtual void Load() { }
 
         #endregion Protected Methods
-
-        #region Layer Comparer
-
-        public class LayerComparer : IComparer<Graphic> {
-            public int Compare(Graphic x, Graphic y) {
-                return System.Math.Sign(x.Layer - y.Layer);
-            }
-        }
-
-        #endregion Layer Comparer
     }
 }

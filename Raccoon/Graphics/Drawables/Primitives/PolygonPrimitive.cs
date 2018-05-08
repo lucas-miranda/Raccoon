@@ -11,7 +11,7 @@ namespace Raccoon.Graphics.Primitives {
 
         public Polygon Shape { get; set; }
 
-        public override void Render(Vector2 position, Color color, float rotation) {
+        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             if (Shape.VertexCount == 0) {
                 return;
             }

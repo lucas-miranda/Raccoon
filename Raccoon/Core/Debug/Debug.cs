@@ -171,7 +171,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
-            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, Util.Math.Floor(position), color ?? Color.White, 0, Vector2.Zero, scale, ImageFlip.None, Vector2.One);
+            Game.Instance.Core.DebugSurface.DrawString(Game.Instance.Core.StdFont, message, Util.Math.Floor(position), 0, scale, ImageFlip.None, color ?? Color.White, Vector2.Zero, Vector2.One);
         }
 
         [Conditional("DEBUG")]

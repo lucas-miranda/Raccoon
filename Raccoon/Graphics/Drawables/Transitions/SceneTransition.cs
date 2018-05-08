@@ -50,8 +50,8 @@
             }
         }
 
-        public override void Render(Vector2 position, Color color, float rotation) {
-            EndGraphic.Render(position, rotation);
+        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            EndGraphic.Render(position, rotation, scale, flip, color, scroll, shader);
         }
 
         public virtual void Play(int repeatTimes = 0) {

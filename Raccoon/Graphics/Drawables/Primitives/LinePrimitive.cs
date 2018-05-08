@@ -18,7 +18,7 @@
         public Vector2 To { get { return From + _to; } set { _to = value - From; } }
         public Line Equation { get { return new Line(From, To); } }
 
-        public override void Render(Vector2 position, Color color, float rotation) {
+        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             Game.Instance.Core.BasicEffect.World = Surface.World;
             Game.Instance.Core.BasicEffect.View = Surface.View;
             Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
@@ -29,8 +29,8 @@
                 pass.Apply();
                 Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(position.X - Origin.X, position.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(position.X - Origin.X + _to.X, position.Y - Origin.Y + _to.Y, 0), Microsoft.Xna.Framework.Color.White)
+                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White),
+                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X + _to.X, Position.Y + position.Y - Origin.Y + _to.Y, 0), Microsoft.Xna.Framework.Color.White)
                     }, 0, 1);
             }
 

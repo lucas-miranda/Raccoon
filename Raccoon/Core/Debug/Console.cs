@@ -53,7 +53,8 @@ namespace Raccoon {
                 Font = Game.Instance.Core.StdFont;
             }
 
-            _background = new RectanglePrimitive(Game.Instance.WindowWidth, Game.Instance.WindowHeight, Color.Black) {
+            _background = new RectanglePrimitive(Game.Instance.WindowWidth, Game.Instance.WindowHeight) {
+                Color = Color.Black,
                 Surface = Game.Instance.Core.DebugSurface,
                 Opacity = 0.25f
             };
@@ -79,7 +80,7 @@ namespace Raccoon {
 
             Message msg = null;
             if (MergeIdenticalMessages && isDefaultCategory) {
-                if (_messages[0].Text == message) {
+                if (_messages.Count > 0 && _messages[0].Text == message) {
                     msg = _messages[0];
                     msg.Repeat();
                 }

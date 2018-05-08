@@ -7,7 +7,7 @@ namespace Raccoon.Graphics.Transitions {
     }
 
     public class FadeTransition : SceneTransition {
-        public FadeTransition(Color color) : base(new RectanglePrimitive(Game.Instance.ScreenWidth, Game.Instance.ScreenHeight, color)) {
+        public FadeTransition(Color color) : base(new RectanglePrimitive(Game.Instance.ScreenWidth, Game.Instance.ScreenHeight) { Color = color }) {
             Type = Fade.In;
         }
 

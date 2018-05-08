@@ -13,14 +13,8 @@ namespace Raccoon.Graphics {
 
         #region Private Members
 
-#if DEBUG
-        private Grid _grid;
-#endif
-
         private int _tileSetRows, _tileSetColumns, _triangleCount;
-        private uint[] _tilesIds = new uint[0];
         private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[0];
-        //private Vector2 _texSpriteCount;
 
         #endregion Private Members
 
@@ -42,40 +36,30 @@ namespace Raccoon.Graphics {
         public Size TileSize { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
-        public uint[] Data { get { return _tilesIds; } }
+        public uint[] Data { get; private set; } = new uint[0];
 
 #if DEBUG
-        public new Vector2 Scroll {
-            get {
-                return base.Scroll;
-            }
-
-            set {
-                base.Scroll = value;
-                if (_grid != null) {
-                    _grid.Scroll = value;
-                }
-            }
-        }
+        public Grid Grid { get; private set; }
 #endif
-
         #endregion Public Properties
 
         #region Public Methods
 
-        public override void Render(Vector2 position, Color color, float rotation) {
+        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             if (_vertices.Length == 0) {
                 return;
             }
 
-            Vector2 scroll = Scroll.X == 0f && Scroll.Y == 0f ? new Vector2(Util.Math.Epsilon) : Scroll;
+            scroll += Scroll;
+            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
             Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
             Game.Instance.Core.BasicEffect.TextureEnabled = true;
             Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            float[] colorNormalized = (color * Color).Normalized;
+            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Surface.World;
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
             Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
             Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
             
@@ -85,18 +69,18 @@ namespace Raccoon.Graphics {
             }
 
             Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
             Game.Instance.Core.BasicEffect.Texture = null;
             Game.Instance.Core.BasicEffect.TextureEnabled = false;
         }
 
-        public override void DebugRender() {
+        public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
 #if DEBUG
-            if (_grid == null) {
+            if (Grid == null) {
                 return;
             }
 
-            _grid.Render(Position, Rotation);
+            Grid.Render(Position + position, Rotation + rotation, Scale * scale, Flipped ^ flip, Color.White, Scroll + scroll);
 #endif
         }
 
@@ -123,7 +107,7 @@ namespace Raccoon.Graphics {
                         newVertices[newTileId + 3] = _vertices[oldTileId + 3];
                         newVertices[newTileId + 4] = _vertices[oldTileId + 4];
                         newVertices[newTileId + 5] = _vertices[oldTileId + 5];
-                        newTilesIds[y * Columns + x] = _tilesIds[y * oldColumns + x];
+                        newTilesIds[y * Columns + x] = Data[y * oldColumns + x];
                     } else {
                         newVertices[newTileId] = newVertices[newTileId + 1] = newVertices[newTileId + 2] = newVertices[newTileId + 3] = newVertices[newTileId + 4] = newVertices[newTileId + 5] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3(0, 0, 0), Color.White, Vector2.Zero);
                         newTilesIds[y * Columns + x] = 0;
@@ -133,15 +117,15 @@ namespace Raccoon.Graphics {
 
             _vertices = newVertices;
             _triangleCount = Columns * Rows * 2;
-            _tilesIds = newTilesIds;
+            Data = newTilesIds;
 #if DEBUG
-            if (_grid == null) {
-                _grid = new Grid(TileSize) {
-                    Scroll = Scroll
+            if (Grid == null) {
+                Grid = new Grid(TileSize) {
+                    BorderColor = Color.White
                 };
             }
 
-            _grid.Setup(Columns, Rows);
+            Grid.Setup(Columns, Rows);
 #endif
         }
 
@@ -200,7 +184,7 @@ namespace Raccoon.Graphics {
 
         public uint GetTile(int x, int y) {
             if (!ExistsTile(x, y)) throw new ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
-            return _tilesIds[y * Columns + x];
+            return Data[y * Columns + x];
         }
 
         public uint[] GetTiles(Rectangle area) {
@@ -222,7 +206,7 @@ namespace Raccoon.Graphics {
             if (!ExistsTile(x, y)) throw new ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
 
             int tileId = (y * Columns + x) * 6;
-            _tilesIds[y * Columns + x] = gid;
+            Data[y * Columns + x] = gid;
 
             // empty tile
             if (gid == 0) {
@@ -339,8 +323,8 @@ namespace Raccoon.Graphics {
         }
 
         public void Refresh() {
-            for (int i = 0; i < _tilesIds.Length; i++) {
-                SetTile(i % Columns, i / Columns, _tilesIds[i]);
+            for (int i = 0; i < Data.Length; i++) {
+                SetTile(i % Columns, i / Columns, Data[i]);
             }
         }
 
