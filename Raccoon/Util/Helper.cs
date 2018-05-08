@@ -52,5 +52,18 @@ namespace Raccoon.Util {
         public static bool InRangeLeftExclusive(float value, float min, float max) {
             return value > min && value <= max;
         }
+
+        #region IEnumerable
+
+        public static IEnumerable<T> Iterate<T>(params IEnumerable<T>[] collections) {
+            foreach (IEnumerable<T> collection in collections) {
+                IEnumerator<T> enumerator = collection.GetEnumerator();
+                while (enumerator.MoveNext()) {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+
+        #endregion IEnumerable
     }
 }

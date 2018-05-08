@@ -54,5 +54,28 @@ namespace Raccoon.Tests.Util {
             Assert.IsTrue(Helper.EqualsPermutation(numbersA[0], numbersA[1], numbersA[2], numbersA[1], numbersA[2], numbersA[0]));
             Assert.IsTrue(Helper.EqualsPermutation(numbersA[0], numbersA[1], numbersA[2], numbersB[0], numbersB[1], numbersB[2]));
         }*/
+
+        [TestCase()]
+        public void IEnumerable_Iterate() {
+            int[] numbersA = { 1 };
+            int[] numbersB = { 2, 4 };
+            int[] numbersC = { 3, 6, 9 };
+            int[] numbersD = { 4, 8, 12, 16 };
+            int[] numbersE = { 5, 10, 15, 20, 25 };
+
+            int[] result = {
+                1,
+                2, 4,
+                3, 6, 9,
+                4, 8, 12, 16,
+                5, 10, 15, 20, 25
+            };
+
+            int i = 0;
+            foreach (int number in Helper.Iterate(numbersA, numbersB, numbersC, numbersD, numbersE)) {
+                Assert.AreEqual(result[i], number);
+                i++;
+            }
+        }
     }
 }
