@@ -20,7 +20,6 @@ namespace Raccoon {
 
         #region Private Members
 
-        private Locker<Component> _components = new Locker<Component>();
         private Surface _surface;
 
         #endregion Private Members
@@ -43,13 +42,15 @@ namespace Raccoon {
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
+        public bool HasStarted { get; private set; } 
         public Vector2 Position { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public float Rotation { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
-        public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(new Graphic.LayerComparer());
+        public Locker<Graphic> Graphics { get; } = new Locker<Graphic>(Graphic.LayerComparer);
+        public Locker<Component> Components { get; } = new Locker<Component>();
         public Scene Scene { get; private set; }
 
         public Graphic Graphic {
@@ -60,6 +61,9 @@ namespace Raccoon {
             set {
                 if (Graphics.Count == 0) {
                     AddGraphic(value);
+                    return;
+                } else if (value == null) {
+                    RemoveGraphic(Graphics[0]);
                     return;
                 }
 
@@ -84,13 +88,17 @@ namespace Raccoon {
 
         #region Public Methods
 
+        public static int LayerComparer(Entity a, Entity b) {
+            return a.Layer.CompareTo(b.Layer);
+        }
+
         public virtual void SceneAdded(Scene scene) {
             if (Scene != null) {
                 return;
             }
 
             Scene = scene;
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (c.Entity == this) {
                     continue;
                 }
@@ -107,7 +115,7 @@ namespace Raccoon {
             }
 
             Scene = null;
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (c.Entity == null) {
                     continue;
                 }
@@ -119,6 +127,7 @@ namespace Raccoon {
         }
 
         public virtual void Start() {
+            HasStarted = true;
             OnStart();
         }
 
@@ -145,7 +154,7 @@ namespace Raccoon {
                 g.Update(delta);
             }
 
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (!c.Active) {
                     continue;
                 }
@@ -166,10 +175,10 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Position + g.Position, Rotation + g.Rotation);
+                g.Render(Position, Rotation + g.Rotation);
             }
 
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (!c.Visible) {
                     continue;
                 }
@@ -190,7 +199,7 @@ namespace Raccoon {
                 g.DebugRender();
             }
 
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (!c.Enabled || c.IgnoreDebugRender) {
                     continue;
                 }
@@ -203,15 +212,23 @@ namespace Raccoon {
 #endif
         }
 
-        public void AddGraphic(Graphic graphic) {
+        public Graphic AddGraphic(Graphic graphic) {
+            if (graphic == null) {
+                return null;
+            }
+
             Graphics.Add(graphic);
             graphic.Surface = Surface;
+            return graphic;
+        }
+
+        public T AddGraphic<T>(T graphic) where T : Graphic {
+            return AddGraphic(graphic as Graphic) as T;
         }
 
         public void AddGraphics(IEnumerable<Graphic> graphics) {
-            Graphics.AddRange(graphics);
             foreach (Graphic g in graphics) {
-                g.Surface = Surface;
+                AddGraphic(g);
             }
         }
 
@@ -219,12 +236,25 @@ namespace Raccoon {
             AddGraphics((IEnumerable<Graphic>) graphics);
         }
 
-        public void AddComponent(Component component) {
-            _components.Add(component);
+        public Component AddComponent(Component component) {
+            if (component == null) {
+                return null;
+            }
+
+            Components.Add(component);
             component.OnAdded(this);
+            return component;
+        }
+
+        public T AddComponent<T>(T component) where T : Component {
+            return AddComponent(component as Component) as T;
         }
 
         public void RemoveGraphic(Graphic graphic) {
+            if (graphic == null) {
+                return;
+            }
+
             Graphics.Remove(graphic);
         }
 
@@ -237,13 +267,13 @@ namespace Raccoon {
         }
 
         public void RemoveComponent(Component component) {
-            if (_components.Remove(component)) {
+            if (Components.Remove(component)) {
                 component.OnRemoved();
             }
         }
 
         public T GetComponent<T>() where T : Component {
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (c is T ct) {
                     return ct;
                 }
@@ -254,7 +284,7 @@ namespace Raccoon {
 
         public List<T> GetComponents<T>() where T : Component {
             List<T> components = new List<T>();
-            foreach (Component c in _components) {
+            foreach (Component c in Components) {
                 if (c is T ct) {
                     components.Add(ct);
                 }
@@ -264,8 +294,8 @@ namespace Raccoon {
         }
 
         public void RemoveComponents<T>() {
-            foreach (Component c in _components) {
-                if (c is T && _components.Remove(c)) {
+            foreach (Component c in Components) {
+                if (c is T && Components.Remove(c)) {
                     c.OnRemoved();
                 }
             }
@@ -276,21 +306,21 @@ namespace Raccoon {
         }
 
         public void ClearComponents() {
-            if (_components.IsLocked) {
-                foreach (Component c in _components.ToAdd) {
+            if (Components.IsLocked) {
+                foreach (Component c in Components.ToAdd) {
                     c.OnRemoved();
                 }
 
-                foreach (Component c in _components.ToRemove) {
+                foreach (Component c in Components.ToRemove) {
                     c.OnRemoved();
                 }
             }
 
-            foreach (Component c in _components.Items) {
+            foreach (Component c in Components.Items) {
                 c.OnRemoved();
             }
 
-            _components.Clear();
+            Components.Clear();
         }
 
         public void RemoveSelf() {
@@ -302,7 +332,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"[Entity '{Name}' | X: {X} Y: {Y} Graphics: {Graphics.Count} Components: {_components.Count}]";
+            return $"[Entity '{Name}' | X: {X} Y: {Y} Graphics: {Graphics.Count} Components: {Components.Count}]";
         }
 
         #endregion Public Methods
@@ -310,15 +340,5 @@ namespace Raccoon {
         #region Private Methods
 
         #endregion Private Methods
-
-        #region Layer Comparer
-
-        public class LayerComparer : IComparer<Entity> {
-            public int Compare(Entity x, Entity y) {
-                return Math.Sign(x.Layer - y.Layer);
-            }
-        }
-
-        #endregion Layer Comparer
     }
 }
