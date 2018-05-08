@@ -13,12 +13,12 @@ namespace Raccoon {
         /// <summary>
         /// Graphics sorted by Graphic.Layer in Scene.
         /// </summary>
-        private Locker<Graphic> _graphics = new Locker<Graphic>(new Graphic.LayerComparer());
+        private Locker<Graphic> _graphics = new Locker<Graphic>(Graphic.LayerComparer);
 
         /// <summary>
         /// Entities sorted by Entity.Layer in Scene.
         /// </summary>
-        private Locker<Entity> _entities = new Locker<Entity>(new Entity.LayerComparer());
+        private Locker<Entity> _entities = new Locker<Entity>(Entity.LayerComparer);
 
         #endregion Private Members
 
@@ -87,8 +87,14 @@ namespace Raccoon {
         /// Add a Graphic to the Scene.
         /// </summary>
         /// <param name="graphic">The graphic to be added.</param>
-        public void AddGraphic(Graphic graphic) {
+        /// <returns>The added Graphic.</returns>
+        public Graphic AddGraphic(Graphic graphic) {
             _graphics.Add(graphic);
+            return graphic;
+        }
+
+        public T AddGraphic<T>(T graphic) where T : Graphic {
+            return AddGraphic(graphic as Graphic) as T;
         }
 
         /// <summary>
@@ -111,12 +117,19 @@ namespace Raccoon {
         /// Add an Entity to the Scene.
         /// </summary>
         /// <param name="entity">The Entity to be added.</param>
-        public void AddEntity(Entity entity) {
+        /// <returns>The added Entity.</returns>
+        public Entity AddEntity(Entity entity) {
             _entities.Add(entity);
             entity.SceneAdded(this);
-            if (HasStarted) {
+            if (HasStarted && !entity.HasStarted) {
                 entity.Start();
             }
+
+            return entity;
+        }
+
+        public T AddEntity<T>(T entity) where T : Entity {
+            return AddEntity(entity as Entity) as T;
         }
         
         /// <summary>
@@ -127,7 +140,7 @@ namespace Raccoon {
             _entities.AddRange(entities);
             foreach (Entity e in entities) {
                 e.SceneAdded(this);
-                if (HasStarted) {
+                if (HasStarted && !e.HasStarted) {
                     e.Start();
                 }
             }
@@ -253,6 +266,10 @@ namespace Raccoon {
         public virtual void Start() {
             HasStarted = true;
             foreach (Entity e in _entities) {
+                if (e.HasStarted) {
+                    continue;
+                }
+
                 e.Start();
             }
 
