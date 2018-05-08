@@ -159,7 +159,7 @@ namespace Raccoon.Util.Tween {
         public Tween From(object start) {
             PropertyInfo[] properties = start.GetType().GetProperties();
             foreach (PropertyInfo property in properties) {
-                PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
+                PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "start");
 
                 if (!_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {
@@ -175,7 +175,7 @@ namespace Raccoon.Util.Tween {
         public Tween To(object target, Func<float, float> easing = null) {
             PropertyInfo[] properties = target.GetType().GetProperties();
             foreach (PropertyInfo property in properties) {
-                PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
+                PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
                 if (!_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {
@@ -252,7 +252,7 @@ namespace Raccoon.Util.Tween {
         }
 
         private Lerper CreateLerper(PropertyInfo property) {
-            PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name);
+            PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             if (subjectProperty == null) throw new ArgumentException("Subject does not contains a property '" + property.Name + "'", "target");
 
             if (_lerpers.TryGetValue(subjectProperty.Name, out Lerper lerper)) {

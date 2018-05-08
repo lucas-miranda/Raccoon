@@ -9,7 +9,7 @@ namespace Raccoon.Util.Tween {
     public abstract class Lerper {
         public Lerper(object owner, string name, Func<float, float> easing) {
             Owner = owner;
-            Property = Owner.GetType().GetProperty(name);
+            Property = Owner.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             Name = name;
             From = To = Value;
             Easing = easing;
