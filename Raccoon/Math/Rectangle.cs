@@ -1,8 +1,10 @@
-﻿namespace Raccoon {
+﻿using Raccoon.Util;
+
+namespace Raccoon {
     public struct Rectangle {
         #region Static Readonly
 
-        public static readonly Rectangle Empty = new Rectangle(0, 0, 0, 0);
+        public static readonly Rectangle Empty = new Rectangle(Vector2.Zero, Size.Empty);
 
         #endregion Static Readonly          
 
@@ -22,7 +24,8 @@
         }
 
         public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) { }
-        public Rectangle(Vector2 topLeft, Vector2 bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y) { }
+        public Rectangle(Vector2 startPos, Vector2 endPos) : this(Math.Min(startPos.X, endPos.X), Math.Min(startPos.Y, endPos.Y), Math.Abs(endPos.X - startPos.X), Math.Abs(endPos.Y - startPos.Y)) {
+        }
 
         public Rectangle(float w, float h) {
             X = Y = 0;
@@ -72,6 +75,10 @@
 
         public bool Contains(Vector2 v) {
             return !(v.X <= Left || v.X >= Right || v.Y <= Top || v.Y >= Bottom);
+        }
+
+        public bool Contains(Rectangle r) {
+            return !(r.Left < Left || r.Right > Right || r.Top < Top || r.Bottom > Bottom);
         }
 
         public bool ContainsInclusive(Vector2 v) {

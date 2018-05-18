@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Raccoon.Graphics;
 
 namespace Raccoon.Util {
     public static class Helper {
@@ -65,5 +66,19 @@ namespace Raccoon.Util {
         }
 
         #endregion IEnumerable
+
+        #region TileMap
+
+        public static Vector2 ConvertPositionToCell(Vector2 position, TileMap tilemap) {
+            Rectangle tilemapBounds = new Rectangle(tilemap.Position - tilemap.Origin, tilemap.Size);
+            position = Math.Clamp(position, tilemapBounds);
+            return Math.Floor(position / tilemap.TileSize);
+        }
+
+        public static Vector2 ConvertCellToPosition(Vector2 cell, TileMap tilemap) {
+            return (tilemap.Position - tilemap.Origin) + cell * tilemap.TileSize;
+        }
+        
+        #endregion TileMap
     }
 }

@@ -66,11 +66,15 @@
         }
 
         public static Vector2 Clamp(Vector2 value, Rectangle rect) {
-            return Clamp(value, rect.Position, new Vector2(rect.Right, rect.Bottom));
+            return Clamp(value, rect.Position, rect.BottomRight - Vector2.One);
         }
 
         public static Rectangle Clamp(Rectangle inner, Rectangle outer) {
             return new Rectangle(Clamp(inner.TopLeft, outer.TopLeft, outer.BottomRight), Clamp(inner.BottomRight, outer.TopLeft, outer.BottomRight));
+        }
+
+        public static Size Clamp(Size value, Size min, Size max) {
+            return new Size(Clamp(value.Width, min.Width, max.Width), Clamp(value.Height, min.Height, max.Height));
         }
 
         public static Vector2 CircleClamp(Vector2 value, float radius = 1f) {

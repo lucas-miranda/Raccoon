@@ -1,7 +1,7 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using Microsoft.Xna.Framework.Graphics;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class TileMap : Graphic {
@@ -37,6 +37,7 @@ namespace Raccoon.Graphics {
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public uint[] Data { get; private set; } = new uint[0];
+        public Rectangle TileBounds { get { return new Rectangle(0, 0, Columns, Rows); } }
 
 #if DEBUG
         public Grid Grid { get; private set; }
@@ -183,15 +184,15 @@ namespace Raccoon.Graphics {
         }
 
         public uint GetTile(int x, int y) {
-            if (!ExistsTile(x, y)) throw new ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
+            if (!ExistsTileAt(x, y)) throw new System.ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
             return Data[y * Columns + x];
         }
 
         public uint[] GetTiles(Rectangle area) {
-            if (area.Left < 0 || area.Right > Columns || area.Top < 0 || area.Bottom > Rows) throw new ArgumentException($"area {area} out of bounds [0 0 {Columns} {Rows}]");
+            area = Math.Clamp(area, new Rectangle(0, 0, Columns, Rows));
 
             int i = 0;
-            uint[] tiles = new uint[(uint) area.Area];
+            uint[] tiles = new uint[(int) (area.Area)];
             for (int y = (int) area.Top; y < area.Bottom; y++) {
                 for (int x = (int) area.Left; x < area.Right; x++) {
                     tiles[i] = GetTile(x, y);
@@ -203,7 +204,7 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTile(int x, int y, uint gid) {
-            if (!ExistsTile(x, y)) throw new ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
+            if (!ExistsTileAt(x, y)) throw new System.ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
 
             int tileId = (y * Columns + x) * 6;
             Data[y * Columns + x] = gid;
@@ -300,25 +301,27 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTiles(Rectangle area, uint gid) {
-            for (int y = (int) area.Top; y < area.Bottom && y >= 0 && y < Rows; y++) {
-                for (int x = (int) area.Left; x < area.Right && x >= 0 && x < Columns; x++) {
+            area = Math.Clamp(area, new Rectangle(0, 0, Columns, Rows));
+
+            for (int y = (int) area.Top; y < area.Bottom; y++) {
+                for (int x = (int) area.Left; x < area.Right; x++) {
                     SetTile(x, y, gid);
                 }
             }
         }
 
         public void SetTiles(Rectangle area, uint[] gids) {
-            if (gids.Length != area.Area) throw new ArgumentException($"Inconsistent gids data size, expected {area.Area} gids, got {gids.Length}", "gids");
+            area = Math.Clamp(area, new Rectangle(0, 0, Columns, Rows));
 
-            for (int y = 0; y < area.Height && area.Top + y < Rows; y++) {
-                for (int x = 0; x < area.Width && area.Left + x < Columns; x++) {
+            for (int y = 0; y < area.Height; y++) {
+                for (int x = 0; x < area.Width; x++) {
                     int id = y * (int) area.Width + x;
                     SetTile((int) area.Left + x, (int) area.Top + y, gids[id]);
                 }
             }
         }
 
-        public bool ExistsTile(int x, int y) {
+        public bool ExistsTileAt(int x, int y) {
             return !(x < 0 || x >= Columns || y < 0 || y >= Rows);
         }
 
