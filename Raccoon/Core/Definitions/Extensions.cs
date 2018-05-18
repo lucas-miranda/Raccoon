@@ -69,6 +69,12 @@ namespace Raccoon {
             list[indexB] = aux;
         }
 
+        public static IEnumerable<T> IterateReverse<T>(this IList<T> list) {
+            for (int i = list.Count - 1; i >= 0; i--) {
+                yield return list[i];
+            }
+        }
+
         #endregion IList
     }
 }
