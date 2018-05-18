@@ -11,6 +11,14 @@ namespace Raccoon.Input {
         M5
     }
 
+    public enum InputButtonState {
+        None,
+        Up,
+        Released,
+        Pressed,
+        Down
+    }
+
     public class Input {
         private static readonly System.Lazy<Input> _lazy = new System.Lazy<Input>(() => new Input());
 
@@ -77,6 +85,25 @@ namespace Raccoon.Input {
             return Instance._keyboardState[(Keys) key] == KeyState.Up;
         }
 
+        public static InputButtonState KeyboardState(Key key) {
+            KeyState previousState = Instance._keyboardPreviousState[(Keys) key],
+                     currentState = Instance._keyboardState[(Keys) key];
+
+            if (previousState == KeyState.Up) {
+                if (currentState == KeyState.Down) {
+                    return InputButtonState.Pressed;
+                }
+
+                return InputButtonState.Up;
+            }
+
+            if (currentState == KeyState.Up) {
+                return InputButtonState.Released;
+            }
+
+            return InputButtonState.Down;
+        }
+
         public static bool IsJoyButtonPressed(int joystickId, int buttonId) {
             return (!Instance._joysticksPreviousState.ContainsKey(joystickId) || Instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Released) && Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
         }
@@ -91,6 +118,25 @@ namespace Raccoon.Input {
 
         public static bool IsJoyButtonUp(int joystickId, int buttonId) {
             return Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released;
+        }
+
+        public static InputButtonState JoyButtonState(int joystickId, int buttonId) {
+            ButtonState previousState = Instance._joysticksState[joystickId].Buttons[buttonId],
+                        currentState = Instance._joysticksPreviousState[joystickId].Buttons[buttonId];
+
+            if (previousState == ButtonState.Released) {
+                if (currentState == ButtonState.Pressed) {
+                    return InputButtonState.Pressed;
+                }
+
+                return InputButtonState.Up;
+            }
+
+            if (currentState == ButtonState.Released) {
+                return InputButtonState.Released;
+            }
+
+            return InputButtonState.Down;
         }
 
         public static float JoyAxisValue(int joystickId, int axisId) {
@@ -115,6 +161,25 @@ namespace Raccoon.Input {
 
         public static bool IsMouseButtonUp(MouseButton button) {
             return Instance._mouseButtonsState[button] == ButtonState.Released;
+        }
+
+        public static InputButtonState MouseButtonState(MouseButton button) {
+            ButtonState previousState = Instance._mouseButtonsLastState[button],
+                        currentState = Instance._mouseButtonsState[button];
+
+            if (previousState == ButtonState.Released) {
+                if (currentState == ButtonState.Pressed) {
+                    return InputButtonState.Pressed;
+                }
+
+                return InputButtonState.Up;
+            }
+
+            if (currentState == ButtonState.Released) {
+                return InputButtonState.Released;
+            }
+
+            return InputButtonState.Down;
         }
 
         public void Update(int delta) {
