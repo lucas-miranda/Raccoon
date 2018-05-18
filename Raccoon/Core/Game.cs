@@ -1,21 +1,26 @@
-﻿using Raccoon.Graphics;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using Raccoon.Graphics;
+using Raccoon.Util;
 
 namespace Raccoon {
-    public class Game : IDisposable {
+    public class Game : System.IDisposable {
 
         #region Public Events
 
-        public event Action<int> OnUpdate = delegate { };
-        public event Action OnRender = delegate { }, OnBegin = delegate { }, OnBeforeUpdate, OnLateUpdate = delegate { };
+        public event System.Action<int> OnUpdate = delegate { };
+        public event System.Action OnRender = delegate { }, OnBegin = delegate { }, OnBeforeUpdate, OnLateUpdate = delegate { };
 
         #endregion Public Events
 
         #region Private Members
 
+        // scenes
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
         private bool _isUnloadingCurrentScene;
+
+        // window
+        //private Size _windowSize;
 
         #endregion Private Members
 
@@ -30,17 +35,19 @@ namespace Raccoon {
             } catch { }
 #endif
 
-            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs args) => {
-                Exception e = (Exception) args.ExceptionObject;
+            System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
+                System.Exception e = (System.Exception) args.ExceptionObject;
                 Debug.Log("crash-report", $"[Unhandled Exception] {e.Message}\n{e.StackTrace}\n");
             };
 
             TargetFramerate = targetFramerate;
             Core = new Core(title, width, height, TargetFramerate, fullscreen, vsync);
-            ScreenSize = new Size(width, height);
-            ScreenCenter = (ScreenSize / 2f).ToVector2();
-            WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
+            WindowSize = new Size(width, height);
             WindowCenter = (WindowSize / 2f).ToVector2();
+            ScreenSize = WindowSize / Scale;
+            ScreenCenter = (ScreenSize / 2f).ToVector2();
+
+            Core.Window.ClientSizeChanged += OnWindowResize;
 
             // events
             OnBeforeUpdate = () => {
@@ -88,6 +95,7 @@ namespace Raccoon {
         public int TargetFramerate { get; private set; }
         public Size ScreenSize { get; private set; }
         public Size WindowSize { get; private set; }
+        public Size WindowMinimunSize { get; set; }
         public Vector2 ScreenCenter { get; private set; }
         public Vector2 WindowCenter { get; private set; }
         public Scene Scene { get; private set; }
@@ -139,12 +147,15 @@ namespace Raccoon {
                 UpdateCurrentScene();
             }
 
+            Debug.WriteLine($"ScreenSize: {ScreenSize}");
+            Debug.WriteLine($"WindowSize: {WindowSize}");
+
             Core.Run();
         }
 
         public void Start(string startScene) {
             if (!_scenes.ContainsKey(startScene)) {
-                throw new ArgumentException($"Scene '{startScene}' not found", "startScene");
+                throw new System.ArgumentException($"Scene '{startScene}' not found", "startScene");
             }
 
             SwitchScene(startScene);
@@ -223,7 +234,7 @@ namespace Raccoon {
         }
 
         public void SwitchScene(string name) {
-            if (!_scenes.TryGetValue(name, out Scene scene)) throw new ArgumentException($"Scene '{name}' not found", "name");
+            if (!_scenes.TryGetValue(name, out Scene scene)) throw new System.ArgumentException($"Scene '{name}' not found", "name");
             NextScene = scene;
         }
 
@@ -249,6 +260,20 @@ namespace Raccoon {
 
         public void ClearSurfaces() {
             Surfaces.Clear();
+        }
+
+        public void ResizeWindow(int width, int height) {
+            Debug.Assert(width > 0 && height > 0, "Width and Height can't be zero or smaller");
+
+            var displayMode = Core.GraphicsDevice.DisplayMode;
+
+            Core.Graphics.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
+            Core.Graphics.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            Core.Graphics.ApplyChanges();
+        }
+
+        public void ResizeWindow(Size size) {
+            ResizeWindow((int) size.Width, (int) size.Height);
         }
 
         #endregion
@@ -309,6 +334,46 @@ namespace Raccoon {
 #if DEBUG
             Core.OnDebugRender += Scene.DebugRender;
 #endif
+        }
+
+        private void OnWindowResize(System.Object sender, System.EventArgs e) {
+            var windowClientBounds = Core.Window.ClientBounds;
+
+            // checks if preffered backbuffer size is the same as current window size
+            if (Core.Graphics.PreferredBackBufferWidth != windowClientBounds.Width || Core.Graphics.PreferredBackBufferHeight != windowClientBounds.Height) {
+                var displayMode = Core.GraphicsDevice.DisplayMode;
+                Core.Graphics.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
+                Core.Graphics.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
+                Core.Graphics.ApplyChanges();
+                return;
+            }
+
+            WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
+            WindowCenter = (WindowSize / 2f).ToVector2();
+            ScreenSize = WindowSize / Scale;
+            ScreenCenter = (ScreenSize / 2f).ToVector2();
+
+            // internal resize
+            // surface
+            var projection = Microsoft.Xna.Framework.Matrix.CreateOrthographicOffCenter(0f, WindowWidth, WindowHeight, 0f, 1f, 0f);
+            foreach (Surface surface in Surfaces) {
+                surface.Projection = projection;
+            }
+
+            // canvas
+            Core.RenderTargetStack.Clear();
+
+#if DEBUG
+            if (Core.DebugCanvas != null) {
+                Core.DebugCanvas.Resize(WindowSize);
+                Core.RenderTargetStack.Push(Core.DebugCanvas.XNARenderTarget);
+            }
+#endif
+
+            if (MainCanvas != null) {
+                MainCanvas.Resize(WindowSize);
+                Core.RenderTargetStack.Push(MainCanvas.XNARenderTarget);
+            }
         }
 
         #endregion Private Methods

@@ -44,7 +44,12 @@ namespace Raccoon.Graphics {
 
             set {
                 _texture = value ?? throw new ArgumentNullException("Invalid texture");
-                ClippingRegion = SourceRegion = _texture.Bounds;
+                SourceRegion = _texture.Bounds;
+                if (ClippingRegion.IsEmpty) {
+                    ClippingRegion = SourceRegion;
+                } else {
+                    ClippingRegion = Util.Math.Clamp(ClippingRegion, SourceRegion);
+                }
             }
         }
 

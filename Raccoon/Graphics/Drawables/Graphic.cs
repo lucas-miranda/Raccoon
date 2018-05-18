@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Raccoon.Graphics {
+﻿namespace Raccoon.Graphics {
     public abstract class Graphic {
         #region Private Members
 

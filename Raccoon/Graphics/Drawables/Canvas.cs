@@ -54,16 +54,30 @@ namespace Raccoon.Graphics {
     }
 
     public class Canvas : Image {
-        public Canvas(int width, int height) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height))) { }
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat))) { }
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage))) { }
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage, bool shared, int arraySize) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage, shared, arraySize))) { }
+        public Canvas(int width, int height) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height))) {
+        }
+
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat))) {
+        }
+
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage))) {
+        }
+
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage, bool shared, int arraySize) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage, shared, arraySize))) {
+        }
 
         public DepthFormat DepthStencilFormat { get { return (DepthFormat) XNARenderTarget.DepthStencilFormat; } }
         public int MultiSampleCount { get { return XNARenderTarget.MultiSampleCount; } }
         public CanvasUsage Usage { get { return (CanvasUsage) XNARenderTarget.RenderTargetUsage; } }
 
         internal RenderTarget2D XNARenderTarget { get { return Texture.XNATexture as RenderTarget2D; } }
+
+        public override void Update(int delta) {
+            base.Update(delta);
+            if (XNARenderTarget.Width != Game.Instance.WindowWidth || XNARenderTarget.Height != Game.Instance.WindowHeight) {
+                Resize(Game.Instance.WindowSize);
+            }
+        }
 
         public void Begin() {
             Game.Instance.Core.GraphicsDevice.SetRenderTarget(XNARenderTarget);
@@ -77,6 +91,29 @@ namespace Raccoon.Graphics {
 
         public void Clear(Color color) {
             Game.Instance.Core.GraphicsDevice.Clear(color);
+        }
+
+        public void Resize(int width, int height, bool mipmap = false) {
+            if ((width == XNARenderTarget.Width && height == XNARenderTarget.Height) || XNARenderTarget == null) {
+                return;
+            }
+
+            RenderTarget2D renderTarget2D = new RenderTarget2D(
+                Game.Instance.Core.GraphicsDevice, 
+                width, 
+                height, 
+                mipmap, 
+                XNARenderTarget.Format, 
+                XNARenderTarget.DepthStencilFormat, 
+                XNARenderTarget.MultiSampleCount, 
+                XNARenderTarget.RenderTargetUsage
+            );
+
+            Texture = new Texture(renderTarget2D);
+        }
+
+        public void Resize(Size size) {
+            Resize((int) size.Width, (int) size.Height);
         }
 
         public override void Dispose() {
