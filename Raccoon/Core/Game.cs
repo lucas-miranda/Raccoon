@@ -5,11 +5,14 @@ using Raccoon.Util;
 
 namespace Raccoon {
     public class Game : System.IDisposable {
-
         #region Public Events
 
         public event System.Action<int> OnUpdate = delegate { };
-        public event System.Action OnRender = delegate { }, OnBegin = delegate { }, OnBeforeUpdate, OnLateUpdate = delegate { };
+        public event System.Action OnRender = delegate { }, 
+                                   OnBegin = delegate { }, 
+                                   OnBeforeUpdate, 
+                                   OnLateUpdate = delegate { },
+                                   OnWindowResize = delegate { };
 
         #endregion Public Events
 
@@ -47,7 +50,7 @@ namespace Raccoon {
             ScreenSize = WindowSize / Scale;
             ScreenCenter = (ScreenSize / 2f).ToVector2();
 
-            Core.Window.ClientSizeChanged += OnWindowResize;
+            Core.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // events
             OnBeforeUpdate = () => {
@@ -336,7 +339,7 @@ namespace Raccoon {
 #endif
         }
 
-        private void OnWindowResize(System.Object sender, System.EventArgs e) {
+        private void InternalOnWindowResize(System.Object sender, System.EventArgs e) {
             var windowClientBounds = Core.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
@@ -374,6 +377,9 @@ namespace Raccoon {
                 MainCanvas.Resize(WindowSize);
                 Core.RenderTargetStack.Push(MainCanvas.XNARenderTarget);
             }
+
+            // user callback
+            OnWindowResize();
         }
 
         #endregion Private Methods
