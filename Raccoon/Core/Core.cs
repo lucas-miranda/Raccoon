@@ -115,6 +115,10 @@ namespace Raccoon {
         }
 
         protected override void LoadContent() {
+            if (Graphics.IsFullScreen) {
+                Game.Instance.ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
+            }
+
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
             MainCanvas = new Graphics.Canvas(Game.Instance.WindowWidth, Game.Instance.WindowHeight, false, Raccoon.Graphics.SurfaceFormat.Color, Raccoon.Graphics.DepthFormat.None, 0, Raccoon.Graphics.CanvasUsage.PreserveContents);
 
@@ -220,10 +224,6 @@ namespace Raccoon {
 
 #if DEBUG
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
-
-            MainSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, MainCanvas.Shader?.XNAEffect);
-            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
-            MainSpriteBatch.End();
 
             // debug render
             GraphicsDevice.SetRenderTarget(DebugCanvas.XNARenderTarget);

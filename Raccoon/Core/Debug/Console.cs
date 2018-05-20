@@ -53,7 +53,7 @@ namespace Raccoon {
                 Font = Game.Instance.Core.StdFont;
             }
 
-            _background = new RectanglePrimitive(Game.Instance.WindowWidth, Game.Instance.WindowHeight) {
+            _background = new RectanglePrimitive(1, 1) {
                 Color = Color.Black,
                 Surface = Game.Instance.Core.DebugSurface,
                 Opacity = 0.25f
@@ -160,7 +160,7 @@ namespace Raccoon {
 
         internal void Render() {
             Vector2 topLeftPos = Camera.Current != null ? Debug.Transform(Camera.Current.Position) : Vector2.Zero;
-            _background.Render(topLeftPos);
+            _background.Render(topLeftPos, 0, Game.Instance.WindowSize.ToVector2());
 
             // total messages
             Surface.DrawString(Font, _messages.Count.ToString(), topLeftPos + new Vector2(Game.Instance.WindowWidth - 25, 15), Color.White);

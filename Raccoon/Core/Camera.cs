@@ -31,9 +31,9 @@ namespace Raccoon {
 
         public float X { get { return Position.X; } set { Position = new Vector2(value, Position.Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
-        public Size Size { get { return Game.Instance.ScreenSize; } }
-        public float Width { get { return Game.Instance.ScreenWidth; } }
-        public float Height { get { return Game.Instance.ScreenHeight; } }
+        public Size Size { get { return Game.Instance.Size; } }
+        public float Width { get { return Game.Instance.Width; } }
+        public float Height { get { return Game.Instance.Height; } }
         public float Left { get { return X; } }
         public float Top { get { return Y; } }
         public float Right { get { return X + Width; } }
@@ -41,7 +41,7 @@ namespace Raccoon {
         public bool UseBounds { get; set; }
         public bool ClampValues { get; set; }
         public Rectangle Bounds { get; set; }
-        public Vector2 Center { get { return Position + Game.Instance.ScreenSize / (2f * _zoom); } set { Position = value - Game.Instance.ScreenSize / (2f * _zoom); } }
+        public Vector2 Center { get { return Position + Game.Instance.Size / (2f * _zoom); } set { Position = value - Game.Instance.Size / (2f * _zoom); } }
 
         public Vector2 Position {
             get {

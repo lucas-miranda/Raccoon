@@ -65,7 +65,7 @@ namespace Raccoon.Components {
         public override void DebugRender() {
             base.DebugRender();
             string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})";
-            Debug.DrawString(Camera.Current, new Vector2(16, Game.Instance.ScreenHeight / 2f), info);
+            Debug.DrawString(Camera.Current, new Vector2(16, Game.Instance.Height / 2f), info);
         }
 
         #endregion Public Methods

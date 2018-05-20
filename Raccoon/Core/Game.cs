@@ -21,6 +21,7 @@ namespace Raccoon {
         // scenes
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
         private bool _isUnloadingCurrentScene;
+        private Size _windowedModeWindowSize;
 
         // window
         //private Size _windowSize;
@@ -47,8 +48,8 @@ namespace Raccoon {
             Core = new Core(title, width, height, TargetFramerate, fullscreen, vsync);
             WindowSize = new Size(width, height);
             WindowCenter = (WindowSize / 2f).ToVector2();
-            ScreenSize = WindowSize / Scale;
-            ScreenCenter = (ScreenSize / 2f).ToVector2();
+            Size = WindowSize / Scale;
+            Center = (Size / 2f).ToVector2();
 
             Core.Window.ClientSizeChanged += InternalOnWindowResize;
 
@@ -82,25 +83,31 @@ namespace Raccoon {
         public bool IsRunning { get; private set; }
         public bool IsFixedTimeStep { get { return Core.IsFixedTimeStep; } }
         public bool VSync { get { return Core.Graphics.SynchronizeWithVerticalRetrace; } set { Core.Graphics.SynchronizeWithVerticalRetrace = value; } }
-        public bool IsFullscreen { get { return Core.Graphics.IsFullScreen; } set { Core.Graphics.IsFullScreen = value; } }
+        public bool IsFullscreen { get { return Core.Graphics.IsFullScreen; } }
         public bool IsMouseVisible { get { return Core.IsMouseVisible; } set { Core.IsMouseVisible = value; } }
         public bool AllowResize { get { return Core.Window.AllowUserResizing; } set { Core.Window.AllowUserResizing = value; } }
         public bool HasFocus { get { return Core.IsActive; } }
+        public bool HardwareModeSwitch { get { return Core.Graphics.HardwareModeSwitch; } set { Core.Graphics.HardwareModeSwitch = value; } }
         public string Title { get { return Core.Title; } set { Core.Title = value; } }
         public string ContentDirectory { get { return Core.Content.RootDirectory; } set { Core.Content.RootDirectory = value; } }
         public int DeltaTime { get { return Core.DeltaTime; } }
         public int X { get { return Core.Window.Position.X; } }
         public int Y { get { return Core.Window.Position.Y; } }
-        public int ScreenWidth { get { return (int) ScreenSize.Width; } }
-        public int ScreenHeight { get { return (int) ScreenSize.Height; } }
+        public int Width { get { return (int) Size.Width; } }
+        public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
         public int WindowHeight { get { return (int) WindowSize.Height; } }
+        public int ScreenWidth { get { return Core.GraphicsDevice.DisplayMode.Width; } }
+        public int ScreenHeight { get { return Core.GraphicsDevice.DisplayMode.Height; } }
         public int TargetFramerate { get; private set; }
-        public Size ScreenSize { get; private set; }
+        public Size Size { get; private set; }
         public Size WindowSize { get; private set; }
         public Size WindowMinimunSize { get; set; }
-        public Vector2 ScreenCenter { get; private set; }
+        public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
+        public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
+        public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { Core.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
+        public Vector2 ScreenCenter { get { return (ScreenSize / 2f).ToVector2(); } }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
@@ -120,8 +127,8 @@ namespace Raccoon {
                 }
 
                 Core.Scale = value;
-                ScreenSize = WindowSize / Scale;
-                ScreenCenter = (ScreenSize / 2f).ToVector2();
+                Size = WindowSize / Scale;
+                Center = (Size / 2f).ToVector2();
             }
         }
 
@@ -149,9 +156,6 @@ namespace Raccoon {
                 Core.OnBegin += OnBegin;
                 UpdateCurrentScene();
             }
-
-            Debug.WriteLine($"ScreenSize: {ScreenSize}");
-            Debug.WriteLine($"WindowSize: {WindowSize}");
 
             Core.Run();
         }
@@ -236,17 +240,44 @@ namespace Raccoon {
             _isUnloadingCurrentScene = true;
         }
 
-        public void SwitchScene(string name) {
+        public Scene SwitchScene(string name) {
             if (!_scenes.TryGetValue(name, out Scene scene)) throw new System.ArgumentException($"Scene '{name}' not found", "name");
             NextScene = scene;
+            return NextScene;
         }
 
-        public void SwitchScene<T>() where T : Scene {
-            SwitchScene(typeof(T).Name.Replace("Scene", ""));
+        public T SwitchScene<T>() where T : Scene {
+            return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
         }
 
         public void ToggleFullscreen() {
-            Core.Graphics.ToggleFullScreen();
+            bool isSwitchingToFullscreen = !IsFullscreen;
+
+            Size newWindowSize = Size.Empty;
+            if (!isSwitchingToFullscreen) {
+                Core.Graphics.ToggleFullScreen();
+                newWindowSize = _windowedModeWindowSize;
+                Debug.WriteLine($"windowed | new window size: {newWindowSize}, windowed window size: {_windowedModeWindowSize}, title safe area: {Core.GraphicsDevice.DisplayMode.TitleSafeArea}");
+            } else {
+                _windowedModeWindowSize = WindowSize;
+                var displayMode = Core.GraphicsDevice.DisplayMode;
+                newWindowSize = new Size(displayMode.Width, displayMode.Height);
+                Debug.WriteLine($"fullscreen | new window size: {newWindowSize}, windowed window size: {_windowedModeWindowSize}, title safe area: {Core.GraphicsDevice.DisplayMode.TitleSafeArea}");
+            }
+
+            ResizeWindow(newWindowSize);
+
+            if (isSwitchingToFullscreen) {
+                Core.Graphics.ToggleFullScreen();
+            }
+        }
+
+        public void SetFullscreen(bool fullscreen) {
+            if (!(IsFullscreen ^ fullscreen)) {
+                return;
+            }
+
+            ToggleFullscreen();
         }
 
         public void AddSurface(Surface surface) {
@@ -254,6 +285,7 @@ namespace Raccoon {
                 return;
             }
 
+            surface.Projection = MainSurface.Projection;
             Surfaces.Add(surface);
         }
 
@@ -266,7 +298,7 @@ namespace Raccoon {
         }
 
         public void ResizeWindow(int width, int height) {
-            Debug.Assert(width > 0 && height > 0, "Width and Height can't be zero or smaller");
+            Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
             var displayMode = Core.GraphicsDevice.DisplayMode;
 
@@ -278,6 +310,10 @@ namespace Raccoon {
         public void ResizeWindow(Size size) {
             ResizeWindow((int) size.Width, (int) size.Height);
         }
+
+        /*public void ToggleFullscreen() {
+            Core.Graphics.ToggleFullScreen();
+        }*/
 
         #endregion
 
@@ -353,8 +389,8 @@ namespace Raccoon {
 
             WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
-            ScreenSize = WindowSize / Scale;
-            ScreenCenter = (ScreenSize / 2f).ToVector2();
+            Size = WindowSize / Scale;
+            Center = (Size / 2f).ToVector2();
 
             // internal resize
             // surface
@@ -367,14 +403,24 @@ namespace Raccoon {
             Core.RenderTargetStack.Clear();
 
 #if DEBUG
+            if (Core.DebugSurface != null) {
+                Core.DebugSurface.Projection = projection;
+            }
+
             if (Core.DebugCanvas != null) {
                 Core.DebugCanvas.Resize(WindowSize);
+                Core.DebugCanvas.ClippingRegion = Core.DebugCanvas.SourceRegion;
                 Core.RenderTargetStack.Push(Core.DebugCanvas.XNARenderTarget);
             }
 #endif
 
+            if (Core.MainSurface != null) {
+                Core.MainSurface.Projection = projection;
+            }
+
             if (MainCanvas != null) {
                 MainCanvas.Resize(WindowSize);
+                MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
                 Core.RenderTargetStack.Push(MainCanvas.XNARenderTarget);
             }
 

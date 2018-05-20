@@ -184,16 +184,18 @@ namespace Raccoon.Graphics {
             position = new Vector2(System.Math.Round(position.X), System.Math.Round(position.Y)); // HACK: Do this using a pixel-perfect shader
 
             Matrix scrollMatrix = Matrix.CreateScale(scroll.X, scroll.Y, 1f);
-            Game.Instance.Core.BasicEffect.World = Matrix.CreateTranslation(position.X, position.Y, 0f) * World;
-            Game.Instance.Core.BasicEffect.View = Matrix.Invert(scrollMatrix) * View * scrollMatrix;
-            Game.Instance.Core.BasicEffect.Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
-            Game.Instance.Core.BasicEffect.TextureEnabled = true;
+
+            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            effect.World = Matrix.CreateTranslation(position.X, position.Y, 0f) * World;
+            effect.View = Matrix.Invert(scrollMatrix) * View * scrollMatrix;
+            effect.Projection = Projection;
+            effect.TextureEnabled = true;
 
             foreach (EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
             }
 
-            Game.Instance.Core.BasicEffect.TextureEnabled = false;
+            effect.TextureEnabled = false;
 
             if (shader != null) {
                 shader.Apply();
