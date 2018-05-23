@@ -21,10 +21,6 @@ namespace Raccoon {
         // scenes
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
         private bool _isUnloadingCurrentScene;
-        private Size _windowedModeWindowSize;
-
-        // window
-        //private Size _windowSize;
 
         #endregion Private Members
 
@@ -250,36 +246,6 @@ namespace Raccoon {
             return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
         }
 
-        public void ToggleFullscreen() {
-            bool isSwitchingToFullscreen = !IsFullscreen;
-
-            Size newWindowSize = Size.Empty;
-            if (!isSwitchingToFullscreen) {
-                Core.Graphics.ToggleFullScreen();
-                newWindowSize = _windowedModeWindowSize;
-                Debug.WriteLine($"windowed | new window size: {newWindowSize}, windowed window size: {_windowedModeWindowSize}, title safe area: {Core.GraphicsDevice.DisplayMode.TitleSafeArea}");
-            } else {
-                _windowedModeWindowSize = WindowSize;
-                var displayMode = Core.GraphicsDevice.DisplayMode;
-                newWindowSize = new Size(displayMode.Width, displayMode.Height);
-                Debug.WriteLine($"fullscreen | new window size: {newWindowSize}, windowed window size: {_windowedModeWindowSize}, title safe area: {Core.GraphicsDevice.DisplayMode.TitleSafeArea}");
-            }
-
-            ResizeWindow(newWindowSize);
-
-            if (isSwitchingToFullscreen) {
-                Core.Graphics.ToggleFullScreen();
-            }
-        }
-
-        public void SetFullscreen(bool fullscreen) {
-            if (!(IsFullscreen ^ fullscreen)) {
-                return;
-            }
-
-            ToggleFullscreen();
-        }
-
         public void AddSurface(Surface surface) {
             if (Surfaces.Contains(surface)) {
                 return;
@@ -311,9 +277,17 @@ namespace Raccoon {
             ResizeWindow((int) size.Width, (int) size.Height);
         }
 
-        /*public void ToggleFullscreen() {
+        public void ToggleFullscreen() {
             Core.Graphics.ToggleFullScreen();
-        }*/
+        }
+
+        public void SetFullscreen(bool fullscreen) {
+            if (!(IsFullscreen ^ fullscreen)) {
+                return;
+            }
+
+            ToggleFullscreen();
+        }
 
         #endregion
 
