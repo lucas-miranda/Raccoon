@@ -20,6 +20,14 @@ namespace Raccoon.Input {
     }
 
     public class Input {
+        #region Public Members
+
+        public static System.Action<char, Key> OnTextInput = delegate { };
+
+        #endregion Public Members
+
+        #region Private Members
+
         private static readonly System.Lazy<Input> _lazy = new System.Lazy<Input>(() => new Input());
 
         private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
@@ -27,8 +35,11 @@ namespace Raccoon.Input {
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState = new Dictionary<MouseButton, ButtonState>(), _mouseButtonsLastState = new Dictionary<MouseButton, ButtonState>();
         private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
         private bool _activated;
-        private string _keyboardTextBuffer = "";
         private Vector2 _mousePosition;
+
+        #endregion Private Members
+
+        #region Constructors
 
         private Input() {
             // mouse
@@ -48,6 +59,10 @@ namespace Raccoon.Input {
             };
         }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         public static Input Instance { get { return _lazy.Value; } }
         public static int JoysticksConnected { get; private set; }
         public static Vector2 MouseMovement { get; private set; }
@@ -55,7 +70,6 @@ namespace Raccoon.Input {
         public static int MouseScrollWheelDelta { get; private set; }
         public static bool LockMouseOnWindow { get; set; }
         public static bool LockMouseOnCenter { get; set; }
-        public static string KeyboardText { get; private set; } = "";
         public static Key[] PressedKeys { get; private set; } = new Key[0];
 
         public static Vector2 MousePosition {
@@ -68,6 +82,10 @@ namespace Raccoon.Input {
                 Mouse.SetPosition((int) Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth), (int) Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight));
             }
         }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         public static bool IsKeyPressed(Key key) {
             return Instance._keyboardPreviousState[(Keys) key] == KeyState.Up && Instance._keyboardState[(Keys) key] == KeyState.Down;
@@ -219,13 +237,6 @@ namespace Raccoon.Input {
                 PressedKeys[i] = (Key) _xnaPressedKeys[i];
             }
 
-            // keyboard text input
-            KeyboardText = "";
-            if (_keyboardTextBuffer.Length > 0) {
-                KeyboardText = _keyboardTextBuffer;
-                _keyboardTextBuffer = "";
-            }
-
             // mouse
             MouseState XNAMouseState = Mouse.GetState();
 
@@ -274,8 +285,14 @@ namespace Raccoon.Input {
             MouseScrollWheel = XNAMouseState.ScrollWheelValue;
         }
 
+        #endregion Public Methods
+
+        #region Private Methods
+
         private void ProcessTextInput(object sender, Microsoft.Xna.Framework.TextInputEventArgs e) {
-            _keyboardTextBuffer += e.Character.ToString();
+            OnTextInput(e.Character, (Key) e.Key);
         }
+
+        #endregion Private Methods
     }
 }
