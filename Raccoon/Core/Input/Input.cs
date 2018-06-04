@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using System.Collections.ObjectModel;
 using Microsoft.Xna.Framework.Input;
 
 namespace Raccoon.Input {
@@ -30,12 +30,19 @@ namespace Raccoon.Input {
 
         private static readonly System.Lazy<Input> _lazy = new System.Lazy<Input>(() => new Input());
 
-        private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
-        private KeyboardState _keyboardState, _keyboardPreviousState;
-        private Dictionary<MouseButton, ButtonState> _mouseButtonsState = new Dictionary<MouseButton, ButtonState>(), _mouseButtonsLastState = new Dictionary<MouseButton, ButtonState>();
-        private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
         private bool _activated;
+
+        // keyboard
+        private KeyboardState _keyboardState, _keyboardPreviousState;
+        private List<Key> _pressedKeys = new List<Key>();
+        private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
+
+        // mouse
+        private Dictionary<MouseButton, ButtonState> _mouseButtonsState = new Dictionary<MouseButton, ButtonState>(), _mouseButtonsLastState = new Dictionary<MouseButton, ButtonState>();
         private Vector2 _mousePosition;
+
+        // joystick
+        private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
 
         #endregion Private Members
 
@@ -47,6 +54,8 @@ namespace Raccoon.Input {
                 _mouseButtonsState[id] = ButtonState.Released;
                 _mouseButtonsLastState[id] = ButtonState.Released;
             }
+
+            PressedKeys = _pressedKeys.AsReadOnly();
 
             // keys to string
             _specialKeysToChar[Key.Space] = ' ';
@@ -70,7 +79,7 @@ namespace Raccoon.Input {
         public static int MouseScrollWheelDelta { get; private set; }
         public static bool LockMouseOnWindow { get; set; }
         public static bool LockMouseOnCenter { get; set; }
-        public static Key[] PressedKeys { get; private set; } = new Key[0];
+        public static ReadOnlyCollection<Key> PressedKeys { get; private set; }
 
         public static Vector2 MousePosition {
             get {
@@ -231,10 +240,10 @@ namespace Raccoon.Input {
             _keyboardPreviousState = _keyboardState;
             _keyboardState = Keyboard.GetState();
             
+            _pressedKeys.Clear();
             Keys[] _xnaPressedKeys = _keyboardState.GetPressedKeys();
-            PressedKeys = new Key[_xnaPressedKeys.Length];
             for (int i = 0; i < _xnaPressedKeys.Length; i++) {
-                PressedKeys[i] = (Key) _xnaPressedKeys[i];
+                _pressedKeys.Add((Key) _xnaPressedKeys[i]);
             }
 
             // mouse
