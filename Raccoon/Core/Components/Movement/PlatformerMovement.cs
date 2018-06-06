@@ -16,6 +16,8 @@ namespace Raccoon.Components {
 
         #region Private Members
 
+        private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
+
         // jump
         private bool _canJump = true, _canKeepCurrentJump = true, _requestedJump;
         private int _jumpMaxY, _ledgeJumpTime;
@@ -23,8 +25,6 @@ namespace Raccoon.Components {
 
         // ramp movement
         private bool _isWalkingOnRamp;
-        /*private bool _lookingForRamp, _walkingOnRamp, _waitingForNextRampCollision, _canApplyRampCorrection;
-        private int _searchRampX, _searchRampY;*/
 
         #endregion Private Members
 
@@ -168,9 +168,9 @@ namespace Raccoon.Components {
                 // checks if it's touching the ground
                 if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
                   && contacts.Length > 0) {
-                    Contact contact = contacts[0];
-                    float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
-                    if (rampSlope <= 0f) { // || Math.EqualsEstimate(contact.PenetrationDepth, 0f)) {
+                    int contactIndex = System.Array.FindIndex(contacts, c => /*c.PenetrationDepth > 0f &&*/ Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
+
+                    if (contactIndex < 0) {
                         OnGround = false;
                     }
                 } else {
@@ -235,77 +235,6 @@ namespace Raccoon.Components {
 
             float verticalVelocity = Velocity.Y;
 
-            float dX = displacement.X + (float) Body.MoveBufferX;
-            if (!Math.EqualsEstimate(displacement.X, 0f)) {
-                // Ascending Ramp
-                /*if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, -.7f), CollisionTags, out Contact[] ascContacts)
-                  && ascContacts.Length > 0) {
-                    Contact contact = ascContacts[0];
-
-                    // check if it's on a valid ascending ramp
-                    float rampSlope = Vector2.Dot(contact.Normal, Vector2.Down);
-                    //Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {rampSlope}");
-                    if (contact.PenetrationDepth > 0f
-                      && Helper.InRange(rampSlope, .4f, 1f)) {
-                        int hSign = Math.Sign(dX);
-
-                        Vector2 contactNormalPerp = hSign > 0 ? contact.Normal.PerpendicularCCW() : contact.Normal.PerpendicularCW();
-                        float displacementProjection = Vector2.Dot(new Vector2(dX, 0f), contactNormalPerp);
-                        Vector2 rampMoveDisplacement = contactNormalPerp * displacementProjection;
-
-                        // hack to ensure a smooth movement when going exclusively upwards
-                        if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f) || Math.EqualsEstimate(rampMoveDisplacement.Y, 0f)) {
-                            rampMoveDisplacement.Y = -1f; // move just a single pixel
-                            displacement = rampMoveDisplacement;
-                        } else {
-                            displacement = rampMoveDisplacement + new Vector2(0f, -.7f);
-                        }
-
-                        Body.MoveBufferX = 0;
-                        //Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");
-                    }
-                } else */
-
-                // Descending Ramp
-                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1.95f), CollisionTags, out Contact[] descContacts)
-                  && descContacts.Length > 0) {
-                    int contactIndex = System.Array.FindIndex(descContacts, c => c.PenetrationDepth > 0f && Helper.InRangeExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
-
-                    // check if it's on a valid ascending ramp
-                    if (contactIndex > -1) {
-                        Contact contact = descContacts[contactIndex];
-                        Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
-
-                        int hSign = Math.Sign(dX);
-
-                        Vector2 contactNormalPerp = hSign > 0 ? contact.Normal.PerpendicularCCW() : contact.Normal.PerpendicularCW();
-                        float displacementProjection = Vector2.Dot(new Vector2(dX, 0f), contactNormalPerp);
-                        Vector2 rampMoveDisplacement = contactNormalPerp * displacementProjection;
-
-                        // hack to ensure a smooth movement when going exclusively upwards
-                        /*if (Math.EqualsEstimate(rampMoveDisplacement.X, 0f) || Math.EqualsEstimate(rampMoveDisplacement.Y, 0f)) {
-                            rampMoveDisplacement.Y = 1f; // move just a single pixel
-                            displacement = rampMoveDisplacement;
-                        } else {
-                            displacement = rampMoveDisplacement + new Vector2(0f, 0f);
-                        }*/
-
-                        //displacement = new Vector2(rampMoveDisplacement.X, rampMoveDisplacement.Y > 1f ? 2f : rampMoveDisplacement.Y);
-                        displacement = rampMoveDisplacement;
-
-                        Body.MoveBufferX = 0;
-                        Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");
-                        _isWalkingOnRamp = true;
-                    } else {
-                        Debug.WriteLine("not a ramp");
-                        _isWalkingOnRamp = false;
-                    }
-                } else {
-                    _isWalkingOnRamp = false;
-                    Debug.WriteLine($"check value => {Math.Max(1f, Math.Ceiling(dX) * 2f)}");
-                }
-            }
-
             if (!_isWalkingOnRamp) {
                 if (!OnGround) {
                     // apply gravity force
@@ -319,8 +248,10 @@ namespace Raccoon.Components {
 
                 verticalVelocity += Body.Force.Y * dt;
                 displacement.Y = verticalVelocity * dt;
-                Debug.WriteLine("cant check for ramp");
+                //Debug.WriteLine("cant check for ramp");
             }
+
+            _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
 
             Velocity = new Vector2(horizontalVelocity, verticalVelocity);
             return displacement;
@@ -396,10 +327,119 @@ namespace Raccoon.Components {
 
         #region Private Methods
 
-        /*private void ResetRampMovement() {
-            _lookingForRamp = _walkingOnRamp = _waitingForNextRampCollision = _canApplyRampCorrection = false;
-            _searchRampX = _searchRampY = 0;
-        }*/
+        private bool CheckRamps(float displacementX, ref Vector2 displacement) {
+            if (!OnGround || Math.EqualsEstimate(displacementX, 0f)) {
+                return false;
+            }
+
+            float dX = displacementX + (float) Body.MoveBufferX;
+
+            if (CheckAscendingRamp(dX, ref displacement)) {
+                return true;
+            }
+
+            if (CheckDescendingRamp(dX, ref displacement)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private Vector2 CalculateRampDisplacement(float dX, Contact contact) {
+            int hSign = Math.Sign(dX);
+
+            // movement direction normal
+            Vector2 contactNormalPerp = hSign > 0 ? contact.Normal.PerpendicularCCW() : contact.Normal.PerpendicularCW();
+
+            // projection of displacement, in horizontal axis, onto movement direction normal
+            float displacementProjection = Vector2.Dot(new Vector2(dX, 0f), contactNormalPerp);
+
+            // ramp movement displacement
+            Vector2 rampMoveDisplacement = contactNormalPerp * displacementProjection;
+
+            return rampMoveDisplacement;
+        }
+
+        private bool CheckAscendingRamp(float dX, ref Vector2 displacement) {
+            // Ascending Ramp
+            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, 0f) + AscendingRampCollisionCheckCorrection, CollisionTags, out Contact[] ascContacts)
+              || ascContacts.Length == 0) {
+                return false;
+            }
+
+            int contactIndex = System.Array.FindIndex(ascContacts, c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f));
+
+            // check if it's on a valid ascending ramp
+            if (contactIndex <= -1) {
+                return false;
+            }
+
+            Contact contact = ascContacts[contactIndex];
+            Vector2 rampMoveDisplacement = CalculateRampDisplacement(dX, contact);
+
+            // ascending ramp can't move downwards
+            if (Math.Sign(rampMoveDisplacement.Y) > 0f) {
+                return false;
+            }
+            
+            // total displacement (added initial collision check vertical correction)
+            displacement = rampMoveDisplacement;
+
+            Body.MoveBufferX = 0;
+            /*Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
+            /*Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");*/
+
+            return true;
+        }
+
+        private bool CheckDescendingRamp(float dX, ref Vector2 displacement) {
+            // Descending Ramp
+            Vector2 descendingCheck = new Vector2(Math.Clamp(dX, -1f, 1f), Math.Max(1.7f, Math.Abs(dX)));
+
+            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + descendingCheck, CollisionTags, out Contact[] descContacts)
+              || descContacts.Length == 0) {
+                return false;
+            }
+
+            int contactIndex = System.Array.FindIndex(descContacts, c => Helper.InRangeLeftExclusive(c.PenetrationDepth, 0f, descendingCheck.Y) 
+                                                                      && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
+
+            // check if it's on a valid descending ramp
+            if (contactIndex <= -1) {
+                return false;
+            }
+
+            Contact contact = descContacts[contactIndex];
+            float rampFactor = Vector2.Dot(contact.Normal, Vector2.Down);
+            Vector2 rampMoveDisplacement = CalculateRampDisplacement(dX, contact);
+
+            //Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampFactor: {rampFactor}\nrampMoveDisplacement: {rampMoveDisplacement}");
+
+            // only handles rampFactor = 1f when already walking on a ramp
+            if (!_isWalkingOnRamp && rampFactor == 1f) {
+                return false;
+            }
+
+            // descending ramp can't move upwards
+            if (Math.Sign(rampMoveDisplacement.Y) < 0) {
+                return false;
+            }
+
+            bool ret = true;
+
+            // HACK: special case when about to leave ramp and reach a flat ground (ramp factor = 1f)
+            if (Math.EqualsEstimate(rampFactor, 1f)) {
+                rampMoveDisplacement = new Vector2(Math.Sign(rampMoveDisplacement.X), 1f);
+                ret = false;
+            }
+
+            // total displacement (added initial collision check vertical correction)
+            displacement = new Vector2(rampMoveDisplacement.X, Math.Max(1f, rampMoveDisplacement.Y)); // force to go at least 1 pixel down (less than that and movement sticks out of tile)
+
+            Body.MoveBufferX = 0;
+            //Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}"); */
+            return ret;
+        }
 
         #endregion Private Methods
     }
