@@ -497,11 +497,11 @@ namespace Raccoon {
 
                 bool canMoveH = true, 
                      canMoveV = true,
-                     singleCheck = Math.DistanceSquared(distanceX, distanceY, distanceX, distanceY) < 1;
+                     singleCheck = distanceX == 0 && distanceY == 0;
 
                 if (singleCheck) {
-                    movementX = Math.Sign(directionX);
-                    movementY = Math.Sign(directionY);
+                    movementX = Math.Sign(movementXBuffer);
+                    movementY = Math.Sign(movementYBuffer);
                 }
 
                 do {

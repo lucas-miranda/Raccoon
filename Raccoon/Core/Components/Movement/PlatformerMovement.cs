@@ -236,10 +236,10 @@ namespace Raccoon.Components {
             float verticalVelocity = Velocity.Y;
 
             if (!_isWalkingOnRamp) {
-                if (!OnGround) {
+                //if (!OnGround) {
                     // apply gravity force
                     verticalVelocity += GravityScale * GravityForce.Y * dt;
-                }
+                //}
 
                 if (IsStillJumping) {
                     // apply jumping acceleration if it's jumping
@@ -248,7 +248,6 @@ namespace Raccoon.Components {
 
                 verticalVelocity += Body.Force.Y * dt;
                 displacement.Y = verticalVelocity * dt;
-                //Debug.WriteLine("cant check for ramp");
             }
 
             _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
