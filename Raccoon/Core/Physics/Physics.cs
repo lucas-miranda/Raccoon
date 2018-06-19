@@ -442,6 +442,10 @@ namespace Raccoon {
             for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
                 Body body = _narrowPhaseBodies[j];
 
+                if (body.Entity == null) {
+                    continue;
+                }
+
                 body.PhysicsUpdate(dt);
 
                 // swap bodies for fast collision check
@@ -611,15 +615,20 @@ namespace Raccoon {
                   || (canMoveV && Math.Abs(distanceY) >= 1)
                 );
 
+                // check if body has been removed in collision resolution and just ignore the post-processing
+                if (body.Entity == null) {
+                    continue;
+                }
+
                 // checks for movement buffer to return to the body
                 double remainderMovementXBuffer = 0.0,
                        remainderMovementYBuffer = 0.0;
 
-                if (canMoveH && Math.Abs(distanceX) > 0) {
+                if (canMoveH && Math.Abs(distanceX + movementXBuffer) > 0) {
                     remainderMovementXBuffer = distanceX + movementXBuffer;
                 }
 
-                if (canMoveV && Math.Abs(distanceY) > 0) {
+                if (canMoveV && Math.Abs(distanceY + movementYBuffer) > 0) {
                     remainderMovementYBuffer = distanceY + movementYBuffer;
                 }
 
