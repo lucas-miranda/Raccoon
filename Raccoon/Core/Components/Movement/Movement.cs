@@ -1,6 +1,10 @@
-﻿namespace Raccoon.Components {
+﻿using Raccoon.Util;
+
+namespace Raccoon.Components {
     public abstract class Movement {
         #region Public Members
+
+        public static readonly float UnitVelocity = Math.Ceiling(1f / Physics.FixedDeltaTimeSeconds);
 
         public System.Action OnMove = delegate { };
 

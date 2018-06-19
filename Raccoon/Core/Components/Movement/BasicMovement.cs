@@ -38,7 +38,7 @@ namespace Raccoon.Components {
             float horizontalVelocity = Velocity.X;
             if (Axis.X == 0f) { // stopping from movement, drag force applies
                 horizontalVelocity = Math.EqualsEstimate(horizontalVelocity, 0f) ? 0f : horizontalVelocity * DragForce;
-            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && System.Math.Sign(Axis.X) != System.Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
+            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && Math.Sign(Axis.X) != Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
                 horizontalVelocity = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
                 horizontalVelocity = Math.Approach(horizontalVelocity, TargetVelocity.X, Acceleration.X * dt);
