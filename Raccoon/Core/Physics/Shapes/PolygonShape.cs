@@ -89,6 +89,19 @@ namespace Raccoon {
             return polygon.Projection(axis);
         }
 
+        public Vector2[] CalculateAxes() {
+            Vector2[] axes = new Vector2[Shape.Normals.Length];
+
+            int i = 0; //1;
+
+            foreach (Vector2 normal in Shape.Normals) {
+                axes[i] = normal;
+                i++;
+            }
+
+            return axes;
+        }
+
         public void Rotate(float degrees) {
             _rotation += degrees;
             Shape.RotateAround(degrees, Shape.Center - Origin);

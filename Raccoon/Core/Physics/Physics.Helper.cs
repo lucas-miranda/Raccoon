@@ -106,6 +106,29 @@ namespace Raccoon {
             return TestSAT(shape, shapePos, polygon, new Vector2[] { }, out contact);
         }
 
+        private bool TestSAT(Vector2 startPoint, Vector2 endPoint, IShape shape, Vector2 shapePos, IEnumerable<Vector2> axes, out Contact? contact) {
+            Contact leastPenetrationContact = new Contact {
+                Position = shapePos,
+                PenetrationDepth = float.PositiveInfinity
+            };
+
+            foreach (Vector2 axis in axes) {
+                Range projectionA = axis.Projection(startPoint, endPoint), projectionB = shape.Projection(shapePos, axis);
+                if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
+                    contact = null;
+                    return false;
+                }
+
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                    leastPenetrationContact.PenetrationDepth = penetrationDepth;
+                    leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
+                }
+            }
+
+            contact = leastPenetrationContact;
+            return true;
+        }
+
         private bool BiasGreaterThan(float a, float b) {
           return a >= (b * .95f + a * .01f);
         }

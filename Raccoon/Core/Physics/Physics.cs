@@ -408,6 +408,65 @@ namespace Raccoon {
 
         #endregion Queries [Multiple Output]
 
+        #region Raycast
+
+        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+            if (tags.Equals(_noneTag)) {
+                contacts = null;
+                return false;
+            }
+
+            Vector2 endPos = position + direction * maxDistance;
+            Contact? rayContact = null;
+            float closerContactDist = float.PositiveInfinity;
+
+            Vector2[] raycastAxes = new Vector2[] {
+                direction.Normalized(),
+                direction.PerpendicularCW().Normalized()
+            };
+
+            Vector2[] axes, shapeAxes;
+            foreach (System.Enum tag in tags.GetFlagValues()) {
+                ValidateTag(tag);
+
+                foreach (Body otherCollider in _collidersByTag[tag]) {
+                    if (otherCollider.Shape == null) {
+                        continue;
+                    }
+
+                    shapeAxes = otherCollider.Shape.CalculateAxes();
+
+                    // prepare axes
+                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
+                    raycastAxes.CopyTo(axes, 0);
+                    shapeAxes.CopyTo(axes, raycastAxes.Length);
+
+                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
+                        continue;
+                    }
+
+                    float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
+                    if (rayContact == null || distToContact < closerContactDist) {
+                        rayContact = contact;
+                        closerContactDist = distToContact;
+                    }
+                }
+            }
+
+            if (rayContact != null) {
+                contacts = new Contact[] {
+                    rayContact.Value
+                };
+
+                return true;
+            }
+
+            contacts = null;
+            return false;
+        }
+
+        #endregion Raycast
+
         #endregion Public Methods
 
         #region Private Methods

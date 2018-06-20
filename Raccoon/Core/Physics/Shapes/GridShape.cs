@@ -11,7 +11,7 @@ namespace Raccoon {
 #endif
 
         private Dictionary<uint, TileShape> _collisionShapes = new Dictionary<uint, TileShape>();
-        private TileShape[,] _tilesData;
+        private readonly TileShape[,] _tilesData;
 
         public GridShape(Size tileSize, int columns, int rows) {
             TileSize = tileSize;
@@ -90,6 +90,10 @@ namespace Raccoon {
 
         public Range Projection(Vector2 position, Vector2 axis) {
             return null;
+        }
+
+        public Vector2[] CalculateAxes() {
+            return new Vector2[] { };
         }
 
         public ref TileShape GetTileInfo(int x, int y) {

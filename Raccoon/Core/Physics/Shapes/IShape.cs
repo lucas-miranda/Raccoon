@@ -13,5 +13,6 @@ namespace Raccoon {
         bool Intersects(Line line);
         float ComputeMass(float density);
         Range Projection(Vector2 shapePosition, Vector2 axis);
+        Vector2[] CalculateAxes();
     }
 }

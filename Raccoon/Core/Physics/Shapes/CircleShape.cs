@@ -41,5 +41,9 @@ namespace Raccoon {
             float p = Vector2.Dot(position, axis);
             return new Range(p - Radius, p + Radius);
         }
+
+        public Vector2[] CalculateAxes() {
+            return new Vector2[] { Vector2.Right };
+        } 
     }
 }
