@@ -227,6 +227,16 @@ namespace Raccoon.Components {
             Velocity = Vector2.Zero;
         }
 
+        public void AddTag(System.Enum tag) {
+            long value = System.Convert.ToInt64(Tags) | System.Convert.ToInt64(tag);
+            Tags = (System.Enum) System.Enum.ToObject(Physics.TagType, value);
+        }
+
+        public void RemoveTag(System.Enum tag) {
+            long value = System.Convert.ToInt64(Tags) & (~System.Convert.ToInt64(tag));
+            Tags = (System.Enum) System.Enum.ToObject(Physics.TagType, value);
+        }
+
         public override string ToString() {
             return $"[Body | Shape: {Shape}, Movement: {Movement}]";
         }
