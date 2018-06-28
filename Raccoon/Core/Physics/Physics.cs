@@ -155,6 +155,10 @@ namespace Raccoon {
             _collisionTagTable.Clear();
         }
 
+        public System.Enum GetCollidableTags(System.Enum tags) {
+            return (System.Enum) System.Enum.ToObject(TagType, GetCollidableTagsAsNumber(tags));
+        }
+
         public void RegisterCollision(System.Enum tagA, System.Enum tagB) {
             ValidateTag(tagA, "tagA");
             ValidateTag(tagB, "tagB");
@@ -751,10 +755,6 @@ namespace Raccoon {
             }
 
             return tagsValue;
-        }
-
-        internal System.Enum GetCollidableTags(System.Enum tags) {
-            return (System.Enum) System.Enum.ToObject(TagType, GetCollidableTagsAsNumber(tags));
         }
 
 #if DEBUG
