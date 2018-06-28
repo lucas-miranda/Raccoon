@@ -33,6 +33,12 @@ namespace Raccoon.Graphics {
 
         #endregion Consctructors
 
+        #region Public Properties
+
+        public Vector2 Alignment { get; set; } = new Vector2(0f, .5f);
+
+        #endregion Public Properties
+        
         #region Protected Properties
 
         protected Vector2[] SectionsPoints { get; private set; } = new Vector2[0];
@@ -55,7 +61,7 @@ namespace Raccoon.Graphics {
             effect.TextureEnabled = true;
             effect.Texture = Texture.XNATexture;
             float[] colorNormalized = (color * Color).Normalized;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
+            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
             effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
             effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
@@ -81,10 +87,13 @@ namespace Raccoon.Graphics {
                 return;
             }
 
+            scroll += Scroll;
             scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
             Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
             BasicEffect effect = Game.Instance.Core.BasicEffect;
+            float[] colorNormalized = color.Normalized;
+            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
             effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
             effect.Projection = Surface.Projection;
@@ -96,6 +105,8 @@ namespace Raccoon.Graphics {
                 device.SetVertexBuffer(_vertexBuffer);
                 device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, Sections * 6 - 1);
             }
+
+            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
 #endif
         }
 
@@ -108,15 +119,18 @@ namespace Raccoon.Graphics {
 
             // update vertices
             VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[(sectionsPoints.Length - 1) * 4];
-            float halfWidth = width / 2f;
+            float upWidth = width * Alignment.Y,
+                  downWidth = width - upWidth,
+                  leftWidth = upWidth * Alignment.X,
+                  rightWidth = width - leftWidth;
 
             for (int s = 0; s < Sections; s++) {
                 Vector2 startPoint = SectionsPoints[s],
                         endPoint = SectionsPoints[s + 1];
 
                 Vector2 direction = Util.Math.PolarToCartesian(1f, Util.Math.Angle(startPoint, endPoint));
-                Vector2 up = direction.PerpendicularCCW() * halfWidth,
-                        down = direction.PerpendicularCW() * halfWidth;
+                Vector2 up = direction.PerpendicularCCW() * upWidth,
+                        down = direction.PerpendicularCW() * downWidth;
 
                 //  
                 // Vertices layout:
@@ -133,11 +147,62 @@ namespace Raccoon.Graphics {
                                                 bottomStart = Microsoft.Xna.Framework.Vector3.Zero;
 
                 if (s == 0) {
-                    bottomStart = new Microsoft.Xna.Framework.Vector3(startPoint.X + down.X, startPoint.Y + down.Y, 0f);
-                    topStart = new Microsoft.Xna.Framework.Vector3(startPoint.X + up.X, startPoint.Y + up.Y, 0f);
+                    Vector2 correction = -direction * upWidth; // subtle start points correction (intention is to align correctly when strip is cyclic)
+
+                    bottomStart = new Microsoft.Xna.Framework.Vector3(startPoint.X + down.X + correction.X, startPoint.Y + down.Y + correction.Y, 0f);
+                    topStart = new Microsoft.Xna.Framework.Vector3(startPoint.X + up.X + correction.X, startPoint.Y + up.Y + correction.Y, 0f);
                 } else {
-                    bottomStart = vertices[vertexStart - 2].Position;
-                    topStart = vertices[vertexStart - 1].Position;
+                    // test if previous point, current point and next point constitute a closed angle
+                    // and apply a correction, if needed
+                    // the goal is to smooth hard turns
+
+                    Vector2 previousPoint = SectionsPoints[s - 1];
+                    Microsoft.Xna.Framework.Vector3 previousBottomPoint = vertices[vertexStart - 2].Position,
+                                                    previousTopPoint = vertices[vertexStart - 1].Position;
+
+                    float angle = Util.Math.Angle(previousPoint, startPoint, endPoint);
+                    bool isClosedAngle = !Util.Helper.InRange(angle, 180 - 45, 180 + 45);
+
+                    if (isClosedAngle) {
+                        Vector2 pivot, rotatedPoint;
+
+                        if (Util.Math.IsRight(previousPoint, endPoint, startPoint)) { // NOTE: ideally should be "IsLeft"
+                            // right turn
+                            pivot = new Vector2(previousTopPoint.X, previousTopPoint.Y);
+                            rotatedPoint = Util.Math.RotateAround(new Vector2(previousBottomPoint.X, previousBottomPoint.Y), pivot, angle);
+                            rotatedPoint += up; // align alignment correction
+                            bottomStart = new Microsoft.Xna.Framework.Vector3(rotatedPoint.X, rotatedPoint.Y, 0f);
+
+                            // apply alignment correction
+                            pivot += up;
+
+                            topStart = new Microsoft.Xna.Framework.Vector3(pivot.X, pivot.Y, 0f);
+
+                            // apply correction on previous pair of points too (for a nice alignment)
+                            var upCorrection = new Microsoft.Xna.Framework.Vector3(up.X, up.Y, 0f);
+                            vertices[vertexStart - 2].Position = previousBottomPoint + upCorrection;
+                            vertices[vertexStart - 1].Position = previousTopPoint + upCorrection;
+                        } else {
+                            // left turn
+                            pivot = new Vector2(previousBottomPoint.X, previousBottomPoint.Y);
+                            rotatedPoint = Util.Math.RotateAround(new Vector2(previousTopPoint.X, previousTopPoint.Y), pivot, angle);
+                            rotatedPoint += down; // alignment correction
+                            topStart = new Microsoft.Xna.Framework.Vector3(rotatedPoint.X, rotatedPoint.Y, 0f);
+
+                            // apply alignment correction
+                            pivot += down;
+
+                            bottomStart = new Microsoft.Xna.Framework.Vector3(pivot.X, pivot.Y, 0f);
+
+                            // apply correction on previous pair of points too (for a nice alignment)
+                            var downCorrection = new Microsoft.Xna.Framework.Vector3(down.X, down.Y, 0f);
+                            vertices[vertexStart - 2].Position = previousBottomPoint + downCorrection;
+                            vertices[vertexStart - 1].Position = previousTopPoint + downCorrection;
+                        }
+                    } else {
+                        bottomStart = previousBottomPoint;
+                        topStart = previousTopPoint;
+                    }
                 }
 
                 // start-bottom
