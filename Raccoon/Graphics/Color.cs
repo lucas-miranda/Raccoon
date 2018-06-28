@@ -1,5 +1,5 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public struct Color {
@@ -44,20 +44,20 @@ namespace Raccoon.Graphics {
             }
 
             if (rgba.Length >= 3 && rgba.Length <= 4) { // RGB or RGBA
-                R = Convert.ToByte(string.Concat(rgba[0], rgba[0]), 16);
-                G = Convert.ToByte(string.Concat(rgba[1], rgba[1]), 16);
-                B = Convert.ToByte(string.Concat(rgba[2], rgba[2]), 16);
+                R = System.Convert.ToByte(string.Concat(rgba[0], rgba[0]), 16);
+                G = System.Convert.ToByte(string.Concat(rgba[1], rgba[1]), 16);
+                B = System.Convert.ToByte(string.Concat(rgba[2], rgba[2]), 16);
 
                 if (rgba.Length == 4) {
-                    A = Convert.ToByte(string.Concat(rgba[3], rgba[3]), 16);
+                    A = System.Convert.ToByte(string.Concat(rgba[3], rgba[3]), 16);
                 }
             } else if (rgba.Length >= 6 && rgba.Length <= 8) { // RRGGBB or RRGGBBAA
-                R = Convert.ToByte(rgba.Substring(0, 2), 16);
-                G = Convert.ToByte(rgba.Substring(2, 2), 16);
-                B = Convert.ToByte(rgba.Substring(4, 2), 16);
+                R = System.Convert.ToByte(rgba.Substring(0, 2), 16);
+                G = System.Convert.ToByte(rgba.Substring(2, 2), 16);
+                B = System.Convert.ToByte(rgba.Substring(4, 2), 16);
 
                 if (rgba.Length == 8) {
-                    A = Convert.ToByte(rgba.Substring(6, 2), 16);
+                    A = System.Convert.ToByte(rgba.Substring(6, 2), 16);
                 }
             }
         }
@@ -72,13 +72,16 @@ namespace Raccoon.Graphics {
         }
 
         public Color(float r, float g, float b, float a = 1f) {
-            R = (byte) Util.Math.Clamp(r * byte.MaxValue, 0, 255);
-            G = (byte) Util.Math.Clamp(g * byte.MaxValue, 0, 255);
-            B = (byte) Util.Math.Clamp(b * byte.MaxValue, 0, 255);
-            A = (byte) Util.Math.Clamp(a * byte.MaxValue, 0, 255);
+            R = (byte) Math.Clamp(r * byte.MaxValue, 0, 255);
+            G = (byte) Math.Clamp(g * byte.MaxValue, 0, 255);
+            B = (byte) Math.Clamp(b * byte.MaxValue, 0, 255);
+            A = (byte) Math.Clamp(a * byte.MaxValue, 0, 255);
         }
 
-        public Color(Color color, float alpha) : this (color.R, color.G, color.B, (byte) ((alpha * byte.MaxValue) % 255)) {
+        public Color(Color color, float alpha) : this(color.R, color.G, color.B, (byte) Math.Clamp(alpha * byte.MaxValue, 0, 255)) {
+        }
+
+        public Color(Color color, byte alpha) : this(color.R, color.G, color.B, alpha) {
         }
 
         #endregion Constructors
@@ -130,7 +133,23 @@ namespace Raccoon.Graphics {
         }
 
         public static Color Lerp(Color start, Color end, float t) {
-            return new Color(Util.Math.Lerp(start.R, end.R, t), Util.Math.Lerp(start.G, end.G, t), Util.Math.Lerp(start.B, end.B, t), Util.Math.Lerp(start.A, end.A, t));
+            return new Color(Math.Lerp(start.R, end.R, t), Math.Lerp(start.G, end.G, t), Math.Lerp(start.B, end.B, t), Math.Lerp(start.A, end.A, t));
+        }
+
+        public static Color Darken(Color color, float amount) {
+            amount = 1f - Math.Clamp(amount, 0f, 1f);
+            return new Color(
+                (byte) Math.Clamp(color.R * amount, 0, 255),
+                (byte) Math.Clamp(color.G * amount, 0, 255),
+                (byte) Math.Clamp(color.B * amount, 0, 255),
+                color.A
+            );
+        }
+
+        public static Color Lighten(Color color, float amount) {
+            Color diff = White - color;
+            diff *= amount;
+            return new Color(color + diff, color.A);
         }
 
         #endregion Public Static Methods
@@ -197,11 +216,25 @@ namespace Raccoon.Graphics {
         }
 
         public static Color operator *(Color l, float n) {
-            return new Color((byte) (l.R * n), (byte) (l.G * n), (byte) (l.B * n), (byte) (l.A * n));
+            float[] normalized = l.Normalized;
+
+            return new Color(
+                normalized[0] * n,
+                normalized[1] * n,
+                normalized[2] * n,
+                normalized[3] * n
+            );
         }
 
         public static Color operator /(Color l, float n) {
-            return new Color((byte) (l.R / n), (byte) (l.G / n), (byte) (l.B / n), (byte) (l.A / n));
+            float[] normalized = l.Normalized;
+
+            return new Color(
+                normalized[0] / n,
+                normalized[1] / n,
+                normalized[2] / n,
+                normalized[3] / n
+            );
         }
 
         #endregion Operators
