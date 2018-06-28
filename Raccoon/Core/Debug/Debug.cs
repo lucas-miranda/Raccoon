@@ -278,6 +278,10 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLines(IList<Vector2> points, Color color) {
+            if (points == null || points.Count == 0) {
+                return;
+            }
+
             float correction = (Camera.Current != null ? Camera.Current.Zoom : 1f) * Game.Instance.Scale;
 
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[points.Count];
