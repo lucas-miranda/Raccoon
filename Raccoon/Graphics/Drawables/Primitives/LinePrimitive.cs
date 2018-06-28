@@ -19,11 +19,12 @@
         public Line Equation { get { return new Line(From, To); } }
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            Game.Instance.Core.BasicEffect.World = Surface.World;
-            Game.Instance.Core.BasicEffect.View = Surface.View;
-            Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = Opacity;
+            var effect = Game.Instance.Core.BasicEffect;
+            effect.World = Surface.World;
+            effect.View = Surface.View;
+            effect.Projection = Surface.Projection;
+            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            effect.Alpha = Opacity;
 
             foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
@@ -34,9 +35,9 @@
                     }, 0, 1);
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f);
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.BasicEffect.View = Game.Instance.Core.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
+            effect.Alpha = 1f;
+            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f);
+            effect.World = Game.Instance.Core.BasicEffect.View = Game.Instance.Core.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
         }
 
         public override void Dispose() { }
