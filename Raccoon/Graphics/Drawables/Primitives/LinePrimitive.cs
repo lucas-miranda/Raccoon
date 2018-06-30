@@ -4,7 +4,7 @@
 
         public LinePrimitive(Vector2 from, Vector2 to, Color color) {
             From = from;
-            To = To;
+            To = to;
             Color = color;
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
     public class Strip : Image {
@@ -110,15 +111,15 @@ namespace Raccoon.Graphics {
 #endif
         }
 
-        public void SetSections(Vector2[] sectionsPoints, float width = 1f) {
-            if (sectionsPoints.Length != SectionsPoints.Length) {
-                throw new System.ArgumentException($"Expected {SectionsPoints.Length} points, got {sectionsPoints.Length}", "sectionsPoints");
+        public void SetSections(IList<Vector2> sectionsPoints, float width = 1f) {
+            if (sectionsPoints.Count != SectionsPoints.Length) {
+                throw new System.ArgumentException($"Expected {SectionsPoints.Length} points, got {sectionsPoints.Count}", "sectionsPoints");
             }
 
             sectionsPoints.CopyTo(SectionsPoints, 0);
 
             // update vertices
-            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[(sectionsPoints.Length - 1) * 4];
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[(sectionsPoints.Count - 1) * 4];
             float upWidth = width * Alignment.Y,
                   downWidth = width - upWidth,
                   leftWidth = upWidth * Alignment.X,
