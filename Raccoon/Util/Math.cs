@@ -268,9 +268,13 @@
         }
 
         public static float Angle(Vector2 a, Vector2 b, Vector2 c) {
-            float ba = (b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y),
-                  bc = (b.X - c.X) * (b.X - c.X) + (b.Y - c.Y) * (b.Y - c.Y),
-                  ca = (c.X - a.X) * (c.X - a.X) + (c.Y - a.Y) * (c.Y - a.Y);
+            double aX = a.X, aY = a.Y,
+                   bX = b.X, bY = b.Y,
+                   cX = c.X, cY = c.Y;
+
+            double ba = (bX - aX) * (bX - aX) + (bY - aY) * (bY - aY),
+                   bc = (bX - cX) * (bX - cX) + (bY - cY) * (bY - cY),
+                   ca = (cX - aX) * (cX - aX) + (cY - aY) * (cY - aY);
 
             return (float) (System.Math.Acos((bc + ba - ca) / System.Math.Sqrt(4 * bc * ba)) * RadToDeg);
         }
