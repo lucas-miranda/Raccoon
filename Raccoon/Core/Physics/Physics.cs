@@ -414,7 +414,9 @@ namespace Raccoon {
 
         #region Raycast
 
-        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Body collidedCollider, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+            collidedCollider = null;
+
             if (tags.Equals(_noneTag)) {
                 contacts = null;
                 return false;
@@ -452,6 +454,7 @@ namespace Raccoon {
                     float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
                     if (rayContact == null || distToContact < closerContactDist) {
                         rayContact = contact;
+                        collidedCollider = otherCollider;
                         closerContactDist = distToContact;
                     }
                 }
@@ -466,6 +469,21 @@ namespace Raccoon {
             }
 
             contacts = null;
+            return false;
+        }
+
+        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+            return Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance);
+        }
+
+        public bool Raycast<T>(Vector2 position, Vector2 direction, System.Enum tags, out T collidedEntity, out Contact[] contacts, float maxDistance = float.PositiveInfinity) where T : Entity {
+            if (Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance)
+              && collidedCollider.Entity is T entity) {
+                collidedEntity = entity;
+                return true;
+            }
+
+            collidedEntity = null;
             return false;
         }
 
