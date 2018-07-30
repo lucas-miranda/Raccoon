@@ -133,7 +133,12 @@ namespace Raccoon.Graphics {
         }
 
         public static Color Lerp(Color start, Color end, float t) {
-            return new Color(Math.Lerp(start.R, end.R, t), Math.Lerp(start.G, end.G, t), Math.Lerp(start.B, end.B, t), Math.Lerp(start.A, end.A, t));
+            return new Color(
+                Math.Lerp(start.R / 255f, end.R / 255f, t), 
+                Math.Lerp(start.G / 255f, end.G / 255f, t), 
+                Math.Lerp(start.B / 255f, end.B / 255f, t), 
+                Math.Lerp(start.A / 255f, end.A / 255f, t)
+            );
         }
 
         public static Color Darken(Color color, float amount) {
@@ -150,6 +155,88 @@ namespace Raccoon.Graphics {
             Color diff = White - color;
             diff *= amount;
             return new Color(color + diff, color.A);
+        }
+
+        public static Color Complementary(Color color) {
+            float[] hsl = ToHSL(color);
+            return FromHSL((hsl[0] + .5f) % 1f, hsl[1], hsl[2]);
+        }
+
+        public static float[] ToHSL(Color color) {
+            float r = color.R / 255f,
+                  g = color.G / 255f,
+                  b = color.B / 255f;
+
+            float max = Math.Max(Math.Max(r, g), b);
+            float min = Math.Min(Math.Min(r, g), b);
+
+            float h, s, l;
+            h = s = l = (max + min) / 2f;
+
+            if (max == min) {
+                h = s = 0f;
+            } else {
+                float d = max - min;
+                s = l > .5f ? d / (2f - (max + min)) : d / (max + min);
+
+                if (r > g && r > b) {
+                    h = (g - b) / d + (g < b ? 6f : 0f);
+                } else if (g > b) {
+                    h = (b - r) / d + 2f;
+                } else {
+                    h = (r - g) / d + 4f;
+                }
+
+                h /= 6f;
+            }
+
+            return new float[] { h, s, l };
+        }
+
+        public static Color FromHSL(float h, float s, float l) {
+            float r, g, b;
+            r = g = b = 0f;
+
+            if (s == 0f) {
+                r = g = b = l;
+            } else {
+                float y = l < .5f ? l * (1f + s) : l + s - l * s;
+                float x = 2f * l - y;
+
+                r = HUEToRGB(x, y, h + 1f / 3f);
+                g = HUEToRGB(x, y, h);
+                b = HUEToRGB(x, y, h - 1f / 3f);
+            }
+
+            return new Color(r, g, b);
+
+            float HUEToRGB(float p, float q, float t) {
+                if (t < 0f) {
+                    t += 1f;
+                }
+
+                if (t > 1f) {
+                    t -= 1f;
+                }
+
+                if (t < 1f/6f) {
+                    return p + (q - p) * 6f * t;
+                }
+
+                if (t < 1f/2f) {
+                    return q;
+                }
+
+                if (t < 2f/3f) {
+                    return p + (q - p) * (2f / 3f - t) * 6f;
+                }
+
+                return p;
+            }
+        }
+
+        public static Color FromHSL(float[] hsl) {
+            return FromHSL(hsl[0], hsl[1], hsl[2]);
         }
 
         #endregion Public Static Methods
