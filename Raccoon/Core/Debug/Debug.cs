@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Collections.Generic;
 
 using Raccoon.Graphics;
+using Raccoon.Components;
 using Raccoon.Util.Tween;
+using Raccoon.Util.Collections;
 
 namespace Raccoon {
     public sealed class Debug {
@@ -28,6 +30,7 @@ namespace Raccoon {
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
         private Vector2 _screenMessagePosition = ScreenMessageStartPosition;
         private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
+        private Locker<Alarm> _alarms = new Locker<Alarm>();
 
         #endregion Private Members
 
@@ -803,6 +806,25 @@ namespace Raccoon {
 
         #endregion Assert
 
+        #region Time
+
+        public static void Stopwatch(uint interval, Action action = null) {
+            if (action == null) {
+                TimeSpan startTime = Game.Instance.Core.Time;
+                string stdMessage = $"[Debug] Stopwatch ended.\n  Start: {startTime.ToString(@"hh\:mm\:ss\.fff")}, End: {{0}}\n  Duration: {{1}}";
+                action = () => {
+                    TimeSpan endTime = Game.Instance.Core.Time;
+                    Info(string.Format(stdMessage, endTime.ToString(@"hh\:mm\:ss\.fff"), endTime.Subtract(startTime).ToString(@"hh\:mm\:ss\.fff")));
+                };
+            }
+
+            Instance._alarms.Add(new Alarm(interval, action) {
+                RepeatTimes = 0
+            });
+        }
+
+        #endregion Time
+
         #region Others
 
         public static void Indent() {
@@ -864,6 +886,13 @@ namespace Raccoon {
                 }
 
                 _toRemoveMessages.Clear();
+            }
+
+            foreach (Alarm alarm in _alarms) {
+                alarm.Update(delta);
+                if (alarm.TriggeredCount > alarm.RepeatTimes) {
+                    _alarms.Remove(alarm);
+                }
             }
 
             Console.Update(delta);
