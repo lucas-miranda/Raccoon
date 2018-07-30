@@ -5,6 +5,7 @@ namespace Raccoon.Components {
         #region Public Members
 
         public static readonly float UnitVelocity = Math.Ceiling(1f / Physics.FixedDeltaTimeSeconds);
+        public const float MaxImpulsePerSecond = 60f * 5f;
 
         public System.Action OnMove = delegate { };
 
@@ -61,7 +62,8 @@ namespace Raccoon.Components {
         public Vector2 TargetVelocity { get; protected set; }
         public Vector2 Acceleration { get; set; }
         public Vector2 LastAxis { get; protected set; }
-        public float DragForce { get; set; } = .1f;
+        //public Vector2 Impulse { get; protected set; }
+        public float DragForce { get; set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
         public bool TouchedTop { get; private set; }
@@ -117,9 +119,16 @@ namespace Raccoon.Components {
         public bool IsDebugRenderEnabled { get; set; }
 #endif
 
-        protected Vector2 NextAxis { get; set; }
-
         #endregion Public Properties
+
+        #region Protected Properties
+
+        protected Vector2 NextAxis { get; set; }
+        protected Vector2 ImpulsePerSec { get; set; }
+        protected float ImpulseTime { get; set; }
+        protected bool JustReceiveImpulse { get; set; }
+
+        #endregion Protected Properties
 
         #region Public Methods
 
@@ -132,10 +141,16 @@ namespace Raccoon.Components {
             OnMove = null;
         }
 
+        public virtual void BeforeUpdate() {
+        }
+
         public virtual void Update(int delta) {
             Axis = NextAxis;
             TargetVelocity = Axis * MaxVelocity;
             NextAxis = Vector2.Zero;
+        }
+
+        public virtual void LateUpdate() {
         }
 
         public virtual void DebugRender() {
@@ -168,6 +183,9 @@ namespace Raccoon.Components {
             }
         }
 
+        public virtual void OnBodyCollide(Body otherBody, Vector2 collisionAxes) {
+        }
+
         public abstract Vector2 Integrate(float dt);
 
         public virtual void Move(Vector2 axis) {
@@ -193,6 +211,18 @@ namespace Raccoon.Components {
 
         public void MoveVertical(float y) {
             Move(new Vector2(LastAxis.X, y));
+        }
+
+        public void ApplyCustomImpulse(Vector2 distance, float duration) {
+            // a = 2d / t²
+
+            ImpulsePerSec = (2f * distance) / (duration * duration); // acceleration
+            ImpulseTime = duration;
+            JustReceiveImpulse = true;
+        }
+
+        public void ApplyCustomImpulse(Vector2 normal, float distance, float duration) {
+            ApplyCustomImpulse(normal * distance, duration);
         }
 
         #endregion Public Methods

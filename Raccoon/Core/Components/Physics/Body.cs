@@ -84,7 +84,10 @@ namespace Raccoon.Components {
                 }
 
                 _movement = value;
-                _movement.OnAdded(this);
+
+                if (Entity != null) {
+                    _movement.OnAdded(this);
+                }
             }
         }
 
@@ -118,17 +121,23 @@ namespace Raccoon.Components {
             Physics.Instance.RemoveCollider(this);
             _isPhysicsActive = false;
 
-            if (Movement != null) {
-                Movement.OnRemoved();
-            }
+            Movement?.OnRemoved();
+        }
+
+        public override void BeforeUpdate() {
+            base.BeforeUpdate();
+            Movement?.BeforeUpdate();
         }
 
         public override void Update(int delta) {
-            if (Movement != null) {
-                Movement.Update(delta);
-            }
+            Movement?.Update(delta);
         }
-        
+
+        public override void LateUpdate() {
+            base.LateUpdate();
+            Movement?.LateUpdate();
+        }
+
         public override void Render() {
         }
 
@@ -174,8 +183,12 @@ namespace Raccoon.Components {
         public void OnCollide(Body otherBody, Vector2 collisionAxes) {
             OnCollided?.Invoke(otherBody, collisionAxes);
 
-            if (Movement != null && otherBody.Tags.HasFlag(Movement.CollisionTags)) {
-                Movement.OnCollide(collisionAxes);
+            if (Movement != null) {
+                Movement.OnBodyCollide(otherBody, collisionAxes);
+
+                if (otherBody.Tags.HasFlag(Movement.CollisionTags)) {
+                    Movement.OnCollide(collisionAxes);
+                }
             }
         }
 

@@ -115,6 +115,16 @@ namespace Raccoon.Components {
         /// </summary>
         public float GravityScale { get; set; } = 1f;
 
+        /// <summary>
+        /// Drag force applied when on ground
+        /// </summary>
+        public float GroundDragForce { get; set; }
+
+        /// <summary>
+        /// Drag force applied when on air
+        /// </summary>
+        public float AirDragForce { get; set; }
+
         #endregion Public Properties
 
         #region Protected Properties
@@ -155,6 +165,8 @@ namespace Raccoon.Components {
             string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nForce: {Body.Force}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump};\nIsJumping? {IsJumping}; IsFalling: {IsFalling}\nJumps: {Jumps}\nJump Height: {JumpHeight}\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_canKeepCurrentJump}, jumpMaxY: {_jumpMaxY}\n\n- Ramps\nisWalkingOnRamp? {_isWalkingOnRamp}";
             Debug.DrawString(Camera.Current, new Vector2(Game.Instance.Width - 200f, Game.Instance.Height / 2f), info);
             Debug.DrawLine(new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), Graphics.Color.Yellow);
+
+            //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
         }
 
         public override void PhysicsUpdate(float dt) {
@@ -217,42 +229,90 @@ namespace Raccoon.Components {
         }
 
         public override Vector2 Integrate(float dt) {
-            Vector2 displacement = Vector2.Zero;
+            Vector2 displacement = Vector2.Zero, // in pixels
+                    velocity = Velocity; // in pixels/second
 
-            float horizontalVelocity = Velocity.X;
-            if (Axis.X == 0f) { // stopping from movement, drag force applies
-                horizontalVelocity = Math.EqualsEstimate(horizontalVelocity, 0f) ? 0f : horizontalVelocity * DragForce;
-            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && Math.Sign(Axis.X) != Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
-                horizontalVelocity = 0f;
-            } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
-                horizontalVelocity = Math.Approach(horizontalVelocity, TargetVelocity.X, Acceleration.X * dt);
-            } else { // velocity increasing without a limit
-                horizontalVelocity += Math.Sign(Axis.X) * Acceleration.X * dt;
-            }
+            /////////////////////////
+            // Horizontal Velocity //
+            /////////////////////////
 
-            horizontalVelocity += Body.Force.X * dt;
-            displacement.X = horizontalVelocity * dt;
+            if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.X != 0f) {
+                // handling impulse
+                velocity.X += ImpulsePerSec.X * dt;
+            } else if (Axis.X == 0f) {
+                // horizontal axis is resting
 
-            float verticalVelocity = Velocity.Y;
+                if (Math.EqualsEstimate(velocity.X, 0f)) {
+                    velocity.X = 0f;
+                } else if (OnGround && !JustReceiveImpulse) {
+                    // ground drag force
+                    velocity.X *= (1f - DragForce) * (1f - GroundDragForce);
+                } else {
+                    // air drag force
+                    float airDragForce = AirDragForce,
+                          impulseSpeedCutoff = 0f;
 
-            if (!_isWalkingOnRamp) {
-                //if (!OnGround) {
-                    // apply gravity force
-                    verticalVelocity += GravityScale * GravityForce.Y * dt;
-                //}
+                    if (JustReceiveImpulse) {
+                        if (OnAir) {
+                            impulseSpeedCutoff = 5f;
+                            airDragForce /= 2f;
+                        } else { // on ground
+                            impulseSpeedCutoff = MaxVelocity.X / 2f;
+                        }
+                    }
 
-                if (IsStillJumping) {
-                    // apply jumping acceleration if it's jumping
-                    verticalVelocity -= Acceleration.Y * dt;
+                    // air drag force
+                    velocity.X *= (1f - DragForce) * (1f - airDragForce);
+
+                    if (Math.Abs(velocity.X) < impulseSpeedCutoff) {
+                        JustReceiveImpulse = false;
+                    }
                 }
-
-                verticalVelocity += Body.Force.Y * dt;
-                displacement.Y = verticalVelocity * dt;
+            } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
+                // snaps horizontal velocity to zero, if horizontal axis is on opposite direction 
+                velocity.X = 0f;
+            } else if (MaxVelocity.X > 0f) { 
+                // velocity increasing until reach MaxVelocity.X limit
+                velocity.X = Math.Approach(velocity.X, TargetVelocity.X, Acceleration.X * dt);
+            } else { 
+                // velocity increasing without a limit
+                velocity.X += Math.Sign(Axis.X) * Acceleration.X * dt;
             }
+
+            velocity.X += Body.Force.X * dt;
+            displacement.X = velocity.X * dt;
+
+            ///////////////////////
+            // Vertical Velocity //
+            ///////////////////////
 
             _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
 
-            Velocity = new Vector2(horizontalVelocity, verticalVelocity);
+            if (!_isWalkingOnRamp) {
+                if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
+                    // handling impulse
+                    velocity.Y += ImpulsePerSec.Y * dt;
+                }
+
+                if (!OnGround) {
+                    // apply gravity force
+                    velocity.Y += GravityScale * GravityForce.Y * dt;
+                }
+
+                if (IsStillJumping) {
+                    // apply jumping acceleration if it's jumping
+                    velocity.Y -= Acceleration.Y * dt;
+                }
+
+                velocity.Y += Body.Force.Y * dt;
+                displacement.Y = velocity.Y * dt;
+            }
+
+            if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
+                ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
+            }
+
+            Velocity = velocity;
             return displacement;
         }
 

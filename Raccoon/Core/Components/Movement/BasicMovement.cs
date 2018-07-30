@@ -9,6 +9,7 @@ namespace Raccoon.Components {
         /// </summary>
         /// <param name="acceleration">Speed increase.</param>
         public BasicMovement(Vector2 acceleration) : base(acceleration) {
+            DragForce = .9f;
             SnapAxes = true;
         }
 
@@ -18,6 +19,7 @@ namespace Raccoon.Components {
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
         /// <param name="acceleration">Speed increase.</param>
         public BasicMovement(Vector2 maxVelocity, Vector2 acceleration) : base(maxVelocity, acceleration) {
+            DragForce = .9f;
             SnapAxes = true;
         }
 
@@ -27,6 +29,7 @@ namespace Raccoon.Components {
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
         /// <param name="timeToAchieveMaxSpeed">Time (in miliseconds) to reach max velocity.</param>
         public BasicMovement(Vector2 maxVelocity, int timeToAchieveMaxSpeed) : base(maxVelocity, timeToAchieveMaxSpeed) {
+            DragForce = .9f;
             SnapAxes = true;
         }
 
