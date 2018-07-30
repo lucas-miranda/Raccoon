@@ -71,11 +71,7 @@ namespace Raccoon {
             return PointA + t * ToVector2();
         }
 
-        public bool Intersects(Line line) {
-            return IntersectionPoint(line) != null;
-        }
-
-        public Vector2? IntersectionPoint(Line line) {
+        public bool IntersectionPoint(Line line, out Vector2 intersectionPoint) {
             // reference:  https://gamedev.stackexchange.com/a/12246
             float a1 = SignedTriangleArea(PointA, PointB, line.PointB),
                   a2 = SignedTriangleArea(PointA, PointB, line.PointA);
@@ -86,7 +82,8 @@ namespace Raccoon {
 
                 if (a3 * a4 < .0f) {
                     float t = a3 / (a3 - a4);
-                    return GetPointNormalized(t);
+                    intersectionPoint = GetPointNormalized(t);
+                    return true;
                 }
             }
 
@@ -102,11 +99,62 @@ namespace Raccoon {
                 return PointA + t * r;
             }*/
 
-            return null;
+            intersectionPoint = default(Vector2);
+            return false;
 
             float SignedTriangleArea(Vector2 a, Vector2 b, Vector2 c) {
                 return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
             }
+        }
+
+        public bool Intersects(Line line) {
+            return IntersectionPoint(line, out Vector2 intersectionPoint);
+        }
+
+        public bool IntersectionPoint(Rectangle rectangle, out Vector2 intersectionPoint) {
+            // ref: https://gist.github.com/ChickenProp/3194723
+            Vector2 v = ToVector2();
+
+            float[] p = new float[] {
+                        -v.X, v.X, -v.Y, v.Y
+                    },
+                    q = new float[] {
+                        PointA.X - rectangle.Left,
+                        rectangle.Right - PointA.X,
+                        PointA.Y - rectangle.Top,
+                        rectangle.Bottom - PointA.Y
+                    };
+
+            float u1 = float.NegativeInfinity,
+                  u2 = float.PositiveInfinity;
+
+            for (int i = 0; i < 4; i++) {
+                if (p[i] == 0) {
+                    if (q[i] < 0) {
+                        intersectionPoint = default(Vector2);
+                        return false;
+                    }
+                } else {
+                    float t = q[i] / p[i];
+                    if (p[i] < 0 && u1 < t) {
+                        u1 = t;
+                    } else if (p[i] > 0 && u2 > t) {
+                        u2 = t;
+                    }
+                }
+            }
+
+            if (u1 > u2 || u1 > 1 || u1 < 0) {
+                intersectionPoint = default(Vector2);
+                return false;
+            }
+
+            intersectionPoint = new Vector2(PointA.X + u1 * v.X, PointA.Y + u1 * v.Y);
+            return true;
+        }
+
+        public bool Intersects(Rectangle rectangle) {
+            return IntersectionPoint(rectangle, out Vector2 intersectionPoint);
         }
 
         public Vector2 ClosestPoint(Vector2 point) {
