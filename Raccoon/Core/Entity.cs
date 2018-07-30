@@ -140,6 +140,14 @@ namespace Raccoon {
         }
 
         public virtual void BeforeUpdate() {
+            foreach (Component c in Components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.BeforeUpdate();
+            }
+
             OnBeforeUpdate();
         }
 
@@ -166,6 +174,14 @@ namespace Raccoon {
         }
 
         public virtual void LateUpdate() {
+            foreach (Component c in Components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.LateUpdate();
+            }
+
             OnLateUpdate();
         }
 

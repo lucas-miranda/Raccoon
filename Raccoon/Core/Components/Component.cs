@@ -14,7 +14,14 @@
             Entity = null;
         }
 
+        public virtual void BeforeUpdate() {
+        }
+
         public abstract void Update(int delta);
+
+        public virtual void LateUpdate() {
+        }
+
         public abstract void Render();
 
         [System.Diagnostics.Conditional("DEBUG")]
