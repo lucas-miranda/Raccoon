@@ -412,7 +412,7 @@ namespace Raccoon {
 
         #endregion Queries [Multiple Output]
 
-        #region Raycast
+        #region Raycast [Single Output]
 
         public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Body collidedCollider, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
             collidedCollider = null;
@@ -487,7 +487,102 @@ namespace Raccoon {
             return false;
         }
 
-        #endregion Raycast
+        #endregion Raycast [Single Output]
+
+        #region Raycast [Multiple Output]
+
+        public bool RaycastMultiple(Vector2 position, Vector2 direction, System.Enum tags, out List<(Body body, Contact[] contacts)> collidedBodies, float maxDistance = float.PositiveInfinity) {
+            collidedBodies = new List<(Body body, Contact[] contacts)>();
+
+            if (tags.Equals(_noneTag)) {
+                return false;
+            }
+
+            Vector2 endPos = position + direction * maxDistance;
+
+            Vector2[] raycastAxes = new Vector2[] {
+                direction.Normalized(),
+                direction.PerpendicularCW().Normalized()
+            };
+
+            Vector2[] axes, shapeAxes;
+            foreach (System.Enum tag in tags.GetFlagValues()) {
+                ValidateTag(tag);
+
+                foreach (Body otherCollider in _collidersByTag[tag]) {
+                    if (otherCollider.Shape == null) {
+                        continue;
+                    }
+
+                    shapeAxes = otherCollider.Shape.CalculateAxes();
+
+                    // prepare axes
+                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
+                    raycastAxes.CopyTo(axes, 0);
+                    shapeAxes.CopyTo(axes, raycastAxes.Length);
+
+                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
+                        continue;
+                    }
+
+                    Contact[] contacts = new Contact[] {
+                        contact.Value
+                    };
+
+                    collidedBodies.Add((otherCollider, contacts));
+                }
+            }
+
+            return collidedBodies.Count > 0;
+        }
+
+
+        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, System.Enum tags, out List<(T entity, Contact[] contacts)> collidedEntities, float maxDistance = float.PositiveInfinity) where T : Entity {
+            collidedEntities = new List<(T entity, Contact[] contacts)>();
+
+            if (tags.Equals(_noneTag)) {
+                return false;
+            }
+
+            Vector2 endPos = position + direction * maxDistance;
+
+            Vector2[] raycastAxes = new Vector2[] {
+                direction.Normalized(),
+                direction.PerpendicularCW().Normalized()
+            };
+
+            Vector2[] axes, shapeAxes;
+            foreach (System.Enum tag in tags.GetFlagValues()) {
+                ValidateTag(tag);
+
+                foreach (Body otherCollider in _collidersByTag[tag]) {
+                    if (otherCollider.Shape == null || !(otherCollider.Entity is T entity)) {
+                        continue;
+                    }
+
+                    shapeAxes = otherCollider.Shape.CalculateAxes();
+
+                    // prepare axes
+                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
+                    raycastAxes.CopyTo(axes, 0);
+                    shapeAxes.CopyTo(axes, raycastAxes.Length);
+
+                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
+                        continue;
+                    }
+
+                    Contact[] contacts = new Contact[] {
+                        contact.Value
+                    };
+
+                    collidedEntities.Add((entity, contacts));
+                }
+            }
+
+            return collidedEntities.Count > 0;
+        }
+
+        #endregion Raycast [Multiple Output]
 
         #endregion Public Methods
 
@@ -628,7 +723,8 @@ namespace Raccoon {
                                 continue;
                             }
 
-                            bool collidedH = false, collidedV = false;
+                            bool collidedH = false, 
+                                 collidedV = false;
 
                             // test for horizontal collision (if it's moving horizontally)
                             if (movementX != 0
