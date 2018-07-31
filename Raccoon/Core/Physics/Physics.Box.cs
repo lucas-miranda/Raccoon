@@ -75,9 +75,13 @@ namespace Raccoon {
             }
 
             if (TestSAT(boxA, APos, circleB, BPos, boxA.Axes, out Contact? contact)) {
-                contacts = new Contact[] {
-                    new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
-                };
+                if (contact == null) {
+                    contacts = new Contact[0];
+                } else {
+                    contacts = new Contact[] {
+                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
+                    };
+                }
 
                 return true;
             }
