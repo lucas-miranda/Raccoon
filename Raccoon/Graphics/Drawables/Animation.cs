@@ -40,7 +40,7 @@ namespace Raccoon.Graphics {
         public Animation(AtlasAnimation animTexture) {
             // TODO: support KeyType with AtlasAnimation, converting string animations label to KeyType enum
             if (typeof(KeyType) != typeof(string)) {
-                throw new NotSupportedException($"KeyType '{typeof(KeyType)}' doesn't support AtlasAnimationTexture, switching to string.");
+                throw new NotSupportedException($"KeyType '{typeof(KeyType)}' doesn't support AtlasAnimationTexture, switch to string.");
             }
 
             Texture = animTexture.Texture;
@@ -326,7 +326,7 @@ namespace Raccoon.Graphics {
             }
 
             public void Reset() {
-                HasEnded = false;
+                HasEnded = !(Frames.Length > 1);
                 CurrentFrameIndex = IsReverse ? Frames.Length - 1 : 0;
                 TimesPlayed = 0;
             }
@@ -339,16 +339,16 @@ namespace Raccoon.Graphics {
                 if ((IsReverse && CurrentFrameIndex - 1 < 0) || (IsForward && CurrentFrameIndex + 1 == Frames.Length)) {
                     if (IsPingPong) {
                         IsReverse = !IsReverse;
-                    } 
-                    
+                    }
+
                     if (IsLooping || TimesPlayed < RepeatTimes) {
                         CurrentFrameIndex = IsReverse ? Frames.Length - 1 : 0;
                         TimesPlayed++;
                         _onEnd.Invoke();
                     } else {
                         HasEnded = true;
+                        TimesPlayed++;
                         _onEnd.Invoke();
-                        return;
                     }
                 } else {
                     CurrentFrameIndex = IsReverse ? CurrentFrameIndex - 1 : CurrentFrameIndex + 1;

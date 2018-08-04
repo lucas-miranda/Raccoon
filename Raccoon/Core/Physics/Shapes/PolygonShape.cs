@@ -61,11 +61,11 @@ namespace Raccoon {
             Debug.DrawPolygon(polygon, color);
 
             // normals
-            int i = 0;
+            /*int i = 0;
             foreach (Line edge in polygon.Edges()) {
                 Debug.DrawLine(edge.GetPointNormalized(.5f), edge.GetPointNormalized(.5f) + polygon.Normals[i] * 4f, Color.Yellow);
                 i++;
-            }
+            }*/
 
             // centroid
             Debug.DrawCircle(position - Origin, 1, 10, Color.White);

@@ -24,6 +24,12 @@ namespace Raccoon.Graphics {
             ClippingRegion = new Rectangle(SourceRegion.Width, SourceRegion.Height);
         }
 
+        public Image(AtlasAnimation animTexture) : this(animTexture.Texture) {
+            Texture = animTexture.Texture;
+            SourceRegion = animTexture.Region;
+            ClippingRegion = new Rectangle(animTexture.FrameSize);
+        }
+
         public Image(Image image) : this(image.Texture) {
             SourceRegion = image.SourceRegion;
             ClippingRegion = image.ClippingRegion;
