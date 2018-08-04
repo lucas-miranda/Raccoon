@@ -124,6 +124,24 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Tests a random integer percent value.
+        /// </summary>
+        /// <param name="chance">Percent value in range [1, 100].</param>
+        /// <returns>True if random value is less than chance, False otherwise.</returns>
+        public static bool PercentInteger(int chance) {
+            return Integer(1, 100) <= chance;
+        }
+
+        /// <summary>
+        /// Tests a random single precision percent value.
+        /// </summary>
+        /// <param name="chance">Percent value in range [0f, 100f[.</param>
+        /// <returns>True if random value is less than chance, False otherwise.</returns>
+        public static bool PercentSingle(float chance) {
+            return Single(0f, 100f) <= chance;
+        }
+
+        /// <summary>
         /// Choose a random value contained in a list.
         /// </summary>
         /// <typeparam name="T">Any class.</typeparam>
