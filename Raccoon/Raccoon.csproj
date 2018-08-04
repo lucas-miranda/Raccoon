@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Core\Coroutines\Coroutine.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
     <Compile Include="Core\Physics\Shapes\GridShape.cs" />
     <Compile Include="Core\Physics\Shapes\PolygonShape.cs" />
@@ -83,7 +84,7 @@
     <Compile Include="Core\Components\Movement\Movement.cs" />
     <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
     <Compile Include="Core\Core.cs" />
-    <Compile Include="Core\Coroutines.cs" />
+    <Compile Include="Core\Coroutines\Coroutines.cs" />
     <Compile Include="Core\Debug\Debug.cs" />
     <Compile Include="Core\Debug\Console.cs" />
     <Compile Include="Core\Definitions\Direction.cs" />

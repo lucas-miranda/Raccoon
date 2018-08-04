@@ -34,7 +34,7 @@ namespace Raccoon.Components {
         public State<T> CurrentState { get; private set; }
         public State<T> NextState { get; private set; } = null;
         public bool KeepTriggerValuesBetweenStates { get; set; } = false;
-        public Coroutines.Coroutine CurrentCoroutine { get; private set; }
+        public Coroutine CurrentCoroutine { get; private set; }
 
         #endregion Public Properties
 
