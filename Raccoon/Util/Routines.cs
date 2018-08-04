@@ -46,10 +46,35 @@ namespace Raccoon.Util {
             }
         }
 
+        public static IEnumerator WaitEndOf<T>(Animation<T> animation) {
+            yield return WaitEndOf(animation, animation.CurrentKey);
+        }
+
         public static IEnumerator Repeat(int times, Func<IEnumerator> routine) {
             while (times > 0) {
                 yield return routine();
                 times--;
+            }
+        }
+
+        public static IEnumerator Parallelize(params IEnumerator[] routines) {
+            Coroutine[] coroutines = new Coroutine[routines.Length];
+
+            for (int i = 0; i < routines.Length; i++) {
+                coroutines[i] = Coroutines.Instance.Start(routines[i]);
+            }
+
+            bool hasEnded = false;
+            while (!hasEnded) {
+                yield return null;
+                hasEnded = true;
+
+                foreach (Coroutine coroutine in coroutines) {
+                    if (!coroutine.HasEnded) {
+                        hasEnded = false;
+                        break;
+                    }
+                }
             }
         }
     }
