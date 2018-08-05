@@ -53,6 +53,30 @@
             return new Vector2(Ceiling(value.X), Ceiling(value.Y));
         }
 
+        public static float SignedCeiling(float n) {
+            return Sign(n) < 0f ? Floor(n) : Ceiling(n);
+        }
+
+        public static double SignedCeiling(double n) {
+            return Sign(n) < 0.0 ? Floor(n) : Ceiling(n);
+        }
+
+        public static Vector2 SignedCeiling(Vector2 value) {
+            return new Vector2(SignedCeiling(value.X), SignedCeiling(value.Y));
+        }
+
+        public static float SignedFloor(float n) {
+            return Sign(n) < 0f ? Ceiling(n) : Floor(n);
+        }
+
+        public static double SignedFloor(double n) {
+            return Sign(n) < 0.0 ? Ceiling(n) : Floor(n);
+        }
+
+        public static Vector2 SignedFloor(Vector2 value) {
+            return new Vector2(SignedFloor(value.X), SignedFloor(value.Y));
+        }
+
         public static float Clamp(float value, float min, float max) {
             return Microsoft.Xna.Framework.MathHelper.Clamp(value, min, max);
         }
