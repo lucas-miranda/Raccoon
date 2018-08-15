@@ -1,5 +1,4 @@
-﻿using Raccoon.Components;
-using Raccoon.Graphics;
+﻿using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {

@@ -63,7 +63,7 @@
             }
 
             set {
-                Flipped = value ? Flipped | ImageFlip.Horizontal : Flipped & ~ImageFlip.Horizontal;
+                Flipped = value ? (Flipped | ImageFlip.Horizontal) : (Flipped & ~ImageFlip.Horizontal);
             }
         }
 
@@ -73,7 +73,7 @@
             }
 
             set {
-                Flipped = value ? Flipped | ImageFlip.Vertical : Flipped & ~ImageFlip.Vertical;
+                Flipped = value ? (Flipped | ImageFlip.Vertical) : (Flipped & ~ImageFlip.Vertical);
             }
         }
 

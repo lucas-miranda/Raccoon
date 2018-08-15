@@ -12,7 +12,6 @@
 
         #region Numeric Stuff
 
-
         public static float Abs(float n) {
             return System.Math.Abs(n);
         }
@@ -314,6 +313,18 @@
         public static float WrapAngle(float angle) {
             angle = (float) (Microsoft.Xna.Framework.MathHelper.WrapAngle(ToRadians(angle)) * RadToDeg);
             return angle >= 0 ? angle : 360 + angle;
+        }
+
+        /// <summary>
+        /// Subdivides into subsections and snaps angle to closest one.
+        /// </summary>
+        /// <param name="angle">Angle degrees.</param>
+        /// <param name="angleSubdivision">Subdivision degrees.</param>
+        /// <returns>Angle degrees snapped on a subdivision.</returns>
+        public static float SnapAngle(float angle, float angleSubdivision) {
+            angle = WrapAngle(angle);
+            int sections = (int) (angle / angleSubdivision);
+            return angleSubdivision * (sections + Round((angle % angleSubdivision) / angleSubdivision));
         }
 
         public static float Distance(float from, float to) {
