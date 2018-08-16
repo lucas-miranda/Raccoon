@@ -191,7 +191,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Position, Rotation + g.Rotation);
+                g.Render(Position, Rotation);
             }
 
             foreach (Component c in Components) {

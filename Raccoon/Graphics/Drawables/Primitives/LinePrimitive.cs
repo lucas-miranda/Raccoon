@@ -23,7 +23,9 @@
             effect.World = Surface.World;
             effect.View = Surface.View;
             effect.Projection = Surface.Projection;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            var c = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            c *= new Microsoft.Xna.Framework.Vector3(Color.R / 255f, Color.G / 255f, Color.B / 255f);
+            effect.DiffuseColor = c;
             effect.Alpha = Opacity;
 
             foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
