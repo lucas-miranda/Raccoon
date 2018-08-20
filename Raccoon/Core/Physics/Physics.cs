@@ -447,8 +447,39 @@ namespace Raccoon {
                     raycastAxes.CopyTo(axes, 0);
                     shapeAxes.CopyTo(axes, raycastAxes.Length);
 
-                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
-                        continue;
+                    Contact? contact = null;
+
+                    switch (otherCollider.Shape) {
+                        case GridShape gridShape:
+                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance), 
+                                (Polygon tilePolygon) => {
+                                    TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
+                                    return tileContact;
+                                }
+                            );
+
+                            if (gridContacts.Count <= 0) {
+                                continue;
+                            }
+
+                            // find closest contact
+                            float closestContactSqrDist = float.PositiveInfinity;
+                            foreach (Contact c in gridContacts) {
+                                float dist = Math.DistanceSquared(position, c.Position);
+                                if (dist < closestContactSqrDist) {
+                                    contact = c;
+                                    closestContactSqrDist = dist;
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out contact) || contact == null) {
+                                continue;
+                            }
+
+                            break;
                     }
 
                     float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
@@ -567,8 +598,39 @@ namespace Raccoon {
                     raycastAxes.CopyTo(axes, 0);
                     shapeAxes.CopyTo(axes, raycastAxes.Length);
 
-                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
-                        continue;
+                    Contact? contact = null;
+
+                    switch (otherCollider.Shape) {
+                        case GridShape gridShape:
+                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance), 
+                                (Polygon tilePolygon) => {
+                                    TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
+                                    return tileContact;
+                                }
+                            );
+
+                            if (gridContacts.Count <= 0) {
+                                continue;
+                            }
+
+                            // find closest contact
+                            float closestContactSqrDist = float.PositiveInfinity;
+                            foreach (Contact c in gridContacts) {
+                                float dist = Math.DistanceSquared(position, c.Position);
+                                if (dist < closestContactSqrDist) {
+                                    contact = c;
+                                    closestContactSqrDist = dist;
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out contact) || contact == null) {
+                                continue;
+                            }
+
+                            break;
                     }
 
                     Contact[] contacts = new Contact[] {

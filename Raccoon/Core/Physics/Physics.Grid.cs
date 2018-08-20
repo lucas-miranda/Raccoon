@@ -40,8 +40,8 @@ namespace Raccoon {
             Polygon boxTilePolygon = new Polygon(grid.BoxTilePolygon);
             boxTilePolygon.Translate(gridPos);
 
-            (int column, int row) start = grid.ConvertPosition(gridPos, otherBoundingBox.TopLeft),
-                                  end = grid.ConvertPosition(gridPos, otherBoundingBox.BottomRight);
+            (int column, int row) start = grid.ConvertPosition(gridPos, otherBoundingBox.TopLeft - Vector2.One),
+                                  end = grid.ConvertPosition(gridPos, otherBoundingBox.BottomRight + Vector2.One);
 
             //List<Contact> contacts = new List<Contact>();
             List<Polygon> tilePolygons = new List<Polygon>();
