@@ -5,17 +5,16 @@ namespace Raccoon.Graphics.Primitives {
     public class CirclePrimitive : Graphic {
         #region Private Members
 
-        private DynamicVertexBuffer _vertexBuffer;
-        private DynamicIndexBuffer _indexBuffer;
+        private VertexBuffer _vertexBuffer;
+        private IndexBuffer _indexBuffer;
 
 #if DEBUG
-        private DynamicIndexBuffer _debug_indexBuffer;
+        private IndexBuffer _debug_indexBuffer;
 #endif
         
-        private VertexPositionColor[] _vertices;
-
         private int _segments;
         private float _radius;
+        private bool _filled;
 
         #endregion Private Members
 
@@ -57,11 +56,26 @@ namespace Raccoon.Graphics.Primitives {
 
         public int Segments {
             get {
-                return _segments > 0 ? _segments : (int) (Radius * Radius);
+                return _segments > 0 ? _segments : (int) (Radius + Radius);
             }
 
             set {
                 _segments = value;
+                NeedsReload = true;
+            }
+        }
+
+        public bool Filled {
+            get {
+                return _filled;
+            }
+
+            set {
+                if (value == _filled) {
+                    return;
+                }
+
+                _filled = value;
                 NeedsReload = true;
             }
         }
@@ -88,12 +102,16 @@ namespace Raccoon.Graphics.Primitives {
                 pass.Apply();
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, Segments + 1);
+
+                if (Filled) {
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Segments);
+                } else {
+                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, Segments);
+                }
             }
 
             effect.Alpha = 1f;
             effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
-
         }
 
         public override void Dispose() { }
@@ -107,14 +125,15 @@ namespace Raccoon.Graphics.Primitives {
 
             int segments = Segments;
 
-            if (_vertexBuffer == null) {
-                // first time setup
-                Setup();
-                _vertices = new VertexPositionColor[segments + 1];
-                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
-            } else if (_vertices.Length != segments + 1) {
-                _vertices = new VertexPositionColor[segments + 1];
+            int[] indices = null;
+
+            if (Filled) {
+                indices = new int[(segments + 1) * 3];
+            } else {
+                indices = new int[segments + 1];
             }
+
+            VertexPositionColor[] _vertices = new VertexPositionColor[segments + 1];
 
             // update vertices
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
@@ -125,6 +144,9 @@ namespace Raccoon.Graphics.Primitives {
             float x = Radius * Math.Cos(0),
                   y = Radius * Math.Sin(0);
 
+            // center
+            int centerIndex = _vertices.Length - 1;
+            _vertices[centerIndex] = new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X, center.Y, 0f), Color.White);
 
             int i;
             for (i = 0; i < _vertices.Length; i++) {
@@ -134,58 +156,23 @@ namespace Raccoon.Graphics.Primitives {
                 t = x;
                 x = c * x - s * y;
                 y = s * t + c * y;
+
+                if (Filled) {
+                    indices[i * 3] = centerIndex; // circle center
+                    indices[i * 3 + 1] = i; // current vertex
+                    indices[i * 3 + 2] = 1 + (i % _vertices.Length); // next vertex (cyclic)
+                } else {
+                    indices[i] = i; // current vertex
+                }
             }
 
-            //_vertices[i] = new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X + x, center.Y + y, 0), Color.White); // just to close the last segment
+            _indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+            _indexBuffer.SetData(indices);
 
+            _vertexBuffer = new DynamicVertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
             _vertexBuffer.SetData(_vertices);
         }
 
         #endregion Protected Methods
-
-        #region Private Methods
-
-        private void Setup() {
-            int[] indices = new int[2 * 3];
-#if DEBUG
-            int[] debug_indices = new int[indices.Length];
-#endif
-
-            //  
-            // Vertices layout:
-            //
-            //  1--3
-            //  |\ |
-            //  | \|
-            //  0--2
-            //
-
-            _indexBuffer = new DynamicIndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
-
-            indices[0] = 0;
-            indices[1] = 1;
-            indices[2] = 2;
-            indices[3] = 2;
-            indices[4] = 1;
-            indices[5] = 3;
-
-            _indexBuffer.SetData(indices);
-
-#if DEBUG
-            _debug_indexBuffer = new DynamicIndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, debug_indices.Length, BufferUsage.WriteOnly);
-
-            debug_indices[0] = 1;
-            debug_indices[1] = 0;
-            debug_indices[2] = 2;
-            debug_indices[3] = 1;
-            debug_indices[4] = 3;
-            debug_indices[5] = 2;
-
-            _debug_indexBuffer.SetData(debug_indices);
-#endif
-
-        }
-
-        #endregion Private Methods
     }
 }
