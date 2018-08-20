@@ -11,12 +11,17 @@ namespace Raccoon {
         UpLeft = Up | Left,
         UpRight = Up | Right,
         DownLeft = Down | Left,
-        DownRight = Down | Right,/*,
+        DownRight = Down | Right,
+
+        /*,
         UpLeftRight = Up | Left | Right,
         UpDownRight = Up | Down | Right,
         DownLeftRight = Down | Left | Right,
         UpDownLeft = Up | Down | Left,
         UpDownLeftRight = Up | Down | Left | Right,*/
+
+        Horizontal = Left | Right,
+        Vertical = Up | Down,
         All = Up | Right | Down | Left
     }
 

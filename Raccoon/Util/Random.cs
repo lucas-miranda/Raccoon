@@ -142,6 +142,28 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Choose a random point inside a circle.
+        /// </summary>
+        /// <param name="radius">Circle radius.</param>
+        /// <param name="minRandomRadius">Random radius will be in range [minRandomRadius, radius].</param>
+        /// <returns>A random point in circle.</returns>
+        public static Vector2 PositionInCircle(float radius, float minRandomRadius = 0f) {
+            return Math.PolarToCartesian(Single(minRandomRadius, radius), Integer(0, 359));
+        }
+
+        /// <summary>
+        /// Choose a random point inside a circle arc
+        /// </summary>
+        /// <param name="circleRadius">Circle radius.</param>
+        /// <param name="arcStartAngle">Angle (in degrees) when arc starts.</param>
+        /// <param name="arcAngleLength">Lenght (in degrees) of arc.</param>
+        /// <param name="minRandomRadius">Random radius will be in range [minRandomRadius, radius].</param>
+        /// <returns>A random point in circle arc.</returns>
+        public static Vector2 PositionInArc(float circleRadius, float arcStartAngle, float arcAngleLength, float minRandomRadius = 0f) {
+            return Math.PolarToCartesian(Single(minRandomRadius, circleRadius), Single(arcStartAngle, arcStartAngle + arcAngleLength));
+        }
+
+        /// <summary>
         /// Choose a random value contained in a list.
         /// </summary>
         /// <typeparam name="T">Any class.</typeparam>
