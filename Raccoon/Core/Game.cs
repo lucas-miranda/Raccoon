@@ -18,6 +18,11 @@ namespace Raccoon {
 
         #region Private Members
 
+        // rendering
+        private int _unitsToPixel;
+        private float _pixelScale;
+
+        // resolution mode
         private Rectangle _windowedModeBounds;
 
         // scenes
@@ -28,7 +33,7 @@ namespace Raccoon {
 
         #region Constructor
 
-        public Game(string title = "Raccoon Game", int width = 800, int height = 600, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
+        public Game(string title = "Raccoon Game", int windowWidth = 1280, int windowHeight = 720, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
 
 #if DEBUG
@@ -43,15 +48,16 @@ namespace Raccoon {
             };
 
             TargetFramerate = targetFramerate;
-            Core = new Core(title, width, height, TargetFramerate, fullscreen, vsync);
-            WindowSize = new Size(width, height);
+            Core = new Core(title, windowWidth, windowHeight, TargetFramerate, fullscreen, vsync);
+
+            WindowSize = new Size(windowWidth, windowHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
-            Size = WindowSize / Scale;
+            Size = WindowSize / PixelScale;
             Center = (Size / 2f).ToVector2();
 
+            // events
             Core.Window.ClientSizeChanged += InternalOnWindowResize;
 
-            // events
             OnBeforeUpdate = () => {
                 if (NextScene == Scene) {
                     return;
@@ -114,47 +120,38 @@ namespace Raccoon {
         public Renderer DebugRenderer { get { return Core.DebugRenderer; } }
         public Canvas MainCanvas { get { return Core.MainCanvas; } }
 
-        public float Scale {
+        public int UnitToPixels {
             get {
-                return Core.Scale;
+                return MainRenderer != null ? MainRenderer.UnitToPixels : _unitsToPixel;
             }
 
             set {
-                if (IsRunning) {
+                _unitsToPixel = value;
+
+                if (!IsRunning) {
                     return;
                 }
 
-                Core.Scale = value;
-                Size = WindowSize / Scale;
-                Center = (Size / 2f).ToVector2();
+                MainRenderer.UnitToPixels = DebugRenderer.UnitToPixels = _unitsToPixel;
             }
         }
 
-        /*public int UnitToPixels {
-            get {
-                return IsRunning ? MainRenderer.UnitToPixels : (int) Scale;
-            }
-
-            set {
-                if (IsRunning) {
-                    MainRenderer.UnitToPixels = DebugRenderer.UnitToPixels = value;
-                } else {
-                    Scale = value;
-                }
-            }
-        }*/
-
         public float PixelScale {
             get {
-                return IsRunning ? MainRenderer.PixelScale : Scale;
+                return MainRenderer != null ? MainRenderer.PixelScale : _pixelScale;
             }
 
             set {
-                if (IsRunning) {
-                    MainRenderer.PixelScale = DebugRenderer.PixelScale = value;
-                } else {
-                    Scale = value;
+                _pixelScale = value;
+
+                Size = WindowSize / _pixelScale;
+                Center = (Size / 2f).ToVector2();
+
+                if (!IsRunning) {
+                    return;
                 }
+
+                MainRenderer.PixelScale = _pixelScale;
             }
         }
 
@@ -267,7 +264,10 @@ namespace Raccoon {
         }
 
         public Scene SwitchScene(string name) {
-            if (!_scenes.TryGetValue(name, out Scene scene)) throw new System.ArgumentException($"Scene '{name}' not found", "name");
+            if (!_scenes.TryGetValue(name, out Scene scene)) {
+                throw new System.ArgumentException($"Scene '{name}' not found", "name");
+            }
+
             NextScene = scene;
             return NextScene;
         }
@@ -397,7 +397,7 @@ namespace Raccoon {
 #endif
         }
 
-        private void InternalOnWindowResize(System.Object sender, System.EventArgs e) {
+        private void InternalOnWindowResize(object sender, System.EventArgs e) {
             var windowClientBounds = Core.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
@@ -411,7 +411,7 @@ namespace Raccoon {
 
             WindowSize = new Size(Core.Graphics.PreferredBackBufferWidth, Core.Graphics.PreferredBackBufferHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
-            Size = WindowSize / Scale;
+            Size = WindowSize / PixelScale;
             Center = (Size / 2f).ToVector2();
 
             // internal resize

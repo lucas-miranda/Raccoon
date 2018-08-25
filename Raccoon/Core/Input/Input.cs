@@ -87,7 +87,11 @@ namespace Raccoon.Input {
             }
 
             set {
-                Instance._mousePosition = new Vector2(Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+                Instance._mousePosition = new Vector2(
+                    Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth) / Game.Instance.PixelScale, 
+                    Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight) / Game.Instance.PixelScale
+                );
+
                 Mouse.SetPosition((int) Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth), (int) Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight));
             }
         }
@@ -266,11 +270,15 @@ namespace Raccoon.Input {
             }
 
             // positions
-            Vector2 newMousePosition = new Vector2(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.Scale, Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.Scale);
+            Vector2 newMousePosition = new Vector2(
+                Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / Game.Instance.PixelScale, 
+                Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / Game.Instance.PixelScale
+            );
+
             MouseMovement = newMousePosition - _mousePosition;
 
             if (LockMouseOnCenter) {
-                _mousePosition = new Vector2(Game.Instance.WindowWidth / (2 * Game.Instance.Scale), Game.Instance.WindowHeight / (2 * Game.Instance.Scale));
+                _mousePosition = new Vector2(Game.Instance.Width / 2, Game.Instance.Height / 2);
                 Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
             } else {
                 _mousePosition = newMousePosition;

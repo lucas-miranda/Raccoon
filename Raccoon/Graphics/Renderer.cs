@@ -48,19 +48,7 @@ namespace Raccoon.Graphics {
 
         public BlendState BlendState { get; private set; }
         public int UnitToPixels { get; set; } = 1;
-        public float PixelScale { get; set; } = 2f;
-
-        // TODO: REMOVE SCALE
-        public Vector2 Scale {
-            get {
-                return _scale;
-            }
-
-            set {
-                _scale = value;
-                View = Matrix.CreateScale(_scale.X, _scale.Y, 1f);
-            }
-        }
+        public float PixelScale { get; set; } = 1f;
 
         #endregion Public Properties
 

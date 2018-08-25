@@ -144,9 +144,7 @@ namespace Raccoon {
 
         private void Refresh() {
             Vector2 scale = new Vector2(Zoom);
-            float scaleFactor = 1f / (Zoom * Game.Instance.Scale);
-
-            //Debug.WriteLine($"Camera.Zoom: {Zoom}, Scale: {Zoom * Game.Instance.Scale}, Factor: {scaleFactor}");
+            float scaleFactor = 1f / (Zoom * Game.Instance.PixelScale);
 
             Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth * scaleFactor, Game.Instance.WindowHeight * scaleFactor, 0f, 0f, 1f);
 
@@ -154,7 +152,6 @@ namespace Raccoon {
             View = Matrix.CreateLookAt(cameraPos, cameraPos + Vector3.Forward, Vector3.Up);
 
             Renderer renderer = Game.Instance.MainRenderer;
-            renderer.Scale = scale;
             renderer.View = View;
             renderer.Projection = Projection;
 

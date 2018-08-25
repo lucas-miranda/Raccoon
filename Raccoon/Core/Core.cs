@@ -18,11 +18,10 @@ namespace Raccoon {
 
         private string _title;
         private int _fpsCount, _fps;
-        private float _scale = 1f;
         private TimeSpan _lastFpsTime;
 
 #if DEBUG
-        private string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
+        private readonly string _windowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
         private const int FramerateMonitorDataSpacing = 4;
 #endif
@@ -35,7 +34,6 @@ namespace Raccoon {
             Title = title;
             Content.RootDirectory = "Content/";
             TargetElapsedTime = TimeSpan.FromTicks((long) Math.Round(10000000 / (double) targetFramerate)); // time between frames
-            Scale = 1f;
             BackgroundColor = Color.Black;
 
             Graphics = new GraphicsDeviceManager(this) {
@@ -84,19 +82,6 @@ namespace Raccoon {
         public List<int> FramerateValues { get; } = new List<int>();
 #endif
 
-        public float Scale {
-            get {
-                return _scale;
-            }
-
-            set {
-                _scale = value;
-                if (MainRenderer != null) {
-                    MainRenderer.Scale = new Vector2(_scale) * (Camera.Current != null ? Camera.Current.Zoom : 1f);
-                }
-            }
-        }
-
         #endregion Public Properties
 
         #region Public Methods
@@ -135,9 +120,13 @@ namespace Raccoon {
 
             RenderTargetStack.Push(MainCanvas.XNARenderTarget);
 
-            DebugRenderer = new Graphics.Renderer(Raccoon.Graphics.BlendState.AlphaBlend);
+            DebugRenderer = new Graphics.Renderer(Raccoon.Graphics.BlendState.AlphaBlend) {
+                UnitToPixels = Game.Instance.UnitToPixels
+            };
+
             MainRenderer = new Graphics.Renderer(Raccoon.Graphics.BlendState.AlphaBlend) {
-                Scale = new Vector2(_scale) * (Camera.Current != null ? Camera.Current.Zoom : 1f)
+                UnitToPixels = Game.Instance.UnitToPixels,
+                PixelScale = Game.Instance.PixelScale
             };
 
             // default content

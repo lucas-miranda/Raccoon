@@ -941,13 +941,13 @@ namespace Raccoon {
                 scale = Vector2.One;
             }
 
-            float d = camera.Zoom * Game.Instance.Scale;
+            float d = camera.Zoom * Game.Instance.PixelScale;
 
             if (Math.EqualsEstimate(d, 0f)) {
                 d = Math.Epsilon;
             }
 
-            scale *= Game.Instance.DebugRenderer.Scale / d;
+            scale *= Game.Instance.DebugRenderer.PixelScale / d;
         }
 
         #endregion Private Methods
