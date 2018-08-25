@@ -1,5 +1,4 @@
-﻿using Raccoon.Components;
-using Raccoon.Graphics;
+﻿using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -17,10 +16,9 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // boundingBox
-            Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
+            Debug.DrawRectangle(new Rectangle(position, BoundingBox), Color.Indigo, 0f, Vector2.One, Origin + BoundingBox / 2f);
 
-            float gameWorldRadius = Debug.Transform(Radius);
-            Debug.DrawCircle(position - Origin, gameWorldRadius, (int) (gameWorldRadius * gameWorldRadius), color);
+            Debug.DrawCircle(position - Origin, Radius, color);
         }
 
         public bool ContainsPoint(Vector2 point) {

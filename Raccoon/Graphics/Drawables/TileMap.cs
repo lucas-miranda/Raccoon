@@ -51,28 +51,31 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
-
-            Game.Instance.Core.BasicEffect.TextureEnabled = true;
-            Game.Instance.Core.BasicEffect.Texture = Texture.XNATexture;
+            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            effect.TextureEnabled = true;
+            effect.Texture = Texture.XNATexture;
             float[] colorNormalized = (color * Color).Normalized;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            Game.Instance.Core.BasicEffect.Alpha = Opacity;
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
-            Game.Instance.Core.BasicEffect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            Game.Instance.Core.BasicEffect.Projection = Surface.Projection;
+            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
+            effect.Alpha = Opacity;
+
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            effect.View = Renderer.View;
+            effect.Projection = Renderer.Projection;
             
-            foreach (EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
                 Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
-            Game.Instance.Core.BasicEffect.Texture = null;
-            Game.Instance.Core.BasicEffect.TextureEnabled = false;
+            effect.Alpha = 1f;
+            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            effect.Texture = null;
+            effect.TextureEnabled = false;
         }
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {

@@ -16,9 +16,9 @@ namespace Raccoon.Graphics.Primitives {
                 return;
             }
 
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Game.Instance.Core.MainSurface.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainSurface.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainSurface.Projection;
+            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Game.Instance.Core.MainRenderer.World;
+            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.MainRenderer.View;
+            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.MainRenderer.Projection;
             Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             Game.Instance.Core.BasicEffect.Alpha = Opacity;
 

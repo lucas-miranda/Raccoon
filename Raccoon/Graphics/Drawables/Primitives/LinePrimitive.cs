@@ -20,9 +20,9 @@
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             var effect = Game.Instance.Core.BasicEffect;
-            effect.World = Surface.World;
-            effect.View = Surface.View;
-            effect.Projection = Surface.Projection;
+            effect.World = Renderer.World;
+            effect.View = Renderer.View;
+            effect.Projection = Renderer.Projection;
             var c = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
             c *= new Microsoft.Xna.Framework.Vector3(Color.R / 255f, Color.G / 255f, Color.B / 255f);
             effect.DiffuseColor = c;

@@ -110,8 +110,8 @@ namespace Raccoon {
         public Scene NextScene { get; private set; }
         public Font StdFont { get { return Core.StdFont; } }
         public Color BackgroundColor { get { return new Color(Core.BackgroundColor.R, Core.BackgroundColor.G, Core.BackgroundColor.B, Core.BackgroundColor.A); } set { Core.BackgroundColor = new Microsoft.Xna.Framework.Color(value.R, value.G, value.B, value.A); } }
-        public Surface MainSurface { get { return Core.MainSurface; } }
-        public Surface DebugSurface { get { return Core.DebugSurface; } }
+        public Renderer MainRenderer { get { return Core.MainRenderer; } }
+        public Renderer DebugRenderer { get { return Core.DebugRenderer; } }
         public Canvas MainCanvas { get { return Core.MainCanvas; } }
 
         public float Scale {
@@ -130,6 +130,34 @@ namespace Raccoon {
             }
         }
 
+        /*public int UnitToPixels {
+            get {
+                return IsRunning ? MainRenderer.UnitToPixels : (int) Scale;
+            }
+
+            set {
+                if (IsRunning) {
+                    MainRenderer.UnitToPixels = DebugRenderer.UnitToPixels = value;
+                } else {
+                    Scale = value;
+                }
+            }
+        }*/
+
+        public float PixelScale {
+            get {
+                return IsRunning ? MainRenderer.PixelScale : Scale;
+            }
+
+            set {
+                if (IsRunning) {
+                    MainRenderer.PixelScale = DebugRenderer.PixelScale = value;
+                } else {
+                    Scale = value;
+                }
+            }
+        }
+
 #if DEBUG
         public bool DebugMode { get; set; }
 #else
@@ -141,7 +169,7 @@ namespace Raccoon {
         #region Internal Properties
 
         internal Core Core { get; private set; }
-        internal List<Surface> Surfaces { get; private set; } = new List<Surface>();
+        internal List<Renderer> Surfaces { get; private set; } = new List<Renderer>();
 
         #endregion Internal Properties
 
@@ -248,16 +276,16 @@ namespace Raccoon {
             return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
         }
 
-        public void AddSurface(Surface surface) {
+        public void AddSurface(Renderer surface) {
             if (Surfaces.Contains(surface)) {
                 return;
             }
 
-            surface.Projection = MainSurface.Projection;
+            surface.Projection = MainRenderer.Projection;
             Surfaces.Add(surface);
         }
 
-        public void RemoveSurface(Surface surface) {
+        public void RemoveSurface(Renderer surface) {
             Surfaces.Remove(surface);
         }
 
@@ -351,7 +379,7 @@ namespace Raccoon {
                 return;
             }
 
-            if (Core.MainSurface != null) {
+            if (Core.MainRenderer != null) {
                 Scene.Begin();
             } else {
                 Core.OnBegin += OnBegin;
@@ -389,7 +417,7 @@ namespace Raccoon {
             // internal resize
             // surface
             var projection = Microsoft.Xna.Framework.Matrix.CreateOrthographicOffCenter(0f, WindowWidth, WindowHeight, 0f, 1f, 0f);
-            foreach (Surface surface in Surfaces) {
+            foreach (Renderer surface in Surfaces) {
                 surface.Projection = projection;
             }
 
@@ -397,8 +425,8 @@ namespace Raccoon {
             Core.RenderTargetStack.Clear();
 
 #if DEBUG
-            if (Core.DebugSurface != null) {
-                Core.DebugSurface.Projection = projection;
+            if (Core.DebugRenderer != null) {
+                Core.DebugRenderer.Projection = projection;
             }
 
             if (Core.DebugCanvas != null) {
@@ -408,8 +436,8 @@ namespace Raccoon {
             }
 #endif
 
-            if (Core.MainSurface != null) {
-                Core.MainSurface.Projection = projection;
+            if (Core.MainRenderer != null) {
+                Core.MainRenderer.Projection = projection;
             }
 
             if (MainCanvas != null) {

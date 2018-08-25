@@ -37,7 +37,7 @@ namespace Raccoon {
 
         #region Public Properties
 
-        public Surface Surface { get; private set; }
+        public Renderer Surface { get; private set; }
         public bool Visible { get; private set; }
         public Font Font { get; set; }
         public bool ShowTimestamp { get; set; } = true;
@@ -48,14 +48,14 @@ namespace Raccoon {
         #region Public Methods
 
         public void Start() {
-            Surface = Game.Instance.DebugSurface;
+            Surface = Game.Instance.DebugRenderer;
             if (Font == null) {
                 Font = Game.Instance.Core.StdFont;
             }
 
             _background = new RectanglePrimitive(1, 1) {
                 Color = Color.Black,
-                Surface = Game.Instance.Core.DebugSurface,
+                Renderer = Game.Instance.Core.DebugRenderer,
                 Opacity = 0.25f
             };
 
@@ -159,7 +159,7 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            Vector2 topLeftPos = Camera.Current != null ? Debug.Transform(Camera.Current.Position) : Vector2.Zero;
+            Vector2 topLeftPos = Camera.Current != null ? Camera.Current.Position : Vector2.Zero;
             _background.Render(topLeftPos, 0, Game.Instance.WindowSize.ToVector2());
 
             // total messages

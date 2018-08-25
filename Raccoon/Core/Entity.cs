@@ -20,7 +20,7 @@ namespace Raccoon {
 
         #region Private Members
 
-        private Surface _surface;
+        private Renderer _renderer;
 
         #endregion Private Members
 
@@ -28,7 +28,7 @@ namespace Raccoon {
 
         public Entity() {
             Name = "Entity";
-            Surface = Game.Instance.Core.MainSurface;
+            Renderer = Game.Instance.Core.MainRenderer;
         }
 
         #endregion Constructors
@@ -71,15 +71,15 @@ namespace Raccoon {
             }
         }
 
-        public Surface Surface {
+        public Renderer Renderer {
             get {
-                return _surface;
+                return _renderer;
             }
 
             set {
-                _surface = value;
+                _renderer = value;
                 foreach (Graphic g in Graphics) {
-                    g.Surface = _surface;
+                    g.Renderer = _renderer;
                 }
             }
         }
@@ -234,7 +234,7 @@ namespace Raccoon {
             }
 
             Graphics.Add(graphic);
-            graphic.Surface = Surface;
+            graphic.Renderer = Renderer;
             return graphic;
         }
 

@@ -73,22 +73,19 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
-
             BasicEffect effect = Game.Instance.Core.BasicEffect;
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
-            effect.World = 
-                Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
                 * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
-                * Surface.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            effect.Projection = Surface.Projection;
+                * Renderer.World;
+
+            effect.View = Renderer.View;
+            effect.Projection = Renderer.Projection;
 
             GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {

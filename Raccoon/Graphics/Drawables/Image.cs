@@ -178,11 +178,11 @@ namespace Raccoon.Graphics {
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             base.Render(position, rotation, scale, flip, color, scroll, shader);
             if (DestinationRegion.IsEmpty) {
-                Surface.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
                 return;
             }
 
-            Surface.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
         }
 
         public override void Dispose() {

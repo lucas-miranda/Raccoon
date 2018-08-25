@@ -38,7 +38,7 @@
         #region Public Methods
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            Surface.DrawString(Font, Value, Position + position, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin / scale, Scroll + scroll, Shader);
+            Renderer.DrawString(Font, Value, Position + position, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
         }
 
         public override void Dispose() { }

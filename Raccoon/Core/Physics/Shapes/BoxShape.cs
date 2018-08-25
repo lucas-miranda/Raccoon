@@ -77,9 +77,9 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position - Origin - BoundingBox / 2f, Debug.Transform(BoundingBox)), Color.Indigo);
+            Debug.DrawRectangle(new Rectangle(position, BoundingBox), Color.Indigo, 0f, Vector2.One, Origin + (BoundingBox / 2f).ToVector2());
 
-            //Debug.DrawRectangle(new Rectangle(position - HalwidthExtents, Debug.Transform(BoundingBox)), color, Rotation);
+            //Debug.DrawRectangle(new Rectangle(position - HalwidthExtents, BoundingBox), color, Rotation);
 
             // draw using Polygon
             Polygon polygon = new Polygon(Shape);
@@ -94,7 +94,8 @@ namespace Raccoon {
             }*/
 
             // centroid
-            Debug.DrawCircle(position - Origin, 1, 10, Color.White);
+            Debug.DrawCircle(position - Origin, 1, Color.White, 10);
+
         }
 
         public bool ContainsPoint(Vector2 point) {

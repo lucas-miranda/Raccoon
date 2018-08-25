@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
+using Raccoon.Util;
+
 namespace Raccoon.Graphics {
     public class Grid : Graphic {
         #region Private Members
@@ -54,17 +56,19 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
-
             BasicEffect effect = Game.Instance.Core.BasicEffect;
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) * Surface.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            effect.Projection = Surface.Projection;
+
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            effect.View = Renderer.View;
+            effect.Projection = Renderer.Projection;
 
             GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
             device.Indices = _indexBuffer;
@@ -73,7 +77,7 @@ namespace Raccoon.Graphics {
             // grid
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, (Columns - 1) + (Rows - 1));
+                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
             }
 
             // borders

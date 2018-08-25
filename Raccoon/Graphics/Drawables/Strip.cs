@@ -64,9 +64,9 @@ namespace Raccoon.Graphics {
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            effect.Projection = Surface.Projection;
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
+            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            effect.Projection = Renderer.Projection;
 
             GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
@@ -95,9 +95,9 @@ namespace Raccoon.Graphics {
             BasicEffect effect = Game.Instance.Core.BasicEffect;
             float[] colorNormalized = color.Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Surface.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            effect.Projection = Surface.Projection;
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
+            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            effect.Projection = Renderer.Projection;
 
             GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {

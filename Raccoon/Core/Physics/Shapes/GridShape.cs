@@ -48,7 +48,7 @@ namespace Raccoon {
 
                 Vector2 tilePos = position - Origin + new Vector2(column * TileSize.Width, row * TileSize.Height);
                 if (tile is BoxTileShape boxTile) {
-                    Debug.DrawRectangle(new Rectangle(tilePos, Debug.Transform(TileSize)), Color.Red);
+                    Debug.DrawRectangle(new Rectangle(tilePos, TileSize), Color.Red);
                 } else if (tile is PolygonTileShape polygonTile) {
                     /*Polygon p = new Polygon(polygonTile.Polygon);
                     p.Translate(tilePos);
@@ -66,7 +66,7 @@ namespace Raccoon {
                     }
 
                     if (DebugRenderDetailed) {
-                        Debug.DrawString(Debug.Transform(tilePos + TileSize / 2f), $"{components.Count}");
+                        Debug.DrawString(tilePos + TileSize / 2f, $"{components.Count}");
                     }
                 }
             }

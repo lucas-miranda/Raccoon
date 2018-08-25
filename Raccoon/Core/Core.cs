@@ -52,8 +52,8 @@ namespace Raccoon {
         #region Public Properties
 
         public GraphicsDeviceManager Graphics { get; private set; }
-        public Graphics.Surface MainSurface { get; private set; }
-        public Graphics.Surface DebugSurface { get; private set; }
+        public Graphics.Renderer MainRenderer { get; private set; }
+        public Graphics.Renderer DebugRenderer { get; private set; }
         public Graphics.Font StdFont { get; private set; }
         public TimeSpan Time { get; private set; }
         public int DeltaTime { get; private set; }
@@ -91,8 +91,8 @@ namespace Raccoon {
 
             set {
                 _scale = value;
-                if (MainSurface != null) {
-                    MainSurface.Scale = new Vector2(_scale) * (Camera.Current != null ? Camera.Current.Zoom : 1f);
+                if (MainRenderer != null) {
+                    MainRenderer.Scale = new Vector2(_scale) * (Camera.Current != null ? Camera.Current.Zoom : 1f);
                 }
             }
         }
@@ -135,8 +135,8 @@ namespace Raccoon {
 
             RenderTargetStack.Push(MainCanvas.XNARenderTarget);
 
-            DebugSurface = new Graphics.Surface(Raccoon.Graphics.BlendState.AlphaBlend);
-            MainSurface = new Graphics.Surface(Raccoon.Graphics.BlendState.AlphaBlend) {
+            DebugRenderer = new Graphics.Renderer(Raccoon.Graphics.BlendState.AlphaBlend);
+            MainRenderer = new Graphics.Renderer(Raccoon.Graphics.BlendState.AlphaBlend) {
                 Scale = new Vector2(_scale) * (Camera.Current != null ? Camera.Current.Zoom : 1f)
             };
 
@@ -210,15 +210,15 @@ namespace Raccoon {
             GraphicsDevice.SetRenderTarget(MainCanvas.XNARenderTarget);
             GraphicsDevice.Clear(Game.Instance.Core.BackgroundColor);
 
-            MainSurface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
-            foreach (Graphics.Surface surface in Game.Instance.Surfaces) {
+            MainRenderer.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            foreach (Graphics.Renderer surface in Game.Instance.Surfaces) {
                 surface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
             }
             
             OnRender();
 
-            MainSurface.End();
-            foreach (Graphics.Surface surface in Game.Instance.Surfaces) {
+            MainRenderer.End();
+            foreach (Graphics.Renderer surface in Game.Instance.Surfaces) {
                 surface.End();
             }
 
@@ -228,7 +228,7 @@ namespace Raccoon {
             // debug render
             GraphicsDevice.SetRenderTarget(DebugCanvas.XNARenderTarget);
             GraphicsDevice.Clear(Color.Transparent);
-            DebugSurface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, null, null, null);
+            DebugRenderer.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, null, null, null);
             
             if (Game.Instance.DebugMode) {
                 OnDebugRender();
@@ -270,7 +270,7 @@ namespace Raccoon {
 
             Physics.Instance.ClearTimers();
 
-            DebugSurface.End();
+            DebugRenderer.End();
 #endif
 
             // draw main render target to screen

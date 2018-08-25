@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Raccoon.Graphics;
 
 using Microsoft.Xna.Framework;
+using Raccoon.Util;
 
 namespace Raccoon {
     public class Camera {
         #region Public Members
 
-        public event Action OnUpdate;
+        public event System.Action OnUpdate;
 
         #endregion Public Members
 
@@ -50,7 +51,7 @@ namespace Raccoon {
 
             set {
                 if (ClampValues) {
-                    value = new Vector2((float) Math.Round(value.X), (float) Math.Round(value.Y));
+                    value = Math.Round(value);
                 }
 
                 _position = !UseBounds ? value : Util.Math.Clamp(value, Bounds);
@@ -64,12 +65,19 @@ namespace Raccoon {
             }
 
             set {
-                _zoom = value;
+                _zoom = Math.Max(value, 0f);
                 _needViewRefresh = true;
             }
         }
 
         #endregion Public Properties
+
+        #region Internal Properties
+
+        internal Matrix Projection { get; private set; }
+        internal Matrix View { get; private set; }
+
+        #endregion Internal Properties
 
         #region Public Methods
 
@@ -101,6 +109,28 @@ namespace Raccoon {
 
         public virtual void DebugRender() { }
 
+        public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
+            Vector3 worldPos = Game.Instance.Core.GraphicsDevice.Viewport.Unproject( 
+                new Vector3(screenPosition, 0f), 
+                Projection, 
+                View, 
+                Matrix.Identity
+            ); 
+ 
+            return new Vector2(worldPos.X, worldPos.Y); 
+        } 
+ 
+        public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
+            Vector3 screenPos = Game.Instance.Core.GraphicsDevice.Viewport.Project( 
+                new Vector3(worldPosition, 0f), 
+                Projection, 
+                View, 
+                Matrix.Identity
+            ); 
+ 
+            return new Vector2(screenPos.X, screenPos.Y); 
+        } 
+
         #endregion Public Methods
 
         #region Protected Methods
@@ -113,11 +143,25 @@ namespace Raccoon {
         #region Private Members
 
         private void Refresh() {
-            Game.Instance.MainSurface.Scale = new Vector2(Zoom * Game.Instance.Scale);
-            Game.Instance.MainSurface.View = Matrix.CreateTranslation(-X, -Y, 0f) * Game.Instance.MainSurface.View;
+            Vector2 scale = new Vector2(Zoom);
+            float scaleFactor = 1f / (Zoom * Game.Instance.Scale);
+
+            //Debug.WriteLine($"Camera.Zoom: {Zoom}, Scale: {Zoom * Game.Instance.Scale}, Factor: {scaleFactor}");
+
+            Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth * scaleFactor, Game.Instance.WindowHeight * scaleFactor, 0f, 0f, 1f);
+
+            Vector3 cameraPos = new Vector3(Position, 0f);
+            View = Matrix.CreateLookAt(cameraPos, cameraPos + Vector3.Forward, Vector3.Up);
+
+            Renderer renderer = Game.Instance.MainRenderer;
+            renderer.Scale = scale;
+            renderer.View = View;
+            renderer.Projection = Projection;
 
 #if DEBUG
-            Game.Instance.DebugSurface.View = Matrix.CreateTranslation(-X * Game.Instance.Scale * Zoom, -Y * Game.Instance.Scale * Zoom, 0);
+            Renderer debugRenderer = Game.Instance.DebugRenderer;
+            debugRenderer.View = View;
+            debugRenderer.Projection = Projection;
 #endif
         }
 

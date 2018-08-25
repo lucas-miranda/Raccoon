@@ -56,7 +56,7 @@ namespace Raccoon.Graphics.Primitives {
 
         public int Segments {
             get {
-                return _segments > 0 ? _segments : (int) (Radius + Radius);
+                return _segments > 0 ? _segments : (int) (Radius <= 3 ? (Radius * Radius * Radius) : (Radius + Radius));
             }
 
             set {
@@ -93,9 +93,9 @@ namespace Raccoon.Graphics.Primitives {
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) * Surface.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Surface.View * scrollMatrix;
-            effect.Projection = Surface.Projection;
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) * Renderer.World;
+            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            effect.Projection = Renderer.Projection;
 
             GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
