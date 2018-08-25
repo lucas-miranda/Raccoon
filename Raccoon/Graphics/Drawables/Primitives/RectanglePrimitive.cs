@@ -73,7 +73,7 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
@@ -87,7 +87,7 @@ namespace Raccoon.Graphics.Primitives {
             effect.View = Renderer.View;
             effect.Projection = Renderer.Projection;
 
-            GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
                 device.Indices = _indexBuffer;
@@ -173,7 +173,7 @@ namespace Raccoon.Graphics.Primitives {
             //  0--2
             //
 
-            _vertexBuffer = new VertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
+            _vertexBuffer = new VertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
 
             // bottom-left
             _vertices[0] = new VertexPositionColor(
@@ -201,10 +201,10 @@ namespace Raccoon.Graphics.Primitives {
 
             _vertexBuffer.SetData(_vertices);
 
-            _indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, 2 * 3, BufferUsage.WriteOnly);
+            _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, 2 * 3, BufferUsage.WriteOnly);
 
 #if DEBUG
-            _debug_indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, _indexBuffer.IndexCount, BufferUsage.WriteOnly);
+            _debug_indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, _indexBuffer.IndexCount, BufferUsage.WriteOnly);
 #endif
 
         }

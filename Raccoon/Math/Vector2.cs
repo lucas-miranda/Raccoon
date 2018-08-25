@@ -109,7 +109,9 @@ namespace Raccoon {
         }
 
         public Range Projection(ICollection<Vector2> points) {
-            if (points.Count == 0) throw new System.ArgumentException("Projection needs at least one value.", "points");
+            if (points.Count == 0) {
+                throw new System.ArgumentException("Projection needs at least one value.", "points");
+            }
 
             IEnumerator<Vector2> enumerator = points.GetEnumerator();
             enumerator.MoveNext();
@@ -143,15 +145,17 @@ namespace Raccoon {
 
         public Direction ToDirection() {
             Direction dir = Direction.None;
-            if (X > 0)
+            if (X > 0) {
                 dir |= Direction.Right;
-            else if (X < 0)
+            } else if (X < 0) {
                 dir |= Direction.Left;
+            }
 
-            if (Y > 0)
+            if (Y > 0) {
                 dir |= Direction.Up;
-            else if (Y < 0)
+            } else if (Y < 0) {
                 dir |= Direction.Down;
+            }
 
             return dir;
         }

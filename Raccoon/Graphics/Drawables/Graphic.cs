@@ -18,7 +18,7 @@
         #region Constructors
 
         public Graphic() {
-            Renderer = Game.Instance.Core.MainRenderer;
+            Renderer = Game.Instance.MainRenderer;
         }
 
         #endregion Constructors

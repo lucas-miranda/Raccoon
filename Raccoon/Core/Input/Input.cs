@@ -35,7 +35,7 @@ namespace Raccoon.Input {
         // keyboard
         private KeyboardState _keyboardState, _keyboardPreviousState;
         private List<Key> _pressedKeys = new List<Key>();
-        private Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
+        private readonly Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
 
         // mouse
         private Dictionary<MouseButton, ButtonState> _mouseButtonsState = new Dictionary<MouseButton, ButtonState>(), _mouseButtonsLastState = new Dictionary<MouseButton, ButtonState>();

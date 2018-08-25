@@ -180,8 +180,8 @@ namespace Raccoon {
                 scale = s.Value.X;
             }
 
-            Game.Instance.Core.DebugRenderer.DrawString(
-                Game.Instance.Core.StdFont, 
+            Game.Instance.DebugRenderer.DrawString(
+                Game.Instance.StdFont, 
                 message, 
                 position, 
                 0, 
@@ -204,8 +204,8 @@ namespace Raccoon {
             CalculateScaleCorrection(camera, ref s);
             scale = s.Value.X;
 
-            Game.Instance.Core.DebugRenderer.DrawString(
-                Game.Instance.Core.StdFont, 
+            Game.Instance.DebugRenderer.DrawString(
+                Game.Instance.StdFont, 
                 message, 
                 camera.ConvertScreenToWorld(position), 
                 0, 
@@ -220,7 +220,7 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public static void DrawString(Camera camera, string message, Color? color = null) {
             DrawString(camera, Instance._screenMessagePosition, message, color);
-            Instance._screenMessagePosition -= new Vector2(0, Game.Instance.Core.StdFont.LineSpacing + MessagesSpacing);
+            Instance._screenMessagePosition -= new Vector2(0, Game.Instance.StdFont.LineSpacing + MessagesSpacing);
         }
 
         [Conditional("DEBUG")]
@@ -258,21 +258,21 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugRenderer.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Game.Instance.BasicEffect.World = Game.Instance.DebugRenderer.World;
+            Game.Instance.BasicEffect.View = Game.Instance.DebugRenderer.View;
+            Game.Instance.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.BasicEffect.Alpha = color.A / 255f;
 
-            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
+            Game.Instance.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(from.X, from.Y, 0f), Color.White),
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(to.X, to.Y, 0f), Color.White)
                 }, 0, 1);
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.BasicEffect.Alpha = 1f;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
         }
 
         [Conditional("DEBUG")]
@@ -320,21 +320,21 @@ namespace Raccoon {
                 vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
             }
 
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.Value.X, -origin.Value.Y, 0f)
-                * Game.Instance.Core.DebugRenderer.World;
+            Game.Instance.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.Value.X, -origin.Value.Y, 0f)
+                * Game.Instance.DebugRenderer.World;
 
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Game.Instance.BasicEffect.View = Game.Instance.DebugRenderer.View;
+            Game.Instance.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.BasicEffect.Alpha = color.A / 255f;
 
-            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, points.Count - 1);
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, points.Count - 1);
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
+            Game.Instance.BasicEffect.Alpha = 1f;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
         }
 
         [Conditional("DEBUG")]
@@ -376,7 +376,7 @@ namespace Raccoon {
                 scale = Vector2.One;
             }
 
-            Microsoft.Xna.Framework.Graphics.BasicEffect fx = Game.Instance.Core.BasicEffect;
+            Microsoft.Xna.Framework.Graphics.BasicEffect fx = Game.Instance.BasicEffect;
 
             fx.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.Value.X, scale.Value.Y, 1f)
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(-rotOrigin.X, -rotOrigin.Y, 0f)
@@ -391,7 +391,7 @@ namespace Raccoon {
             fx.Alpha = color.A / 255f;
 
             fx.CurrentTechnique.Passes[0].Apply();
-            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
+            Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[5] {
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f), Color.White),
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Width, 0f, 0f), Color.White),
@@ -437,23 +437,28 @@ namespace Raccoon {
                 segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
             }
 
-            float theta = (float) (2.0 * Util.Math.PI / segments);
-            float t, c = (float) Math.Cos(theta), s = (float) Math.Sin(theta); // precalculate the sine and cosine
+            float theta = (float) (2.0 * Math.PI / segments);
+            float t, c = (float) System.Math.Cos(theta), s = (float) System.Math.Sin(theta); // precalculate the sine and cosine
 
-            float x = radius * Util.Math.Cos(rotation);
-            float y = radius * Util.Math.Sin(rotation);
+            float x = radius * Math.Cos(rotation);
+            float y = radius * Math.Sin(rotation);
 
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugRenderer.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Microsoft.Xna.Framework.Graphics.BasicEffect fx = Game.Instance.BasicEffect;
+
+            fx.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(center.X, center.Y, 0f)
+                * Game.Instance.DebugRenderer.World;
+
+            fx.View = Game.Instance.DebugRenderer.View;
+            fx.Projection = Game.Instance.DebugRenderer.Projection;
+
+            fx.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            fx.Alpha = color.A / 255f;
 
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[segments + 1];
 
             int i;
-            for (i = 0; i < segments; i++) {
-                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X + x, center.Y + y, 0f), Color.White);
+            for (i = 0; i < vertices.Length; i++) {
+                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
 
                 // apply the rotation matrix
                 t = x;
@@ -461,17 +466,18 @@ namespace Raccoon {
                 y = s * t + c * y;
             }
 
-            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X + x, center.Y + y, 0), Color.White); // just to close the last segment
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in fx.CurrentTechnique.Passes) {
+                pass.Apply();
 
-            if (dashed) {
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, segments / 2);
-            } else {
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments);
+                if (dashed) {
+                    Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, segments / 2);
+                } else {
+                    Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments);
+                }
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            fx.Alpha = 1f;
+            fx.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -523,34 +529,41 @@ namespace Raccoon {
                 segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
             }
 
-            float theta = Util.Math.ToRadians(arcAngle) / (segments - 1); // theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
-            float tangentialFactor = (float) Math.Tan(theta), radialFactor = (float) Math.Cos(theta);
+            float theta = Math.ToRadians(arcAngle) / (segments - 1); // theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
+            float tangentialFactor = (float) System.Math.Tan(theta), radialFactor = (float) System.Math.Cos(theta);
 
-            float x = radius * Util.Math.Cos(startAngle), // we now start at the start angle
-                  y = radius * Util.Math.Sin(startAngle);
+            float x = radius * Math.Cos(startAngle), // we now start at the start angle
+                  y = radius * Math.Sin(startAngle);
 
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugRenderer.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Microsoft.Xna.Framework.Graphics.BasicEffect fx = Game.Instance.BasicEffect;
+
+            fx.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(center.X, center.Y, 0f)
+                * Game.Instance.DebugRenderer.World;
+
+            fx.View = Game.Instance.DebugRenderer.View;
+            fx.Projection = Game.Instance.DebugRenderer.Projection;
+
+            fx.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            fx.Alpha = color.A / 255f;
 
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[segments];
 
             int i;
             for (i = 0; i < segments; i++) {
-                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X + x, center.Y + y, 0f), Color.White);
+                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
 
                 float tx = -y, ty = x;
                 x = (x + tx * tangentialFactor) * radialFactor;
                 y = (y + ty * tangentialFactor) * radialFactor;
             }
 
-            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments - 1);
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in fx.CurrentTechnique.Passes) {
+                pass.Apply();
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments - 1);
+            }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            fx.Alpha = 1f;
+            fx.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -581,14 +594,14 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle, Color color) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugRenderer.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Game.Instance.BasicEffect.World = Game.Instance.DebugRenderer.World;
+            Game.Instance.BasicEffect.View = Game.Instance.DebugRenderer.View;
+            Game.Instance.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.BasicEffect.Alpha = color.A / 255f;
 
-            Game.Instance.Core.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
+            Game.Instance.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
                 new Microsoft.Xna.Framework.Graphics.VertexPositionColor[4] {
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White),
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.B.X, triangle.B.Y, 0f), Color.White),
@@ -596,8 +609,8 @@ namespace Raccoon {
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White)
                 }, 0, 3);
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            Game.Instance.BasicEffect.Alpha = 1f;
+            Game.Instance.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -675,13 +688,13 @@ namespace Raccoon {
         public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position, Color color) {
             Assert(columns > 0 && rows > 0, "Columns and Rows must be greater than zero.");
 
-            Game.Instance.Core.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
+            Game.Instance.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
                 * Game.Instance.DebugRenderer.World;
 
-            Game.Instance.Core.BasicEffect.View = Game.Instance.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Game.Instance.BasicEffect.View = Game.Instance.DebugRenderer.View;
+            Game.Instance.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.BasicEffect.Alpha = color.A / 255f;
 
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2 * (columns + rows + 2)];
 
@@ -718,13 +731,13 @@ namespace Raccoon {
             vertices[id + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(columns * tileSize.Width, rows * tileSize.Height, 0f), Color.White);
             id += 2;
 
-            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, columns + rows + 2);
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, columns + rows + 2);
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            Game.Instance.BasicEffect.Alpha = 1f;
+            Game.Instance.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -755,11 +768,11 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, Color color, float step = .1f) {
-            Game.Instance.Core.BasicEffect.World = Game.Instance.Core.DebugRenderer.World;
-            Game.Instance.Core.BasicEffect.View = Game.Instance.Core.DebugRenderer.View;
-            Game.Instance.Core.BasicEffect.Projection = Game.Instance.Core.DebugRenderer.Projection;
-            Game.Instance.Core.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.Core.BasicEffect.Alpha = color.A / 255f;
+            Game.Instance.BasicEffect.World = Game.Instance.DebugRenderer.World;
+            Game.Instance.BasicEffect.View = Game.Instance.DebugRenderer.View;
+            Game.Instance.BasicEffect.Projection = Game.Instance.DebugRenderer.Projection;
+            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
+            Game.Instance.BasicEffect.Alpha = color.A / 255f;
 
             // build bezier curve points
             int steps = 1 + (int) Math.Ceiling(1f / step);
@@ -767,26 +780,26 @@ namespace Raccoon {
             if (points.Length == 3) {
                 float t = 0f;
                 for (int i = 0; i < steps; i++) {
-                    Vector2 point = Util.Math.BezierCurve(points[0], points[1], points[2], t);
+                    Vector2 point = Math.BezierCurve(points[0], points[1], points[2], t);
                     vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
                     t = Util.Math.Approach(t, 1f, step);
                 }
             } else if (points.Length == 4) {
                 float t = 0f;
                 for (int i = 0; i < steps; i++) {
-                    Vector2 point = Util.Math.BezierCurve(points[0], points[1], points[2], points[3], t);
+                    Vector2 point = Math.BezierCurve(points[0], points[1], points[2], points[3], t);
                     vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
                     t = Util.Math.Approach(t, 1f, step);
                 }
             }
 
-            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, steps - 1);
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, steps - 1);
             }
 
-            Game.Instance.Core.BasicEffect.Alpha = 1f;
-            Game.Instance.Core.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            Game.Instance.BasicEffect.Alpha = 1f;
+            Game.Instance.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
         }
 
         [Conditional("DEBUG")]
@@ -855,10 +868,10 @@ namespace Raccoon {
 
         public static void Stopwatch(uint interval, System.Action action = null) {
             if (action == null) {
-                System.TimeSpan startTime = Game.Instance.Core.Time;
+                System.TimeSpan startTime = Game.Instance.Time;
                 string stdMessage = $"[Debug] Stopwatch ended.\n  Start: {startTime.ToString(@"hh\:mm\:ss\.fff")}, End: {{0}}\n  Duration: {{1}}";
                 action = () => {
-                    System.TimeSpan endTime = Game.Instance.Core.Time;
+                    System.TimeSpan endTime = Game.Instance.Time;
                     Info(string.Format(stdMessage, endTime.ToString(@"hh\:mm\:ss\.fff"), endTime.Subtract(startTime).ToString(@"hh\:mm\:ss\.fff")));
                 };
             }

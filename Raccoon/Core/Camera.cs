@@ -110,7 +110,7 @@ namespace Raccoon {
         public virtual void DebugRender() { }
 
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
-            Vector3 worldPos = Game.Instance.Core.GraphicsDevice.Viewport.Unproject( 
+            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
                 new Vector3(screenPosition, 0f), 
                 Projection, 
                 View, 
@@ -121,7 +121,7 @@ namespace Raccoon {
         } 
  
         public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
-            Vector3 screenPos = Game.Instance.Core.GraphicsDevice.Viewport.Project( 
+            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project( 
                 new Vector3(worldPosition, 0f), 
                 Projection, 
                 View, 

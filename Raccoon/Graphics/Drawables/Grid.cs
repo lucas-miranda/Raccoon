@@ -56,7 +56,7 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
@@ -70,7 +70,7 @@ namespace Raccoon.Graphics {
             effect.View = Renderer.View;
             effect.Projection = Renderer.Projection;
 
-            GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             device.Indices = _indexBuffer;
             device.SetVertexBuffer(_vertexBuffer);
 
@@ -114,11 +114,11 @@ namespace Raccoon.Graphics {
 
 
             if (_vertexBuffer == null || vertices.Length > _vertexBuffer.VertexCount) {
-                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             }
 
             if (_indexBuffer == null || indices.Length > _indexBuffer.IndexCount) {
-                _indexBuffer = new DynamicIndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+                _indexBuffer = new DynamicIndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
             }
 
             //  

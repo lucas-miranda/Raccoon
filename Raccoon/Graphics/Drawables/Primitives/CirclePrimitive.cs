@@ -85,19 +85,19 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+            BasicEffect effect = Game.Instance.BasicEffect;
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) 
+                * Renderer.World;
+
+            effect.View = Renderer.View;
+            effect.Projection = Renderer.Projection;
+
             float[] colorNormalized = (color * Color).Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.Alpha = Opacity;
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) * Renderer.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
-            effect.Projection = Renderer.Projection;
 
-            GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
                 device.Indices = _indexBuffer;
@@ -166,10 +166,10 @@ namespace Raccoon.Graphics.Primitives {
                 }
             }
 
-            _indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+            _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
             _indexBuffer.SetData(indices);
 
-            _vertexBuffer = new DynamicVertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
+            _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
             _vertexBuffer.SetData(_vertices);
         }
 

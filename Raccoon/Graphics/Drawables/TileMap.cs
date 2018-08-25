@@ -51,7 +51,7 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
             effect.TextureEnabled = true;
             effect.Texture = Texture.XNATexture;
             float[] colorNormalized = (color * Color).Normalized;
@@ -69,7 +69,7 @@ namespace Raccoon.Graphics {
             
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
             }
 
             effect.Alpha = 1f;

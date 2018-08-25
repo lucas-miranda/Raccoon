@@ -58,7 +58,7 @@ namespace Raccoon.Graphics {
             scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
             Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
             effect.TextureEnabled = true;
             effect.Texture = Texture.XNATexture;
             float[] colorNormalized = (color * Color).Normalized;
@@ -68,7 +68,7 @@ namespace Raccoon.Graphics {
             effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
             effect.Projection = Renderer.Projection;
 
-            GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
                 device.Indices = _indexBuffer;
@@ -92,14 +92,14 @@ namespace Raccoon.Graphics {
             scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
             Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
             float[] colorNormalized = color.Normalized;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
             effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
             effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
             effect.Projection = Renderer.Projection;
 
-            GraphicsDevice device = Game.Instance.Core.GraphicsDevice;
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
                 pass.Apply();
                 device.Indices = _debug_indexBuffer;
@@ -284,18 +284,18 @@ namespace Raccoon.Graphics {
             }
 
             if (_vertexBuffer == null || sections * 4 > _vertexBuffer.VertexCount) {
-                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.Core.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, sections * 4, BufferUsage.WriteOnly);
+                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, sections * 4, BufferUsage.WriteOnly);
             }
 
             if (_indexBuffer == null || indices.Length > _indexBuffer.IndexCount) {
-                _indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+                _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
             }
 
             _indexBuffer.SetData(indices);
 
 #if DEBUG
             if (_debug_indexBuffer == null || debug_indices.Length > _debug_indexBuffer.IndexCount) {
-                _debug_indexBuffer = new IndexBuffer(Game.Instance.Core.GraphicsDevice, IndexElementSize.ThirtyTwoBits, debug_indices.Length, BufferUsage.WriteOnly);
+                _debug_indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, debug_indices.Length, BufferUsage.WriteOnly);
             }
 
             _debug_indexBuffer.SetData(debug_indices);

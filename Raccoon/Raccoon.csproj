@@ -83,7 +83,7 @@
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />
     <Compile Include="Core\Components\Movement\Movement.cs" />
     <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
-    <Compile Include="Core\Core.cs" />
+    <Compile Include="Core\XNAGameWrapper.cs" />
     <Compile Include="Core\Coroutines\Coroutines.cs" />
     <Compile Include="Core\Debug\Debug.cs" />
     <Compile Include="Core\Debug\Console.cs" />

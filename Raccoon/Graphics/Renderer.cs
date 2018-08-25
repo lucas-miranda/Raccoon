@@ -33,12 +33,12 @@ namespace Raccoon.Graphics {
         }
 
         public Renderer(BlendState blendState = BlendState.AlphaBlend) {
-            if (Game.Instance.Core.GraphicsDevice == null) {
+            if (Game.Instance.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Renderer needs a valid graphics device. Maybe are you using before first Scene.Start() is called?");
             }
 
             BlendState = blendState;
-            SpriteBatch = new SpriteBatch(Game.Instance.Core.GraphicsDevice);
+            SpriteBatch = new SpriteBatch(Game.Instance.GraphicsDevice);
             Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, 1f);
         }
 
@@ -64,7 +64,7 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
-            Vector3 worldPos = Game.Instance.Core.GraphicsDevice.Viewport.Unproject( 
+            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
                 new Vector3(screenPosition, 0f), 
                 Projection, 
                 View, 
@@ -75,7 +75,7 @@ namespace Raccoon.Graphics {
         } 
  
         public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
-            Vector3 screenPos = Game.Instance.Core.GraphicsDevice.Viewport.Project( 
+            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project( 
                 new Vector3(worldPosition, 0f), 
                 Projection, 
                 View, 
@@ -295,7 +295,7 @@ namespace Raccoon.Graphics {
 
             //Matrix scrollMatrix = Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
-            BasicEffect effect = Game.Instance.Core.BasicEffect;
+            BasicEffect effect = Game.Instance.BasicEffect;
 
             scale = new Vector2(scale.X / (UnitToPixels * PixelScale), scale.Y / (UnitToPixels * PixelScale));
             effect.World = Matrix.CreateScale(scale.X, scale.Y, 1f)
@@ -312,7 +312,7 @@ namespace Raccoon.Graphics {
 
             effect.TextureEnabled = true;
 
-            foreach (EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
             }
 

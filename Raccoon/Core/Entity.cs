@@ -28,7 +28,7 @@ namespace Raccoon {
 
         public Entity() {
             Name = "Entity";
-            Renderer = Game.Instance.Core.MainRenderer;
+            Renderer = Game.Instance.MainRenderer;
         }
 
         #endregion Constructors

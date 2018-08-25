@@ -54,16 +54,16 @@ namespace Raccoon.Graphics {
     }
 
     public class Canvas : Image {
-        public Canvas(int width, int height) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height))) {
+        public Canvas(int width, int height) : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat))) {
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat) : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage))) {
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage) : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage, bool shared, int arraySize) : base(new Texture(new RenderTarget2D(Game.Instance.Core.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage, shared, arraySize))) {
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, CanvasUsage usage, bool shared, int arraySize) : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, (Microsoft.Xna.Framework.Graphics.SurfaceFormat) surfaceFormat, (Microsoft.Xna.Framework.Graphics.DepthFormat) depthFormat, multiSampleCount, (RenderTargetUsage) usage, shared, arraySize))) {
         }
 
         public DepthFormat DepthStencilFormat { get { return (DepthFormat) XNARenderTarget.DepthStencilFormat; } }
@@ -80,17 +80,17 @@ namespace Raccoon.Graphics {
         }
 
         public void Begin() {
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(XNARenderTarget);
-            Game.Instance.Core.RenderTargetStack.Push(XNARenderTarget);
+            Game.Instance.GraphicsDevice.SetRenderTarget(XNARenderTarget);
+            Game.Instance.RenderTargetStack.Push(XNARenderTarget);
         }
 
         public void End() {
-            Game.Instance.Core.RenderTargetStack.Pop();
-            Game.Instance.Core.GraphicsDevice.SetRenderTarget(Game.Instance.Core.RenderTargetStack.Peek());
+            Game.Instance.RenderTargetStack.Pop();
+            Game.Instance.GraphicsDevice.SetRenderTarget(Game.Instance.RenderTargetStack.Peek());
         }
 
         public void Clear(Color color) {
-            Game.Instance.Core.GraphicsDevice.Clear(color);
+            Game.Instance.GraphicsDevice.Clear(color);
         }
 
         public void Resize(int width, int height, bool mipmap = false) {
@@ -99,7 +99,7 @@ namespace Raccoon.Graphics {
             }
 
             RenderTarget2D renderTarget2D = new RenderTarget2D(
-                Game.Instance.Core.GraphicsDevice, 
+                Game.Instance.GraphicsDevice, 
                 width, 
                 height, 
                 mipmap, 

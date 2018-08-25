@@ -19,7 +19,7 @@
         public Line Equation { get { return new Line(From, To); } }
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            var effect = Game.Instance.Core.BasicEffect;
+            var effect = Game.Instance.BasicEffect;
             effect.World = Renderer.World;
             effect.View = Renderer.View;
             effect.Projection = Renderer.Projection;
@@ -28,9 +28,9 @@
             effect.DiffuseColor = c;
             effect.Alpha = Opacity;
 
-            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.Core.BasicEffect.CurrentTechnique.Passes) {
+            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
                 pass.Apply();
-                Game.Instance.Core.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
                         new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White),
                         new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X + _to.X, Position.Y + position.Y - Origin.Y + _to.Y, 0), Microsoft.Xna.Framework.Color.White)
@@ -39,7 +39,7 @@
 
             effect.Alpha = 1f;
             effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f);
-            effect.World = Game.Instance.Core.BasicEffect.View = Game.Instance.Core.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
+            effect.World = Game.Instance.BasicEffect.View = Game.Instance.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
         }
 
         public override void Dispose() { }

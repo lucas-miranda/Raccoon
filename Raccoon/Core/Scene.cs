@@ -380,7 +380,7 @@ namespace Raccoon {
                 e.LateUpdate();
             }
 
-            Camera.Update(Game.Instance.DeltaTime);
+            Camera.Update(Game.Instance.LastUpdateDeltaTime);
         }
 
         /// <summary>

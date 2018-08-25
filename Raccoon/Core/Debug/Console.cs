@@ -50,12 +50,12 @@ namespace Raccoon {
         public void Start() {
             Surface = Game.Instance.DebugRenderer;
             if (Font == null) {
-                Font = Game.Instance.Core.StdFont;
+                Font = Game.Instance.StdFont;
             }
 
             _background = new RectanglePrimitive(1, 1) {
                 Color = Color.Black,
-                Renderer = Game.Instance.Core.DebugRenderer,
+                Renderer = Game.Instance.DebugRenderer,
                 Opacity = 0.25f
             };
 
