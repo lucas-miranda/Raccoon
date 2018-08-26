@@ -141,7 +141,7 @@ namespace Raccoon.Audio {
         #region Protected Methods
 
         protected void Load(string filename) {
-            XNASong = Game.Instance.Core.Content.Load<Song>(filename);
+            XNASong = Game.Instance.XNAGameWrapper.Content.Load<Song>(filename);
             if (XNASong == null) {
                 throw new NullReferenceException($"Music '{filename}' not found");
             }

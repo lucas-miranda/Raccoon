@@ -107,7 +107,7 @@ namespace Raccoon.Graphics {
         #region Primitives
 
         public static Image Rectangle(int width, int height, bool filled = true) {
-            Debug.Assert(Game.Instance.Core.GraphicsDevice != null, "Primitive needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
+            Debug.Assert(Game.Instance.XNAGameWrapper.GraphicsDevice != null, "Primitive needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             Debug.Assert(width * height > 0, "Invalid primitive size.");
 
             Color[] data = new Color[width * height];
@@ -139,7 +139,7 @@ namespace Raccoon.Graphics {
         }
 
         public static Image Circle(int radius) {
-            Debug.Assert(Game.Instance.Core.GraphicsDevice != null, "Primitive needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
+            Debug.Assert(Game.Instance.XNAGameWrapper.GraphicsDevice != null, "Primitive needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             Debug.Assert(radius > 0, "Invalid primitive size.");
 
             int diameter = radius * radius;

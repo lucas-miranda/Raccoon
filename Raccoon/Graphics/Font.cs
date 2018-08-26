@@ -45,11 +45,11 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
         internal void Load() {
-            if (Game.Instance.Core.GraphicsDevice == null) {
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Font needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            SpriteFont = Game.Instance.Core.Content.Load<SpriteFont>(Name);
+            SpriteFont = Game.Instance.XNAGameWrapper.Content.Load<SpriteFont>(Name);
             DefaultCharacter = '?';
         }
 

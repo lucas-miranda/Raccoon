@@ -62,8 +62,8 @@ namespace Raccoon.Input {
             _specialKeysToChar[Key.Period] = '.';
             _specialKeysToChar[Key.Comma] = ',';
 
-            Game.Instance.Core.Window.TextInput += ProcessTextInput;
-            Game.Instance.Core.Activated += (object sender, System.EventArgs e) => {
+            Game.Instance.XNAGameWrapper.Window.TextInput += ProcessTextInput;
+            Game.Instance.XNAGameWrapper.Activated += (object sender, System.EventArgs e) => {
                 _activated = true;
             };
         }

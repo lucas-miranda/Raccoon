@@ -148,12 +148,12 @@ namespace Raccoon.Graphics {
             }
 
             if (_isFromContentManager) {
-                XNATexture = Game.Instance.Core.Content.Load<Texture2D>(Filename);
+                XNATexture = Game.Instance.XNAGameWrapper.Content.Load<Texture2D>(Filename);
             } else {
                 XNATexture.Dispose();
 
                 using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    XNATexture = Texture2D.FromStream(Game.Instance.Core.GraphicsDevice, stream);
+                    XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
                 }
             }
 
@@ -168,24 +168,24 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected void Load(int width, int height) {
-            if (Game.Instance.Core.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
 
-            XNATexture = new Texture2D(Game.Instance.Core.GraphicsDevice, width, height);
+            XNATexture = new Texture2D(Game.Instance.XNAGameWrapper.GraphicsDevice, width, height);
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;
         }
 
         protected void Load(string filename) {
-            if (Game.Instance.Core.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
 
             Filename = filename;
             if (Filename.EndsWith(".bmp") || Filename.EndsWith(".gif") || Filename.EndsWith(".jpg") || Filename.EndsWith(".png") || Filename.EndsWith(".tif") || Filename.EndsWith(".dds")) {
                 using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    XNATexture = Texture2D.FromStream(Game.Instance.Core.GraphicsDevice, stream);
+                    XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
                 }
             } else {
                 _isFromContentManager = true;
-                XNATexture = Game.Instance.Core.Content.Load<Texture2D>(Filename);
+                XNATexture = Game.Instance.XNAGameWrapper.Content.Load<Texture2D>(Filename);
             }
 
             if (XNATexture == null) throw new NullReferenceException($"Texture '{Filename}' not found");

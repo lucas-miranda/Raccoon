@@ -59,9 +59,12 @@ namespace Raccoon {
             Instance = this;
 
 #if DEBUG
+            Debug.Start();
+
             try {
                 System.Console.Title = "Raccoon Debug";
-            } catch { }
+            } catch {
+            }
 #endif
 
             System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
@@ -73,11 +76,9 @@ namespace Raccoon {
             TargetFramerate = targetFramerate;
 
             // wrapper
-            Core = new XNAGameWrapper(windowWidth, windowHeight, TargetFramerate, fullscreen, vsync, InternalLoadContent, InternalUnloadContent, InternalUpdate, InternalDraw);
+            XNAGameWrapper = new XNAGameWrapper(windowWidth, windowHeight, TargetFramerate, fullscreen, vsync, InternalLoadContent, InternalUnloadContent, InternalUpdate, InternalDraw);
+            XNAGameWrapper.Content.RootDirectory = "Content/";
             Title = title;
-
-            // content
-            Core.Content.RootDirectory = "Content/";
 
             // background
             BackgroundColor = Color.Black;
@@ -89,7 +90,7 @@ namespace Raccoon {
             Center = (Size / 2f).ToVector2();
 
             // events
-            Core.Window.ClientSizeChanged += InternalOnWindowResize;
+            XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             OnBeforeUpdate = () => {
                 if (NextScene == Scene) {
@@ -98,8 +99,6 @@ namespace Raccoon {
 
                 UpdateCurrentScene();
             };
-
-            Debug.Instance.GetType(); // HACK: Force early Debug lazy initialization
         }
 
         ~Game() {
@@ -118,24 +117,24 @@ namespace Raccoon {
 
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
-        public bool IsFixedTimeStep { get { return Core.IsFixedTimeStep; } }
-        public bool VSync { get { return Core.GraphicsDeviceManager.SynchronizeWithVerticalRetrace; } set { Core.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = value; } }
-        public bool IsFullscreen { get { return Core.GraphicsDeviceManager.IsFullScreen; } }
-        public bool IsMouseVisible { get { return Core.IsMouseVisible; } set { Core.IsMouseVisible = value; } }
-        public bool AllowResize { get { return Core.Window.AllowUserResizing; } set { Core.Window.AllowUserResizing = value; } }
-        public bool HasFocus { get { return Core.IsActive; } }
-        public bool HardwareModeSwitch { get { return Core.GraphicsDeviceManager.HardwareModeSwitch; } set { Core.GraphicsDeviceManager.HardwareModeSwitch = value; } }
+        public bool IsFixedTimeStep { get { return XNAGameWrapper.IsFixedTimeStep; } }
+        public bool VSync { get { return XNAGameWrapper.GraphicsDeviceManager.SynchronizeWithVerticalRetrace; } set { XNAGameWrapper.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = value; } }
+        public bool IsFullscreen { get { return XNAGameWrapper.GraphicsDeviceManager.IsFullScreen; } }
+        public bool IsMouseVisible { get { return XNAGameWrapper.IsMouseVisible; } set { XNAGameWrapper.IsMouseVisible = value; } }
+        public bool AllowResize { get { return XNAGameWrapper.Window.AllowUserResizing; } set { XNAGameWrapper.Window.AllowUserResizing = value; } }
+        public bool HasFocus { get { return XNAGameWrapper.IsActive; } }
+        public bool HardwareModeSwitch { get { return XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch; } set { XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch = value; } }
         public bool IsRunningSlowly { get; private set; }
-        public string ContentDirectory { get { return Core.Content.RootDirectory; } set { Core.Content.RootDirectory = value; } }
+        public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public int LastUpdateDeltaTime { get; private set; }
-        public int X { get { return Core.Window.Position.X; } }
-        public int Y { get { return Core.Window.Position.Y; } }
+        public int X { get { return XNAGameWrapper.Window.Position.X; } }
+        public int Y { get { return XNAGameWrapper.Window.Position.Y; } }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
         public int WindowHeight { get { return (int) WindowSize.Height; } }
-        public int ScreenWidth { get { return Core.GraphicsDevice.DisplayMode.Width; } }
-        public int ScreenHeight { get { return Core.GraphicsDevice.DisplayMode.Height; } }
+        public int ScreenWidth { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Width; } }
+        public int ScreenHeight { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
         public Size WindowSize { get; private set; }
@@ -143,7 +142,7 @@ namespace Raccoon {
         public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
-        public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { Core.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
+        public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
         public Vector2 ScreenCenter { get { return (ScreenSize / 2f).ToVector2(); } }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
@@ -162,7 +161,7 @@ namespace Raccoon {
             set {
                 _title = value;
 #if DEBUG
-                Core.Window.Title = string.Format(WindowTitleDetailed, _title, _fps, System.GC.GetTotalMemory(false) / 1048576f);
+                XNAGameWrapper.Window.Title = string.Format(WindowTitleDetailed, _title, _fps, System.GC.GetTotalMemory(false) / 1048576f);
 #else
                 Core.Window.Title = _title;
 #endif
@@ -215,8 +214,8 @@ namespace Raccoon {
 
         #region Internal Properties
 
-        internal XNAGameWrapper Core { get; set; }
-        internal GraphicsDevice GraphicsDevice { get { return Core.GraphicsDevice; } }
+        internal XNAGameWrapper XNAGameWrapper { get; set; }
+        internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
         internal SpriteBatch MainSpriteBatch { get; private set; }
         internal BasicEffect BasicEffect { get; private set; }
         internal Canvas DebugCanvas { get; private set; }
@@ -232,7 +231,7 @@ namespace Raccoon {
         public void Start() {
             Debug.Info("| Raccoon Started |");
             IsRunning = true;
-            Core.Run();
+            XNAGameWrapper.Run();
         }
 
         public void Start(string startScene) {
@@ -252,7 +251,7 @@ namespace Raccoon {
         public void Exit() {
             Debug.WriteLine("Exiting...");
             IsRunning = false;
-            Core.Exit();
+            XNAGameWrapper.Exit();
         }
 
         public void Dispose() {
@@ -347,11 +346,11 @@ namespace Raccoon {
         public void ResizeWindow(int width, int height) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
-            var displayMode = Core.GraphicsDevice.DisplayMode;
+            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
-            Core.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
-            Core.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
-            Core.GraphicsDeviceManager.ApplyChanges();
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResizeWindow(Size size) {
@@ -363,19 +362,19 @@ namespace Raccoon {
 
             Size newWindowSize = Size.Empty;
             if (!isSwitchingToFullscreen) {
-                Core.GraphicsDeviceManager.ToggleFullScreen();
+                XNAGameWrapper.GraphicsDeviceManager.ToggleFullScreen();
                 newWindowSize = _windowedModeBounds.Size;
                 WindowPosition = _windowedModeBounds.Position;
             } else {
                 _windowedModeBounds = new Rectangle(WindowPosition, WindowSize);
-                var displayMode = Core.GraphicsDevice.DisplayMode;
+                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
                 newWindowSize = new Size(displayMode.Width, displayMode.Height);
             }
 
             ResizeWindow(newWindowSize);
 
             if (isSwitchingToFullscreen) {
-                Core.GraphicsDeviceManager.ToggleFullScreen();
+                XNAGameWrapper.GraphicsDeviceManager.ToggleFullScreen();
             }
         }
 
@@ -393,7 +392,7 @@ namespace Raccoon {
 
         protected virtual void Initialize() {
             // systems initialization
-            Debug.Instance.Initialize();
+            Debug.Console.Start();
 
             OnBegin();
             OnBegin = null;
@@ -488,7 +487,7 @@ namespace Raccoon {
         protected virtual void Dispose(bool disposing) {
             if (!Disposed) {
                 if (disposing) {
-                    Core.Dispose();
+                    XNAGameWrapper.Dispose();
                 }
 
                 IsRunning = false;
@@ -518,18 +517,18 @@ namespace Raccoon {
         }
 
         private void InternalOnWindowResize(object sender, System.EventArgs e) {
-            var windowClientBounds = Core.Window.ClientBounds;
+            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
-            if (Core.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || Core.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
-                var displayMode = Core.GraphicsDevice.DisplayMode;
-                Core.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
-                Core.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
-                Core.GraphicsDeviceManager.ApplyChanges();
+            if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
+                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
+                XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
                 return;
             }
 
-            WindowSize = new Size(Core.GraphicsDeviceManager.PreferredBackBufferWidth, Core.GraphicsDeviceManager.PreferredBackBufferHeight);
+            WindowSize = new Size(XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth, XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
             Size = WindowSize / PixelScale;
             Center = (Size / 2f).ToVector2();
@@ -577,7 +576,7 @@ namespace Raccoon {
         }
 
         private void InternalLoadContent() {
-            if (Core.GraphicsDeviceManager.IsFullScreen) {
+            if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
 
@@ -607,7 +606,7 @@ namespace Raccoon {
             };
 
             // default content
-            AdditionalResourceContentManager = new ResourceContentManager(Core.Services, Resource.ResourceManager);
+            AdditionalResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
             StdFont = new Font(AdditionalResourceContentManager.Load<SpriteFont>("Zoomy"));
             BasicEffect = new BasicEffect(GraphicsDevice) {
                 VertexColorEnabled = true

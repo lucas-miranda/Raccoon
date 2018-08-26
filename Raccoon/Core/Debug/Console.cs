@@ -37,7 +37,7 @@ namespace Raccoon {
 
         #region Public Properties
 
-        public Renderer Surface { get; private set; }
+        public Renderer Renderer { get; private set; }
         public bool Visible { get; private set; }
         public Font Font { get; set; }
         public bool ShowTimestamp { get; set; } = true;
@@ -48,7 +48,7 @@ namespace Raccoon {
         #region Public Methods
 
         public void Start() {
-            Surface = Game.Instance.DebugRenderer;
+            Renderer = Game.Instance.DebugRenderer;
             if (Font == null) {
                 Font = Game.Instance.StdFont;
             }
@@ -56,7 +56,7 @@ namespace Raccoon {
             _background = new RectanglePrimitive(1, 1) {
                 Color = Color.Black,
                 Renderer = Game.Instance.DebugRenderer,
-                Opacity = 0.25f
+                Opacity = .25f
             };
 
             /*_inputBackground = new Graphics.Primitives.Rectangle(Game.Instance.WindowWidth, Font.LineSpacing + 5 * 2, Color.White) {
@@ -159,22 +159,43 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            Vector2 topLeftPos = Camera.Current != null ? Camera.Current.Position : Vector2.Zero;
-            _background.Render(topLeftPos, 0, Game.Instance.WindowSize.ToVector2());
+            Vector2 scale = Vector2.One;
+
+            if (Camera.Current != null) {
+                scale = new Vector2(Renderer.PixelScale / (Camera.Current.Zoom * Game.Instance.MainRenderer.PixelScale));
+            }
+
+            _background.Render(Renderer.ConvertScreenToWorld(Vector2.Zero), 0f, Game.Instance.WindowSize.ToVector2());
 
             // total messages
-            Surface.DrawString(Font, _messages.Count.ToString(), topLeftPos + new Vector2(Game.Instance.WindowWidth - 25, 15), Color.White);
+            Renderer.DrawString(
+                Font, 
+                _messages.Count.ToString(), 
+                Renderer.ConvertScreenToWorld(new Vector2(Game.Instance.WindowWidth - 25, 15)), 
+                0f, 
+                scale, 
+                ImageFlip.None, 
+                Color.White, 
+                Vector2.Zero, 
+                Vector2.One
+            );
 
             // messages
             Vector2 messagePos = new Vector2(15, Game.Instance.WindowHeight - Font.LineSpacing);
             foreach (Message message in _messages) {
-                messagePos += new Vector2(0, message.Lines * (-Font.LineSpacing - SpaceBetweenLines));
+                 messagePos += new Vector2(0, message.Lines * (-Font.LineSpacing - SpaceBetweenLines));
                 
-                Surface.DrawString(Font, 
-                                   (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), 
-                                   topLeftPos + messagePos, 
-                                   message.Color
-                                  );
+                 Renderer.DrawString(
+                    Font, 
+                    (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), 
+                    Renderer.ConvertScreenToWorld(messagePos), 
+                    0f, 
+                    scale,
+                    ImageFlip.None,
+                    message.Color,
+                    Vector2.Zero,
+                    Vector2.One                                  
+                );
 
                 if (messagePos.Y <= -Font.LineSpacing) {
                     break;

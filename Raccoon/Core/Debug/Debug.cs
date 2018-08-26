@@ -20,7 +20,6 @@ namespace Raccoon {
 
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, Game.Instance.WindowHeight - 30);
-        private static readonly System.Lazy<Debug> _lazy = new System.Lazy<Debug>(() => new Debug());
 
         #endregion Private Static Members
 
@@ -37,10 +36,10 @@ namespace Raccoon {
         #region Constructors
 
         private Debug() {
-            Trace.Listeners.Add(new ConsoleTraceListener());
+            //Trace.Listeners.Add(new ConsoleTraceListener());
 
 #if DEBUG
-            //Trace.Listeners.Add(Console);
+            Trace.Listeners.Add(Console);
 #else
             _useLogToFile = true;
             Trace.Listeners.Add(_textWriterTraceListener);
@@ -52,7 +51,7 @@ namespace Raccoon {
 
         #region Public Static Properties
 
-        public static Debug Instance { get { return _lazy.Value; } }
+        public static Debug Instance { get; private set; }
         public static int IndentLevel { get { return Trace.IndentLevel; } set { Trace.IndentLevel = value; } }
         public static int IndentSize { get { return Trace.IndentSize; } set { Trace.IndentSize = value; } }
 
@@ -85,7 +84,7 @@ namespace Raccoon {
 
         #endregion Public Static Properties
 
-        #region Public Static Methods
+        #region Public Methods
 
         #region Messages
 
@@ -895,13 +894,17 @@ namespace Raccoon {
 
         #endregion Others
 
-        #endregion Public Static Methods
+        #endregion Public Methods
 
         #region Internal Methods
 
         [Conditional("DEBUG")]
-        internal void Initialize() {
-            Console.Start();
+        internal static void Start() {
+            if (Instance != null) {
+                return;
+            }
+
+            Instance = new Debug();
         }
 
         [Conditional("DEBUG")]

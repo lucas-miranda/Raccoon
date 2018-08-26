@@ -128,11 +128,11 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected void Load(string filename) {
-            if (Game.Instance.Core.GraphicsDevice == null) {
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Shader needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            XNAEffect = Game.Instance.Core.Content.Load<Effect>(filename);
+            XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(filename);
 
             if (XNAEffect == null) throw new NullReferenceException($"Shader '{filename}' not found");
             

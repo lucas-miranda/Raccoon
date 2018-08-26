@@ -63,7 +63,7 @@ namespace Raccoon.Audio {
         #region Protected Methods
 
         protected void Load(string filename) {
-            XNASoundEffect = Game.Instance.Core.Content.Load<Microsoft.Xna.Framework.Audio.SoundEffect>(filename);
+            XNASoundEffect = Game.Instance.XNAGameWrapper.Content.Load<Microsoft.Xna.Framework.Audio.SoundEffect>(filename);
             if (XNASoundEffect == null) {
                 throw new NullReferenceException($"Sound Effect '{filename}' not found");
             }
