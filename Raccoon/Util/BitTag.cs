@@ -86,6 +86,11 @@ namespace Raccoon.Util {
         }
 
         public IEnumerator<BitTag> GetEnumerator() {
+            if (IsSingleValue) {
+                yield return new BitTag(LiteralValue) { EnumType = EnumType };
+                yield break;
+            }
+
             int bits = (int) System.Math.Ceiling(System.Math.Log(LiteralValue, 2));
             for (int i = 0; i <= bits; i++) {
                 ulong flagValue = 1UL << i;

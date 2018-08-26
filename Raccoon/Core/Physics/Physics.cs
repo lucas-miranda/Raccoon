@@ -20,7 +20,7 @@ namespace Raccoon {
         private static readonly System.Lazy<Physics> _lazy = new System.Lazy<Physics>(() => new Physics());
 
         // tags
-        private Dictionary<BitTag, HashSet<BitTag>> _collisionTagTable = new Dictionary<BitTag, HashSet<BitTag>>();
+        private Dictionary<BitTag, BitTag> _collisionTagTable = new Dictionary<BitTag, BitTag>();
 
         // colliders
         private List<Body> _colliders = new List<Body>();
@@ -119,8 +119,34 @@ namespace Raccoon {
             }
         }
 
-        public bool HasTag(BitTag tag) {
-            return _collidersByTag.ContainsKey(tag);
+        /// <summary>
+        /// Checks if one or more tag exists. 
+        /// </summary>
+        /// <param name="tags">One or more bit tags.</param>
+        /// <returns>True if all tags exists, False otherwise.</returns>
+        public bool HasTag(BitTag tags) {
+            foreach (BitTag tag in tags) {
+                if (!_collidersByTag.ContainsKey(tag)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if at least one tag of a set exists.
+        /// </summary>
+        /// <param name="tags">One or more bit tags.</param>
+        /// <returns>True if at least one tag exists, False otherwise.</returns>
+        public bool HasAnyTag(BitTag tags) {
+            foreach (BitTag tag in tags) {
+                if (_collidersByTag.ContainsKey(tag)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void RegisterTags<T>() {
@@ -136,7 +162,7 @@ namespace Raccoon {
             foreach (System.Enum enumValue in System.Enum.GetValues(tagType)) {
                 BitTag tag = enumValue;
                 _collidersByTag.Add(tag, new List<Body>());
-                _collisionTagTable.Add(tag, new HashSet<BitTag>());
+                _collisionTagTable.Add(tag, BitTag.None);
             }
         }
 
@@ -149,81 +175,80 @@ namespace Raccoon {
             BitTag collidableTags = BitTag.None;
 
             foreach (BitTag tag in tags) {
-                foreach (BitTag collidableTag in _collisionTagTable[tag]) {
-                    collidableTags += collidableTag;
-                }
+                collidableTags += _collisionTagTable[tag];
             }
 
             return collidableTags;
         }
 
-        public void RegisterCollision(BitTag tagA, BitTag tagB) {
-            ValidateTag(tagA, "tagA");
-            ValidateTag(tagB, "tagB");
-            Debug.Assert(tagA != BitTag.None && tagB != BitTag.None, $"Can't register a collision with tag None.");
+        public void RegisterCollision(BitTag tagsA, BitTag tagsB) {
+            ValidateTags(tagsA, "tagsA");
+            ValidateTags(tagsB, "tagsB");
+            Debug.Assert(tagsA != BitTag.None && tagsB != BitTag.None, $"Can't register a collision with tag None.");
 
-            _collisionTagTable[tagA].Add(tagB);
-            _collisionTagTable[tagB].Add(tagA);
-        }
-
-        public void RemoveCollision(BitTag tagA, BitTag tagB) {
-            ValidateTag(tagA, "tagA");
-            ValidateTag(tagB, "tagB");
-
-#if DEBUG
-            if (tagA == BitTag.None || tagB == BitTag.None) {
-                return;
+            foreach (BitTag singleTagA in tagsA) {
+                _collisionTagTable[singleTagA] += tagsB;
             }
-#endif
 
-            _collisionTagTable[tagA].Remove(tagB);
-            _collisionTagTable[tagB].Remove(tagA);
+            foreach (BitTag singleTagB in tagsB) {
+                _collisionTagTable[singleTagB] += tagsA;
+            }
         }
 
-        public bool IsCollidable(BitTag tagA, BitTag tagB) {
-            ValidateTag(tagA, "tagA");
-            ValidateTag(tagB, "tagB");
+        public void RemoveCollision(BitTag tagsA, BitTag tagsB) {
+            ValidateTags(tagsA, "tagsA");
+            ValidateTags(tagsB, "tagsB");
 
-#if DEBUG
-            if (tagA == BitTag.None || tagB == BitTag.None) {
+            foreach (BitTag singleTagA in tagsA) {
+                _collisionTagTable[singleTagA] -= tagsB;
+            }
+
+            foreach (BitTag singleTagB in tagsB) {
+                _collisionTagTable[singleTagB] -= tagsA;
+            }
+        }
+
+        public bool IsCollidable(BitTag tagsA, BitTag tagsB) {
+            ValidateTags(tagsA, "tagsA");
+            ValidateTags(tagsB, "tagsB");
+
+            if (tagsA == BitTag.None || tagsB == BitTag.None) {
                 return false;
             }
-#endif
 
-            return _collisionTagTable[tagA].Contains(tagB);
+            foreach (BitTag singleTagA in tagsA) {
+                if (_collisionTagTable[singleTagA].HasAny(tagsB)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void ClearCollisions() {
-            foreach (HashSet<BitTag> collisionTags in _collisionTagTable.Values) {
-                collisionTags.Clear();
+            BitTag[] keys = new BitTag[_collisionTagTable.Keys.Count];
+            _collisionTagTable.Keys.CopyTo(keys, 0);
+
+            foreach (BitTag collisionTag in keys) {
+                _collisionTagTable[collisionTag] = BitTag.None;
             }
         }
 
-        public void SetCollisions(Dictionary<BitTag, System.Array> collisions) {
-            foreach (HashSet<BitTag> collidedTags in _collisionTagTable.Values) {
-                collidedTags.Clear();
-            }
+        public void SetCollisions((BitTag, BitTag)[] collisions) {
+            ClearCollisions();
 
-            foreach (KeyValuePair<BitTag, System.Array> tagCollision in collisions) {
-                foreach (BitTag otherTag in tagCollision.Value) {
-                    RegisterCollision(tagCollision.Key, otherTag);
-                }
+            foreach ((BitTag tag, BitTag collisionWith) in collisions) {
+                RegisterCollision(tag, collisionWith);
             }
         }
 
         public void AddCollider(Body collider) {
-            foreach (BitTag tag in collider.Tags) {
-                AddCollider(collider, tag);
-            }
-
+            AddCollider(collider, collider.Tags);
             _colliders.Add(collider);
         }
 
         public void RemoveCollider(Body collider) {
-            foreach (BitTag tag in collider.Tags) {
-                RemoveCollider(collider, tag);
-            }
-
+            RemoveCollider(collider, collider.Tags);
             _colliders.Remove(collider);
         }
 
@@ -251,12 +276,11 @@ namespace Raccoon {
             }
         }
 
-        public int GetCollidersCount(BitTag tag) {
-            ValidateTag(tag);
-
+        public int GetCollidersCount(BitTag tags) {
             int collidersCount = 0;
-            foreach (BitTag t in tag) {
-                collidersCount += _collidersByTag[t].Count;
+            foreach (BitTag tag in tags) {
+                ValidateTag(tag);
+                collidersCount += _collidersByTag[tag].Count;
             }
 
             return collidersCount;
@@ -264,8 +288,8 @@ namespace Raccoon {
 
         public override string ToString() {
             string info = $"Physics:\n  Colliders: {_colliders.Count}\n  Collision Tag Table:\n";
-            foreach (KeyValuePair<BitTag, HashSet<BitTag>> tagCollisionTable in _collisionTagTable) {
-                info += $"    {tagCollisionTable.Key} => {string.Join(", ", tagCollisionTable.Value)}\n"; 
+            foreach (KeyValuePair<BitTag, BitTag> entry in _collisionTagTable) {
+                info += $"    {entry.Key} => {entry.Value}\n"; 
             }
 
             info += "  Colliders By Tag:\n";
@@ -878,18 +902,23 @@ namespace Raccoon {
 #endif
         }
 
-        private void AddCollider(Body collider, BitTag tag) {
-            List<Body> collidersByTag = _collidersByTag[tag];
-            if (collidersByTag.Contains(collider)) {
-                return;
-            }
+        private void AddCollider(Body collider, BitTag tags) {
+            foreach (BitTag tag in tags) {
+                List<Body> collidersByTag = _collidersByTag[tag];
 
-            collidersByTag.Add(collider);
+                if (collidersByTag.Contains(collider)) {
+                    continue;
+                }
+
+                collidersByTag.Add(collider);
+            }
         }
 
-        private void RemoveCollider(Body collider, BitTag tag) {
-            ValidateTag(tag);
-            _collidersByTag[tag].Remove(collider);
+        private void RemoveCollider(Body collider, BitTag tags) {
+            foreach (BitTag tag in tags) {
+                ValidateTag(tag);
+                _collidersByTag[tag].Remove(collider);
+            }
         }
 
         private bool CheckCollision(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
@@ -906,8 +935,15 @@ namespace Raccoon {
 
         [System.Diagnostics.Conditional("DEBUG")]
         private void ValidateTag(BitTag tag, string paramName = "tag") {
-            if (!HasTag(tag)) {
+            if (!_collidersByTag.ContainsKey(tag)) {
                 throw new System.ArgumentException($"Tag '{tag}' not found.", paramName);
+            }
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void ValidateTags(BitTag tags, string paramName = "tags") {
+            foreach (BitTag tag in tags) {
+                ValidateTag(tag, paramName);
             }
         }
 
