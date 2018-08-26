@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+
 using Raccoon.Graphics;
+using Raccoon.Util;
 
 namespace Raccoon.Components {
     public class Body : Component {
@@ -18,7 +20,7 @@ namespace Raccoon.Components {
 
         private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
-        private System.Enum _tags;
+        private BitTag _tags = BitTag.None;
         private bool _isPhysicsActive;
 
         #endregion Private Members
@@ -30,7 +32,6 @@ namespace Raccoon.Components {
             Material = material ?? StandardMaterial;
             Mass = Shape.ComputeMass(1f);
             InverseMass = Mass == 0f ? 0f : (1f / Mass);
-            _tags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         #endregion Constructors
@@ -56,14 +57,14 @@ namespace Raccoon.Components {
         public Color Color { get; set; } = Color.White;
 #endif
 
-        public System.Enum Tags {
+        public BitTag Tags {
             get {
                 return _tags;
             }
 
             set {
                 if (_isPhysicsActive) {
-                    System.Enum oldTags = _tags;
+                    BitTag oldTags = _tags;
                     _tags = value;
                     Physics.Instance.UpdateColliderTagsEntry(this, oldTags);
                     return;
@@ -195,7 +196,7 @@ namespace Raccoon.Components {
             if (Movement != null) {
                 Movement.OnBodyCollide(otherBody, collisionAxes);
 
-                if (otherBody.Tags.HasFlag(Movement.CollisionTags)) {
+                if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
                     Movement.OnCollide(collisionAxes);
                 }
             }
@@ -249,27 +250,17 @@ namespace Raccoon.Components {
             Velocity = Vector2.Zero;
         }
 
-        public void AddTag(System.Enum tag) {
-            long value = System.Convert.ToInt64(Tags) | System.Convert.ToInt64(tag);
-            Tags = (System.Enum) System.Enum.ToObject(Physics.TagType, value);
-        }
-
-        public void RemoveTag(System.Enum tag) {
-            long value = System.Convert.ToInt64(Tags) & (~System.Convert.ToInt64(tag));
-            Tags = (System.Enum) System.Enum.ToObject(Physics.TagType, value);
-        }
-
         public override string ToString() {
             return $"[Body | Shape: {Shape}, Movement: {Movement}]";
         }
 
         #region Collides [Single Output]
 
-        public bool Collides(Vector2 position, System.Enum tags, out Contact[] contacts) {
+        public bool Collides(Vector2 position, BitTag tags, out Contact[] contacts) {
             return Physics.Instance.QueryCollision(Shape, position, tags, out contacts);
         }
 
-        public bool Collides(System.Enum tags, out Contact[] contacts) {
+        public bool Collides(BitTag tags, out Contact[] contacts) {
             return Physics.Instance.QueryCollision(Shape, Position, tags, out contacts);
         }
 
@@ -281,11 +272,11 @@ namespace Raccoon.Components {
             return Collides(Position, out contacts);
         }
 
-        public bool Collides(Vector2 position, System.Enum tags, out Body collidedCollider, out Contact[] contact) {
+        public bool Collides(Vector2 position, BitTag tags, out Body collidedCollider, out Contact[] contact) {
             return Physics.Instance.QueryCollision(Shape, position, tags, out collidedCollider, out contact);
         }
 
-        public bool Collides(System.Enum tags, out Body collidedCollider, out Contact[] contact) {
+        public bool Collides(BitTag tags, out Body collidedCollider, out Contact[] contact) {
             return Physics.Instance.QueryCollision(Shape, Position, tags, out collidedCollider, out contact);
         }
 
@@ -297,11 +288,11 @@ namespace Raccoon.Components {
             return Collides(Position, out collidedCollider, out contacts);
         }
 
-        public bool Collides<T>(Vector2 position, System.Enum tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
+        public bool Collides<T>(Vector2 position, BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
             return Physics.Instance.QueryCollision(Shape, position, tags, out collidedEntity, out contacts);
         }
 
-        public bool Collides<T>(System.Enum tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
+        public bool Collides<T>(BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
             return Physics.Instance.QueryCollision(Shape, Position, tags, out collidedEntity, out contacts);
         }
 
@@ -317,11 +308,11 @@ namespace Raccoon.Components {
 
         #region Collides [Multiple Output]
 
-        public bool CollidesMultiple(Vector2 position, System.Enum tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
+        public bool CollidesMultiple(Vector2 position, BitTag tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
             return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collidedColliders);
         }
 
-        public bool CollidesMultiple(System.Enum tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
+        public bool CollidesMultiple(BitTag tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
             return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collidedColliders);
         }
 
@@ -333,11 +324,11 @@ namespace Raccoon.Components {
             return CollidesMultiple(Position, out collidedColliders);
         }
 
-        public bool CollidesMultiple<T>(Vector2 position, System.Enum tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
+        public bool CollidesMultiple<T>(Vector2 position, BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
             return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collidedEntities);
         }
 
-        public bool CollidesMultiple<T>(System.Enum tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
+        public bool CollidesMultiple<T>(BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
             return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collidedEntities);
         }
 

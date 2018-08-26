@@ -73,6 +73,7 @@
     <Compile Include="Test\Math\CircleTest.cs" />
     <Compile Include="Test\Util\HelperTest.cs" />
     <Compile Include="Util\Bit.cs" />
+    <Compile Include="Util\BitTag.cs" />
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />

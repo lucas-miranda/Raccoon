@@ -25,7 +25,6 @@ namespace Raccoon.Components {
         /// <param name="acceleration">Speed increase.</param>
         public Movement(Vector2 acceleration) {
             Acceleration = acceleration;
-            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         /// <summary>
@@ -36,7 +35,6 @@ namespace Raccoon.Components {
         public Movement(Vector2 maxVelocity, Vector2 acceleration) {
             MaxVelocity = maxVelocity;
             Acceleration = acceleration;
-            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         /// <summary>
@@ -47,7 +45,6 @@ namespace Raccoon.Components {
         public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
             MaxVelocity = maxVelocity;
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
-            CollisionTags = (System.Enum) System.Enum.ToObject(Physics.TagType, 0);
         }
 
         #endregion Constructors
@@ -55,7 +52,7 @@ namespace Raccoon.Components {
         #region Public Properties
 
         public Body Body { get; private set; }
-        public System.Enum CollisionTags { get; set; }
+        public BitTag CollisionTags { get; set; } = BitTag.None;
         public Vector2 Axis { get; set; }
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
         public Vector2 MaxVelocity { get; set; }

@@ -20,12 +20,11 @@ namespace Raccoon {
         private static readonly System.Lazy<Physics> _lazy = new System.Lazy<Physics>(() => new Physics());
 
         // tags
-        private System.Enum _noneTag;
-        private Dictionary<System.Enum, HashSet<System.Enum>> _collisionTagTable = new Dictionary<System.Enum, HashSet<System.Enum>>();
+        private Dictionary<BitTag, HashSet<BitTag>> _collisionTagTable = new Dictionary<BitTag, HashSet<BitTag>>();
 
         // colliders
         private List<Body> _colliders = new List<Body>();
-        private Dictionary<System.Enum, List<Body>> _collidersByTag = new Dictionary<System.Enum, List<Body>>();
+        private Dictionary<BitTag, List<Body>> _collidersByTag = new Dictionary<BitTag, List<Body>>();
 
         // collision checking
         private Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>>();
@@ -87,7 +86,6 @@ namespace Raccoon {
 
         public static Physics Instance { get { return _lazy.Value; } }
         public static bool IsRunning { get; set; }
-        public static System.Type TagType { get; private set; }
 
         #endregion Public Static Properties
 
@@ -121,99 +119,100 @@ namespace Raccoon {
             }
         }
 
-        public bool HasTag(System.Enum tag) {
-            if (tag.GetType() != TagType) {
-                throw new System.ArgumentException($"Type from '{tag}' is inconsistent with Tag Type {TagType.Name}.", "tag");
-            }
-
+        public bool HasTag(BitTag tag) {
             return _collidersByTag.ContainsKey(tag);
         }
 
         public void RegisterTags<T>() {
-            System.Type type = typeof(T);
-            if (!type.IsEnum) {
+            System.Type tagType = typeof(T);
+            if (!tagType.IsEnum) {
                 throw new System.ArgumentException("Tags Type must be a Enum.");
             }
 
-            if (!type.IsDefined(typeof(System.FlagsAttribute), false)) {
+            if (!tagType.IsDefined(typeof(System.FlagsAttribute), false)) {
                 throw new System.ArgumentException("Tags Type must contains System.FlagsAttribute and all values declared as power of 2.");
             }
 
-            TagType = type;
-            _noneTag = (System.Enum) System.Enum.ToObject(TagType, 0);
-            foreach (System.Enum enumValue in System.Enum.GetValues(TagType)) {
-                System.Enum tag = (System.Enum) System.Enum.ToObject(TagType, enumValue);
+            foreach (System.Enum enumValue in System.Enum.GetValues(tagType)) {
+                BitTag tag = enumValue;
                 _collidersByTag.Add(tag, new List<Body>());
-                _collisionTagTable.Add(tag, new HashSet<System.Enum>());
+                _collisionTagTable.Add(tag, new HashSet<BitTag>());
             }
         }
 
         public void ClearTags() {
-            TagType = null;
-            _noneTag = null;
             _collidersByTag.Clear();
             _collisionTagTable.Clear();
         }
 
-        public System.Enum GetCollidableTags(System.Enum tags) {
-            return (System.Enum) System.Enum.ToObject(TagType, GetCollidableTagsAsNumber(tags));
+        public BitTag GetCollidableTags(BitTag tags) {
+            BitTag collidableTags = BitTag.None;
+
+            foreach (BitTag tag in tags) {
+                foreach (BitTag collidableTag in _collisionTagTable[tag]) {
+                    collidableTags += collidableTag;
+                }
+            }
+
+            return collidableTags;
         }
 
-        public void RegisterCollision(System.Enum tagA, System.Enum tagB) {
+        public void RegisterCollision(BitTag tagA, BitTag tagB) {
             ValidateTag(tagA, "tagA");
             ValidateTag(tagB, "tagB");
-
-            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
-                throw new System.ArgumentException($"Can't register a collision with special tag '{_noneTag}'.");
-            }
+            Debug.Assert(tagA != BitTag.None && tagB != BitTag.None, $"Can't register a collision with tag None.");
 
             _collisionTagTable[tagA].Add(tagB);
             _collisionTagTable[tagB].Add(tagA);
         }
 
-        public void RemoveCollision(System.Enum tagA, System.Enum tagB) {
+        public void RemoveCollision(BitTag tagA, BitTag tagB) {
             ValidateTag(tagA, "tagA");
             ValidateTag(tagB, "tagB");
 
-            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
+#if DEBUG
+            if (tagA == BitTag.None || tagB == BitTag.None) {
                 return;
             }
+#endif
 
             _collisionTagTable[tagA].Remove(tagB);
             _collisionTagTable[tagB].Remove(tagA);
         }
 
-        public bool IsCollidable(System.Enum tagA, System.Enum tagB) {
+        public bool IsCollidable(BitTag tagA, BitTag tagB) {
             ValidateTag(tagA, "tagA");
             ValidateTag(tagB, "tagB");
 
-            if (tagA.Equals(_noneTag) || tagB.Equals(_noneTag)) {
+#if DEBUG
+            if (tagA == BitTag.None || tagB == BitTag.None) {
                 return false;
             }
+#endif
 
             return _collisionTagTable[tagA].Contains(tagB);
         }
 
         public void ClearCollisions() {
-            foreach (HashSet<System.Enum> collisionTags in _collisionTagTable.Values) {
+            foreach (HashSet<BitTag> collisionTags in _collisionTagTable.Values) {
                 collisionTags.Clear();
             }
         }
 
-        public void SetCollisions(Dictionary<System.Enum, System.Array> collisions) {
-            foreach (HashSet<System.Enum> collidedTags in _collisionTagTable.Values) {
+        public void SetCollisions(Dictionary<BitTag, System.Array> collisions) {
+            foreach (HashSet<BitTag> collidedTags in _collisionTagTable.Values) {
                 collidedTags.Clear();
             }
 
-            foreach (KeyValuePair<System.Enum, System.Array> tagCollision in collisions) {
-                foreach (System.Enum otherTag in tagCollision.Value) {
+            foreach (KeyValuePair<BitTag, System.Array> tagCollision in collisions) {
+                foreach (BitTag otherTag in tagCollision.Value) {
                     RegisterCollision(tagCollision.Key, otherTag);
                 }
             }
         }
 
         public void AddCollider(Body collider) {
-            foreach (System.Enum tag in collider.Tags.GetFlagValues()) {
+            foreach (BitTag tag in collider.Tags) {
                 AddCollider(collider, tag);
             }
 
@@ -221,7 +220,7 @@ namespace Raccoon {
         }
 
         public void RemoveCollider(Body collider) {
-            foreach (System.Enum tag in collider.Tags.GetFlagValues()) {
+            foreach (BitTag tag in collider.Tags) {
                 RemoveCollider(collider, tag);
             }
 
@@ -236,29 +235,27 @@ namespace Raccoon {
             _colliders.Clear();
         }
 
-        public void UpdateColliderTagsEntry(Body collider, System.Enum oldTags = null) {
-            if (oldTags == null) {
-                foreach (KeyValuePair<System.Enum, List<Body>> tagColliders in _collidersByTag) {
+        public void UpdateColliderTagsEntry(Body collider, BitTag oldTags = default(BitTag)) {
+            if (oldTags == BitTag.All || oldTags == BitTag.None) {
+                foreach (KeyValuePair<BitTag, List<Body>> tagColliders in _collidersByTag) {
                     tagColliders.Value.Remove(collider);
                 }
             } else {
-                List<System.Enum> oldTagsList = oldTags.GetFlagValues();
-                foreach (System.Enum oldTag in oldTagsList) {
+                foreach (BitTag oldTag in oldTags) {
                     RemoveCollider(collider, oldTag);
                 }
             }
 
-            List<System.Enum> tags = collider.Tags.GetFlagValues();
-            foreach (System.Enum tag in tags) {
+            foreach (BitTag tag in collider.Tags) {
                 AddCollider(collider, tag);
             }
         }
 
-        public int GetCollidersCount(System.Enum tag) {
+        public int GetCollidersCount(BitTag tag) {
             ValidateTag(tag);
 
             int collidersCount = 0;
-            foreach (System.Enum t in tag.GetFlagValues()) {
+            foreach (BitTag t in tag) {
                 collidersCount += _collidersByTag[t].Count;
             }
 
@@ -267,12 +264,12 @@ namespace Raccoon {
 
         public override string ToString() {
             string info = $"Physics:\n  Colliders: {_colliders.Count}\n  Collision Tag Table:\n";
-            foreach (KeyValuePair<System.Enum, HashSet<System.Enum>> tagCollisionTable in _collisionTagTable) {
+            foreach (KeyValuePair<BitTag, HashSet<BitTag>> tagCollisionTable in _collisionTagTable) {
                 info += $"    {tagCollisionTable.Key} => {string.Join(", ", tagCollisionTable.Value)}\n"; 
             }
 
             info += "  Colliders By Tag:\n";
-            foreach (KeyValuePair<System.Enum, List<Body>> tagColliders in _collidersByTag) {
+            foreach (KeyValuePair<BitTag, List<Body>> tagColliders in _collidersByTag) {
                 info += $"    {tagColliders.Key}: {tagColliders.Value.Count}\n";
             }
 
@@ -281,13 +278,13 @@ namespace Raccoon {
 
         #region Queries [Single Output]
 
-        public bool QueryCollision(IShape shape, Vector2 position, System.Enum tags, out Contact[] contacts) {
-            if (tags.Equals(_noneTag)) {
+        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out Contact[] contacts) {
+            if (tags == BitTag.None) {
                 contacts = null;
                 return false;
             }
 
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -305,14 +302,14 @@ namespace Raccoon {
             return false;
         }
 
-        public bool QueryCollision(IShape shape, Vector2 position, System.Enum tags, out Body collidedCollider, out Contact[] contacts) {
-            if (tags.Equals(_noneTag)) {
+        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out Body collidedCollider, out Contact[] contacts) {
+            if (tags == BitTag.None) {
                 collidedCollider = null;
                 contacts = null;
                 return false;
             }
 
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -332,14 +329,14 @@ namespace Raccoon {
             return false;
         }
 
-        public bool QueryCollision<T>(IShape shape, Vector2 position, System.Enum tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
-            if (tags.Equals(_noneTag)) {
+        public bool QueryCollision<T>(IShape shape, Vector2 position, BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
+            if (tags == BitTag.None) {
                 collidedEntity = null;
                 contacts = null;
                 return false;
             }
 
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -363,14 +360,14 @@ namespace Raccoon {
 
         #region Queries [Multiple Output]
 
-        public bool QueryMultipleCollision(IShape shape, Vector2 position, System.Enum tags, out List<(Body collider, Contact[] contact)> collidedColliders) {
-            if (tags.Equals(_noneTag)) {
+        public bool QueryMultipleCollision(IShape shape, Vector2 position, BitTag tags, out List<(Body collider, Contact[] contact)> collidedColliders) {
+            if (tags == BitTag.None) {
                 collidedColliders = null;
                 return false;
             }
 
             collidedColliders = new List<(Body, Contact[])>();
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == shape) {
@@ -386,14 +383,14 @@ namespace Raccoon {
             return collidedColliders.Count > 0;
         }
 
-        public bool QueryMultipleCollision<T>(IShape shape, Vector2 position, System.Enum tags, out List<(T entity, Contact[] contact)> collidedEntities) where T : Entity {
-            if (tags.Equals(_noneTag)) {
+        public bool QueryMultipleCollision<T>(IShape shape, Vector2 position, BitTag tags, out List<(T entity, Contact[] contact)> collidedEntities) where T : Entity {
+            if (tags == BitTag.None) {
                 collidedEntities = null;
                 return false;
             }
 
             collidedEntities = new List<(T, Contact[])>();
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == shape) {
@@ -414,10 +411,10 @@ namespace Raccoon {
 
         #region Raycast [Single Output]
 
-        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Body collidedCollider, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out Body collidedCollider, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
             collidedCollider = null;
 
-            if (tags.Equals(_noneTag)) {
+            if (tags == BitTag.None) {
                 contacts = null;
                 return false;
             }
@@ -432,7 +429,7 @@ namespace Raccoon {
             };
 
             Vector2[] axes, shapeAxes;
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -503,11 +500,11 @@ namespace Raccoon {
             return false;
         }
 
-        public bool Raycast(Vector2 position, Vector2 direction, System.Enum tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
             return Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance);
         }
 
-        public bool Raycast<T>(Vector2 position, Vector2 direction, System.Enum tags, out T collidedEntity, out Contact[] contacts, float maxDistance = float.PositiveInfinity) where T : Entity {
+        public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out T collidedEntity, out Contact[] contacts, float maxDistance = float.PositiveInfinity) where T : Entity {
             if (Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance)
               && collidedCollider.Entity is T entity) {
                 collidedEntity = entity;
@@ -522,10 +519,10 @@ namespace Raccoon {
 
         #region Raycast [Multiple Output]
 
-        public bool RaycastMultiple(Vector2 position, Vector2 direction, System.Enum tags, out List<(Body body, Contact[] contacts)> collidedBodies, float maxDistance = float.PositiveInfinity) {
+        public bool RaycastMultiple(Vector2 position, Vector2 direction, BitTag tags, out List<(Body body, Contact[] contacts)> collidedBodies, float maxDistance = float.PositiveInfinity) {
             collidedBodies = new List<(Body body, Contact[] contacts)>();
 
-            if (tags.Equals(_noneTag)) {
+            if (tags == BitTag.None) {
                 return false;
             }
 
@@ -537,7 +534,7 @@ namespace Raccoon {
             };
 
             Vector2[] axes, shapeAxes;
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -568,10 +565,10 @@ namespace Raccoon {
         }
 
 
-        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, System.Enum tags, out List<(T entity, Contact[] contacts)> collidedEntities, float maxDistance = float.PositiveInfinity) where T : Entity {
+        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities, float maxDistance = float.PositiveInfinity) where T : Entity {
             collidedEntities = new List<(T entity, Contact[] contacts)>();
 
-            if (tags.Equals(_noneTag)) {
+            if (tags == BitTag.None) {
                 return false;
             }
 
@@ -583,7 +580,7 @@ namespace Raccoon {
             };
 
             Vector2[] axes, shapeAxes;
-            foreach (System.Enum tag in tags.GetFlagValues()) {
+            foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -693,8 +690,8 @@ namespace Raccoon {
                 Vector2 nextPosition = body.Integrate(dt);
 
                 // prepare collidable tags
-                long bodyCollidableTags = GetCollidableTagsAsNumber(body.Tags),
-                     movementCollidableTags = body.Movement == null ? 0L : System.Convert.ToInt64(body.Movement.CollisionTags);
+                BitTag bodyCollidableTags = GetCollidableTags(body.Tags),
+                       movementCollidableTags = body.Movement == null ? BitTag.None : body.Movement.CollisionTags;
 
                 // initial body vars
                 int currentX = (int) body.Position.X,
@@ -772,13 +769,12 @@ namespace Raccoon {
                                                     currentY + movementY
                                                 ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
 
-                    if (!bodyCollidableTags.Equals(_noneTag) || !movementCollidableTags.Equals(_noneTag)) {
+                    if (bodyCollidableTags != BitTag.None || movementCollidableTags != BitTag.None) {
                         for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
                             Body otherBody = _narrowPhaseBodies[k];
-                            long otherBodyTags = System.Convert.ToInt64(otherBody.Tags);
 
-                            bool isBodyCollidable     = (otherBodyTags & bodyCollidableTags)     != 0L,
-                                 isMovementCollidable = (otherBodyTags & movementCollidableTags) != 0L;
+                            bool isBodyCollidable     = otherBody.Tags.HasAny(bodyCollidableTags),
+                                 isMovementCollidable = otherBody.Tags.HasAny(movementCollidableTags);
 
                             // checks if otherBody tags contains at least one body or movement collidable tag
                             if (!isBodyCollidable && !isMovementCollidable) {
@@ -882,7 +878,7 @@ namespace Raccoon {
 #endif
         }
 
-        private void AddCollider(Body collider, System.Enum tag) {
+        private void AddCollider(Body collider, BitTag tag) {
             List<Body> collidersByTag = _collidersByTag[tag];
             if (collidersByTag.Contains(collider)) {
                 return;
@@ -891,7 +887,7 @@ namespace Raccoon {
             collidersByTag.Add(collider);
         }
 
-        private void RemoveCollider(Body collider, System.Enum tag) {
+        private void RemoveCollider(Body collider, BitTag tag) {
             ValidateTag(tag);
             _collidersByTag[tag].Remove(collider);
         }
@@ -908,30 +904,16 @@ namespace Raccoon {
             return CheckCollision(A.Shape, A.Position, B.Shape, B.Position, out contacts);
         }
 
-        private void ValidateTag(System.Enum tag, string paramName = "tag") {
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void ValidateTag(BitTag tag, string paramName = "tag") {
             if (!HasTag(tag)) {
-                throw new System.ArgumentException($"Tag '{tag}' not found on Tag Type {TagType.Name}.", paramName);
+                throw new System.ArgumentException($"Tag '{tag}' not found.", paramName);
             }
-        }
-
-        private bool IsSingleTag(System.Enum tags) {
-            return Math.IsPowerOfTwo(System.Convert.ToInt64(tags));
         }
 
         #endregion Private Methods
 
         #region Internal Methods
-
-        internal long GetCollidableTagsAsNumber(System.Enum tags) {
-            long tagsValue = 0;
-            foreach (System.Enum tag in tags.GetFlagValues()) {
-                foreach (System.Enum collidableTag in _collisionTagTable[tag]) {
-                    tagsValue |= System.Convert.ToInt64(collidableTag);
-                }
-            }
-
-            return tagsValue;
-        }
 
 #if DEBUG
         internal void ClearTimers() {
