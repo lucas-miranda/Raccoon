@@ -54,32 +54,29 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+            BasicShader bs = Game.Instance.BasicShader;
 
-            BasicEffect effect = Game.Instance.BasicEffect;
-            effect.TextureEnabled = true;
-            effect.Texture = Texture.XNATexture;
-            float[] colorNormalized = (color * Color).Normalized;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            effect.Alpha = Opacity;
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
-            effect.Projection = Renderer.Projection;
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
+            //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color * Color, Opacity);
+
+            // texture
+            bs.TextureEnabled = true;
+            bs.Texture = Texture;
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
+            foreach (var pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Sections * 2);
             }
 
-            effect.Alpha = 1f;
-            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
-            effect.Texture = null;
-            effect.TextureEnabled = false;
+            bs.ResetParameters();
         }
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
@@ -88,26 +85,27 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            scroll += Scroll;
-            scroll = scroll.LengthSquared() == 0f ? new Vector2(Util.Math.Epsilon) : scroll;
-            Microsoft.Xna.Framework.Matrix scrollMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(scroll.X, scroll.Y, 1f);
+            BasicShader bs = Game.Instance.BasicShader;
 
-            BasicEffect effect = Game.Instance.BasicEffect;
-            float[] colorNormalized = color.Normalized;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
-            effect.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
-            effect.Projection = Renderer.Projection;
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color, 1f);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
+            foreach (var pass in bs) {
                 device.Indices = _debug_indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
                 device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, Sections * 6 - 1);
             }
 
-            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            bs.ResetParameters();
 #endif
         }
 

@@ -68,6 +68,7 @@
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Strip.cs" />
+    <Compile Include="Graphics\Shaders\BasicShader.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Extensions\EnumTest.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />
@@ -185,7 +186,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="BasicEffect.xnb" />
     <None Include="packages.config" />
     <None Include="x86\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

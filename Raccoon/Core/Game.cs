@@ -217,12 +217,12 @@ namespace Raccoon {
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
         internal SpriteBatch MainSpriteBatch { get; private set; }
-        internal BasicEffect BasicEffect { get; private set; }
+        internal BasicShader BasicShader { get; private set; }
         internal Canvas DebugCanvas { get; private set; }
         internal List<Renderer> Surfaces { get; private set; } = new List<Renderer>();
         internal Microsoft.Xna.Framework.Color XNABackgroundColor { get; private set; }
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
-        internal ResourceContentManager AdditionalResourceContentManager { get; private set; }
+        internal ResourceContentManager DefaultResourceContentManager { get; private set; }
 
         #endregion Internal Properties
 
@@ -606,18 +606,16 @@ namespace Raccoon {
             };
 
             // default content
-            AdditionalResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
-            StdFont = new Font(AdditionalResourceContentManager.Load<SpriteFont>("Zoomy"));
-            BasicEffect = new BasicEffect(GraphicsDevice) {
-                VertexColorEnabled = true
-            };
+            DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
+            StdFont = new Font(DefaultResourceContentManager.Load<SpriteFont>("Zoomy"));
+            BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
 
             Initialize();
         }
 
         private void InternalUnloadContent() {
             Scene.UnloadContent();
-            AdditionalResourceContentManager.Unload();
+            DefaultResourceContentManager.Unload();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();
         }

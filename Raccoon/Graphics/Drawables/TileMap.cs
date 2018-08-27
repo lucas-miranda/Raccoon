@@ -51,31 +51,31 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            BasicEffect effect = Game.Instance.BasicEffect;
-            effect.TextureEnabled = true;
-            effect.Texture = Texture.XNATexture;
-            float[] colorNormalized = (color * Color).Normalized;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            effect.Alpha = Opacity;
+            BasicShader bs = Game.Instance.BasicShader;
 
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
                 * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
                 * Renderer.World;
 
-            effect.View = Renderer.View;
-            effect.Projection = Renderer.Projection;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.DiffuseColor = color * Color;
+            bs.Alpha = Opacity;
+
+            // texture
+            bs.TextureEnabled = true;
+            bs.Texture = Texture;
             
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
+            foreach (var pass in bs) {
                 Game.Instance.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
             }
 
-            effect.Alpha = 1f;
-            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
-            effect.Texture = null;
-            effect.TextureEnabled = false;
+            bs.ResetParameters();
         }
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
@@ -187,7 +187,10 @@ namespace Raccoon.Graphics {
         }
 
         public uint GetTile(int x, int y) {
-            if (!ExistsTileAt(x, y)) throw new System.ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
+            if (!ExistsTileAt(x, y)) {
+                throw new System.ArgumentException($"x ({x}) or y ({y}) out of bounds [0 0 {Columns} {Rows}]");
+            }
+
             return Data[y * Columns + x];
         }
 
@@ -195,7 +198,7 @@ namespace Raccoon.Graphics {
             area = Math.Clamp(area, new Rectangle(0, 0, Columns, Rows));
 
             int i = 0;
-            uint[] tiles = new uint[(int) (area.Area)];
+            uint[] tiles = new uint[(int) area.Area];
             for (int y = (int) area.Top; y < area.Bottom; y++) {
                 for (int x = (int) area.Left; x < area.Right; x++) {
                     tiles[i] = GetTile(x, y);
@@ -207,7 +210,9 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTile(int x, int y, uint gid) {
-            if (!ExistsTileAt(x, y)) throw new System.ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
+            if (!ExistsTileAt(x, y)) {
+                throw new System.ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
+            }
 
             int tileId = (y * Columns + x) * 6;
             Data[y * Columns + x] = gid;

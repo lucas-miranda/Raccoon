@@ -56,43 +56,40 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            BasicEffect effect = Game.Instance.BasicEffect;
-            float[] colorNormalized = (color * Color).Normalized;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
-            effect.Alpha = Opacity;
+            BasicShader bs = Game.Instance.BasicShader;
 
-            effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
                 * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
                 * Renderer.World;
 
-            effect.View = Renderer.View;
-            effect.Projection = Renderer.Projection;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color * Color, Opacity);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
             device.Indices = _indexBuffer;
             device.SetVertexBuffer(_vertexBuffer);
 
             // grid
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
+            foreach (var pass in bs) {
                 device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
             }
 
             // borders
             if (_useBorderColor) {
-                colorNormalized = (color * BorderColor).Normalized;
-                effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(colorNormalized[0], colorNormalized[1], colorNormalized[2]);
+                bs.DiffuseColor = color * BorderColor;
             }
 
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
+            foreach (var pass in bs) {
                 device.DrawIndexedPrimitives(PrimitiveType.LineStrip, _usingVerticesCount - 4, _usingIndicesCount - 8, 8);
             }
 
-            effect.Alpha = 1f;
-            effect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+            bs.ResetParameters();
         }
 
         public void Setup(int columns, int rows, Size tileSize) {

@@ -19,17 +19,17 @@
         public Line Equation { get { return new Line(From, To); } }
 
         public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            var effect = Game.Instance.BasicEffect;
-            effect.World = Renderer.World;
-            effect.View = Renderer.View;
-            effect.Projection = Renderer.Projection;
-            var c = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            c *= new Microsoft.Xna.Framework.Vector3(Color.R / 255f, Color.G / 255f, Color.B / 255f);
-            effect.DiffuseColor = c;
-            effect.Alpha = Opacity;
+            BasicShader bs = Game.Instance.BasicShader;
 
-            foreach (Microsoft.Xna.Framework.Graphics.EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
-                pass.Apply();
+            // transformations
+            bs.World = Renderer.World;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color * Color, Opacity);
+
+            foreach (var pass in bs) {
                 Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
                     new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
                         new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White),
@@ -37,9 +37,7 @@
                     }, 0, 1);
             }
 
-            effect.Alpha = 1f;
-            effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f);
-            effect.World = Game.Instance.BasicEffect.View = Game.Instance.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
+            bs.ResetParameters();
         }
 
         public override void Dispose() { }

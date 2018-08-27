@@ -16,12 +16,6 @@ namespace Raccoon.Graphics.Primitives {
                 return;
             }
 
-            Game.Instance.BasicEffect.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Game.Instance.MainRenderer.World;
-            Game.Instance.BasicEffect.View = Game.Instance.MainRenderer.View;
-            Game.Instance.BasicEffect.Projection = Game.Instance.MainRenderer.Projection;
-            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
-            Game.Instance.BasicEffect.Alpha = Opacity;
-
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[Shape.VertexCount * 2];
             for (int i = 0; i < Shape.VertexCount; i++) {
                 Vector2 vertex = Shape[i], nextVertex = Shape[(i + 1) % Shape.VertexCount];
@@ -29,12 +23,21 @@ namespace Raccoon.Graphics.Primitives {
                 vertices[i * 2 + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(nextVertex.X - Origin.X, nextVertex.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White);
             }
 
-            Game.Instance.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, Shape.VertexCount);
+            BasicShader bs = Game.Instance.BasicShader;
 
-            Game.Instance.BasicEffect.Alpha = 1f;
-            Game.Instance.BasicEffect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1f, 1f, 1f);
-            Game.Instance.BasicEffect.World = Game.Instance.BasicEffect.View = Game.Instance.BasicEffect.Projection = Microsoft.Xna.Framework.Matrix.Identity;
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Game.Instance.MainRenderer.World;
+            bs.View = Game.Instance.MainRenderer.View;
+            bs.Projection = Game.Instance.MainRenderer.Projection;
+
+            // material
+            bs.SetMaterial(color, Opacity);
+
+            foreach (var pass in bs) {
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, Shape.VertexCount);
+            }
+
+            bs.ResetParameters();
         }
 
         public override void Dispose() { }

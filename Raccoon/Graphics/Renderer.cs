@@ -19,8 +19,6 @@ namespace Raccoon.Graphics {
 
         private static Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState> _blendstates = new Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState>();
 
-        private Vector2 _scale = Vector2.One;
-
         #endregion Private Members
 
         #region Constructors
@@ -295,28 +293,25 @@ namespace Raccoon.Graphics {
 
             //Matrix scrollMatrix = Matrix.CreateScale(scroll.X, scroll.Y, 1f);
 
-            BasicEffect effect = Game.Instance.BasicEffect;
+            BasicShader bs = Game.Instance.BasicShader;
 
+            // transformations
             scale = new Vector2(scale.X / (UnitToPixels * PixelScale), scale.Y / (UnitToPixels * PixelScale));
-            effect.World = Matrix.CreateScale(scale.X, scale.Y, 1f)
+            bs.World = Matrix.CreateScale(scale.X, scale.Y, 1f)
                 * Matrix.CreateTranslation(-origin.X * scale.X, -origin.Y * scale.Y, 0f)
                 * Matrix.CreateRotationZ(rotation)
                 * Matrix.CreateTranslation(position.X, position.Y, 0f) 
                 * World;
 
             //effect.View = Matrix.Invert(scrollMatrix) * View * scrollMatrix;
-            effect.View = View;
+            bs.View = View;
 
-            effect.Projection = Projection;
+            bs.Projection = Projection;
                 //* Matrix.CreateScale(1f / Scale.X, 1f / Scale.Y, 1f);
 
-            effect.TextureEnabled = true;
-
-            foreach (EffectPass pass in Game.Instance.BasicEffect.CurrentTechnique.Passes) {
-                pass.Apply();
-            }
-
-            effect.TextureEnabled = false;
+            bs.TextureEnabled = true;
+            bs.Apply();
+            bs.ResetParameters();
 
             if (shader != null) {
                 shader.Apply();

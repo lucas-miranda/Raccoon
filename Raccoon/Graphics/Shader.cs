@@ -1,12 +1,18 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System.Collections;
+using System.Collections.Generic;
+
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    public class Shader {
+    public class Shader : IEnumerable {
         #region Constructors
 
         public Shader(string filename) {
             Load(filename);
+        }
+
+        internal Shader(Effect effect) {
+            XNAEffect = effect;
         }
 
         #endregion Constructors
@@ -14,25 +20,27 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public int TechniqueCount { get { return XNAEffect.Techniques.Count; } }
-        public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } }
+        public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } set { XNAEffect.CurrentTechnique = XNAEffect.Techniques[value]; } }
 
         #endregion Public Properties
 
         #region Internal Properties
 
-        internal Effect XNAEffect { get; set; }
+        internal protected Effect XNAEffect { get; set; }
 
         #endregion Internal Properties
 
         #region Public Methods
 
         public void Apply() {
+            OnApply();
             foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
                 pass.Apply();
             }
         }
 
         public void Apply(int passId) {
+            OnApply();
             XNAEffect.CurrentTechnique.Passes[passId].Apply();
         }
 
@@ -123,9 +131,29 @@ namespace Raccoon.Graphics {
             XNAEffect.Parameters[name].SetValue(value.XNATexture);
         }
 
+        /*
+        public IEnumerator<EffectPass> GetEnumerator() {
+            OnApply();
+            foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
+                yield return pass;
+            }
+        }
+        */
+
+        public IEnumerator GetEnumerator() {
+            OnApply();
+            foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
+                pass.Apply();
+                yield return null;
+            }
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
+
+        protected virtual void OnApply() {
+        }
 
         protected void Load(string filename) {
             if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
@@ -134,11 +162,9 @@ namespace Raccoon.Graphics {
 
             XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(filename);
 
-            if (XNAEffect == null) throw new NullReferenceException($"Shader '{filename}' not found");
-            
-            /*if (XNAEffect.Techniques.Count > 0) {
-                XNAEffect.CurrentTechnique = XNAEffect.Techniques[0];
-            }*/
+            if (XNAEffect == null) {
+                throw new System.NullReferenceException($"Shader '{filename}' not found");
+            }
         }
 
         #endregion Protected Methods
