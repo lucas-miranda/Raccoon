@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace Raccoon.Util {
-    public struct BitTag : System.IEquatable<BitTag>, IEnumerable, IEnumerable<BitTag> {
+    public struct BitTag : System.IEquatable<BitTag>, IEnumerable<BitTag>, IEnumerable {
         #region Public Members
 
         public static readonly BitTag None = new BitTag(0UL),
@@ -22,6 +22,17 @@ namespace Raccoon.Util {
         public BitTag(System.Enum flags) {
             LiteralValue = (ulong) System.Convert.ToInt64(flags);
             EnumType = flags.GetType();
+        }
+
+        public BitTag(ulong flags, System.Type enumType) : this() {
+            if (enumType == null || !enumType.IsEnum) {
+                LiteralValue = flags;
+                EnumType = null;
+                return;
+            }
+
+            LiteralValue = flags;
+            EnumType = enumType;
         }
 
         public BitTag(ulong flags) {
@@ -104,10 +115,10 @@ namespace Raccoon.Util {
 
         public override string ToString() {
             if (EnumType != null) {
-                return $"{EnumType.Name}: {System.Enum.ToObject(EnumType, LiteralValue)}";
+                return $"{System.Enum.ToObject(EnumType, LiteralValue)}";
             }
 
-            return $"Flags: {System.Convert.ToString((long) LiteralValue, 2)}";
+            return $"{System.Convert.ToString((long) LiteralValue, 2)}";
         }
 
         #endregion Public Methods
@@ -163,23 +174,23 @@ namespace Raccoon.Util {
         }
 
         public static BitTag operator ~(BitTag tag) {
-            return new BitTag(~tag.LiteralValue);
+            return new BitTag(~tag.LiteralValue, tag.EnumType);
         }
 
         public static BitTag operator &(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue & r.LiteralValue);
+            return new BitTag(l.LiteralValue & r.LiteralValue, l.EnumType);
         }
 
         public static BitTag operator |(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue | r.LiteralValue);
+            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType);
         }
 
         public static BitTag operator +(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue | r.LiteralValue);
+            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType);
         }
 
         public static BitTag operator -(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue & ~r.LiteralValue);
+            return new BitTag(l.LiteralValue & ~r.LiteralValue, l.EnumType);
         }
 
         #endregion Operators

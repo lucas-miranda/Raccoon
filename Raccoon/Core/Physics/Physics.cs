@@ -161,8 +161,13 @@ namespace Raccoon {
 
             foreach (System.Enum enumValue in System.Enum.GetValues(tagType)) {
                 BitTag tag = enumValue;
+
+                if (tag == BitTag.None) {
+                    continue;
+                }
+
                 _collidersByTag.Add(tag, new List<Body>());
-                _collisionTagTable.Add(tag, BitTag.None);
+                _collisionTagTable.Add(tag, new BitTag(0, tagType));
             }
         }
 
@@ -172,7 +177,7 @@ namespace Raccoon {
         }
 
         public BitTag GetCollidableTags(BitTag tags) {
-            BitTag collidableTags = BitTag.None;
+            BitTag collidableTags = new BitTag(0, tags.EnumType);
 
             foreach (BitTag tag in tags) {
                 collidableTags += _collisionTagTable[tag];
@@ -230,7 +235,7 @@ namespace Raccoon {
             _collisionTagTable.Keys.CopyTo(keys, 0);
 
             foreach (BitTag collisionTag in keys) {
-                _collisionTagTable[collisionTag] = BitTag.None;
+                _collisionTagTable[collisionTag] = new BitTag(0, collisionTag.EnumType);
             }
         }
 
