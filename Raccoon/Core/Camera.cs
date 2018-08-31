@@ -155,10 +155,6 @@ namespace Raccoon {
                 _previousProjectionSize = projectionSize;
                 
                 Game.Instance.MainRenderer.Projection = _projection;
-
-#if DEBUG
-                Game.Instance.DebugRenderer.Projection = _projection;
-#endif
             }
 
             Vector3 cameraPos = new Vector3(Position, 0f),
@@ -167,10 +163,6 @@ namespace Raccoon {
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out _view);
 
             Game.Instance.MainRenderer.View = _view;
-
-#if DEBUG
-            Game.Instance.DebugRenderer.View = _view;
-#endif
         }
 
         #endregion Private Members

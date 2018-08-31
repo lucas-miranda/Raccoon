@@ -159,12 +159,6 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            Vector2 scale = Vector2.One;
-
-            if (Camera.Current != null) {
-                scale = new Vector2(1f / (Camera.Current.Zoom * Game.Instance.PixelScale));
-            }
-
             _background.Render(Renderer.ConvertScreenToWorld(Vector2.Zero), 0f, Game.Instance.WindowSize.ToVector2());
 
             // total messages
@@ -173,7 +167,7 @@ namespace Raccoon {
                 _messages.Count.ToString(), 
                 Renderer.ConvertScreenToWorld(new Vector2(Game.Instance.WindowWidth - 25, 15)), 
                 0f, 
-                scale, 
+                Vector2.One, 
                 ImageFlip.None, 
                 Color.White, 
                 Vector2.Zero, 
@@ -190,7 +184,7 @@ namespace Raccoon {
                     (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), 
                     Renderer.ConvertScreenToWorld(messagePos), 
                     0f, 
-                    scale,
+                    Vector2.One,
                     ImageFlip.None,
                     message.Color,
                     Vector2.Zero,

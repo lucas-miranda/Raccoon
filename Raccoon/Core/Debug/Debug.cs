@@ -172,17 +172,19 @@ namespace Raccoon {
         #region String
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
-            if (Camera.Current != null) {
-                Vector2? s = new Vector2(scale);
-                CalculateScaleCorrection(Camera.Current, ref s);
-                scale = s.Value.X;
+        public static void DrawString(Camera camera, Vector2 position, string message, Color? color = null, float scale = 1f) {
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
             }
 
             Game.Instance.DebugRenderer.DrawString(
                 Game.Instance.StdFont, 
                 message, 
-                position, 
+                zoom * (-cameraPos + position), 
                 0, 
                 scale, 
                 ImageFlip.None, 
@@ -193,27 +195,8 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Camera camera, Vector2 position, string message, Color? color = null, float scale = 1f) {
-            if (camera == null) {
-                DrawString(position, message, color, scale);
-                return;
-            }
-
-            Vector2? s = new Vector2(scale);
-            CalculateScaleCorrection(camera, ref s);
-            scale = s.Value.X;
-
-            Game.Instance.DebugRenderer.DrawString(
-                Game.Instance.StdFont, 
-                message, 
-                camera.ConvertScreenToWorld(position), 
-                0, 
-                scale, 
-                ImageFlip.None, 
-                color ?? Color.White, 
-                Vector2.Zero, 
-                Vector2.One
-            );
+        public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
+            DrawString(Camera.Current, position, message, color, scale);
         }
 
         [Conditional("DEBUG")]
@@ -256,11 +239,22 @@ namespace Raccoon {
         #region Line
 
         [Conditional("DEBUG")]
-        public static void DrawLine(Vector2 from, Vector2 to, Color color) {
+        public static void DrawLine(Camera camera, Vector2 from, Vector2 to, Color color) {
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
+
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Game.Instance.DebugRenderer.World;
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
+                * Game.Instance.DebugRenderer.World;
+
             bs.View = Game.Instance.DebugRenderer.View;
             bs.Projection = Game.Instance.DebugRenderer.Projection;
 
@@ -279,28 +273,23 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
+        public static void DrawLine(Camera camera, Vector2 from, Vector2 to) {
+            DrawLine(camera, from, to, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLine(Vector2 from, Vector2 to, Color color) {
+            DrawLine(Camera.Current, from, to, color); ;
+        }
+
+        [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to) {
-            DrawLine(from, to, Color.White);
+            DrawLine(Camera.Current, from, to, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLine(Line line, Color color) {
-            DrawLine(line.PointA, line.PointB, color);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawLine(Camera camera, Vector2 from, Vector2 to, Color color) {
-            if (camera == null) {
-                DrawLine(from, to, color);
-                return;
-            }
-
-            DrawLine(camera.ConvertScreenToWorld(from), camera.ConvertScreenToWorld(to), color);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawLine(Camera camera, Vector2 from, Vector2 to) {
-            DrawLine(camera, from, to, Color.White);
+            DrawLine(Camera.Current, line.PointA, line.PointB, color);
         }
 
         #endregion Line
@@ -308,9 +297,17 @@ namespace Raccoon {
         #region Lines
 
         [Conditional("DEBUG")]
-        public static void DrawLines(IList<Vector2> points, Color color, Vector2? origin = null) {
+        public static void DrawLines(Camera camera, IList<Vector2> points, Color color, Vector2? origin = null) {
             if (points == null || points.Count == 0) {
                 return;
+            }
+
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
             }
 
             if (!origin.HasValue) {
@@ -326,7 +323,8 @@ namespace Raccoon {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.Value.X, -origin.Value.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X - origin.Value.X, -cameraPos.Y - origin.Value.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
                 * Game.Instance.DebugRenderer.World;
 
             bs.View = Game.Instance.DebugRenderer.View;
@@ -343,31 +341,35 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawLines(IList<Vector2> points) {
-            DrawLines(points, Color.White);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawLines(Camera camera, IList<Vector2> points, Color color) {
-            if (camera == null) {
-                DrawLines(points, color);
-                return;
-            }
-
-            DrawLines(points, color, -camera.Position);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawLines(Camera camera, IList<Vector2> points) {
             DrawLines(camera, points, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(IList<Vector2> points, Color color, Vector2? origin = null) {
+            DrawLines(Camera.Current, points, color, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(IList<Vector2> points) {
+            DrawLines(Camera.Current, points, Color.White);
         }
 
         #endregion Line
 
         #region Rectangle
 
+
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
+
             Vector2 rotOrigin = Vector2.Zero;
 
             if (origin.HasValue) {
@@ -386,8 +388,13 @@ namespace Raccoon {
             // transformations
             bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.Value.X, scale.Value.Y, 1f)
                 * Microsoft.Xna.Framework.Matrix.CreateTranslation(-rotOrigin.X, -rotOrigin.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Util.Math.ToRadians(rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(rectangle.X + rotOrigin.X - origin.Value.X, rectangle.Y + rotOrigin.Y - origin.Value.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(
+                    -cameraPos.X + rotOrigin.X + rectangle.X - origin.Value.X, 
+                    -cameraPos.Y + rotOrigin.Y + rectangle.Y - origin.Value.Y,
+                    0f
+                )
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
                 * Game.Instance.DebugRenderer.World;
 
             bs.View = Game.Instance.DebugRenderer.View;
@@ -411,24 +418,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(rectangle, Color.White, rotation, scale, origin);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            if (camera == null) {
-                DrawRectangle(rectangle, color, rotation, scale, origin);
-                return;
-            }
-
-            CalculateScaleCorrection(camera, ref scale);
-            DrawRectangle(new Rectangle(camera.ConvertScreenToWorld(rectangle.Position), rectangle.Size), color, rotation, scale, origin);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawRectangle(Camera camera, Rectangle rectangle, float rotation, Vector2? scale = null, Vector2? origin = null) {
             DrawRectangle(camera, rectangle, Color.White, rotation, scale, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
+            DrawRectangle(Camera.Current, rectangle, color, rotation, scale, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawRectangle(Rectangle rectangle, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
+            DrawRectangle(Camera.Current, rectangle, Color.White, rotation, scale, origin);
         }
 
         #endregion Rectangle
@@ -436,8 +437,16 @@ namespace Raccoon {
         #region Circle
 
         [Conditional("DEBUG")]
-        public static void DrawCircle(Vector2 center, float radius, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
+        public static void DrawCircle(Camera camera, Vector2 center, float radius, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
+
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
 
             if (segments <= 0) {
                 segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
@@ -452,7 +461,8 @@ namespace Raccoon {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(center.X, center.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X + center.X, -cameraPos.Y + center.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
                 * Game.Instance.DebugRenderer.World;
 
             bs.View = Game.Instance.DebugRenderer.View;
@@ -485,33 +495,6 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawCircle(Vector2 center, float radius, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(center, radius, Color.White, segments, dashed, rotation);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawCircle(Circle circle, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(circle.Center, circle.Radius, color, segments, dashed, rotation);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawCircle(Circle circle, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(circle.Center, circle.Radius, Color.White, segments, dashed, rotation);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawCircle(Camera camera, Vector2 center, float radius, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
-            if (camera == null) {
-                DrawCircle(center, radius, color, segments, dashed, rotation);
-                return;
-            }
-
-            Vector2? scale = Vector2.One;
-            CalculateScaleCorrection(camera, ref scale);
-            DrawCircle(camera.ConvertScreenToWorld(center), radius * scale.Value.X, color, segments, dashed, rotation);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawCircle(Camera camera, Vector2 center, float radius, int segments = 0, bool dashed = false, float rotation = 0) {
             DrawCircle(camera, center, radius, segments, dashed, rotation);
         }
@@ -521,13 +504,41 @@ namespace Raccoon {
             DrawCircle(camera, circle.Center, circle.Radius, segments, dashed, rotation);
         }
 
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Vector2 center, float radius, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
+            DrawCircle(Camera.Current, center, radius, color, segments, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Vector2 center, float radius, int segments = 0, bool dashed = false, float rotation = 0) {
+            DrawCircle(Camera.Current, center, radius, Color.White, segments, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Circle circle, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
+            DrawCircle(Camera.Current, circle.Center, circle.Radius, color, segments, dashed, rotation);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawCircle(Circle circle, int segments = 0, bool dashed = false, float rotation = 0) {
+            DrawCircle(Camera.Current, circle.Center, circle.Radius, Color.White, segments, dashed, rotation);
+        }
+
         #endregion Circle
 
         #region Arc
 
         [Conditional("DEBUG")]
-        public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, Color color, int segments = 0) {
+        public static void DrawArc(Camera camera, Vector2 center, float radius, float startAngle, float arcAngle, Color color, int segments = 0) {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
+
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
 
             if (segments <= 1) {
                 segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
@@ -542,7 +553,8 @@ namespace Raccoon {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(center.X, center.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X + center.X, -cameraPos.Y + center.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
                 * Game.Instance.DebugRenderer.World;
 
             bs.View = Game.Instance.DebugRenderer.View;
@@ -570,25 +582,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments = 0) {
-            DrawArc(center, radius, startAngle, arcAngle, Color.White, segments);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawArc(Camera camera, Vector2 center, float radius, float startAngle, float arcAngle, Color color, int segments = 0) {
-            if (camera == null) {
-                DrawArc(center, radius, startAngle, arcAngle, color, segments);
-                return;
-            }
-
-            Vector2? scale = Vector2.One;
-            CalculateScaleCorrection(camera, ref scale);
-            DrawArc(camera.ConvertScreenToWorld(center), radius * scale.Value.X, startAngle, arcAngle, color, segments);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawArc(Camera camera, Vector2 center, float radius, float startAngle, float arcAngle, int segments = 0) {
             DrawArc(camera, center, radius, startAngle, arcAngle, Color.White, segments);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, Color color, int segments = 0) {
+            DrawArc(Camera.Current, center, radius, startAngle, arcAngle, color, segments);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments = 0) {
+            DrawArc(Camera.Current, center, radius, startAngle, arcAngle, Color.White, segments);
         }
 
         #endregion Arc
@@ -596,11 +601,22 @@ namespace Raccoon {
         #region Triangle
 
         [Conditional("DEBUG")]
-        public static void DrawTriangle(Triangle triangle, Color color) {
+        public static void DrawTriangle(Camera camera, Triangle triangle, Color color) {
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
+
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Game.Instance.DebugRenderer.World;
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
+                * Game.Instance.DebugRenderer.World;
+
             bs.View = Game.Instance.DebugRenderer.View;
             bs.Projection = Game.Instance.DebugRenderer.Projection;
 
@@ -621,29 +637,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawTriangle(Triangle triangle) {
-            DrawTriangle(triangle, Color.White);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawTriangle(Camera camera, Triangle triangle, Color color) {
-            if (camera == null) {
-                DrawTriangle(triangle, color);
-                return;
-            }
-
-            Triangle t = new Triangle(
-                camera.ConvertScreenToWorld(triangle.A),
-                camera.ConvertScreenToWorld(triangle.B),
-                camera.ConvertScreenToWorld(triangle.C)
-            );
-
-            DrawTriangle(t, color);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawTriangle(Camera camera, Triangle triangle) {
             DrawTriangle(camera, triangle, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Triangle triangle, Color color) {
+            DrawTriangle(Camera.Current, triangle, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Triangle triangle) {
+            DrawTriangle(Camera.Current, triangle, Color.White);
         }
 
         #endregion Triangle
@@ -651,35 +656,12 @@ namespace Raccoon {
         #region Polygon
 
         [Conditional("DEBUG")]
-        public static void DrawPolygon(Polygon polygon, Color color) {
+        public static void DrawPolygon(Camera camera, Polygon polygon, Color color) {
             Vector2[] points = new Vector2[polygon.VertexCount + 1];
             polygon.Vertices.CopyTo(points, 0);
             points[points.Length - 1] = points[0];
 
-            DrawLines(points, color);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawPolygon(Polygon polygon) {
-            DrawPolygon(polygon, Color.White);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawPolygon(Camera camera, Polygon polygon, Color color) {
-            if (camera == null) {
-                DrawPolygon(polygon, color);
-                return;
-            }
-
-            Vector2[] points = new Vector2[polygon.VertexCount + 1];
-
-            for (int i = 0; i < polygon.VertexCount; i++) {
-                points[i] = camera.ConvertScreenToWorld(polygon.Vertices[i]);
-            }
-
-            points[points.Length - 1] = camera.ConvertScreenToWorld(polygon.Vertices[0]);
-
-            DrawLines(points, color);
+            DrawLines(camera, points, color);
         }
 
         [Conditional("DEBUG")]
@@ -687,18 +669,37 @@ namespace Raccoon {
             DrawPolygon(camera, polygon, Color.White);
         }
 
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Polygon polygon, Color color) {
+            DrawPolygon(Camera.Current, polygon, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Polygon polygon) {
+            DrawPolygon(Camera.Current, polygon, Color.White);
+        }
+
         #endregion Polygon
 
         #region Grid
 
         [Conditional("DEBUG")]
-        public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position, Color color) {
+        public static void DrawGrid(Camera camera, Size tileSize, int columns, int rows, Vector2 position, Color color) {
             Assert(columns > 0 && rows > 0, "Columns and Rows must be greater than zero.");
+
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
 
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X + position.X, -cameraPos.Y + position.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
                 * Game.Instance.DebugRenderer.World;
 
             bs.View = Game.Instance.DebugRenderer.View;
@@ -750,25 +751,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position) {
-            DrawGrid(tileSize, columns, rows, position, Color.White);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawGrid(Camera camera, Size tileSize, int columns, int rows, Vector2 position, Color color) {
-            if (camera == null) {
-                DrawGrid(tileSize, columns, rows, position, color);
-                return;
-            }
-
-            Vector2? scale = Vector2.One;
-            CalculateScaleCorrection(camera, ref scale);
-            DrawGrid(tileSize * scale.Value, columns, rows, camera.ConvertScreenToWorld(position), color);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawGrid(Camera camera, Size tileSize, int columns, int rows, Vector2 position) {
             DrawGrid(camera, tileSize, columns, rows, position, Color.White);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position, Color color) {
+            DrawGrid(Camera.Current, tileSize, columns, rows, position, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position) {
+            DrawGrid(Camera.Current, tileSize, columns, rows, position, Color.White);
         }
 
         #endregion Grid
@@ -776,11 +770,22 @@ namespace Raccoon {
         #region Bezier Curve
 
         [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Vector2[] points, Color color, float step = .1f) {
+        public static void DrawBezierCurve(Camera camera, Vector2[] points, Color color, float step = .1f) {
+            Vector2 cameraPos = Vector2.Zero;
+            float zoom = 1f;
+
+            if (camera != null) {
+                cameraPos = camera.Position;
+                zoom = Game.Instance.PixelScale * camera.Zoom;
+            }
+
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Game.Instance.DebugRenderer.World;
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
+                * Game.Instance.DebugRenderer.World;
+
             bs.View = Game.Instance.DebugRenderer.View;
             bs.Projection = Game.Instance.DebugRenderer.Projection;
 
@@ -795,14 +800,14 @@ namespace Raccoon {
                 for (int i = 0; i < steps; i++) {
                     Vector2 point = Math.BezierCurve(points[0], points[1], points[2], t);
                     vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
-                    t = Util.Math.Approach(t, 1f, step);
+                    t = Math.Approach(t, 1f, step);
                 }
             } else if (points.Length == 4) {
                 float t = 0f;
                 for (int i = 0; i < steps; i++) {
                     Vector2 point = Math.BezierCurve(points[0], points[1], points[2], points[3], t);
                     vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
-                    t = Util.Math.Approach(t, 1f, step);
+                    t = Math.Approach(t, 1f, step);
                 }
             }
 
@@ -814,28 +819,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Vector2[] points, float step = .1f) {
-            DrawBezierCurve(points, Color.White, step);
-        }
-
-        [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Camera camera, Vector2[] points, Color color, float step = .1f) {
-            if (camera == null) {
-                DrawBezierCurve(points, color, step);
-                return;
-            }
-
-            Vector2[] correctedPoints = new Vector2[points.Length];
-            for (int i = 0; i < points.Length; i++) {
-                correctedPoints[i] = camera.ConvertScreenToWorld(points[i]);
-            }
-
-            DrawBezierCurve(correctedPoints, color, step);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawBezierCurve(Camera camera, Vector2[] points, float step = .1f) {
             DrawBezierCurve(camera, points, Color.White, step);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawBezierCurve(Vector2[] points, Color color, float step = .1f) {
+            DrawBezierCurve(Camera.Current, points, color, step);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawBezierCurve(Vector2[] points, float step = .1f) {
+            DrawBezierCurve(Camera.Current, points, Color.White, step);
         }
 
         #endregion Bezier Curve
@@ -961,24 +956,6 @@ namespace Raccoon {
         }
 
         #endregion Internal Static Methods
-
-        #region Private Methods
-
-        private static void CalculateScaleCorrection(Camera camera, ref Vector2? scale) {
-            if (scale == null) {
-                scale = Vector2.One;
-            }
-
-            float d = camera.Zoom * Game.Instance.PixelScale;
-
-            if (Math.EqualsEstimate(d, 0f)) {
-                d = Math.Epsilon;
-            }
-
-            scale *= 1f / d;
-        }
-
-        #endregion Private Methods
 
         #region Class Message
 

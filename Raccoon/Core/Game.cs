@@ -618,12 +618,12 @@ namespace Raccoon {
             Render();
 
             foreach (Renderer surface in Instance.Surfaces) {
-                PrepareShader();
+                PrepareShader(MainRenderer);
                 surface.End();
                 CleanupShader();
             }
 
-            PrepareShader();
+            PrepareShader(MainRenderer);
             MainRenderer.End();
             CleanupShader();
 
@@ -637,7 +637,7 @@ namespace Raccoon {
 
             DebugRender(metrics);
 
-            PrepareShader();
+            PrepareShader(DebugRenderer);
             DebugRenderer.End();
             CleanupShader();
 #endif
@@ -656,9 +656,9 @@ namespace Raccoon {
             _fpsCount++;
         }
 
-        private void PrepareShader() {
-            BasicShader.View = MainRenderer.View;
-            BasicShader.Projection = MainRenderer.Projection;
+        private void PrepareShader(Renderer renderer) {
+            BasicShader.View = renderer.View;
+            BasicShader.Projection = renderer.Projection;
             BasicShader.TextureEnabled = true;
             BasicShader.UpdateParameters();
         }
