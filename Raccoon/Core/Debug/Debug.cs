@@ -975,7 +975,7 @@ namespace Raccoon {
                 d = Math.Epsilon;
             }
 
-            scale *= Game.Instance.DebugRenderer.PixelScale / d;
+            scale *= 1f / d;
         }
 
         #endregion Private Methods

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using Raccoon.Util;
-
 namespace Raccoon.Graphics {
     public enum BlendState {
         AlphaBlend,
@@ -37,7 +35,7 @@ namespace Raccoon.Graphics {
 
             BlendState = blendState;
             SpriteBatch = new SpriteBatch(Game.Instance.GraphicsDevice);
-            Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, 1f);
+            Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
         }
 
         #endregion Constructors
@@ -45,8 +43,6 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public BlendState BlendState { get; private set; }
-        public int UnitToPixels { get; set; } = 1;
-        public float PixelScale { get; set; } = 1f;
 
         #endregion Public Properties
 
@@ -86,34 +82,31 @@ namespace Raccoon.Graphics {
         #region Draw Texture on Destination Rectangle
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(destinationRectangle.Position, Math.ToRadians(rotation), new Vector2(PixelScale), origin, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), 
+                destinationRectangle,
                 sourceRectangle, 
                 color, 
-                0f, 
-                Vector2.Zero, 
+                rotation, 
+                origin, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(destinationRectangle.Position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), 
+                destinationRectangle,
                 sourceRectangle, 
                 color
             );
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(destinationRectangle.Position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                new Microsoft.Xna.Framework.Rectangle(0, 0, (int) destinationRectangle.Width, (int) destinationRectangle.Height), 
+                destinationRectangle,
                 color
             );
         }
@@ -127,50 +120,46 @@ namespace Raccoon.Graphics {
         #region Draw Texture with Position
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), scale * PixelScale, origin, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 sourceRectangle, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                Microsoft.Xna.Framework.Vector2.One, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), new Vector2(scale * PixelScale), origin, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 sourceRectangle, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                1f, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 sourceRectangle, 
                 color
             );
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.Draw(
                 texture.XNATexture, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color
             );
         }
@@ -184,41 +173,38 @@ namespace Raccoon.Graphics {
         #region Draw Text from String
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), scale * PixelScale, origin, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                Microsoft.Xna.Framework.Vector2.One, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), new Vector2(scale * PixelScale), origin, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                1f, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color
             );
         }
@@ -232,41 +218,38 @@ namespace Raccoon.Graphics {
         #region Draw Text from StringBuilder
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), scale * PixelScale, origin, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                Microsoft.Xna.Framework.Vector2.One, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            Prepare(position, Math.ToRadians(rotation), new Vector2(scale * PixelScale), origin, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                1f, 
+                rotation, 
+                origin, 
+                scale, 
                 (SpriteEffects) flip, 
                 0f
             );
         }
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
-            Prepare(position, 0f, new Vector2(PixelScale), Vector2.Zero, scroll, shader);
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
+                position, 
                 color
             );
         }
@@ -281,45 +264,8 @@ namespace Raccoon.Graphics {
 
         #region Internal Methods
 
-        internal void Prepare(Vector2 position, float rotation, Vector2 scale, Vector2 origin, Vector2 scrollFactor, Shader shader = null) {
-            Vector2 scroll = scrollFactor;
-
-            // HACK: to ensure graphic will be rendered
-            if (scroll.X == 0f && scroll.Y == 0f) {
-                scroll = new Vector2(Math.Epsilon);
-            }
-
-            //position = Math.Round(position); // HACK: Do this using a pixel-perfect shader
-
-            //Matrix scrollMatrix = Matrix.CreateScale(scroll.X, scroll.Y, 1f);
-
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            scale = new Vector2(scale.X / (UnitToPixels * PixelScale), scale.Y / (UnitToPixels * PixelScale));
-            bs.World = Matrix.CreateScale(scale.X, scale.Y, 1f)
-                * Matrix.CreateTranslation(-origin.X * scale.X, -origin.Y * scale.Y, 0f)
-                * Matrix.CreateRotationZ(rotation)
-                * Matrix.CreateTranslation(position.X, position.Y, 0f) 
-                * World;
-
-            //effect.View = Matrix.Invert(scrollMatrix) * View * scrollMatrix;
-            bs.View = View;
-
-            bs.Projection = Projection;
-                //* Matrix.CreateScale(1f / Scale.X, 1f / Scale.Y, 1f);
-
-            bs.TextureEnabled = true;
-            bs.Apply();
-            bs.ResetParameters();
-
-            if (shader != null) {
-                shader.Apply();
-            }
-        }
-
-        internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null) {
-            SpriteBatch.Begin(sortMode, _blendstates[BlendState], samplerState, depthStencilState, rasterizerState, effect, null);
+        internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null, Matrix? transform = null) {
+            SpriteBatch.Begin(sortMode, _blendstates[BlendState], samplerState, depthStencilState, rasterizerState, effect, transform);
         }
 
         internal void End() {

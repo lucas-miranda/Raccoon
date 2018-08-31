@@ -156,21 +156,7 @@ namespace Raccoon.Graphics {
             Alpha = diffuseColor.A / 255f;
         }
 
-        public void ResetParameters() {
-            World = View = Projection = Matrix.Identity;
-            DiffuseColor = Color.White;
-            Alpha = 1f;
-            TextureEnabled = false;
-            Texture = null;
-        }
-
-        #endregion Public Methods
-
-        #region Protected Methods
-
-        protected override void OnApply() {
-            base.OnApply();
-
+        public void UpdateParameters() {
             if (_dirtyFlags.Has(DirtyFlags.WorldViewProjection)) {
                 Matrix.Multiply(ref _world, ref _view, out Matrix worldView);
                 Matrix.Multiply(ref worldView, ref _projection, out Matrix worldViewProjection);
@@ -203,6 +189,23 @@ namespace Raccoon.Graphics {
 
                 _dirtyFlags -= DirtyFlags.TechniqueIndex;
             }
+        }
+
+        public void ResetParameters() {
+            World = View = Projection = Matrix.Identity;
+            DiffuseColor = Color.White;
+            Alpha = 1f;
+            TextureEnabled = false;
+            Texture = null;
+        }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void OnApply() {
+            base.OnApply();
+            UpdateParameters();
         }
 
         #endregion Protected Methods

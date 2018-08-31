@@ -41,7 +41,6 @@ namespace Raccoon {
 #endif
 
         // rendering
-        private int _unitsToPixel;
         private float _pixelScale;
 
         // resolution mode
@@ -168,25 +167,9 @@ namespace Raccoon {
             }
         }
 
-        public int UnitToPixels {
-            get {
-                return MainRenderer != null ? MainRenderer.UnitToPixels : _unitsToPixel;
-            }
-
-            set {
-                _unitsToPixel = value;
-
-                if (!IsRunning) {
-                    return;
-                }
-
-                MainRenderer.UnitToPixels = DebugRenderer.UnitToPixels = _unitsToPixel;
-            }
-        }
-
         public float PixelScale {
             get {
-                return MainRenderer != null ? MainRenderer.PixelScale : _pixelScale;
+                return _pixelScale;
             }
 
             set {
@@ -199,7 +182,7 @@ namespace Raccoon {
                     return;
                 }
 
-                MainRenderer.PixelScale = _pixelScale;
+                MainCanvas.Resize(Size);
             }
         }
 
@@ -581,7 +564,7 @@ namespace Raccoon {
             }
 
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
-            MainCanvas = new Canvas(WindowWidth, WindowHeight, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents);
+            MainCanvas = new Canvas(Width, Height, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents);
 
 #if DEBUG
             DebugCanvas = new Canvas(WindowWidth, WindowHeight, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents);
@@ -596,14 +579,8 @@ namespace Raccoon {
 
             RenderTargetStack.Push(MainCanvas.XNARenderTarget);
 
-            DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
-                UnitToPixels = UnitToPixels
-            };
-
-            MainRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
-                UnitToPixels = UnitToPixels,
-                PixelScale = PixelScale
-            };
+            DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend);
+            MainRenderer = new Renderer(Graphics.BlendState.AlphaBlend);
 
             // default content
             DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
@@ -632,17 +609,23 @@ namespace Raccoon {
             GraphicsDevice.SetRenderTarget(MainCanvas.XNARenderTarget);
             GraphicsDevice.Clear(XNABackgroundColor);
 
-            MainRenderer.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            MainRenderer.Begin(SpriteSortMode.Texture, SamplerState.PointClamp, DepthStencilState.Default, null, BasicShader.XNAEffect, null);
+
             foreach (Renderer surface in Instance.Surfaces) {
-                surface.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+                surface.Begin(SpriteSortMode.Texture, SamplerState.PointClamp, DepthStencilState.Default, null, BasicShader.XNAEffect, null);
             }
             
             Render();
 
-            MainRenderer.End();
             foreach (Renderer surface in Instance.Surfaces) {
+                PrepareShader();
                 surface.End();
+                CleanupShader();
             }
+
+            PrepareShader();
+            MainRenderer.End();
+            CleanupShader();
 
 #if DEBUG
             GraphicsMetrics metrics = GraphicsDevice.Metrics;
@@ -650,25 +633,38 @@ namespace Raccoon {
             // debug render
             GraphicsDevice.SetRenderTarget(DebugCanvas.XNARenderTarget);
             GraphicsDevice.Clear(Color.Transparent);
-            DebugRenderer.Begin(SpriteSortMode.Immediate, SamplerState.PointClamp, null, null, null);
+            DebugRenderer.Begin(SpriteSortMode.Texture, SamplerState.PointClamp, null, null, BasicShader.XNAEffect, null);
 
             DebugRender(metrics);
 
+            PrepareShader();
             DebugRenderer.End();
+            CleanupShader();
 #endif
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
             //GraphicsDevice.Clear(ClearOptions.Target, Game.Instance.Core.BackgroundColor, 0f, 0);
             GraphicsDevice.Clear(Color.Black);
-            MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
-            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
+            MainSpriteBatch.Begin(SpriteSortMode.Texture, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero,  null, Color.White, 0f, Microsoft.Xna.Framework.Vector2.Zero, new Microsoft.Xna.Framework.Vector2(4f), SpriteEffects.None, 0f);
 #if DEBUG
             MainSpriteBatch.Draw(DebugCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
 #endif
             MainSpriteBatch.End();
 
             _fpsCount++;
+        }
+
+        private void PrepareShader() {
+            BasicShader.View = MainRenderer.View;
+            BasicShader.Projection = MainRenderer.Projection;
+            BasicShader.TextureEnabled = true;
+            BasicShader.UpdateParameters();
+        }
+
+        private void CleanupShader() {
+            BasicShader.ResetParameters();
         }
 
         #endregion Private Methods

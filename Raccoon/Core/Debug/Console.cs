@@ -162,7 +162,7 @@ namespace Raccoon {
             Vector2 scale = Vector2.One;
 
             if (Camera.Current != null) {
-                scale = new Vector2(Renderer.PixelScale / (Camera.Current.Zoom * Game.Instance.MainRenderer.PixelScale));
+                scale = new Vector2(1f / (Camera.Current.Zoom * Game.Instance.PixelScale));
             }
 
             _background.Render(Renderer.ConvertScreenToWorld(Vector2.Zero), 0f, Game.Instance.WindowSize.ToVector2());

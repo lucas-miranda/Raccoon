@@ -1,6 +1,6 @@
-﻿using Raccoon.Graphics;
+﻿using Microsoft.Xna.Framework;
 
-using Microsoft.Xna.Framework;
+using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -13,9 +13,13 @@ namespace Raccoon {
 
         #region Private Members
 
+
         private Vector2 _position;
         private float _zoom = 1f;
         private bool _needViewRefresh;
+        private Vector3 _cameraUpVector = Vector3.Up;
+        private Matrix _projection, _view;
+        private Size _previousProjectionSize;
 
         #endregion Private Members
 
@@ -65,19 +69,18 @@ namespace Raccoon {
             }
 
             set {
-                _zoom = Math.Max(value, 0f);
+                if (_zoom == value) {
+                    return;
+                }
+
+                float previousZoom = _zoom;
+                _zoom = Math.Max(value, Math.Epsilon);
                 _needViewRefresh = true;
+                OnZoom(previousZoom, _zoom);
             }
         }
 
         #endregion Public Properties
-
-        #region Internal Properties
-
-        internal Matrix Projection { get; private set; }
-        internal Matrix View { get; private set; }
-
-        #endregion Internal Properties
 
         #region Public Methods
 
@@ -112,8 +115,8 @@ namespace Raccoon {
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
             Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
                 new Vector3(screenPosition, 0f), 
-                Projection, 
-                View, 
+                _projection, 
+                _view, 
                 Matrix.Identity
             ); 
  
@@ -123,8 +126,8 @@ namespace Raccoon {
         public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
             Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project( 
                 new Vector3(worldPosition, 0f), 
-                Projection, 
-                View, 
+                _projection, 
+                _view, 
                 Matrix.Identity
             ); 
  
@@ -146,19 +149,27 @@ namespace Raccoon {
             Vector2 scale = new Vector2(Zoom);
             float scaleFactor = 1f / (Zoom * Game.Instance.PixelScale);
 
-            Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth * scaleFactor, Game.Instance.WindowHeight * scaleFactor, 0f, 0f, 1f);
-
-            Vector3 cameraPos = new Vector3(Position, 0f);
-            View = Matrix.CreateLookAt(cameraPos, cameraPos + Vector3.Forward, Vector3.Up);
-
-            Renderer renderer = Game.Instance.MainRenderer;
-            renderer.View = View;
-            renderer.Projection = Projection;
+            Size projectionSize = new Size(Game.Instance.WindowWidth * scaleFactor, Game.Instance.WindowHeight * scaleFactor);
+            if (projectionSize != _previousProjectionSize) {
+                Matrix.CreateOrthographicOffCenter(0f, projectionSize.Width, projectionSize.Height, 0f, 0f, -1f, out _projection);
+                _previousProjectionSize = projectionSize;
+                
+                Game.Instance.MainRenderer.Projection = _projection;
 
 #if DEBUG
-            Renderer debugRenderer = Game.Instance.DebugRenderer;
-            debugRenderer.View = View;
-            debugRenderer.Projection = Projection;
+                Game.Instance.DebugRenderer.Projection = _projection;
+#endif
+            }
+
+            Vector3 cameraPos = new Vector3(Position, 0f),
+                    cameraTarget = cameraPos + Vector3.Forward;
+
+            Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out _view);
+
+            Game.Instance.MainRenderer.View = _view;
+
+#if DEBUG
+            Game.Instance.DebugRenderer.View = _view;
 #endif
         }
 
