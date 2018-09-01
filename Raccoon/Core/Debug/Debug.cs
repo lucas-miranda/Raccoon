@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 
@@ -167,6 +168,48 @@ namespace Raccoon {
             Trace.Fail(message, detailMessage);
         }
 
+        public static void Dump(params object[] vars) {
+            StringBuilder str = new StringBuilder(vars.Length);
+
+            foreach (object var in vars) {
+                str.AppendFormat("{0}, ", var.ToString());
+            }
+
+            Write(str.ToString());
+        }
+
+        public static void Dump(params (string, object)[] vars) {
+            StringBuilder str = new StringBuilder(vars.Length);
+
+            foreach ((string name, object value) in vars) {
+                str.AppendFormat("{0}: {1}, ", name, value.ToString());
+            }
+
+            Write(str.ToString());
+        }
+
+        public static void DumpLine(params object[] vars) {
+            StringBuilder str = new StringBuilder(vars.Length);
+
+            foreach (object var in vars) {
+                str.AppendFormat("{0}", var.ToString());
+                str.AppendLine();
+            }
+
+            Write(str.ToString());
+        }
+
+        public static void DumpLine(params (string, object)[] vars) {
+            StringBuilder str = new StringBuilder(vars.Length);
+
+            foreach ((string name, object value) in vars) {
+                str.AppendFormat("{0}: {1}", name, value.ToString());
+                str.AppendLine();
+            }
+
+            Write(str.ToString());
+        }
+
         #endregion Messages
 
         #region String
@@ -195,14 +238,14 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
-        public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
-            DrawString(Camera.Current, position, message, color, scale);
-        }
-
-        [Conditional("DEBUG")]
         public static void DrawString(Camera camera, string message, Color? color = null) {
             DrawString(camera, Instance._screenMessagePosition, message, color);
             Instance._screenMessagePosition -= new Vector2(0, Game.Instance.StdFont.LineSpacing + MessagesSpacing);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
+            DrawString(Camera.Current, position, message, color, scale);
         }
 
         [Conditional("DEBUG")]
