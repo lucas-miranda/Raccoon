@@ -2,8 +2,8 @@
 
 namespace Raccoon {
     internal class XNAGameWrapper : Microsoft.Xna.Framework.Game {
-
         #region Private Members
+
         private System.Action OnLoadContent, OnUnloadContent;
         private readonly System.Action<GameTime> OnUpdate, OnDraw;
 

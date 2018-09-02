@@ -201,10 +201,13 @@ namespace Raccoon {
         internal SpriteBatch MainSpriteBatch { get; private set; }
         internal BasicShader BasicShader { get; private set; }
         internal Canvas MainCanvas { get; private set; }
-        internal Canvas DebugCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
         internal ResourceContentManager DefaultResourceContentManager { get; private set; }
+
+#if DEBUG
+        internal Canvas DebugCanvas { get; private set; }
+#endif
 
         #endregion Internal Properties
 
@@ -309,19 +312,20 @@ namespace Raccoon {
             return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
         }
 
-        public Renderer AddRenderer(Renderer surface) {
-            if (!Renderers.Contains(surface)) {
-                Renderers.Add(surface);
+        public Renderer AddRenderer(Renderer renderer) {
+            if (!Renderers.Contains(renderer)) {
+                Renderers.Add(renderer);
+                renderer.RecalculateProjection();
             }
 
-            return surface;
+            return renderer;
         }
 
-        public void RemoveRenderer(Renderer surface) {
-            Renderers.Remove(surface);
+        public void RemoveRenderer(Renderer renderer) {
+            Renderers.Remove(renderer);
         }
 
-        public void ClearSurfaces() {
+        public void ClearRenderers() {
             Renderers.Clear();
         }
 
@@ -630,9 +634,10 @@ namespace Raccoon {
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(Color.Black);
 
-            MainSpriteBatch.Begin(SpriteSortMode.Texture, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
 
-            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, null, Color.White, 0f, Microsoft.Xna.Framework.Vector2.Zero, new Microsoft.Xna.Framework.Vector2(1f), SpriteEffects.None, 0f);
+            // TODO: Add a way to register custom canvas to render here (each one should have a ID for sorting)
+            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, null, Color.White, 0f, Microsoft.Xna.Framework.Vector2.Zero, new Microsoft.Xna.Framework.Vector2(PixelScale), SpriteEffects.None, 0f);
 
 #if DEBUG
             MainSpriteBatch.Draw(DebugCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
