@@ -66,6 +66,7 @@
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
+    <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Strip.cs" />
     <Compile Include="Graphics\Shaders\BasicShader.cs" />

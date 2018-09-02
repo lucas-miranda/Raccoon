@@ -2,7 +2,7 @@
 using Raccoon.Util;
 
 namespace Raccoon.Graphics.Primitives {
-    public class RectanglePrimitive : Graphic {
+    public class RectanglePrimitive : PrimitiveGraphic {
         #region Private Members
 
         private VertexBuffer _vertexBuffer;
@@ -72,38 +72,6 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
 
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.DiffuseColor = color * Color;
-            bs.Alpha = Opacity;
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (var pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-
-                if (Filled) {
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
-                } else {
-                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, 4);
-                }
-            }
-
-            bs.ResetParameters();
-        }
-
         public override void Dispose() { }
 
         public void Setup(Size size) {
@@ -155,6 +123,38 @@ namespace Raccoon.Graphics.Primitives {
             _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, 0f); 
 
             _vertexBuffer.SetData(_vertices);
+        }
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            BasicShader bs = Game.Instance.BasicShader;
+
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.DiffuseColor = color * Color;
+            bs.Alpha = Opacity;
+
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
+            foreach (var pass in bs) {
+                device.Indices = _indexBuffer;
+                device.SetVertexBuffer(_vertexBuffer);
+
+                if (Filled) {
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                } else {
+                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, 4);
+                }
+            }
+
+            bs.ResetParameters();
         }
 
         #endregion Protected Methods

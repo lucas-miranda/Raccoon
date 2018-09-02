@@ -1,6 +1,12 @@
 ﻿namespace Raccoon.Graphics.Primitives {
-    public class LinePrimitive : Graphic {
+    public class LinePrimitive : PrimitiveGraphic {
+        #region Private Members
+
         private Vector2 _to;
+
+        #endregion Private Members
+
+        #region Constructors
 
         public LinePrimitive(Vector2 from, Vector2 to, Color color) {
             From = from;
@@ -14,11 +20,25 @@
             Color = color;
         }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         public Vector2 From { get { return Position - Origin; } set { Position = value + Origin; } }
         public Vector2 To { get { return From + _to; } set { _to = value - From; } }
         public Line Equation { get { return new Line(From, To); } }
 
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        #endregion Public Properties
+
+        #region Public Methods
+
+        public override void Dispose() { }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
@@ -40,6 +60,6 @@
             bs.ResetParameters();
         }
 
-        public override void Dispose() { }
+        #endregion Protected Methods
     }
 }

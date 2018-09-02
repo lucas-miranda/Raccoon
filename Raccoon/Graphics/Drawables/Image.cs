@@ -65,9 +65,10 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value.Left < Texture.Bounds.Left || value.Top < Texture.Bounds.Top || value.Right > Texture.Bounds.Right || value.Bottom > Texture.Bounds.Bottom)
+                if (value.Left < Texture.Bounds.Left || value.Top < Texture.Bounds.Top || value.Right > Texture.Bounds.Right || value.Bottom > Texture.Bounds.Bottom) {
                     throw new ArgumentOutOfRangeException("SourceRegion", value, "Value must be within texture bounds");
-                
+                }
+
                 _sourceRegion = value;
             }
         }
@@ -78,8 +79,9 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                if (value.Left < 0 || value.Top < 0 || value.Right > _sourceRegion.Width || value.Bottom > _sourceRegion.Height)
+                if (value.Left < 0 || value.Top < 0 || value.Right > _sourceRegion.Width || value.Bottom > _sourceRegion.Height) {
                     throw new ArgumentOutOfRangeException("ClippingRegion", value, $"Value must be within source region bounds {_sourceRegion}");
+                }
 
                 _clippingRegion = value;
 
@@ -175,16 +177,6 @@ namespace Raccoon.Graphics {
 
         #endregion Primitives
 
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            base.Render(position, rotation, scale, flip, color, scroll, shader);
-            if (DestinationRegion.IsEmpty) {
-                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
-                return;
-            }
-
-            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
-        }
-
         public override void Dispose() {
             if (Texture == null) {
                 return;
@@ -197,6 +189,19 @@ namespace Raccoon.Graphics {
             return $"[Image | Position: {Position}, Texture: {Texture}]";
         }
 
-        #endregion
+        #endregion Public Methods
+
+        #region Protected Methods 
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            if (DestinationRegion.IsEmpty) {
+                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+                return;
+            }
+
+            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+        }
+
+        #endregion Protected Methods 
     }
 }

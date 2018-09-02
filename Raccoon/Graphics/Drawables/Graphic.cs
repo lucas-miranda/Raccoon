@@ -122,7 +122,7 @@
             Render(position, rotation, scale, flip, color, Vector2.Zero, Shader);
         }
 
-        public virtual void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
 #if DEBUG
             _lastPosition = position;
             _lastRotation = rotation;
@@ -131,6 +131,10 @@
             _lastColor = color;
             _lastScroll = scroll;
 #endif
+
+            BeforeDraw();
+            Draw(position, rotation, scale, flip, color, scroll, shader);
+            AfterDraw();
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
@@ -149,6 +153,14 @@
         #region Protected Methods
 
         protected virtual void Load() { }
+
+        protected virtual void BeforeDraw() {
+        }
+
+        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null);
+
+        protected virtual void AfterDraw() {
+        }
 
         #endregion Protected Methods
     }

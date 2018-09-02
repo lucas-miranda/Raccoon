@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 
 namespace Raccoon.Graphics.Primitives {
-    public class PolygonPrimitive : Graphic {
+    public class PolygonPrimitive : PrimitiveGraphic {
+        #region Constructors
+
         public PolygonPrimitive(Polygon polygon, Color color) {
             Shape = polygon;
             Color = color;
@@ -9,9 +11,23 @@ namespace Raccoon.Graphics.Primitives {
 
         public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Raccoon.Polygon(points), color) { }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         public Polygon Shape { get; set; }
 
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        #endregion Public Properties
+
+        #region Public Methods
+
+        public override void Dispose() { }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
             if (Shape.VertexCount == 0) {
                 return;
             }
@@ -40,6 +56,6 @@ namespace Raccoon.Graphics.Primitives {
             bs.ResetParameters();
         }
 
-        public override void Dispose() { }
+        #endregion Protected Methods
     }
 }

@@ -187,7 +187,7 @@ namespace Raccoon {
         }
 
         internal void Render() {
-            _background.Render(Renderer.ConvertScreenToWorld(Vector2.Zero), 0f, Game.Instance.WindowSize.ToVector2());
+            _background.Render(Vector2.Zero, 0f, Game.Instance.WindowSize.ToVector2());
 
             // total messages
             Renderer.DrawString(

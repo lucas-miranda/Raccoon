@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public class TileMap : Graphic {
+    public class TileMap : PrimitiveGraphic {
         #region Private Static Members
 
         private static readonly Regex GidRegex = new Regex(@"(\d+)");
@@ -45,38 +45,6 @@ namespace Raccoon.Graphics {
         #endregion Public Properties
 
         #region Public Methods
-
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            if (_vertices.Length == 0) {
-                return;
-            }
-
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.DiffuseColor = color * Color;
-            bs.Alpha = Opacity;
-
-            // texture
-            bs.TextureEnabled = true;
-            bs.Texture = Texture;
-            
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
-            }
-
-            bs.ResetParameters();
-        }
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
 #if DEBUG
@@ -352,6 +320,38 @@ namespace Raccoon.Graphics {
         protected override void Load() {
             _tileSetColumns = Texture.Width / (int) TileSize.Width;
             _tileSetRows = Texture.Height / (int) TileSize.Height;
+        }
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            if (_vertices.Length == 0) {
+                return;
+            }
+
+            BasicShader bs = Game.Instance.BasicShader;
+
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.DiffuseColor = color * Color;
+            bs.Alpha = Opacity;
+
+            // texture
+            bs.TextureEnabled = true;
+            bs.Texture = Texture;
+            
+            foreach (var pass in bs) {
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
+            }
+
+            bs.ResetParameters();
         }
 
         #endregion Protected Methods

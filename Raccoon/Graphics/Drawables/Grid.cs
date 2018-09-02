@@ -3,7 +3,7 @@
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public class Grid : Graphic {
+    public class Grid : PrimitiveGraphic {
         #region Private Members
 
         private DynamicVertexBuffer _vertexBuffer;
@@ -50,47 +50,6 @@ namespace Raccoon.Graphics {
         #endregion Public Properties
 
         #region Public Methods
-
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            if (Columns == 0 || Rows == 0 || TileSize.Area == 0) {
-                return;
-            }
-
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.SetMaterial(color * Color, Opacity);
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-            device.Indices = _indexBuffer;
-            device.SetVertexBuffer(_vertexBuffer);
-
-            // grid
-            foreach (var pass in bs) {
-                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
-            }
-
-            // borders
-            if (_useBorderColor) {
-                bs.DiffuseColor = color * BorderColor;
-            }
-
-            foreach (var pass in bs) {
-                device.DrawIndexedPrimitives(PrimitiveType.LineStrip, _usingVerticesCount - 4, _usingIndicesCount - 8, 8);
-            }
-
-            bs.ResetParameters();
-        }
 
         public void Setup(int columns, int rows, Size tileSize) {
             if (Columns == columns && Rows == rows && TileSize == tileSize) {
@@ -191,5 +150,50 @@ namespace Raccoon.Graphics {
         public override void Dispose() { }
 
         #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            if (Columns == 0 || Rows == 0 || TileSize.Area == 0) {
+                return;
+            }
+
+            BasicShader bs = Game.Instance.BasicShader;
+
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color * Color, Opacity);
+
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
+            device.Indices = _indexBuffer;
+            device.SetVertexBuffer(_vertexBuffer);
+
+            // grid
+            foreach (var pass in bs) {
+                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
+            }
+
+            // borders
+            if (_useBorderColor) {
+                bs.DiffuseColor = color * BorderColor;
+            }
+
+            foreach (var pass in bs) {
+                device.DrawIndexedPrimitives(PrimitiveType.LineStrip, _usingVerticesCount - 4, _usingIndicesCount - 8, 8);
+            }
+
+            bs.ResetParameters();
+        }
+
+        #endregion Protected Methods
     }
 }

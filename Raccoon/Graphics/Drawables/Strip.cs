@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    public class Strip : Image {
+    public class Strip : PrimitiveGraphic {
         #region Private Members
 
         private DynamicVertexBuffer _vertexBuffer;
@@ -16,20 +16,12 @@ namespace Raccoon.Graphics {
 
         #region Consctructors
 
-        public Strip(int sections, Texture texture) : base(texture) {
+        public Strip(int sections, Texture texture) {
+            Texture = texture;
             SetupSections(sections);
         }
 
-        public Strip(int sections, string filename) : base(filename) {
-            SetupSections(sections);
-        }
-
-        public Strip(int sections, AtlasSubTexture subTexture) : base(subTexture) {
-            SetupSections(sections);
-        }
-
-        public Strip(int sections, Image image) :  base(image) {
-            SetupSections(sections);
+        public Strip(int sections, string filename) : this(sections, new Texture(filename)) {
         }
 
         #endregion Consctructors
@@ -37,6 +29,7 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public Vector2 Alignment { get; set; } = new Vector2(0f, .5f);
+        public Texture Texture { get; set; }
 
         #endregion Public Properties
         
@@ -48,36 +41,6 @@ namespace Raccoon.Graphics {
         #endregion Protected Properties
 
         #region Public Methods
-
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            if (Sections == 0) {
-                return;
-            }
-
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
-            //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.SetMaterial(color * Color, Opacity);
-
-            // texture
-            bs.TextureEnabled = true;
-            bs.Texture = Texture;
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (var pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Sections * 2);
-            }
-
-            bs.ResetParameters();
-        }
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
 #if DEBUG
@@ -236,11 +199,53 @@ namespace Raccoon.Graphics {
             _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
         }
 
+        public override void Dispose() {
+            if (Texture == null) {
+                return;
+            }
+
+            Texture.Dispose();
+        }
+
         public override string ToString() {
             return $"[Strip | Position: {Position}, Texture: {Texture}]";
         }
 
         #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            if (Sections == 0) {
+                return;
+            }
+
+            BasicShader bs = Game.Instance.BasicShader;
+
+            // transformations
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
+            //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
+            bs.View = Renderer.View;
+            bs.Projection = Renderer.Projection;
+
+            // material
+            bs.SetMaterial(color * Color, Opacity);
+
+            // texture
+            bs.TextureEnabled = true;
+            bs.Texture = Texture;
+
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
+            foreach (var pass in bs) {
+                device.Indices = _indexBuffer;
+                device.SetVertexBuffer(_vertexBuffer);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Sections * 2);
+            }
+
+            bs.ResetParameters();
+        }
+
+        #endregion Protected Methods 
 
         #region Private Methods
 

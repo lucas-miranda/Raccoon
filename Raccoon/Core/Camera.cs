@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 
-using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -18,8 +17,6 @@ namespace Raccoon {
         private float _zoom = 1f;
         private bool _needViewRefresh;
         private Vector3 _cameraUpVector = Vector3.Up;
-        private Matrix _projection, _view;
-        private Size _previousProjectionSize;
 
         #endregion Private Members
 
@@ -112,28 +109,6 @@ namespace Raccoon {
 
         public virtual void DebugRender() { }
 
-        public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
-            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
-                new Vector3(screenPosition, 0f), 
-                _projection, 
-                _view, 
-                Matrix.Identity
-            ); 
- 
-            return new Vector2(worldPos.X, worldPos.Y); 
-        } 
- 
-        public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
-            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project( 
-                new Vector3(worldPosition, 0f), 
-                _projection, 
-                _view, 
-                Matrix.Identity
-            ); 
- 
-            return new Vector2(screenPos.X, screenPos.Y); 
-        } 
-
         #endregion Public Methods
 
         #region Protected Methods
@@ -146,22 +121,12 @@ namespace Raccoon {
         #region Private Members
 
         private void Refresh() {
-            Vector2 scale = new Vector2(Zoom);
-            float scaleFactor = 1f / (Zoom * Game.Instance.PixelScale);
-
-            Size projectionSize = new Size(Game.Instance.WindowWidth * scaleFactor, Game.Instance.WindowHeight * scaleFactor);
-            if (projectionSize != _previousProjectionSize) {
-                Matrix.CreateOrthographicOffCenter(0f, projectionSize.Width, projectionSize.Height, 0f, 0f, -1f, out _projection);
-                _previousProjectionSize = projectionSize;
-                
-                Game.Instance.MainRenderer.Projection = _projection;
-            }
+            Game.Instance.MainRenderer.RecalculateProjection();
 
             Vector3 cameraPos = new Vector3(Position, 0f),
                     cameraTarget = cameraPos + Vector3.Forward;
 
-            Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out _view);
-
+            Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
             Game.Instance.MainRenderer.View = _view;
         }
 

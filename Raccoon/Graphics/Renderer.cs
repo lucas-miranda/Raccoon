@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public enum BlendState {
@@ -13,9 +14,23 @@ namespace Raccoon.Graphics {
     }
 
     public class Renderer {
+        #region Public Members
+
+        public static readonly System.Func<Size> DefaultRecalculateProjectionSize = () => Game.Instance.WindowSize;
+
+        public System.Func<Size> RecalculateProjectionSize = DefaultRecalculateProjectionSize;
+
+        #endregion Public Members
+
         #region Private Members
 
         private static Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState> _blendstates = new Dictionary<BlendState, Microsoft.Xna.Framework.Graphics.BlendState>();
+
+        private Size _previousProjectionSize;
+
+        private Matrix _world = Matrix.Identity, 
+                       _view = Matrix.Identity, 
+                       _projection = Matrix.Identity;
 
         #endregion Private Members
 
@@ -35,7 +50,7 @@ namespace Raccoon.Graphics {
 
             BlendState = blendState;
             SpriteBatch = new SpriteBatch(Game.Instance.GraphicsDevice);
-            Projection = Matrix.CreateOrthographicOffCenter(0f, Game.Instance.WindowWidth, Game.Instance.WindowHeight, 0f, 0f, -1f);
+            RecalculateProjection();
         }
 
         #endregion Constructors
@@ -43,15 +58,49 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public BlendState BlendState { get; private set; }
+        public bool IsBatching { get; private set; }
 
         #endregion Public Properties
 
         #region Internal Properties
 
         internal SpriteBatch SpriteBatch { get; private set; }
-        internal Matrix World { get; set; } = Matrix.Identity;
-        internal Matrix View { get; set; } = Matrix.Identity;
-        internal Matrix Projection { get; set; } = Matrix.Identity;
+        internal SpriteSortMode LastSortMode { get; private set; }
+        internal SamplerState LastSamplerState { get; private set; }
+        internal DepthStencilState LastDepthStencilState { get; private set; }
+        internal RasterizerState LastRasterizerState { get; private set; }
+        internal Effect LastEffect { get; private set; }
+        internal Matrix? LastTransform { get; private set; }
+
+        internal Matrix World {
+            get {
+                return _world;
+            }
+
+            set {
+                _world = value;
+            }
+        }
+
+        internal Matrix View {
+            get {
+                return _view;
+            }
+
+            set {
+                _view = value;
+            }
+        }
+
+        internal Matrix Projection {
+            get {
+                return _projection;
+            }
+
+            set {
+                _projection = value;
+            }
+        }
 
         #endregion Internal Properties
 
@@ -79,6 +128,17 @@ namespace Raccoon.Graphics {
             return new Vector2(screenPos.X, screenPos.Y); 
         } 
 
+        public void RecalculateProjection() {
+            Size size = RecalculateProjectionSize();
+
+            if (size == _previousProjectionSize) {
+                return;
+            }
+
+            Matrix.CreateOrthographicOffCenter(0f, size.Width, size.Height, 0f, 0f, -1f, out _projection);
+            _previousProjectionSize = size;
+        }
+
         #region Draw Texture on Destination Rectangle
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
@@ -87,7 +147,7 @@ namespace Raccoon.Graphics {
                 destinationRectangle,
                 sourceRectangle, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 (SpriteEffects) flip, 
                 0f
@@ -125,7 +185,7 @@ namespace Raccoon.Graphics {
                 position, 
                 sourceRectangle, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -139,7 +199,7 @@ namespace Raccoon.Graphics {
                 position, 
                 sourceRectangle, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -178,7 +238,7 @@ namespace Raccoon.Graphics {
                 text, 
                 position, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -192,7 +252,7 @@ namespace Raccoon.Graphics {
                 text, 
                 position, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -223,7 +283,7 @@ namespace Raccoon.Graphics {
                 text, 
                 position, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -237,7 +297,7 @@ namespace Raccoon.Graphics {
                 text, 
                 position, 
                 color, 
-                rotation, 
+                Math.ToRadians(rotation), 
                 origin, 
                 scale, 
                 (SpriteEffects) flip, 
@@ -265,11 +325,32 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
         internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null, Matrix? transform = null) {
-            SpriteBatch.Begin(sortMode, _blendstates[BlendState], samplerState, depthStencilState, rasterizerState, effect, transform);
+            LastSortMode = sortMode;
+            LastSamplerState = samplerState;
+            LastDepthStencilState = depthStencilState;
+            LastRasterizerState = rasterizerState;
+            LastEffect = effect;
+            LastTransform = transform;
+
+            Begin();
+        }
+
+        internal void Begin() {
+            IsBatching = true;
+            SpriteBatch.Begin(
+                LastSortMode,
+                _blendstates[BlendState], 
+                LastSamplerState,
+                LastDepthStencilState,
+                LastRasterizerState,
+                LastEffect,
+                LastTransform
+            );
         }
 
         internal void End() {
             SpriteBatch.End();
+            IsBatching = false;
         }
 
         #endregion Internal Methods

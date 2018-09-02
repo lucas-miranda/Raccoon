@@ -1,13 +1,23 @@
 ﻿namespace Raccoon.Graphics.Transitions {
     public abstract class SceneTransition : Graphic {
+        #region Public Members
+
         public delegate void CallbackHandler();
         public event CallbackHandler OnStart;
         public event CallbackHandler OnEnd;
+
+        #endregion Public Members
+
+        #region Constructors
 
         protected SceneTransition(Graphic endGraphic) {
             EndGraphic = endGraphic;
             ElapsedTime = 0f;
         }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public Graphic EndGraphic { get; protected set; }
         public int RepeatTimes { get; set; }
@@ -17,9 +27,14 @@
         public bool Finished { get; private set; }
         public bool Reverse { get; set; }
 
+        #endregion Public Properties
+
+        #region Public Methods
+
         public override void Update(int delta) {
-            if (!Playing)
+            if (!Playing) {
                 return;
+            }
 
             float deltaSec = delta * Util.Time.MiliToSec;
             ElapsedTime += deltaSec;
@@ -50,10 +65,6 @@
             }
         }
 
-        public override void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            EndGraphic.Render(position, rotation, scale, flip, color, scroll, shader);
-        }
-
         public virtual void Play(int repeatTimes = 0) {
             Playing = true;
             Finished = false;
@@ -68,5 +79,15 @@
                 EndGraphic.Dispose();
             }
         }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+            EndGraphic.Render(position, rotation, scale, flip, color, scroll, shader);
+        }
+
+        #endregion Protected Methods
     }
 }

@@ -38,7 +38,7 @@ namespace Raccoon.Graphics {
 
         internal Texture(Texture2D texture) {
             XNATexture = texture;
-            Name = texture.Name;
+            Name = XNATexture.Name;
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;
         }
