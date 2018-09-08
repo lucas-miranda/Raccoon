@@ -166,7 +166,7 @@ namespace Raccoon.Components {
             }
         }
 
-        public virtual void OnCollide(Vector2 collisionAxes) {
+        public virtual void BeginCollision(Vector2 collisionAxes) {
             if (collisionAxes.Y < 0f) {
                 TouchedTop = true;
             } else if (collisionAxes.Y > 0f) {
@@ -180,7 +180,30 @@ namespace Raccoon.Components {
             }
         }
 
-        public virtual void OnBodyCollide(Body otherBody, Vector2 collisionAxes) {
+        public virtual void Collided(Vector2 collisionAxes) {
+            if (collisionAxes.Y < 0f) {
+                TouchedTop = true;
+            } else if (collisionAxes.Y > 0f) {
+                TouchedBottom = true;
+            }
+
+            if (collisionAxes.X < 0f) {
+                TouchedLeft = true;
+            } else if (collisionAxes.X > 0f) {
+                TouchedRight = true;
+            }
+        }
+
+        public virtual void EndCollision() {
+        }
+
+        public virtual void BeginBodyCollision(Body otherBody, Vector2 collisionAxes) {
+        }
+
+        public virtual void BodyCollided(Body otherBody, Vector2 collisionAxes) {
+        }
+
+        public virtual void EndBodyCollision(Body otherBody) {
         }
 
         public abstract Vector2 Integrate(float dt);

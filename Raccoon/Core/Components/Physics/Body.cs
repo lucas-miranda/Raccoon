@@ -2,6 +2,7 @@
 
 using Raccoon.Graphics;
 using Raccoon.Util;
+using Raccoon.Util.Collections;
 
 namespace Raccoon.Components {
     public class Body : Component {
@@ -12,7 +13,8 @@ namespace Raccoon.Components {
 #endif
 
         public static IMaterial StandardMaterial = new StandardMaterial();
-        public event System.Action<Body, Vector2> OnCollided;
+        public event System.Action<Body, Vector2> OnBeginCollision, OnCollided;
+        public event System.Action<Body> OnEndCollision;
 
         #endregion Public Members
 
@@ -22,6 +24,9 @@ namespace Raccoon.Components {
         private Movement _movement;
         private BitTag _tags = BitTag.None;
         private bool _isPhysicsActive;
+
+        private List<Body> _collisionList = new List<Body>();
+        private HashSet<Body> _currentUpdateCollisionList = new HashSet<Body>();
 
         #endregion Private Members
 
@@ -177,12 +182,25 @@ namespace Raccoon.Components {
 
         public void PhysicsUpdate(float dt) {
             LastPosition = Position;
+            _currentUpdateCollisionList.Clear();
+
             if (Movement != null) {
                 Movement.PhysicsUpdate(dt);
             }
         }
 
         public void PhysicsLateUpdate() {
+            foreach (Body otherBody in _collisionList) {
+                if (_currentUpdateCollisionList.Contains(otherBody)) {
+                    continue;
+                }
+
+                EndCollision(otherBody);
+            }
+
+            _collisionList.Clear();
+            _collisionList.AddRange(_currentUpdateCollisionList);
+
             if (Movement != null) {
                 Movement.PhysicsLateUpdate();
             }
@@ -190,16 +208,16 @@ namespace Raccoon.Components {
             IsResting = (Position - LastPosition).LengthSquared() == 0f;
         }
 
-        public void OnCollide(Body otherBody, Vector2 collisionAxes) {
-            OnCollided?.Invoke(otherBody, collisionAxes);
+        public void CollidedWith(Body otherBody, Vector2 collisionAxes) {
+            _currentUpdateCollisionList.Add(otherBody);
 
-            if (Movement != null) {
-                Movement.OnBodyCollide(otherBody, collisionAxes);
-
-                if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
-                    Movement.OnCollide(collisionAxes);
-                }
+            if (_collisionList.Contains(otherBody)) {
+                Collided(otherBody, collisionAxes);
+                return;
             }
+
+            BeginCollision(otherBody, collisionAxes);
+            _collisionList.Add(otherBody);
         }
 
         public Vector2 Integrate(float dt) {
@@ -272,76 +290,116 @@ namespace Raccoon.Components {
             return Collides(Position, out contacts);
         }
 
-        public bool Collides(Vector2 position, BitTag tags, out Body collidedCollider, out Contact[] contact) {
-            return Physics.Instance.QueryCollision(Shape, position, tags, out collidedCollider, out contact);
+        public bool Collides(Vector2 position, BitTag tags, out CollisionInfo<Body> collisionInfo) {
+            return Physics.Instance.QueryCollision(Shape, position, tags, out collisionInfo);
         }
 
-        public bool Collides(BitTag tags, out Body collidedCollider, out Contact[] contact) {
-            return Physics.Instance.QueryCollision(Shape, Position, tags, out collidedCollider, out contact);
+        public bool Collides(BitTag tags, out CollisionInfo<Body> collisionInfo) {
+            return Physics.Instance.QueryCollision(Shape, Position, tags, out collisionInfo);
         }
 
-        public bool Collides(Vector2 position, out Body collidedCollider, out Contact[] contacts) {
-            return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collidedCollider, out contacts);
+        public bool Collides(Vector2 position, out CollisionInfo<Body> collisionInfo) {
+            return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionInfo);
         }
 
-        public bool Collides(out Body collidedCollider, out Contact[] contacts) {
-            return Collides(Position, out collidedCollider, out contacts);
+        public bool Collides(out CollisionInfo<Body> collisionInfo) {
+            return Collides(Position, out collisionInfo);
         }
 
-        public bool Collides<T>(Vector2 position, BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
-            return Physics.Instance.QueryCollision(Shape, position, tags, out collidedEntity, out contacts);
+        public bool Collides<T>(Vector2 position, BitTag tags, out CollisionInfo<T> collisionInfo) where T : Entity {
+            return Physics.Instance.QueryCollision(Shape, position, tags, out collisionInfo);
         }
 
-        public bool Collides<T>(BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
-            return Physics.Instance.QueryCollision(Shape, Position, tags, out collidedEntity, out contacts);
+        public bool Collides<T>(BitTag tags, out CollisionInfo<T> collisionInfo) where T : Entity {
+            return Physics.Instance.QueryCollision(Shape, Position, tags, out collisionInfo);
         }
 
-        public bool Collides<T>(Vector2 position, out T collidedEntity, out Contact[] contacts) where T : Entity {
-            return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collidedEntity, out contacts);
+        public bool Collides<T>(Vector2 position, out CollisionInfo<T> collisionInfo) where T : Entity {
+            return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionInfo);
         }
 
-        public bool Collides<T>(out T collidedEntity, out Contact[] contacts) where T : Entity {
-            return Collides(Position, out collidedEntity, out contacts);
+        public bool Collides<T>(out CollisionInfo<T> collisionInfo) where T : Entity {
+            return Collides(Position, out collisionInfo);
         }
 
         #endregion Collides [Single Output]
 
         #region Collides [Multiple Output]
 
-        public bool CollidesMultiple(Vector2 position, BitTag tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
-            return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collidedColliders);
+        public bool CollidesMultiple(Vector2 position, BitTag tags, out CollisionList<Body> collisionList) {
+            return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collisionList);
         }
 
-        public bool CollidesMultiple(BitTag tags, out List<(Body collider, Contact[] contacts)> collidedColliders) {
-            return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collidedColliders);
+        public bool CollidesMultiple(BitTag tags, out CollisionList<Body> collisionList) {
+            return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collisionList);
         }
 
-        public bool CollidesMultiple(Vector2 position, out List<(Body collider, Contact[] contacts)> collidedColliders) {
-            return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collidedColliders);
+        public bool CollidesMultiple(Vector2 position, out CollisionList<Body> collisionList) {
+            return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionList);
         }
 
-        public bool CollidesMultiple(out List<(Body collider, Contact[] contacts)> collidedColliders) {
-            return CollidesMultiple(Position, out collidedColliders);
+        public bool CollidesMultiple(out CollisionList<Body> collisionList) {
+            return CollidesMultiple(Position, out collisionList);
         }
 
-        public bool CollidesMultiple<T>(Vector2 position, BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
-            return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collidedEntities);
+        public bool CollidesMultiple<T>(Vector2 position, BitTag tags, out CollisionList<T> collisionList) where T : Entity {
+            return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collisionList);
         }
 
-        public bool CollidesMultiple<T>(BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
-            return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collidedEntities);
+        public bool CollidesMultiple<T>(BitTag tags, out CollisionList<T> collisionList) where T : Entity {
+            return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collisionList);
         }
 
-        public bool CollidesMultiple<T>(Vector2 position, out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
-            return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collidedEntities);
+        public bool CollidesMultiple<T>(Vector2 position, out CollisionList<T> collisionList) where T : Entity {
+            return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionList);
         }
 
-        public bool CollidesMultiple<T>(out List<(T entity, Contact[] contacts)> collidedEntities) where T : Entity {
-            return CollidesMultiple(Position, out collidedEntities);
+        public bool CollidesMultiple<T>(out CollisionList<T> collisionList) where T : Entity {
+            return CollidesMultiple(Position, out collisionList);
         }
 
         #endregion Collides [Multiple Output]
 
         #endregion Public Methods
+
+        #region Protected Methods
+
+        protected virtual void BeginCollision(Body otherBody, Vector2 collisionAxes) {
+            OnBeginCollision?.Invoke(otherBody, collisionAxes);
+
+            if (Movement != null) {
+                Movement.BeginBodyCollision(otherBody, collisionAxes);
+
+                if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
+                    Movement.BeginCollision(collisionAxes);
+                }
+            }
+        }
+
+        protected virtual void Collided(Body otherBody, Vector2 collisionAxes) {
+            OnCollided?.Invoke(otherBody, collisionAxes);
+
+            if (Movement != null) {
+                Movement.BodyCollided(otherBody, collisionAxes);
+
+                if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
+                    Movement.Collided(collisionAxes);
+                }
+            }
+        }
+
+        protected virtual void EndCollision(Body otherBody) {
+            OnEndCollision?.Invoke(otherBody);
+
+            if (Movement != null) {
+                Movement.EndBodyCollision(otherBody);
+
+                if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
+                    Movement.EndCollision();
+                }
+            }
+        }
+
+        #endregion Protected Methods
     }
 }

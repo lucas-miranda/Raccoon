@@ -163,7 +163,7 @@ namespace Raccoon.Components {
         public override void DebugRender() {
             base.DebugRender();
             string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nForce: {Body.Force}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump};\nIsJumping? {IsJumping}; IsFalling: {IsFalling}\nJumps: {Jumps}\nJump Height: {JumpHeight}\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_canKeepCurrentJump}, jumpMaxY: {_jumpMaxY}\n\n- Ramps\nisWalkingOnRamp? {_isWalkingOnRamp}";
-            Debug.DrawString(Camera.Current, new Vector2(Game.Instance.Width - 200f, Game.Instance.Height / 2f), info);
+            Debug.DrawString(null, new Vector2(Game.Instance.Width - 200f, Game.Instance.Height / 2f), info);
             Debug.DrawLine(new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), Graphics.Color.Yellow);
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
@@ -178,15 +178,11 @@ namespace Raccoon.Components {
 
             if (OnGround && !_isWalkingOnRamp) {
                 // checks if it's touching the ground
-                if (Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
-                  && contacts.Length > 0) {
-                    int contactIndex = System.Array.FindIndex(contacts, c => /*c.PenetrationDepth > 0f &&*/ Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
-
-                    if (contactIndex < 0) {
-                        OnGround = false;
-                    }
-                } else {
-                    OnGround = false;
+                if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
+                  || System.Array.FindIndex(contacts, c => c.PenetrationDepth == 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f)) >= 0) {
+                    IsFalling = true;
+                    OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
+                    OnFallingBegin();
                 }
             }
         }
@@ -195,8 +191,8 @@ namespace Raccoon.Components {
             base.PhysicsLateUpdate();
         }
 
-        public override void OnCollide(Vector2 collisionAxes) {
-            base.OnCollide(collisionAxes);
+        public override void Collided(Vector2 collisionAxes) {
+            base.Collided(collisionAxes);
 
             if (TouchedBottom) { 
                 // falling and reached the ground
@@ -214,17 +210,17 @@ namespace Raccoon.Components {
 
                 Velocity = new Vector2(Velocity.X, 0f);
             } else if (TouchedTop) { 
-                // jumping and reached a ceiling
-                if (IsJumping) {
+                // moving up and reached a ceiling
+                if (Velocity.Y < 0) {
                     IsJumping = _canKeepCurrentJump = false;
-                    IsFalling = true;
                     Velocity = new Vector2(Velocity.X, 0f);
-                    OnFallingBegin();
-                }
-            }
 
-            if (!OnGround) {
-                return;
+                    if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
+                      || System.Array.FindIndex(contacts, c => c.PenetrationDepth < 1f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f)) >= 0) {
+                        IsFalling = true;
+                        OnFallingBegin();
+                    }
+                }
             }
         }
 
@@ -286,7 +282,7 @@ namespace Raccoon.Components {
             // Vertical Velocity //
             ///////////////////////
 
-            _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
+            //? _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
 
             if (!_isWalkingOnRamp) {
                 if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
@@ -351,7 +347,7 @@ namespace Raccoon.Components {
         protected override void OnMoving(Vector2 distance) {
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
-                if (!IsFalling && !_isWalkingOnRamp) { 
+                if (IsJumping && !IsFalling && !_isWalkingOnRamp) { 
                     IsFalling = true;
                     OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
                     OnFallingBegin();

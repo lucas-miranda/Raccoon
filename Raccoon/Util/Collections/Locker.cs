@@ -181,7 +181,6 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
-            Upkeep();
             Lock();
 
             using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
@@ -191,6 +190,7 @@ namespace Raccoon.Util.Collections {
             }
 
             Unlock();
+            Upkeep();
         }
 
         public void CopyTo(T[] array, int arrayIndex) {

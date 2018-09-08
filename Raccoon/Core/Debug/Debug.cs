@@ -402,7 +402,6 @@ namespace Raccoon {
 
         #region Rectangle
 
-
         [Conditional("DEBUG")]
         public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
             Vector2 cameraPos = Vector2.Zero;
@@ -1050,16 +1049,16 @@ namespace Raccoon {
                 }
 
                 if (AutoPosition) {
-                    DrawString(Camera.Current, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                    DrawString(null, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
                     return;
                 }
 
                 if (PositionRelativeToCamera) {
-                    DrawString(Camera.Current, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                    DrawString(null, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
                     return;
                 }
 
-                DrawString(Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                DrawString(null, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
             }
 
             public void RegisterTween(Tween tween) {

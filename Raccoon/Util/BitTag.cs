@@ -97,6 +97,10 @@ namespace Raccoon.Util {
         }
 
         public IEnumerator<BitTag> GetEnumerator() {
+            if (LiteralValue == 0UL) {
+                yield break;
+            }
+
             if (IsSingleValue) {
                 yield return new BitTag(LiteralValue) { EnumType = EnumType };
                 yield break;

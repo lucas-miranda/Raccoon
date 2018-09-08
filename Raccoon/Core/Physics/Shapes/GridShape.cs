@@ -35,6 +35,10 @@ namespace Raccoon {
         public Rectangle TileBounds { get; private set; }
         public Polygon BoxTilePolygon { get; private set; }
 
+#if DEBUG
+        public Color CollisionTilesColor { get; set; } = Color.Red;
+#endif
+
         public void DebugRender(Vector2 position, Color color) {
 #if DEBUG
             // background grid
@@ -48,7 +52,7 @@ namespace Raccoon {
 
                 Vector2 tilePos = position - Origin + new Vector2(column * TileSize.Width, row * TileSize.Height);
                 if (tile is BoxTileShape boxTile) {
-                    Debug.DrawRectangle(new Rectangle(tilePos, TileSize), Color.Red);
+                    Debug.DrawRectangle(new Rectangle(tilePos, TileSize), CollisionTilesColor);
                 } else if (tile is PolygonTileShape polygonTile) {
                     /*Polygon p = new Polygon(polygonTile.Polygon);
                     p.Translate(tilePos);
@@ -62,7 +66,7 @@ namespace Raccoon {
                             points[i] = tilePos + component[i];
                         }
 
-                        Debug.DrawLines(points, Color.Red);
+                        Debug.DrawLines(points, CollisionTilesColor);
                     }
 
                     if (DebugRenderDetailed) {

@@ -44,6 +44,8 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
+    <Compile Include="Core\Physics\CollisionInfo.cs" />
+    <Compile Include="Core\Physics\CollisionList.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
     <Compile Include="Core\Physics\Shapes\GridShape.cs" />
     <Compile Include="Core\Physics\Shapes\PolygonShape.cs" />

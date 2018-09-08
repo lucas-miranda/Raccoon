@@ -331,10 +331,9 @@ namespace Raccoon {
             return false;
         }
 
-        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out Body collidedCollider, out Contact[] contacts) {
+        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out CollisionInfo<Body> collisionInfo) {
             if (tags == BitTag.None) {
-                collidedCollider = null;
-                contacts = null;
+                collisionInfo = null;
                 return false;
             }
 
@@ -346,22 +345,20 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out contacts)) {
-                        collidedCollider = otherCollider;
+                    if (CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                        collisionInfo = new CollisionInfo<Body>(otherCollider, contacts);
                         return true;
                     }
                 }
             }
 
-            collidedCollider = null;
-            contacts = null;
+            collisionInfo = null;
             return false;
         }
 
-        public bool QueryCollision<T>(IShape shape, Vector2 position, BitTag tags, out T collidedEntity, out Contact[] contacts) where T : Entity {
+        public bool QueryCollision<T>(IShape shape, Vector2 position, BitTag tags, out CollisionInfo<T> collisionInfo) where T : Entity {
             if (tags == BitTag.None) {
-                collidedEntity = null;
-                contacts = null;
+                collisionInfo = null;
                 return false;
             }
 
@@ -373,15 +370,14 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out contacts)) {
-                        collidedEntity = otherCollider.Entity as T;
+                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                        collisionInfo = new CollisionInfo<T>(otherCollider.Entity as T, contacts);
                         return true;
                     }
                 }
             }
 
-            collidedEntity = null;
-            contacts = null;
+            collisionInfo = null;
             return false;
         }
 
@@ -389,13 +385,14 @@ namespace Raccoon {
 
         #region Queries [Multiple Output]
 
-        public bool QueryMultipleCollision(IShape shape, Vector2 position, BitTag tags, out List<(Body collider, Contact[] contact)> collidedColliders) {
+        public bool QueryMultipleCollision(IShape shape, Vector2 position, BitTag tags, out CollisionList<Body> collisionList) {
+            collisionList = new CollisionList<Body>();
+
             if (tags == BitTag.None) {
-                collidedColliders = null;
+                collisionList = null;
                 return false;
             }
 
-            collidedColliders = new List<(Body, Contact[])>();
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -404,21 +401,21 @@ namespace Raccoon {
                     }
 
                     if (CheckCollision(shape, position, otherCollider, out Contact[] contact)) {
-                        collidedColliders.Add((otherCollider, contact));
+                        collisionList.Add(otherCollider, contact);
                     }
                 }
             }
 
-            return collidedColliders.Count > 0;
+            return collisionList.Count > 0;
         }
 
-        public bool QueryMultipleCollision<T>(IShape shape, Vector2 position, BitTag tags, out List<(T entity, Contact[] contact)> collidedEntities) where T : Entity {
+        public bool QueryMultipleCollision<T>(IShape shape, Vector2 position, BitTag tags, out CollisionList<T> collisionList) where T : Entity {
+            collisionList = new CollisionList<T>();
+
             if (tags == BitTag.None) {
-                collidedEntities = null;
                 return false;
             }
 
-            collidedEntities = new List<(T, Contact[])>();
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
@@ -428,25 +425,25 @@ namespace Raccoon {
 
                     if (otherCollider.Entity is T 
                       && CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
-                        collidedEntities.Add((otherCollider.Entity as T, contacts));
+                        collisionList.Add(otherCollider.Entity as T, contacts);
                     }
                 }
             }
 
-            return collidedEntities.Count > 0;
+            return collisionList.Count > 0;
         }
 
         #endregion Queries [Multiple Output]
 
         #region Raycast [Single Output]
 
-        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out Body collidedCollider, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
-            collidedCollider = null;
-
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<Body> collisionInfo, float maxDistance = float.PositiveInfinity) {
             if (tags == BitTag.None) {
-                contacts = null;
+                collisionInfo = null;
                 return false;
             }
+
+            Body collidedCollider = null;
 
             Vector2 endPos = position + direction * maxDistance;
             Contact? rayContact = null;
@@ -458,6 +455,7 @@ namespace Raccoon {
             };
 
             Vector2[] axes, shapeAxes;
+
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
@@ -518,29 +516,28 @@ namespace Raccoon {
             }
 
             if (rayContact != null) {
-                contacts = new Contact[] {
-                    rayContact.Value
-                };
-
+                collisionInfo = new CollisionInfo<Body>(collidedCollider, rayContact.Value);
                 return true;
             }
 
-            contacts = null;
+            collisionInfo = null;
             return false;
         }
 
         public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
-            return Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance);
+            bool hit = Raycast(position, direction, tags, out CollisionInfo<Body> collisionInfo, maxDistance);
+            contacts = collisionInfo.Contacts;
+            return hit;
         }
 
-        public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out T collidedEntity, out Contact[] contacts, float maxDistance = float.PositiveInfinity) where T : Entity {
-            if (Raycast(position, direction, tags, out Body collidedCollider, out contacts, maxDistance)
-              && collidedCollider.Entity is T entity) {
-                collidedEntity = entity;
+        public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<T> collisionInfo, float maxDistance = float.PositiveInfinity) where T : Entity {
+            if (Raycast(position, direction, tags, out CollisionInfo<Body> collidedCollider, maxDistance)
+              && collidedCollider.Subject is T) {
+                collisionInfo = new CollisionInfo<T>(collidedCollider.Subject as T, collidedCollider.Contacts);
                 return true;
             }
 
-            collidedEntity = null;
+            collisionInfo = null;
             return false;
         }
 
@@ -548,8 +545,8 @@ namespace Raccoon {
 
         #region Raycast [Multiple Output]
 
-        public bool RaycastMultiple(Vector2 position, Vector2 direction, BitTag tags, out List<(Body body, Contact[] contacts)> collidedBodies, float maxDistance = float.PositiveInfinity) {
-            collidedBodies = new List<(Body body, Contact[] contacts)>();
+        public bool RaycastMultiple(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<Body> collisionList, float maxDistance = float.PositiveInfinity) {
+            collisionList = new CollisionList<Body>();
 
             if (tags == BitTag.None) {
                 return false;
@@ -582,20 +579,16 @@ namespace Raccoon {
                         continue;
                     }
 
-                    Contact[] contacts = new Contact[] {
-                        contact.Value
-                    };
-
-                    collidedBodies.Add((otherCollider, contacts));
+                    collisionList.Add(otherCollider, contact.Value);
                 }
             }
 
-            return collidedBodies.Count > 0;
+            return collisionList.Count > 0;
         }
 
 
-        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, BitTag tags, out List<(T entity, Contact[] contacts)> collidedEntities, float maxDistance = float.PositiveInfinity) where T : Entity {
-            collidedEntities = new List<(T entity, Contact[] contacts)>();
+        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<T> collisionList, float maxDistance = float.PositiveInfinity) where T : Entity {
+            collisionList = new CollisionList<T>();
 
             if (tags == BitTag.None) {
                 return false;
@@ -659,15 +652,11 @@ namespace Raccoon {
                             break;
                     }
 
-                    Contact[] contacts = new Contact[] {
-                        contact.Value
-                    };
-
-                    collidedEntities.Add((entity, contacts));
+                    collisionList.Add(entity, contact.Value);
                 }
             }
 
-            return collidedEntities.Count > 0;
+            return collisionList.Count > 0;
         }
 
         #endregion Raycast [Multiple Output]
@@ -730,11 +719,11 @@ namespace Raccoon {
                        diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
 
                 // early exit if next and current positions are the same
-                if (Math.EqualsEstimate(Math.DistanceSquared(diffX, diffY, diffX, diffY), 0.0)) {
+                /*if (Math.EqualsEstimate(Math.DistanceSquared(diffX, diffY, diffX, diffY), 0.0)) {
                     body.MoveBufferX = body.MoveBufferY = 0.0;
                     body.PhysicsLateUpdate();
                     continue;
-                }
+                }*/
 
                 // signed distance in pixels
                 int distanceX = Math.Sign(diffX) * (int) Math.Truncate(Math.Abs(diffX)),
@@ -814,44 +803,59 @@ namespace Raccoon {
                                  collidedV = false;
 
                             // test for horizontal collision (if it's moving horizontally)
-                            if (movementX != 0
-                              && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out Contact[] contactsH)
-                              && System.Array.Exists(contactsH, c => c.PenetrationDepth > 0f)) {
-                                collidedH = true;
+                            if ((singleCheck || movementX != 0)
+                              && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out Contact[] contactsH)) {
+                                if (singleCheck) {
+                                    collidedH = true;
+                                }
 
-                                if (isMovementCollidable) {
-                                    canMoveH = false;
-                                    distanceX = 0;
-                                    directionY = Math.Sign(directionY);
-                                    moveVerticalPos.X = currentX;
+                                if (System.Array.Exists(contactsH, c => c.PenetrationDepth > 0f)) {
+                                    collidedH = true;
+
+                                    if (isMovementCollidable) {
+                                        canMoveH = false;
+                                        distanceX = 0;
+                                        directionY = Math.Sign(directionY);
+                                        moveVerticalPos.X = currentX;
+                                    }
                                 }
                             }
 
                             // test for vertical collision (if it's moving vertically)
-                            if (movementY != 0
-                              && CheckCollision(body.Shape, moveVerticalPos, otherBody, out Contact[] contactsV)
-                              && System.Array.Exists(contactsV, c => c.PenetrationDepth > 0f)) {
-                                collidedV = true;
-                                
-                                if (isMovementCollidable) {
-                                    canMoveV = false;
-                                    distanceY = 0;
-                                    directionX = Math.Sign(directionX);
+                            if ((singleCheck || movementY != 0)
+                              && CheckCollision(body.Shape, moveVerticalPos, otherBody, out Contact[] contactsV)) {
+                                if (singleCheck) {
+                                    collidedV = true;
+                                }
+
+                                if (System.Array.Exists(contactsV, c => c.PenetrationDepth > 0f)) {
+                                    collidedV = true;
+
+                                    if (isMovementCollidable) {
+                                        canMoveV = false;
+                                        distanceY = 0;
+                                        directionX = Math.Sign(directionX);
+                                    }
                                 }
                             }
 
                             if (collidedH || collidedV) {
                                 // stop moving
-                                Vector2 collisionAxes = new Vector2(
-                                    collidedH ? movementX : 0,
-                                    collidedV ? movementY : 0
-                                );
+                                Vector2 collisionAxes = Vector2.Zero;
 
-                                body.OnCollide(otherBody, collisionAxes);
-                                otherBody.OnCollide(body, -collisionAxes);
+                                if (singleCheck) {
+                                    collisionAxes.X = !canMoveH ? movementX : 0;
+                                    collisionAxes.Y = !canMoveV ? movementY : 0;
+                                } else {
+                                    collisionAxes.X = collidedH ? movementX : 0;
+                                    collisionAxes.Y = collidedV ? movementY : 0;
+                                }
+
+                                body.CollidedWith(otherBody, collisionAxes);
+                                //otherBody.CollidedWith(body, -collisionAxes);
 
 #if DEBUG
-                                body.Color = otherBody.Color = Graphics.Color.Red;
+                                body.Color = /*otherBody.Color =*/ Graphics.Color.Red;
 #endif
                             }
                         }
