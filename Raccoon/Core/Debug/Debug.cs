@@ -20,7 +20,7 @@ namespace Raccoon {
         #region Private Static Members
 
         private const int MessagesSpacing = 5;
-        private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, Game.Instance.WindowHeight - 30);
+        private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
         #endregion Private Static Members
 
@@ -28,7 +28,7 @@ namespace Raccoon {
 
         private bool _useLogToFile;
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
-        private Vector2 _screenMessagePosition = ScreenMessageStartPosition;
+        private Vector2 _screenMessagePosition = new Vector2(ScreenMessageStartPosition.X, Game.Instance.WindowHeight + ScreenMessageStartPosition.Y);
         private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
         private Locker<Alarm> _alarms = new Locker<Alarm>();
 
@@ -239,7 +239,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawString(Camera camera, string message, Color? color = null) {
-            DrawString(camera, Instance._screenMessagePosition, message, color);
+            DrawString(camera, Game.Instance.MainRenderer.ConvertScreenToWorld(Instance._screenMessagePosition), message, color);
             Instance._screenMessagePosition -= new Vector2(0, Game.Instance.StdFont.LineSpacing + MessagesSpacing);
         }
 
@@ -990,7 +990,7 @@ namespace Raccoon {
                 message.Render();
             }
 
-            _screenMessagePosition = ScreenMessageStartPosition;
+            _screenMessagePosition = new Vector2(ScreenMessageStartPosition.X, Game.Instance.WindowHeight + ScreenMessageStartPosition.Y);
 
             if (Console.Visible) {
                 Console.Render();
@@ -1048,17 +1048,21 @@ namespace Raccoon {
                     return;
                 }
 
+                if (PositionRelativeToCamera) {
+                    if (AutoPosition) {
+                        DrawString(Camera.Current, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                        return;
+                    }
+
+                    DrawString(Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                    return;
+                }
+
                 if (AutoPosition) {
                     DrawString(null, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
-                    return;
-                }
-
-                if (PositionRelativeToCamera) {
+                } else {
                     DrawString(null, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
-                    return;
                 }
-
-                DrawString(null, Position, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
             }
 
             public void RegisterTween(Tween tween) {
