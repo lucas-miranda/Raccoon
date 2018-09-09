@@ -6,6 +6,10 @@ namespace Raccoon {
             Add(new CollisionInfo<T>(subject, contacts));
         }
 
+        public void Add(T subject, ContactList contacts) {
+            Add(new CollisionInfo<T>(subject, contacts));
+        }
+
         public bool Contains(T subject) {
             return FindIndex(p => p.Equals(subject)) > -1;
         }

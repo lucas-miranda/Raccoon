@@ -243,8 +243,8 @@ Fall Through
 
             if (OnGround && !_isWalkingOnRamp) {
                 // checks if it's touching the ground
-                if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
-                  || System.Array.FindIndex(contacts, c => c.PenetrationDepth == 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f)) >= 0) {
+                if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out ContactList contacts)
+                  || contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f))) {
                     Fall();
                 }
             }
@@ -256,8 +256,8 @@ Fall Through
         public override void PhysicsLateUpdate() {
             Body.CollidesMultiple(CollisionTags, out CollisionList<Body> collisionList);
 
-            bool touchedBottom = collisionList.Contains(ci => ci.ContainsContact(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
-                 touchedTop = collisionList.Contains(ci => ci.ContainsContact(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
+            bool touchedBottom = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
+                 touchedTop = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
 
             Debug.PostString(_isTryingToFallThrough ? "can fall through" : "can't fall through");
 
@@ -288,8 +288,8 @@ Fall Through
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
 
-                    if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
-                      || System.Array.FindIndex(contacts, c => c.PenetrationDepth < 1f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f)) >= 0) {
+                    if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out ContactList contacts)
+                      || contacts.Contains(c => c.PenetrationDepth < 1f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f))) {
                         IsFalling = true;
                         OnFallingBegin();
                     }
@@ -304,7 +304,7 @@ Fall Through
                 return true;
             }
 
-            if (collisionAxes.Y > 0 && collisionInfo.ContainsContact(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+            if (collisionAxes.Y > 0 && collisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
                 if (CanFallThrough) {
                     _applyFall = true;
                     return false;
@@ -337,14 +337,14 @@ Fall Through
                     vCollisionInfo = hCollisionInfo;
                 }
 
-                if (collisionAxes.Y > 0 && vCollisionInfo.ContainsContact(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                if (collisionAxes.Y > 0 && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
                     if (CanFallThrough) {
                         _applyFall = true;
                     } else if (_isTryingToFallThrough) {
                         _isTryingToFallThrough = false;
                     }
                 } else {
-                    if (collisionAxes.Y >= 0 && !vCollisionInfo.ContainsContact(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                    if (collisionAxes.Y >= 0 && !vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
                         _applyFall = true;
                     } 
                 }
@@ -569,12 +569,12 @@ Fall Through
 
         private bool CheckAscendingRamp(float dX, ref Vector2 displacement) {
             // Ascending Ramp
-            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, 0f) + AscendingRampCollisionCheckCorrection, CollisionTags, out Contact[] ascContacts)
-              || ascContacts.Length == 0) {
+            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + new Vector2(dX, 0f) + AscendingRampCollisionCheckCorrection, CollisionTags, out ContactList ascContacts)
+              || ascContacts.Count == 0) {
                 return false;
             }
 
-            int contactIndex = System.Array.FindIndex(ascContacts, c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f));
+            int contactIndex = ascContacts.FindIndex(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f));
 
             // check if it's on a valid ascending ramp
             if (contactIndex <= -1) {
@@ -603,13 +603,13 @@ Fall Through
             // Descending Ramp
             Vector2 descendingCheck = new Vector2(Math.Clamp(dX, -1f, 1f), Math.Max(1.7f, Math.Abs(dX)));
 
-            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + descendingCheck, CollisionTags, out Contact[] descContacts)
-              || descContacts.Length == 0) {
+            if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + descendingCheck, CollisionTags, out ContactList descContacts)
+              || descContacts.Count == 0) {
                 return false;
             }
 
-            int contactIndex = System.Array.FindIndex(descContacts, c => Helper.InRangeLeftExclusive(c.PenetrationDepth, 0f, descendingCheck.Y) 
-                                                                      && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
+            int contactIndex = descContacts.FindIndex(c => Helper.InRangeLeftExclusive(c.PenetrationDepth, 0f, descendingCheck.Y) 
+                                                        && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
 
             // check if it's on a valid descending ramp
             if (contactIndex <= -1) {

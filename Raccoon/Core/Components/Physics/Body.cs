@@ -225,12 +225,12 @@ namespace Raccoon.Components {
             Vector2 velocity = Velocity;
 
             // velocity X correction
-            if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
+            if (Math.EqualsEstimate(velocity.X, 0f)) {
                 velocity.X = 0f;
             }
 
             // velocity Y correction
-            if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
+            if (Math.EqualsEstimate(velocity.Y, 0f)) {
                 velocity.Y = 0f;
             }
 
@@ -275,19 +275,19 @@ namespace Raccoon.Components {
 
         #region Collides [Single Output]
 
-        public bool Collides(Vector2 position, BitTag tags, out Contact[] contacts) {
+        public bool Collides(Vector2 position, BitTag tags, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, position, tags, out contacts);
         }
 
-        public bool Collides(BitTag tags, out Contact[] contacts) {
+        public bool Collides(BitTag tags, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, Position, tags, out contacts);
         }
 
-        public bool Collides(Vector2 position, out Contact[] contacts) {
+        public bool Collides(Vector2 position, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out contacts);
         }
 
-        public bool Collides(out Contact[] contacts) {
+        public bool Collides(out ContactList contacts) {
             return Collides(Position, out contacts);
         }
 
