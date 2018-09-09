@@ -245,6 +245,12 @@ namespace Raccoon {
         public class BoxTileShape : TileShape {
             public BoxTileShape(uint gid) : base(gid) { }
 
+            public Polygon CreateCollisionPolygon(GridShape grid, Vector2 gridPos, int column, int row) {
+                Polygon boxPolygon = new Polygon(grid.BoxTilePolygon);
+                boxPolygon.Translate(grid.ConvertTilePosition(gridPos, column, row));
+                return boxPolygon;
+            }
+
             public override string ToString() {
                 return $"[BoxTileShape | Gid: {Gid}, Id: {Id}]";
             }
@@ -260,6 +266,18 @@ namespace Raccoon {
             }
 
             public Polygon Polygon { get; private set; }
+
+            public Polygon[] CreateCollisionPolygons(GridShape grid, Vector2 gridPos, int column, int row) {
+                List<Vector2[]> convexComponents = Polygon.ConvexComponents();
+                Polygon[] polygons = new Polygon[convexComponents.Count];
+                for (int i = 0; i < convexComponents.Count; i++) {
+                    Polygon p = new Polygon(convexComponents[i]);
+                    p.Translate(gridPos + grid.ConvertTilePosition(gridPos, column, row));
+                    polygons[i] = p;
+                }
+
+                return polygons;
+            }
 
             public override string ToString() {
                 return $"[PolygonTileShape | Gid: {Gid}, Id: {Id}, Polygon: {Polygon}]";

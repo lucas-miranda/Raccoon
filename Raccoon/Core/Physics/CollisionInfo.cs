@@ -2,8 +2,12 @@
     public class CollisionInfo<T> {
         public CollisionInfo(T subject, params Contact[] contacts) {
             Subject = subject;
-            Contacts = new Contact[contacts.Length];
-            contacts.CopyTo(Contacts, 0);
+            if (contacts == null) {
+                Contacts = new Contact[0];
+            } else {
+                Contacts = new Contact[contacts.Length];
+                contacts.CopyTo(Contacts, 0);
+            }
         }
 
         public T Subject { get; private set; }

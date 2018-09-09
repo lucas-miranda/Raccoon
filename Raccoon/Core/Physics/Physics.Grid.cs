@@ -51,18 +51,11 @@ namespace Raccoon {
 
                 switch (shape) {
                     case GridShape.BoxTileShape boxShape:
-                        Polygon boxPolygon = new Polygon(boxTilePolygon);
-                        boxPolygon.Translate(grid.ConvertTilePosition(gridPos, column, row));
-                        tilePolygons.Add(boxPolygon);
+                        tilePolygons.Add(boxShape.CreateCollisionPolygon(grid, gridPos, column, row));
                         break;
 
                     case GridShape.PolygonTileShape polygonShape:
-                        foreach (Vector2[] component in polygonShape.Polygon.ConvexComponents()) {
-                            Polygon p = new Polygon(component);
-                            p.Translate(gridPos + grid.ConvertTilePosition(gridPos, column, row));
-                            tilePolygons.Add(p);
-                        }
-
+                        tilePolygons.AddRange(polygonShape.CreateCollisionPolygons(grid, gridPos, column, row));
                         break;
 
                     case null:

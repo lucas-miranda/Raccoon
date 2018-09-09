@@ -18,6 +18,46 @@ namespace Raccoon.Components {
 
         private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
 
+        private static readonly string DebugText = @"
+Axes
+  Current: {0}
+  Last: {1}
+  Snap H: {2} V: {3}
+
+Velocity
+  Current: {4}
+  Max: {5}   Target: {6}
+  Acceleration: {7}
+
+Force: {8}
+Gravity Force: {9}
+
+Enabled? {10}
+Can Move? {11}
+
+OnGround? {12} 
+IsFalling? {13}
+
+Jump
+  Jumps: {14}
+  Can Jump? {15}
+  Is Jumping? {16}
+  Is Still Jumping? {17}
+  Height: {18}
+
+  can keep current jump? {19}
+  jump max y: {20}
+
+Ramps
+  is Walking On Ramp? {21}
+
+Fall Through 
+  Can Fall Through? {22}
+  
+  is trying to fall through? {23}
+  apply fall? {24}
+";
+
         // jump
         private bool _canJump = true, _canKeepCurrentJump = true, _requestedJump;
         private int _jumpMaxY, _ledgeJumpTime;
@@ -25,6 +65,9 @@ namespace Raccoon.Components {
 
         // ramp movement
         private bool _isWalkingOnRamp;
+
+        // fall through
+        private bool _isTryingToFallThrough, _applyFall;
 
         #endregion Private Members
 
@@ -116,14 +159,24 @@ namespace Raccoon.Components {
         public float GravityScale { get; set; } = 1f;
 
         /// <summary>
-        /// Drag force applied when on ground
+        /// Drag force applied when on ground.
         /// </summary>
         public float GroundDragForce { get; set; }
 
         /// <summary>
-        /// Drag force applied when on air
+        /// Drag force applied when on air.
         /// </summary>
         public float AirDragForce { get; set; }
+
+        /// <summary>
+        /// Tags to check using fall through platform logic.
+        /// </summary>
+        public BitTag FallThroughTags { get; set; }
+
+        /// <summary>
+        /// It's on fall through state.
+        /// </summary>
+        public bool CanFallThrough { get; private set; }
 
         #endregion Public Properties
 
@@ -158,12 +211,24 @@ namespace Raccoon.Components {
             }
 
             IsStillJumping = false;
+            CanFallThrough = false;
         }
 
         public override void DebugRender() {
             base.DebugRender();
-            string info = $"Axis: {Axis} (Last: {LastAxis})\nVelocity: {Velocity}\nMaxVelocity: {MaxVelocity}\nTargetVelocity: {TargetVelocity}\nAcceleration: {Acceleration}\nForce: {Body.Force}\nEnabled? {Enabled}; CanMove? {CanMove};\nAxes Snap: (H: {SnapHorizontalAxis}, V: {SnapVerticalAxis})\nOnGroud? {OnGround}; CanJump? {CanJump};\nIsJumping? {IsJumping}; IsFalling: {IsFalling}\nJumps: {Jumps}\nJump Height: {JumpHeight}\nIsStillJumping? {IsStillJumping}\nGravity Force: {GravityForce}\n\nnextJumpReady? {_canKeepCurrentJump}, jumpMaxY: {_jumpMaxY}\n\n- Ramps\nisWalkingOnRamp? {_isWalkingOnRamp}";
-            Debug.DrawString(null, new Vector2(Game.Instance.Width - 200f, Game.Instance.Height / 2f), info);
+            string info = string.Format(
+                DebugText, 
+                Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
+                Velocity, MaxVelocity, TargetVelocity, Acceleration,
+                Body.Force, GravityForce * GravityScale,
+                Enabled, CanMove,
+                OnGround, IsFalling,
+                Jumps, CanJump, IsJumping, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+                _isWalkingOnRamp,
+                CanFallThrough, _isTryingToFallThrough, _applyFall
+            );
+
+            Debug.DrawString(null, new Vector2(10f, 10f), info);
             Debug.DrawLine(new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), Graphics.Color.Yellow);
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
@@ -180,38 +245,46 @@ namespace Raccoon.Components {
                 // checks if it's touching the ground
                 if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out Contact[] contacts)
                   || System.Array.FindIndex(contacts, c => c.PenetrationDepth == 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f)) >= 0) {
-                    IsFalling = true;
-                    OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
-                    OnFallingBegin();
+                    Fall();
                 }
             }
+
+            _isTryingToFallThrough = true;
+            _applyFall = false;
         }
 
         public override void PhysicsLateUpdate() {
-            base.PhysicsLateUpdate();
-        }
+            Body.CollidesMultiple(CollisionTags, out CollisionList<Body> collisionList);
 
-        public override void Collided(Vector2 collisionAxes) {
-            base.Collided(collisionAxes);
+            bool touchedBottom = collisionList.Contains(ci => ci.ContainsContact(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
+                 touchedTop = collisionList.Contains(ci => ci.ContainsContact(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
 
-            if (TouchedBottom) { 
-                // falling and reached the ground
-                if (!OnGround) {
-                    OnGround = true;
-                    IsStillJumping = IsJumping = IsFalling = false;
-                    Jumps = MaxJumps;
+            Debug.PostString(_isTryingToFallThrough ? "can fall through" : "can't fall through");
 
-                    if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
-                        _canKeepCurrentJump = true;
+            if (_isTryingToFallThrough && _applyFall) {
+                Fall();
+            }
+
+            if (touchedBottom) { 
+                if (!_isTryingToFallThrough) {
+                    // falling and reached the ground
+                    if (!OnGround) {
+                        OnGround = true;
+                        IsStillJumping = IsJumping = IsFalling = false;
+                        Jumps = MaxJumps;
+
+                        if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                            _canKeepCurrentJump = true;
+                        }
+
+                        OnTouchGround();
                     }
 
-                    OnTouchGround();
+                    Velocity = new Vector2(Velocity.X, 0f);
                 }
-
-                Velocity = new Vector2(Velocity.X, 0f);
-            } else if (TouchedTop) { 
+            } else if (touchedTop) { 
                 // moving up and reached a ceiling
-                if (Velocity.Y < 0) {
+                if (Velocity.Y < 0 && !_isTryingToFallThrough) {
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
 
@@ -222,6 +295,79 @@ namespace Raccoon.Components {
                     }
                 }
             }
+
+            base.PhysicsLateUpdate();
+        }
+
+        public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            if (!collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
+                return true;
+            }
+
+            if (collisionAxes.Y > 0 && collisionInfo.ContainsContact(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                if (CanFallThrough) {
+                    _applyFall = true;
+                    return false;
+                }
+            } else {
+                return false;
+            }
+
+            return true;
+        }
+
+        public override void BodyCollided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            base.BodyCollided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
+
+            if (!_isTryingToFallThrough) {
+                return;
+            }
+
+            if (!otherBody.Tags.HasAny(FallThroughTags)) {
+                if (vCollisionInfo != null) {
+                    _isTryingToFallThrough = false;
+                }
+
+                _applyFall = false;
+                return;
+            }
+
+            if (otherBody.Shape is GridShape) {
+                if (vCollisionInfo == null) {
+                    vCollisionInfo = hCollisionInfo;
+                }
+
+                if (collisionAxes.Y > 0 && vCollisionInfo.ContainsContact(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                    if (CanFallThrough) {
+                        _applyFall = true;
+                    } else if (_isTryingToFallThrough) {
+                        _isTryingToFallThrough = false;
+                    }
+                } else {
+                    if (collisionAxes.Y >= 0 && !vCollisionInfo.ContainsContact(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                        _applyFall = true;
+                    } 
+                }
+
+                return;
+            }
+
+            if (Body.Bottom > otherBody.Top) {
+                if (Velocity.Y >= 0) {
+                    _applyFall = true;
+                }
+            } else if (collisionAxes.Y >= 0) {
+                if (CanFallThrough) {
+                    _applyFall = true;
+                } else if (_isTryingToFallThrough) {
+                    // falling until reach a fall through platform, cancel fall through state
+                    _isTryingToFallThrough = false;
+                }
+            }
+        }
+
+        public override void Collided(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            base.Collided(collisionAxes, hCollisionInfo, vCollisionInfo);
         }
 
         public override Vector2 Integrate(float dt) {
@@ -340,6 +486,14 @@ namespace Raccoon.Components {
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
         }
 
+        public void FallThrough() {
+            CanFallThrough = true;
+
+            if (OnGround) {
+                Velocity = new Vector2(Velocity.X, Acceleration.Y * JumpExplosionRate);
+            }
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
@@ -347,10 +501,8 @@ namespace Raccoon.Components {
         protected override void OnMoving(Vector2 distance) {
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
-                if (IsJumping && !IsFalling && !_isWalkingOnRamp) { 
-                    IsFalling = true;
-                    OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
-                    OnFallingBegin();
+                if (IsJumping && !IsFalling && !_isWalkingOnRamp) {
+                    Fall();
                 }
             } else if (distance.Y < 0f) {
                 if (IsStillJumping) {
@@ -494,6 +646,12 @@ namespace Raccoon.Components {
             Body.MoveBufferX = 0;
             //Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}"); */
             return ret;
+        }
+
+        private void Fall() {
+            IsFalling = true;
+            OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
+            OnFallingBegin();
         }
 
         #endregion Private Methods

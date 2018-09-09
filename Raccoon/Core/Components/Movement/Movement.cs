@@ -63,51 +63,51 @@ namespace Raccoon.Components {
         public float DragForce { get; set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
-        public bool TouchedTop { get; private set; }
+        /*public bool TouchedTop { get; private set; }
         public bool TouchedRight { get; private set; }
         public bool TouchedBottom { get; private set; }
-        public bool TouchedLeft { get; private set; }
+        public bool TouchedLeft { get; private set; }*/
 
         public bool SnapHorizontalAxis {
             get {
-                return Util.Bit.HasSet(ref _axesSnap, 0);
+                return Bit.HasSet(ref _axesSnap, 0);
             }
 
             set {
                 if (value) {
-                    Util.Bit.Set(ref _axesSnap, 0);
+                    Bit.Set(ref _axesSnap, 0);
                 } else {
-                    Util.Bit.Clear(ref _axesSnap, 0);
+                    Bit.Clear(ref _axesSnap, 0);
                 }
             }
         }
 
         public bool SnapVerticalAxis {
             get {
-                return Util.Bit.HasSet(ref _axesSnap, 1);
+                return Bit.HasSet(ref _axesSnap, 1);
             }
 
             set {
                 if (value) {
-                    Util.Bit.Set(ref _axesSnap, 1);
+                    Bit.Set(ref _axesSnap, 1);
                 } else {
-                    Util.Bit.Clear(ref _axesSnap, 1);
+                    Bit.Clear(ref _axesSnap, 1);
                 }
             }
         }
 
         public bool SnapAxes {
             get {
-                return Util.Bit.HasSet(ref _axesSnap, 0) && Util.Bit.HasSet(ref _axesSnap, 1);
+                return Bit.HasSet(ref _axesSnap, 0) && Bit.HasSet(ref _axesSnap, 1);
             }
 
             set {
                 if (value) {
-                    Util.Bit.Set(ref _axesSnap, 0);
-                    Util.Bit.Set(ref _axesSnap, 1);
+                    Bit.Set(ref _axesSnap, 0);
+                    Bit.Set(ref _axesSnap, 1);
                 } else {
-                    Util.Bit.Clear(ref _axesSnap, 0);
-                    Util.Bit.Clear(ref _axesSnap, 1);
+                    Bit.Clear(ref _axesSnap, 0);
+                    Bit.Clear(ref _axesSnap, 1);
                 }
             }
         }
@@ -154,7 +154,7 @@ namespace Raccoon.Components {
         }
         
         public virtual void PhysicsUpdate(float dt) {
-            TouchedTop = TouchedRight = TouchedBottom = TouchedLeft = false;
+            //ResetTouch();
         }
 
         public virtual void PhysicsLateUpdate() {
@@ -166,44 +166,29 @@ namespace Raccoon.Components {
             }
         }
 
-        public virtual void BeginCollision(Vector2 collisionAxes) {
-            if (collisionAxes.Y < 0f) {
-                TouchedTop = true;
-            } else if (collisionAxes.Y > 0f) {
-                TouchedBottom = true;
-            }
-
-            if (collisionAxes.X < 0f) {
-                TouchedLeft = true;
-            } else if (collisionAxes.X > 0f) {
-                TouchedRight = true;
-            }
+        public virtual bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            return true;
         }
 
-        public virtual void Collided(Vector2 collisionAxes) {
-            if (collisionAxes.Y < 0f) {
-                TouchedTop = true;
-            } else if (collisionAxes.Y > 0f) {
-                TouchedBottom = true;
-            }
-
-            if (collisionAxes.X < 0f) {
-                TouchedLeft = true;
-            } else if (collisionAxes.X > 0f) {
-                TouchedRight = true;
-            }
+        public virtual void BeginBodyCollision(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            //CheckTouch(otherBody);
         }
 
-        public virtual void EndCollision() {
-        }
-
-        public virtual void BeginBodyCollision(Body otherBody, Vector2 collisionAxes) {
-        }
-
-        public virtual void BodyCollided(Body otherBody, Vector2 collisionAxes) {
+        public virtual void BodyCollided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            //CheckTouch(otherBody);
         }
 
         public virtual void EndBodyCollision(Body otherBody) {
+            //CheckUntouch(otherBody);
+        }
+
+        public virtual void BeginCollision(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+        }
+
+        public virtual void Collided(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+        }
+
+        public virtual void EndCollision() {
         }
 
         public abstract Vector2 Integrate(float dt);
@@ -269,5 +254,24 @@ namespace Raccoon.Components {
         protected abstract void OnMoving(Vector2 distance);
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        /*private void ResetTouch() {
+            TouchedTop = TouchedRight = TouchedBottom = TouchedLeft = false;
+        }
+
+        private void CheckTouch(Body body) {
+            if (!Physics.Instance.CheckCollision(Body, body, out Contact[] contacts)) {
+                return;
+            }
+
+            
+        }
+
+        private void CheckUntouch(Body body) {
+        }*/
+
+        #endregion Private Methods
     }
 }
