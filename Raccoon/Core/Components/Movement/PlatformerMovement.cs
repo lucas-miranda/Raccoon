@@ -67,7 +67,7 @@ Fall Through
         private bool _isWalkingOnRamp;
 
         // fall through
-        private bool _isTryingToFallThrough, _applyFall;
+        private bool _isTryingToFallThrough, _applyFall, _isAboveSomething;
 
         #endregion Private Members
 
@@ -250,7 +250,7 @@ Fall Through
             }
 
             _isTryingToFallThrough = true;
-            _applyFall = false;
+            _applyFall = _isAboveSomething = false;
         }
 
         public override void PhysicsLateUpdate() {
@@ -258,8 +258,6 @@ Fall Through
 
             bool touchedBottom = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
                  touchedTop = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
-
-            Debug.PostString(_isTryingToFallThrough ? "can fall through" : "can't fall through");
 
             if (_isTryingToFallThrough && _applyFall) {
                 Fall();
@@ -332,37 +330,25 @@ Fall Through
                 return;
             }
 
-            if (otherBody.Shape is GridShape) {
-                if (vCollisionInfo == null) {
-                    vCollisionInfo = hCollisionInfo;
-                }
-
-                if (collisionAxes.Y > 0 && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
-                    if (CanFallThrough) {
-                        _applyFall = true;
-                    } else if (_isTryingToFallThrough) {
-                        _isTryingToFallThrough = false;
-                    }
-                } else {
-                    if (collisionAxes.Y >= 0 && !vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
-                        _applyFall = true;
-                    } 
-                }
-
-                return;
+            if (vCollisionInfo == null) {
+                vCollisionInfo = hCollisionInfo;
             }
 
-            if (Body.Bottom > otherBody.Top) {
-                if (Velocity.Y >= 0) {
-                    _applyFall = true;
-                }
-            } else if (collisionAxes.Y >= 0) {
+            if (collisionAxes.Y > 0 && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
                 if (CanFallThrough) {
                     _applyFall = true;
                 } else if (_isTryingToFallThrough) {
-                    // falling until reach a fall through platform, cancel fall through state
                     _isTryingToFallThrough = false;
                 }
+            } else if (collisionAxes.Y >= 0) {
+                if (vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                    _isAboveSomething = true;
+                    _applyFall = false;
+                }
+
+                if (!_isAboveSomething && (otherBody.Shape is GridShape || Body.Bottom > otherBody.Top)) {
+                    _applyFall = true;
+                } 
             }
         }
 
