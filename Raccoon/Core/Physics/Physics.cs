@@ -149,11 +149,8 @@ namespace Raccoon {
             return false;
         }
 
-        public void RegisterTags<T>() {
+        public void RegisterTags<T>() where T : System.Enum {
             System.Type tagType = typeof(T);
-            if (!tagType.IsEnum) {
-                throw new System.ArgumentException("Tags Type must be a Enum.");
-            }
 
             if (!tagType.IsDefined(typeof(System.FlagsAttribute), false)) {
                 throw new System.ArgumentException("Tags Type must contains System.FlagsAttribute and all values declared as power of 2.");
