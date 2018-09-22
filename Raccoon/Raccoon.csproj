@@ -46,6 +46,12 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
+    <Compile Include="Core\IDebugRenderable.cs" />
+    <Compile Include="Core\IExtendedRenderable.cs" />
+    <Compile Include="Core\IRenderable.cs" />
+    <Compile Include="Core\IExtendedUpdatable.cs" />
+    <Compile Include="Core\ISceneObject.cs" />
+    <Compile Include="Core\IUpdatable.cs" />
     <Compile Include="Core\Physics\CollisionInfo.cs" />
     <Compile Include="Core\Physics\CollisionList.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
@@ -70,6 +76,7 @@
     <Compile Include="Core\Physics\Physics.Helper.cs" />
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
+    <Compile Include="Core\Transform.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />

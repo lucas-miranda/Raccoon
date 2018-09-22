@@ -24,9 +24,26 @@ namespace Raccoon {
         #region Private Members
 
 #if DEBUG
+        private static readonly string DiagnosticsTextFormat = @"Time: {0}
+
+Draw Calls: {1}, Sprites: {2}
+Texture: {3}
+
+Physics:
+  Update Position: {4}ms
+  Solve Constraints: {5}ms
+  Coll Broad Phase: (C: {6}): {7}ms
+  Coll Narrow Phase: (C: {8}): {9}ms
+
+Scene:
+  Updatables: {10}
+  Renderables: {11}
+  Objects: {12}";
+
         private readonly string WindowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
         private const int FramerateMonitorDataSpacing = 4;
+
 #endif
 
         // window
@@ -435,7 +452,24 @@ namespace Raccoon {
             Debug.Instance.Render();
 
             if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(null, new Vector2(WindowWidth - 260, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}\n\nPhysics:\n  Update Position: {Physics.UpdatePositionExecutionTime}ms\n  Solve Constraints: {Physics.SolveConstraintsExecutionTime}ms\n  Collision Broad Phase (C: {Physics.CollidersBroadPhaseCount}): {Physics.CollisionDetectionBroadPhaseExecutionTime}ms\n  Collision Narrow Phase (C: {Physics.CollidersNarrowPhaseCount}): {Physics.CollisionDetectionNarrowPhaseExecutionTime}ms\n\nScene:\n  Entities: {(Scene == null ? "0" : Scene.EntitiesCount.ToString())}\n  Graphics: {(Scene == null ? "0" : Scene.GraphicsCount.ToString())}");
+                Debug.DrawString(
+                    null, 
+                    new Vector2(WindowWidth - 260, 15), 
+                    string.Format(
+                        DiagnosticsTextFormat, 
+                        Time.ToString(@"hh\:mm\:ss\.fff"),
+                        metrics.DrawCount,
+                        metrics.SpriteCount,
+                        metrics.TextureCount,
+                        Physics.UpdatePositionExecutionTime,
+                        Physics.SolveConstraintsExecutionTime,
+                        Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
+                        Physics.CollidersNarrowPhaseCount, Physics.CollisionDetectionNarrowPhaseExecutionTime,
+                        Scene == null ? "0" : Scene.UpdatableCount.ToString(),
+                        Scene == null ? "0" : Scene.RenderableCount.ToString(),
+                        Scene == null ? "0" : Scene.SceneObjectsCount.ToString()
+                    )
+                );
 
                 // framerate monitor frame
                 Debug.DrawRectangle(null, _framerateMonitorFrame, Color.White);

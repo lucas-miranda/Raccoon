@@ -1,19 +1,25 @@
-﻿using System;
-using System.Diagnostics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
 using Raccoon.Util.Collections;
 
 namespace Raccoon {
-    public class Entity {
+    public class Entity : ISceneObject {
         #region Public Delegates
 
-        public Action OnSceneAdded = delegate { }, OnSceneRemoved = delegate { }, OnStart = delegate { }, OnSceneBegin = delegate { }, OnSceneEnd = delegate { }, OnBeforeUpdate = delegate { }, OnUpdate = delegate { }, OnLateUpdate = delegate { }, OnRender = delegate { };
+        public event System.Action OnSceneAdded = delegate { }, 
+                                   OnSceneRemoved = delegate { }, 
+                                   OnStart = delegate { }, 
+                                   OnSceneBegin = delegate { }, 
+                                   OnSceneEnd = delegate { }, 
+                                   OnBeforeUpdate = delegate { }, 
+                                   OnUpdate = delegate { }, 
+                                   OnLateUpdate = delegate { }, 
+                                   OnRender = delegate { };
 
 #if DEBUG
-        public Action OnDebugRender = delegate { };
+        public event System.Action OnDebugRender = delegate { };
 #endif
 
         #endregion Public Delegates
@@ -42,11 +48,13 @@ namespace Raccoon {
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
-        public bool HasStarted { get; private set; } 
-        public Vector2 Position { get; set; }
-        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
-        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
-        public float Rotation { get; set; }
+        public bool HasStarted { get; private set; }
+        public Transform Transform { get; private set; } = new Transform();
+        public Vector2 Position { get { return Transform.Position; } set { Transform.Position = value; } }
+        public float X { get { return Transform.X; } set { Transform.X = value; } }
+        public float Y { get { return Transform.Y; } set { Transform.Y = value; } }
+        public float Rotation { get { return Transform.Rotation; } set { Transform.Rotation = value; } }
+        public int Order { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; } = new Locker<Graphic>(Graphic.LayerComparer);
@@ -191,7 +199,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Position, Rotation);
+                g.Render(Position, Transform.Rotation);
             }
 
             foreach (Component c in Components) {
@@ -205,7 +213,7 @@ namespace Raccoon {
             OnRender();
         }
 
-        [Conditional("DEBUG")]
+#if DEBUG
         public virtual void DebugRender() {
             foreach (Graphic g in Graphics) {
                 if (!g.Visible || g.IgnoreDebugRender) {
@@ -223,14 +231,13 @@ namespace Raccoon {
                 c.DebugRender();
             }
 
-#if DEBUG
             OnDebugRender();
-#endif
         }
+#endif
 
         public Graphic AddGraphic(Graphic graphic) {
             if (graphic == null) {
-                return null;
+                return default;
             }
 
             Graphics.Add(graphic);
