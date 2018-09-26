@@ -10,9 +10,18 @@ namespace Raccoon {
 
         #endregion Private Members
 
+        #region Constructors
+
+        internal Transform(Entity entity) {
+            Entity = entity;
+        }
+
+        #endregion Constructors
+
         #region Public Properties
 
-        public Vector2 Position { get; set; }
+        public Entity Entity { get; }
+        public Vector2 LocalPosition { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public Vector2 Origin { get; set; }
@@ -25,16 +34,34 @@ namespace Raccoon {
             }
 
             set {
+                if (value == this) {
+                    value = null;
+                }
+
                 if (value == _parent) {
                     return;
                 }
 
                 if (_parent != null) {
                     _parent._children.Remove(this);
+                    OnParentRemoved();
                 }
 
                 _parent = value;
-                _parent._children.Add(this);
+                if (_parent != null) {
+                    _parent._children.Add(this);
+                    OnParentAdded();
+                }
+            }
+        }
+
+        public Vector2 Position {
+            get {
+                return _parent == null ? LocalPosition : LocalPosition + _parent.Position;
+            }
+
+            set {
+                LocalPosition = _parent == null ? value : value - _parent.Position;
             }
         }
 
@@ -50,13 +77,39 @@ namespace Raccoon {
             _children.Clear();
         }
 
-        #endregion Public Methods
-
-        #region Private Methods
+        public override string ToString() {
+            return $"{Position}  Rot: {Rotation}  Origin: {Origin}  Parent? {_parent != null}  Child Count: {_children.Count}";
+        }
 
         public IEnumerator<Transform> GetEnumerator() {
             foreach (Transform child in _children) {
                 yield return child;
+            }
+        }
+
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private void OnParentAdded() {
+            if (Entity.Scene != Parent.Entity.Scene) {
+                if (Entity.Scene != null) {
+                    Entity.SceneRemoved();
+                }
+
+                if (Parent.Entity.Scene != null) {
+                    Entity.SceneAdded(Parent.Entity.Scene);
+                }
+            }
+
+            if (!Entity.HasStarted && Parent.Entity.HasStarted) {
+                Entity.Start();
+            }
+        }
+
+        private void OnParentRemoved() {
+            if (Entity.Scene != null) {
+                Entity.SceneRemoved();
             }
         }
 

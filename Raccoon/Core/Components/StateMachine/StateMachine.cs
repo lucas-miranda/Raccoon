@@ -84,7 +84,7 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            Debug.DrawString(Entity.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0), $"State:\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
+            Debug.DrawString(Entity.Transform.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0), $"State:\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
         }
 
         public void Start(T label) {
@@ -187,7 +187,7 @@ namespace Raccoon.Components {
                 return (K) value;
             }
 
-            return default(K);
+            return default;
         }
 
         public void RemoveTrigger(string label) {

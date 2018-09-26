@@ -49,7 +49,7 @@ namespace Raccoon.Components {
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
         public Vector2 LastPosition { get; private set; }
-        public Vector2 Position { get { return Entity.Position - Shape.Origin; } set { Entity.Position = value + Shape.Origin; } }
+        public Vector2 Position { get { return Entity.Transform.Position - Shape.Origin; } set { Entity.Transform.Position = value + Shape.Origin; } }
         public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
@@ -152,7 +152,7 @@ namespace Raccoon.Components {
 #if DEBUG
         Contact[] contacts = null;
         public override void DebugRender() {
-            Shape.DebugRender(Entity.Position, Color);
+            Shape.DebugRender(Entity.Transform.Position, Color);
 
             if (contacts != null) {
                 foreach (Contact contact in contacts) {
