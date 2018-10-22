@@ -110,7 +110,7 @@ namespace Raccoon.Util {
         /// Returns a random Vector2 in a determined area.
         /// </summary>
         /// <param name="area">A Rectangle area.</param>
-        /// <returns>A random Vector2 in range (x: [-left, right], y: [-top, bottom]).</returns>
+        /// <returns>A random Vector2 in range (x: [left, right], y: [top, bottom]).</returns>
         public static Vector2 Vector2(Rectangle area) {
             return new Vector2(Integer((int) area.Left, (int) area.Right), Integer((int) area.Top, (int) area.Bottom));
         }

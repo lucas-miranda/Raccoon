@@ -190,16 +190,16 @@
             return (value - center) / center;
         }
 
-        public static float Round(float n) {
-            return (float) System.Math.Round(n);
+        public static float Round(float n, System.MidpointRounding midpointRounding = System.MidpointRounding.ToEven) {
+            return (float) System.Math.Round(n, midpointRounding);
         }
 
-        public static double Round(double n) {
-            return System.Math.Round(n);
+        public static double Round(double n, System.MidpointRounding midpointRounding = System.MidpointRounding.ToEven) {
+            return System.Math.Round(n, midpointRounding);
         }
 
-        public static Vector2 Round(Vector2 value) {
-            return new Vector2(Round(value.X), Round(value.Y));
+        public static Vector2 Round(Vector2 value, System.MidpointRounding midpointRounding = System.MidpointRounding.ToEven) {
+            return new Vector2(Round(value.X, midpointRounding), Round(value.Y, midpointRounding));
         }
 
         public static int Sign(float n) {

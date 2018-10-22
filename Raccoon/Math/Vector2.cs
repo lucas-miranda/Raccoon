@@ -1,10 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using Raccoon.Util;
 
 namespace Raccoon {
     public struct Vector2 : System.IEquatable<Vector2> {
-        #region Static Readonly
+        #region Private Members
+
+        private static readonly Regex StringFormatRegex = new Regex(@"(\-?\d+(?:\.?\d+)?)(?: *, *| +)(\-?\d+(?:\.?\d+)?)");
+
+        #endregion Private Members
+
+        #region Public Members
 
         public static readonly Vector2 Zero = new Vector2(0, 0);
         public static readonly Vector2 One = new Vector2(1, 1);
@@ -18,10 +25,6 @@ namespace Raccoon {
         public static readonly Vector2 DownLeft = new Vector2(1, -1);
         public static readonly Vector2 UnitX = new Vector2(1, 0);
         public static readonly Vector2 UnitY = new Vector2(0, 1);
-
-        #endregion Static Readonly          
-
-        #region Public Members
 
         public float X, Y;
 
@@ -82,6 +85,35 @@ namespace Raccoon {
 
         public static bool EqualsEstimate(Vector2 v1, Vector2 v2, float tolerance = Math.Epsilon) {
             return Math.EqualsEstimate(v1.X, v2.X, tolerance) && Math.EqualsEstimate(v1.Y, v2.Y, tolerance);
+        }
+
+        public static Vector2 Parse(string value) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                throw new System.FormatException($"String '{value}' doesn't not typify a Vector2.");
+            }
+
+            return new Vector2(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value)
+            );
+        }
+
+        public static bool TryParse(string value, out Vector2 result) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                result = Zero;
+                return false;
+            }
+
+            result = new Vector2(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value)
+            );
+
+            return true;
         }
 
         #endregion Public Static Methods

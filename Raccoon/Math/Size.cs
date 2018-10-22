@@ -1,13 +1,17 @@
-﻿namespace Raccoon {
+﻿using System.Text.RegularExpressions;
+
+namespace Raccoon {
     public struct Size {
-        #region Static Readonly
+        #region Private Members
+
+        private static readonly Regex StringFormatRegex = new Regex(@"(\-?\d+(?:\.?\d+)?)(?: *, *| +)(\-?\d+(?:\.?\d+)?)");
+
+        #endregion Private Members
+
+        #region Public Members
 
         public static readonly Size Empty = new Size(0);
         public static readonly Size One = new Size(1);
-
-        #endregion Static Readonly  
-
-        #region Public Members
 
         public float Width, Height;
 
@@ -20,9 +24,11 @@
             Height = System.Math.Abs(h);
         }
 
-        public Size(float wh) : this(wh, wh) { }
+        public Size(float wh) : this(wh, wh) {
+        }
 
-        public Size(Vector2 v) : this(v.X, v.Y) { }
+        public Size(Vector2 v) : this(v.X, v.Y) {
+        }
 
         #endregion Constructors
 
@@ -34,6 +40,35 @@
         #endregion Public Properties
 
         #region Public Methods
+
+        public static Size Parse(string value) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                throw new System.FormatException($"String '{value}' doesn't not typify a Size.");
+            }
+
+            return new Size(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value)
+            );
+        }
+
+        public static bool TryParse(string value, out Size result) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                result = Empty;
+                return false;
+            }
+
+            result = new Size(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value)
+            );
+
+            return true;
+        }
 
         public void Inflate(float w, float h) {
             Width = System.Math.Abs(Width + w);
