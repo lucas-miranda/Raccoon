@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+
 using Newtonsoft.Json.Linq;
+
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -25,21 +27,32 @@ namespace Raccoon.Graphics {
             _subTextures = new Dictionary<string, AtlasSubTexture>();
             Texture = new Texture(imageFilename);
 
+
             // all frames organized as sprite/tag/frame
             Dictionary<string, Dictionary<string, List<JObject>>> animationsData = new Dictionary<string, Dictionary<string, List<JObject>>>();
             JObject json = JObject.Parse(File.ReadAllText(jsonFilename));
+
+            JToken sizeToken = json.SelectToken("meta.size");
+
+            Rectangle sourceRegion = new Rectangle(
+                                         sizeToken.Value<int>("w"),
+                                         sizeToken.Value<int>("h")
+                                     );
+
             foreach (JProperty prop in json.SelectToken("frames").Children<JProperty>()) {
                 Match m = FrameNameRegex.Match(prop.Name);
                 if (!m.Success) {
                     continue;
                 }
 
-                string spriteName = m.Groups[1].Value, tag = m.Groups[3].Length == 0 ? "default" : m.Groups[3].Value;
+                string spriteName = m.Groups[1].Value, 
+                       tag = m.Groups[3].Length == 0 ? "none" : m.Groups[3].Value;
+
                 int frameId = m.Groups[2].Length == 0 ? 0 : int.Parse(m.Groups[2].Value);
                 
                 if (!animationsData.ContainsKey(spriteName)) {
                     animationsData.Add(spriteName, new Dictionary<string, List<JObject>>());
-                    animationsData[spriteName].Add("Default", new List<JObject>());
+                    animationsData[spriteName].Add("all", new List<JObject>());
                 }
 
                 Dictionary<string, List<JObject>> animData = animationsData[spriteName];
@@ -50,30 +63,30 @@ namespace Raccoon.Graphics {
                 JObject frameObj = prop.Value.ToObject<JObject>();
                 frameObj.Add("frameId", new JValue(frameId));
                 animData[tag].Add(frameObj);
-                if (tag != "Default") {
-                    animData["Default"].Add(frameObj);
+
+                if (tag != "all") {
+                    animData["all"].Add(frameObj);
                 }
             }
 
             // create AtlasSubTextures
             foreach (KeyValuePair<string, Dictionary<string, List<JObject>>> animationData in animationsData) {
-                JObject defaultSpriteData = animationData.Value["Default"][0];
-                JToken frameRegion = defaultSpriteData["frame"];
-                Rectangle region = new Rectangle(frameRegion.Value<int>("x"), frameRegion.Value<int>("y"), frameRegion.Value<int>("w"), frameRegion.Value<int>("h"));
-                if (animationData.Value["Default"].Count == 1) {
-                    _subTextures.Add(animationData.Key, new AtlasSubTexture(Texture, region));
+                if (animationData.Value["all"].Count == 1) {
+                    _subTextures.Add(animationData.Key, new AtlasSubTexture(Texture, sourceRegion));
                 } else {
-                    // expand region to fit all frames
-                    foreach (JObject frameData in animationData.Value["Default"]) {
-                        frameRegion = frameData["frame"];
-                        region |= new Rectangle(frameRegion.Value<int>("x"), frameRegion.Value<int>("y"), frameRegion.Value<int>("w"), frameRegion.Value<int>("h"));
-                    }
+                    AtlasAnimation animation = new AtlasAnimation(Texture, sourceRegion);
 
-                    JToken frameSize = defaultSpriteData["sourceSize"];
-                    AtlasAnimation animation = new AtlasAnimation(new Size(frameSize.Value<int>("w"), frameSize.Value<int>("h")), Texture, region);
                     foreach (KeyValuePair<string, List<JObject>> track in animationData.Value) {
                         foreach (JObject frameData in track.Value) {
-                            animation.Add(frameData["frameId"].ToObject<int>(), frameData["duration"].ToObject<int>(), track.Key);
+                            JToken frameRegion = frameData["frame"];
+                            Rectangle clippingRegion = new Rectangle(
+                                                           frameRegion.Value<int>("x"), 
+                                                           frameRegion.Value<int>("y"), 
+                                                           frameRegion.Value<int>("w"), 
+                                                           frameRegion.Value<int>("h")
+                                                       );
+
+                            animation.Add(clippingRegion, frameData["duration"].ToObject<int>(), track.Key);
                         }
                     }
 

@@ -24,7 +24,7 @@
 
         public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = subTexture.Texture;
-            SourceRegion = subTexture.Region;
+            SourceRegion = subTexture.SourceRegion;
             Load();
         }
 

@@ -1,11 +1,11 @@
 ﻿namespace Raccoon.Graphics {
     public class AtlasSubTexture {
-        public AtlasSubTexture(Texture texture, Rectangle region) {
+        public AtlasSubTexture(Texture texture, Rectangle sourceRegion) {
             Texture = texture;
-            Region = region;
+            SourceRegion = sourceRegion;
         }
 
         public Texture Texture { get; }
-        public Rectangle Region { get; protected set; }
+        public Rectangle SourceRegion { get; protected set; }
     }
 }

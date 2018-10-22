@@ -20,14 +20,14 @@ namespace Raccoon.Graphics {
         public Image(string filename) : this(new Texture(filename)) { }
 
         public Image(AtlasSubTexture subTexture) : this(subTexture.Texture) {
-            SourceRegion = subTexture.Region;
+            SourceRegion = subTexture.SourceRegion;
             ClippingRegion = new Rectangle(SourceRegion.Width, SourceRegion.Height);
         }
 
         public Image(AtlasAnimation animTexture) : this(animTexture.Texture) {
             Texture = animTexture.Texture;
-            SourceRegion = animTexture.Region;
-            ClippingRegion = new Rectangle(animTexture.FrameSize);
+            SourceRegion = animTexture.SourceRegion;
+            ClippingRegion = animTexture["all"][0].ClippingRegion;
         }
 
         public Image(Image image) : this(image.Texture) {
