@@ -55,7 +55,7 @@ Scene:
         private System.TimeSpan _lastFpsTime;
 
 #if DEBUG
-        private Rectangle _framerateMonitorFrame;
+        private Size _framerateMonitorSize;
 #endif
 
         // rendering
@@ -63,6 +63,7 @@ Scene:
 
         // resolution mode
         private Rectangle _windowedModeBounds;
+        private Vector2 _gameCanvasPosition;
 
         // scenes
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
@@ -107,14 +108,14 @@ Scene:
             // background
             BackgroundColor = Color.Black;
 
-            // window and resolution
+            // events
+            XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
+
+            // window and game internal size
             WindowSize = new Size(windowWidth, windowHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
             Size = WindowSize / PixelScale;
             Center = (Size / 2f).ToVector2();
-
-            // events
-            XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             OnBeforeUpdate = () => {
                 if (NextScene == Scene) {
@@ -158,17 +159,17 @@ Scene:
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
         public int WindowHeight { get { return (int) WindowSize.Height; } }
-        public int ScreenWidth { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Width; } }
-        public int ScreenHeight { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Height; } }
+        public int DisplayWidth { get { return (int) DisplaySize.Width; } }
+        public int DisplayHeight { get { return (int) DisplaySize.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
         public Size WindowSize { get; private set; }
         public Size WindowMinimunSize { get; set; }
-        public Size ScreenSize { get { return new Size(ScreenWidth, ScreenHeight); } }
+        public Size DisplaySize { get; private set; }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
         public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
-        public Vector2 ScreenCenter { get { return (ScreenSize / 2f).ToVector2(); } }
+        public Vector2 DisplayCenter { get { return (DisplaySize / 2f).ToVector2(); } }
         public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
@@ -177,6 +178,7 @@ Scene:
         public Renderer MainRenderer { get; private set; }
         public Renderer DebugRenderer { get; private set; }
         public System.TimeSpan Time { get; private set; }
+        public ResizeMode ResizeMode { get; set; } = ResizeMode.ExpandView;
 
         public string Title {
             get {
@@ -231,6 +233,7 @@ Scene:
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
         internal ResourceContentManager DefaultResourceContentManager { get; private set; }
+        internal float KeepProportionsScale { get; private set; } = 1f;
 
 #if DEBUG
         internal Canvas DebugCanvas { get; private set; }
@@ -513,11 +516,12 @@ Scene:
                 );
 
                 // framerate monitor frame
-                Debug.DrawRectangle(null, _framerateMonitorFrame, Color.White);
+                Rectangle framerateMonitorRect = new Rectangle(new Vector2(WindowWidth - 260 - _framerateMonitorSize.Width - 32, 15), _framerateMonitorSize);
+                Debug.DrawRectangle(null, framerateMonitorRect, Color.White);
 
                 // plot framerate values
                 int previousFramerateValue = FramerateValues[0], currentFramerateValue;
-                Vector2 monitorBottomLeft = _framerateMonitorFrame.BottomLeft;
+                Vector2 monitorBottomLeft = framerateMonitorRect.BottomLeft;
                 Vector2 previousPos = monitorBottomLeft + new Vector2(1, -previousFramerateValue - 1), currentPos;
                 for (int i = 1; i < FramerateValues.Count; i++) {
                     currentFramerateValue = FramerateValues[i];
@@ -594,38 +598,74 @@ Scene:
                 return;
             }
 
+            Size previousWindowSize = WindowSize;
+
+            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
             WindowSize = new Size(windowClientBounds.Width, windowClientBounds.Height);
             WindowCenter = (WindowSize / 2f).ToVector2();
-            Size = WindowSize / PixelScale;
-            Center = (Size / 2f).ToVector2();
 
-            // internal resize
-            // renderer
-            foreach (Renderer renderer in Renderers) {
-                renderer.RecalculateProjection();
-            }
+            switch (ResizeMode) {
+                case ResizeMode.KeepProportions:
+                    KeepProportionsScale = Math.Max(1f, WindowHeight / (Height * PixelScale));
 
-            // canvas
-            RenderTargetStack.Clear();
-
-            // game renderers projection
-            if (MainCanvas != null) {
-                MainCanvas.Resize(Size);
-                MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
-            }
+                    // width correction
+                    float internalGameWidth = Width * PixelScale * KeepProportionsScale;
+                    if (WindowWidth > internalGameWidth) {
+                        _gameCanvasPosition = new Vector2((WindowWidth - internalGameWidth) / 2f, 0f);
+                    } else {
+                        _gameCanvasPosition = Vector2.Zero;
+                    }
 
 #if DEBUG
-            if (DebugCanvas != null) {
-                DebugCanvas.Resize(WindowSize);
-                DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
-            }
+                    if (DebugCanvas != null) {
+                        DebugCanvas.Resize(WindowSize);
+                        DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
+                    }
 #endif
+
+                    break;
+
+                case ResizeMode.ExpandView:
+                default:
+                    _gameCanvasPosition = Vector2.Zero;
+                    Size = WindowSize / PixelScale;
+                    Center = (Size / 2f).ToVector2();
+
+                    // internal resize
+                    // renderer
+                    foreach (Renderer renderer in Renderers) {
+                        renderer.RecalculateProjection();
+                    }
+
+                    // canvas
+                    RenderTargetStack.Clear();
+
+                    // game renderers projection
+                    if (MainCanvas != null) {
+                        MainCanvas.Resize(Size);
+                        MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
+                    }
+
+#if DEBUG
+                    if (DebugCanvas != null) {
+                        DebugCanvas.Resize(WindowSize);
+                        DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
+                    }
+#endif
+                    break;
+
+            }
 
             // user callback
             OnWindowResize();
         }
 
         private void InternalLoadContent() {
+            //XNAGameWrapper.GraphicsDevice.p
+
+            // window and resolution
+            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
+
             if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
@@ -637,7 +677,7 @@ Scene:
                 RecalculateProjectionSize = () => {
                     float zoom = Camera.Current == null ? 1f : Camera.Current.Zoom;
                     float scaleFactor = 1f / (zoom * PixelScale);
-                    return new Size(WindowWidth * scaleFactor, WindowHeight * scaleFactor);
+                    return new Size(Width / zoom, Height / zoom);
                 }
             };
 
@@ -651,7 +691,7 @@ Scene:
             };
 
             float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
-            _framerateMonitorFrame = new Rectangle(new Vector2(WindowWidth - 260 - monitorFrameWidth - 32, 15), new Size(monitorFrameWidth, 82));
+            _framerateMonitorSize = new Size(monitorFrameWidth, 82); // new Rectangle(, );
             for (int i = 0; i < FramerateMonitorValuesCount; i++) {
                 FramerateValues.Add(0);
             }
@@ -661,6 +701,7 @@ Scene:
             DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
             StdFont = new Font(DefaultResourceContentManager.Load<SpriteFont>("Zoomy"));
             BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
+
 
             Initialize();
         }
@@ -713,10 +754,31 @@ Scene:
             MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
 
             // TODO: Add a way to register custom canvas to render here (each one should have a ID for sorting)
-            MainSpriteBatch.Draw(MainCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, null, Color.White, 0f, Microsoft.Xna.Framework.Vector2.Zero, new Microsoft.Xna.Framework.Vector2(PixelScale), SpriteEffects.None, 0f);
+            MainSpriteBatch.Draw(
+                MainCanvas.XNARenderTarget, 
+                _gameCanvasPosition, 
+                null, 
+                Color.White, 
+                0f, 
+                Microsoft.Xna.Framework.Vector2.Zero, 
+                new Microsoft.Xna.Framework.Vector2(PixelScale * KeepProportionsScale), 
+                SpriteEffects.None, 
+                0f
+            );
 
 #if DEBUG
-            MainSpriteBatch.Draw(DebugCanvas.XNARenderTarget, Microsoft.Xna.Framework.Vector2.Zero, Color.White);
+            MainSpriteBatch.Draw(
+                DebugCanvas.XNARenderTarget, 
+                _gameCanvasPosition,
+                null,
+                Color.White,
+                0f,
+                Microsoft.Xna.Framework.Vector2.Zero,
+                //new Microsoft.Xna.Framework.Vector2(KeepProportionsScale),
+                Microsoft.Xna.Framework.Vector2.One,
+                SpriteEffects.None,
+                0f
+            );
 #endif
 
             MainSpriteBatch.End();

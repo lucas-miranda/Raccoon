@@ -221,7 +221,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             Game.Instance.DebugRenderer.DrawString(
@@ -288,7 +288,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             BasicShader bs = Game.Instance.BasicShader;
@@ -350,7 +350,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             if (!origin.HasValue) {
@@ -409,7 +409,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             Vector2 rotOrigin = Vector2.Zero;
@@ -487,7 +487,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             if (segments <= 0) {
@@ -579,7 +579,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             if (segments <= 1) {
@@ -649,7 +649,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             BasicShader bs = Game.Instance.BasicShader;
@@ -734,7 +734,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             BasicShader bs = Game.Instance.BasicShader;
@@ -818,7 +818,7 @@ namespace Raccoon {
 
             if (camera != null) {
                 cameraPos = camera.Position;
-                zoom = Game.Instance.PixelScale * camera.Zoom;
+                zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
             BasicShader bs = Game.Instance.BasicShader;
