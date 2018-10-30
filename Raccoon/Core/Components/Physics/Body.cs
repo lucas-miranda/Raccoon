@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 using Raccoon.Graphics;
 using Raccoon.Util;
-using Raccoon.Util.Collections;
 
 namespace Raccoon.Components {
     public class Body : Component {
@@ -37,6 +37,7 @@ namespace Raccoon.Components {
             Material = material ?? StandardMaterial;
             Mass = Shape.ComputeMass(1f);
             InverseMass = Mass == 0f ? 0f : (1f / Mass);
+            CollisionList = _collisionList.AsReadOnly();
         }
 
         #endregion Constructors
@@ -48,7 +49,7 @@ namespace Raccoon.Components {
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
         public Vector2 LastPosition { get; private set; }
-        public Vector2 Position { get { return Entity.Position - Shape.Origin; } set { Entity.Position = value + Shape.Origin; } }
+        public Vector2 Position { get { return Entity.Transform.Position - Shape.Origin; } set { Entity.Transform.Position = value + Shape.Origin; } }
         public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
@@ -57,6 +58,7 @@ namespace Raccoon.Components {
         public float Right { get { return Shape != null ? Position.X + Shape.BoundingBox.Width / 2f : Position.X; } }
         public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Height / 2f : Position.Y; } }
         public float Left { get { return Shape != null ? Position.X - Shape.BoundingBox.Width / 2f : Position.X; } }
+        public ReadOnlyCollection<Body> CollisionList { get; }
 
 #if DEBUG
         public Color Color { get; set; } = Color.White;
@@ -91,7 +93,7 @@ namespace Raccoon.Components {
 
                 _movement = value;
 
-                if (Entity != null) {
+                if (Entity != null && _movement != null) {
                     _movement.OnAdded(this);
                 }
             }
@@ -150,7 +152,7 @@ namespace Raccoon.Components {
 #if DEBUG
         Contact[] contacts = null;
         public override void DebugRender() {
-            Shape.DebugRender(Entity.Position, Color);
+            Shape.DebugRender(Entity.Transform.Position, Color);
 
             if (contacts != null) {
                 foreach (Contact contact in contacts) {
@@ -208,28 +210,27 @@ namespace Raccoon.Components {
             IsResting = (Position - LastPosition).LengthSquared() == 0f;
         }
 
-        public void CollidedWith(Body otherBody, Vector2 collisionAxes) {
+        public void CollidedWith(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             _currentUpdateCollisionList.Add(otherBody);
 
-            if (_collisionList.Contains(otherBody)) {
-                Collided(otherBody, collisionAxes);
-                return;
+            if (!_collisionList.Contains(otherBody)) {
+                _collisionList.Add(otherBody);
+                BeginCollision(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
             }
 
-            BeginCollision(otherBody, collisionAxes);
-            _collisionList.Add(otherBody);
+            Collided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
         }
 
         public Vector2 Integrate(float dt) {
             Vector2 velocity = Velocity;
 
             // velocity X correction
-            if (Util.Math.EqualsEstimate(velocity.X, 0f)) {
+            if (Math.EqualsEstimate(velocity.X, 0f)) {
                 velocity.X = 0f;
             }
 
             // velocity Y correction
-            if (Util.Math.EqualsEstimate(velocity.Y, 0f)) {
+            if (Math.EqualsEstimate(velocity.Y, 0f)) {
                 velocity.Y = 0f;
             }
 
@@ -274,19 +275,19 @@ namespace Raccoon.Components {
 
         #region Collides [Single Output]
 
-        public bool Collides(Vector2 position, BitTag tags, out Contact[] contacts) {
+        public bool Collides(Vector2 position, BitTag tags, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, position, tags, out contacts);
         }
 
-        public bool Collides(BitTag tags, out Contact[] contacts) {
+        public bool Collides(BitTag tags, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, Position, tags, out contacts);
         }
 
-        public bool Collides(Vector2 position, out Contact[] contacts) {
+        public bool Collides(Vector2 position, out ContactList contacts) {
             return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out contacts);
         }
 
-        public bool Collides(out Contact[] contacts) {
+        public bool Collides(out ContactList contacts) {
             return Collides(Position, out contacts);
         }
 
@@ -364,26 +365,26 @@ namespace Raccoon.Components {
 
         #region Protected Methods
 
-        protected virtual void BeginCollision(Body otherBody, Vector2 collisionAxes) {
+        protected virtual void BeginCollision(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             OnBeginCollision?.Invoke(otherBody, collisionAxes);
 
             if (Movement != null) {
-                Movement.BeginBodyCollision(otherBody, collisionAxes);
+                Movement.BeginBodyCollision(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
 
                 if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
-                    Movement.BeginCollision(collisionAxes);
+                    Movement.BeginCollision(collisionAxes, hCollisionInfo, vCollisionInfo);
                 }
             }
         }
 
-        protected virtual void Collided(Body otherBody, Vector2 collisionAxes) {
+        protected virtual void Collided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             OnCollided?.Invoke(otherBody, collisionAxes);
 
             if (Movement != null) {
-                Movement.BodyCollided(otherBody, collisionAxes);
+                Movement.BodyCollided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
 
                 if (otherBody.Tags.HasAny(Movement.CollisionTags)) {
-                    Movement.Collided(collisionAxes);
+                    Movement.Collided(collisionAxes, hCollisionInfo, vCollisionInfo);
                 }
             }
         }

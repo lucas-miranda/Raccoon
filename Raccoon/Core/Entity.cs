@@ -1,19 +1,25 @@
-﻿using System;
-using System.Diagnostics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
 using Raccoon.Util.Collections;
 
 namespace Raccoon {
-    public class Entity {
+    public class Entity : ISceneObject {
         #region Public Delegates
 
-        public Action OnSceneAdded = delegate { }, OnSceneRemoved = delegate { }, OnStart = delegate { }, OnSceneBegin = delegate { }, OnSceneEnd = delegate { }, OnBeforeUpdate = delegate { }, OnUpdate = delegate { }, OnLateUpdate = delegate { }, OnRender = delegate { };
+        public event System.Action OnSceneAdded = delegate { }, 
+                                   OnSceneRemoved = delegate { }, 
+                                   OnStart = delegate { }, 
+                                   OnSceneBegin = delegate { }, 
+                                   OnSceneEnd = delegate { }, 
+                                   OnBeforeUpdate = delegate { }, 
+                                   OnUpdate = delegate { }, 
+                                   OnLateUpdate = delegate { }, 
+                                   OnRender = delegate { };
 
 #if DEBUG
-        public Action OnDebugRender = delegate { };
+        public event System.Action OnDebugRender = delegate { };
 #endif
 
         #endregion Public Delegates
@@ -29,6 +35,7 @@ namespace Raccoon {
         public Entity() {
             Name = "Entity";
             Renderer = Game.Instance.MainRenderer;
+            Transform = new Transform(this);
         }
 
         #endregion Constructors
@@ -36,17 +43,15 @@ namespace Raccoon {
         #region Public Properties
 
         public string Name { get; set; }
+        public Transform Transform { get; }
         public bool Active { get; set; } = true;
         public bool Visible { get; set; } = true;
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
-        public bool HasStarted { get; private set; } 
-        public Vector2 Position { get; set; }
-        public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
-        public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
-        public float Rotation { get; set; }
+        public bool HasStarted { get; private set; }
+        public int Order { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; } = new Locker<Graphic>(Graphic.LayerComparer);
@@ -106,6 +111,14 @@ namespace Raccoon {
                 c.OnAdded(this);
             }
 
+            foreach (Transform child in Transform) {
+                if (child.Entity.Scene == Scene) {
+                    continue;
+                }
+
+                child.Entity.SceneAdded(Scene);
+            }
+
             OnSceneAdded();
         }
 
@@ -123,19 +136,40 @@ namespace Raccoon {
                 c.OnRemoved();
             }
 
+            foreach (Transform child in Transform) {
+                child.Entity.SceneRemoved();
+            }
+
             OnSceneRemoved();
         }
 
         public virtual void Start() {
             HasStarted = true;
+
+            foreach (Transform child in Transform) {
+                if (child.Entity.HasStarted) {
+                    continue;
+                }
+
+                child.Entity.Start();
+            }
+
             OnStart();
         }
 
         public virtual void SceneBegin() {
+            foreach (Transform child in Transform) {
+                child.Entity.SceneBegin();
+            }
+
             OnSceneBegin();
         }
 
         public virtual void SceneEnd() {
+            foreach (Transform child in Transform) {
+                child.Entity.SceneEnd();
+            }
+
             OnSceneEnd();
         }
 
@@ -146,6 +180,14 @@ namespace Raccoon {
                 }
 
                 c.BeforeUpdate();
+            }
+
+            foreach (Transform child in Transform) {
+                if (!child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.BeforeUpdate();
             }
 
             OnBeforeUpdate();
@@ -170,6 +212,14 @@ namespace Raccoon {
                 c.Update(delta);
             }
 
+            foreach (Transform child in Transform) {
+                if (!child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.Update(delta);
+            }
+
             OnUpdate();
         }
 
@@ -182,6 +232,14 @@ namespace Raccoon {
                 c.LateUpdate();
             }
 
+            foreach (Transform child in Transform) {
+                if (!child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.LateUpdate();
+            }
+
             OnLateUpdate();
         }
 
@@ -191,7 +249,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Position, Rotation);
+                g.Render(Transform.Position, Transform.Rotation);
             }
 
             foreach (Component c in Components) {
@@ -202,10 +260,18 @@ namespace Raccoon {
                 c.Render();
             }
 
+            foreach (Transform child in Transform) {
+                if (!child.Entity.Visible) {
+                    continue;
+                }
+
+                child.Entity.Render();
+            }
+
             OnRender();
         }
 
-        [Conditional("DEBUG")]
+#if DEBUG
         public virtual void DebugRender() {
             foreach (Graphic g in Graphics) {
                 if (!g.Visible || g.IgnoreDebugRender) {
@@ -223,14 +289,21 @@ namespace Raccoon {
                 c.DebugRender();
             }
 
-#if DEBUG
+            foreach (Transform child in Transform) {
+                if (!child.Entity.Visible) {
+                    continue;
+                }
+
+                child.Entity.DebugRender();
+            }
+
             OnDebugRender();
-#endif
         }
+#endif
 
         public Graphic AddGraphic(Graphic graphic) {
             if (graphic == null) {
-                return null;
+                return default;
             }
 
             Graphics.Add(graphic);
@@ -348,7 +421,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"[Entity '{Name}' | X: {X} Y: {Y} Graphics: {Graphics.Count} Components: {Components.Count}]";
+            return $"[Entity '{Name}' | {Transform} | Graphics: {Graphics.Count} Components: {Components.Count}]";
         }
 
         #endregion Public Methods

@@ -1,5 +1,5 @@
 ﻿namespace Raccoon.Graphics {
-    public abstract class Graphic {
+    public abstract class Graphic : IUpdatable, IRenderable {
         #region Private Members
 
         private float _opacity = 1f;
@@ -26,6 +26,7 @@
         #region Public Properties
 
         public string Name { get; set; }
+        public bool Active { get; set; } = true;
         public bool Visible { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
         public Vector2 Position { get; set; }
@@ -33,6 +34,7 @@
         public Vector2 Origin { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
         public float ScaleXY { get { return Scale.X; } set { Scale = new Vector2(value); } }
+        public int Order { get; set; }
         public int Layer { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }

@@ -1,14 +1,17 @@
-﻿using Raccoon.Util;
+﻿using System.Text.RegularExpressions;
+using Raccoon.Util;
 
 namespace Raccoon {
     public struct Rectangle {
-        #region Static Readonly
+        #region Private Members
 
-        public static readonly Rectangle Empty = new Rectangle(Vector2.Zero, Size.Empty);
+        private static readonly Regex StringFormatRegex = new Regex(@"(\-?\d+(?:\.?\d+)?)(?: *, *| +)(\-?\d+(?:\.?\d+)?)(?: *, *| +)(\-?\d+(?:\.?\d+)?)(?: *, *| +)(\-?\d+(?:\.?\d+)?)");
 
-        #endregion Static Readonly          
+        #endregion Private Members
 
         #region Public Members
+
+        public static readonly Rectangle Empty = new Rectangle(Vector2.Zero, Size.Empty);
 
         public float X, Y, Width, Height;
 
@@ -67,6 +70,39 @@ namespace Raccoon {
 
         public static bool Intersect(Rectangle a, Rectangle b) {
             return a.Intersects(b);
+        }
+
+        public static Rectangle Parse(string value) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                throw new System.FormatException($"String '{value}' doesn't not typify a Rectangle.");
+            }
+
+            return new Rectangle(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value),
+                float.Parse(matches[0].Groups[3].Value),
+                float.Parse(matches[0].Groups[4].Value)
+            );
+        }
+
+        public static bool TryParse(string value, out Rectangle result) {
+            MatchCollection matches = StringFormatRegex.Matches(value);
+
+            if (matches.Count == 0 || !matches[0].Success) {
+                result = Empty;
+                return false;
+            }
+
+            result = new Rectangle(
+                float.Parse(matches[0].Groups[1].Value),
+                float.Parse(matches[0].Groups[2].Value),
+                float.Parse(matches[0].Groups[3].Value),
+                float.Parse(matches[0].Groups[4].Value)
+            );
+
+            return true;
         }
 
         #endregion Static Public Methods

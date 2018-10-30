@@ -350,6 +350,7 @@ namespace Raccoon.Graphics {
 
         internal void End() {
             SpriteBatch.End();
+
             IsBatching = false;
         }
 

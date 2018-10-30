@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,9 +25,26 @@ namespace Raccoon {
         #region Private Members
 
 #if DEBUG
+        private static readonly string DiagnosticsTextFormat = @"Time: {0}
+
+Draw Calls: {1}, Sprites: {2}
+Texture: {3}
+
+Physics:
+  Update Position: {4}ms
+  Solve Constraints: {5}ms
+  Coll Broad Phase: (C: {6}): {7}ms
+  Coll Narrow Phase: (C: {8}): {9}ms
+
+Scene:
+  Updatables: {10}
+  Renderables: {11}
+  Objects: {12}";
+
         private readonly string WindowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
         private const int FramerateMonitorDataSpacing = 4;
+
 #endif
 
         // window
@@ -68,7 +86,14 @@ namespace Raccoon {
 
             System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
                 System.Exception e = (System.Exception) args.ExceptionObject;
-                Debug.Log("crash-report", $"[Unhandled Exception] {e.Message}\n{e.StackTrace}\n");
+
+                using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
+                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n\n\n");
+                }
+
+#if WINDOWS
+                System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
+#endif
             };
 
             // fps
@@ -104,15 +129,15 @@ namespace Raccoon {
             Dispose(false);
         }
 
-        #endregion
+#endregion
 
-        #region Static Public Properties
+#region Static Public Properties
 
         public static Game Instance { get; private set; }
 
-        #endregion Static Public Properties
+#endregion Static Public Properties
 
-        #region Public Properties
+#region Public Properties
 
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
@@ -125,6 +150,7 @@ namespace Raccoon {
         public bool HardwareModeSwitch { get { return XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch; } set { XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch = value; } }
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
+        public string StartSceneName { get; private set; }
         public int LastUpdateDeltaTime { get; private set; }
         public int X { get { return XNAGameWrapper.Window.Position.X; } }
         public int Y { get { return XNAGameWrapper.Window.Position.Y; } }
@@ -143,6 +169,7 @@ namespace Raccoon {
         public Vector2 WindowCenter { get; private set; }
         public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
         public Vector2 ScreenCenter { get { return (ScreenSize / 2f).ToVector2(); } }
+        public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
         public Font StdFont { get; private set; }
@@ -192,9 +219,9 @@ namespace Raccoon {
         public bool DebugMode { get { return false; } }
 #endif
 
-        #endregion
+#endregion
 
-        #region Internal Properties
+#region Internal Properties
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
@@ -209,9 +236,9 @@ namespace Raccoon {
         internal Canvas DebugCanvas { get; private set; }
 #endif
 
-        #endregion Internal Properties
+#endregion Internal Properties
 
-        #region Public Methods
+#region Public Methods
 
         public void Start() {
             Debug.Info("| Raccoon Started |");
@@ -224,8 +251,11 @@ namespace Raccoon {
                 throw new System.ArgumentException($"Scene '{startScene}' not found", "startScene");
             }
 
-            SwitchScene(startScene);
-            UpdateCurrentScene();
+            StartSceneName = startScene;
+
+            IsRunning = false;
+            PreviousScene = Scene = NextScene = null;
+
             Start();
         }
 
@@ -309,7 +339,32 @@ namespace Raccoon {
         }
 
         public T SwitchScene<T>() where T : Scene {
-            return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
+            System.Type type = typeof(T);
+            foreach (KeyValuePair<string, Scene> entry in _scenes) {
+                if (entry.Value.GetType() == type) {
+                    return SwitchScene(entry.Key) as T;
+                }
+            }
+
+            throw new System.ArgumentException($"Scene '{type.Name}' is invalid or isn't registered yet.");
+        }
+
+        public Scene SwitchScene(Scene scene) {
+            foreach (KeyValuePair<string, Scene> entry in _scenes) {
+                if (entry.Value == scene) {
+                    return SwitchScene(entry.Key);
+                }
+            }
+
+            throw new System.ArgumentException($"Scene '{scene.GetType().Name}' is invalid or isn't registered yet.");
+        }
+
+        public bool HasScene(string name) {
+            return _scenes.ContainsKey(name);
+        }
+
+        public bool HasScene<T>() where T : Scene {
+            return _scenes.ContainsKey(typeof(T).Name.Replace("Scene", ""));
         }
 
         public Renderer AddRenderer(Renderer renderer) {
@@ -372,16 +427,19 @@ namespace Raccoon {
             ToggleFullscreen();
         }
 
-        #endregion
+#endregion
 
-        #region Protected Methods
+#region Protected Methods
 
         protected virtual void Initialize() {
             // systems initialization
             Debug.Console.Start();
 
-            OnBegin();
+            OnBegin?.Invoke();
             OnBegin = null;
+
+            SwitchScene(StartSceneName);
+            UpdateCurrentScene();
 
             Scene?.Begin();
 
@@ -435,7 +493,24 @@ namespace Raccoon {
             Debug.Instance.Render();
 
             if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(null, new Vector2(WindowWidth - 260, 15), $"Time: {Time.ToString(@"hh\:mm\:ss\.fff")}\n\nDraw calls: {metrics.DrawCount}, Sprites: {metrics.SpriteCount}\nTextures: {metrics.TextureCount}\n\nPhysics:\n  Update Position: {Physics.UpdatePositionExecutionTime}ms\n  Solve Constraints: {Physics.SolveConstraintsExecutionTime}ms\n  Collision Broad Phase (C: {Physics.CollidersBroadPhaseCount}): {Physics.CollisionDetectionBroadPhaseExecutionTime}ms\n  Collision Narrow Phase (C: {Physics.CollidersNarrowPhaseCount}): {Physics.CollisionDetectionNarrowPhaseExecutionTime}ms\n\nScene:\n  Entities: {(Scene == null ? "0" : Scene.EntitiesCount.ToString())}\n  Graphics: {(Scene == null ? "0" : Scene.GraphicsCount.ToString())}");
+                Debug.DrawString(
+                    null, 
+                    new Vector2(WindowWidth - 260, 15), 
+                    string.Format(
+                        DiagnosticsTextFormat, 
+                        Time.ToString(@"hh\:mm\:ss\.fff"),
+                        metrics.DrawCount,
+                        metrics.SpriteCount,
+                        metrics.TextureCount,
+                        Physics.UpdatePositionExecutionTime,
+                        Physics.SolveConstraintsExecutionTime,
+                        Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
+                        Physics.CollidersNarrowPhaseCount, Physics.CollisionDetectionNarrowPhaseExecutionTime,
+                        Scene == null ? "0" : Scene.UpdatableCount.ToString(),
+                        Scene == null ? "0" : Scene.RenderableCount.ToString(),
+                        Scene == null ? "0" : Scene.SceneObjectsCount.ToString()
+                    )
+                );
 
                 // framerate monitor frame
                 Debug.DrawRectangle(null, _framerateMonitorFrame, Color.White);
@@ -481,9 +556,9 @@ namespace Raccoon {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Private Methods
+#region Private Methods
 
         private void UpdateCurrentScene() {
             if (Scene != null) {
@@ -495,6 +570,7 @@ namespace Raccoon {
                 }
             }
 
+            PreviousScene = Scene;
             Scene = NextScene;
 
             if (Scene != null && MainRenderer != null) {
@@ -659,6 +735,6 @@ namespace Raccoon {
             BasicShader.ResetParameters();
         }
 
-        #endregion Private Methods
+#endregion Private Methods
     }
 }

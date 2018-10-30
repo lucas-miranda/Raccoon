@@ -9,16 +9,20 @@ namespace Raccoon {
 
         private Camera _camera;
 
+        /// <summary>
+        /// All scene objects for quickly access.
+        /// </summary>
+        private Locker<ISceneObject> _sceneObjects = new Locker<ISceneObject>();
 
         /// <summary>
-        /// Graphics sorted by Graphic.Layer in Scene.
+        /// Renderables sorted by IRenderable.Layer in Scene.
         /// </summary>
-        private Locker<Graphic> _graphics = new Locker<Graphic>(Graphic.LayerComparer);
+        private Locker<IRenderable> _renderables = new Locker<IRenderable>((IRenderable a, IRenderable b) => a.Layer.CompareTo(b.Layer));
 
         /// <summary>
-        /// Entities sorted by Entity.Layer in Scene.
+        /// Updatables sorted by IUpdatable.Order in Scene.
         /// </summary>
-        private Locker<Entity> _entities = new Locker<Entity>(Entity.LayerComparer);
+        private Locker<IUpdatable> _updatables = new Locker<IUpdatable>((IUpdatable a, IUpdatable b) => a.Order.CompareTo(b.Order));
 
         #endregion Private Members
 
@@ -37,14 +41,19 @@ namespace Raccoon {
         #region Public Properties
 
         /// <summary>
-        /// Entity count in this Scene.
+        /// Updatable count in this Scene.
         /// </summary>
-        public int EntitiesCount { get { return _entities.Count; } }
+        public int UpdatableCount { get { return _updatables.Count; } }
 
         /// <summary>
-        /// Graphic count in this Scene.
+        /// Renderable count in this Scene.
         /// </summary>
-        public int GraphicsCount { get { return _graphics.Count; } }
+        public int RenderableCount { get { return _renderables.Count; } }
+
+        /// <summary>
+        /// Scene Objects count in this Scene.
+        /// </summary>
+        public int SceneObjectsCount { get { return _sceneObjects.Count; } }
 
         /// <summary>
         /// Current Scene Time (in milliseconds), increments in every Update() when Scene is running.
@@ -84,42 +93,94 @@ namespace Raccoon {
         #region Public Methods
 
         /// <summary>
-        /// Add a Graphic to the Scene.
+        /// Adds an IUpdatable, IRenderable or ISceneObject to Scene.
+        /// Type can implements one or more of them.
         /// </summary>
-        /// <param name="graphic">The graphic to be added.</param>
-        /// <returns>The added Graphic.</returns>
+        /// <typeparam name="T">Class based on IUpdatable, IRenderable and/or ISceneObject.</typeparam>
+        /// <param name="obj">Object to add.</param>
+        /// <returns>Reference to the object.</returns>
+        public T Add<T>(T obj) {
+            bool added = false;
+
+            if (obj is IUpdatable updatable) {
+                _updatables.Add(updatable);
+                added = true;
+            } 
+
+            if (obj is IRenderable renderable) {
+                _renderables.Add(renderable);
+                added = true;
+            } 
+
+            if (obj is ISceneObject sceneObject) {
+                _sceneObjects.Add(sceneObject);
+                added = true;
+
+                sceneObject.SceneAdded(this);
+                if (HasStarted && !sceneObject.HasStarted) {
+                    sceneObject.Start();
+                }
+            } 
+
+            if (!added) {
+                throw new System.ArgumentException("Object must be an ISceneObject, IUpdatable or IRenderable.");
+            }
+
+            return obj;
+        }
+
+        /// <summary>
+        /// Adds a Graphic to the Scene.
+        /// </summary>
+        /// <param name="graphic">Graphic to add.</param>
+        /// <returns>Reference to Graphic.</returns>
         public Graphic AddGraphic(Graphic graphic) {
-            _graphics.Add(graphic);
+            _updatables.Add(graphic);
+            _renderables.Add(graphic);
             return graphic;
         }
 
+        /// <summary>
+        /// Adds a Graphic to the Scene.
+        /// </summary>
+        /// <typeparam name="T">Graphic based type.</typeparam>
+        /// <param name="graphic">Graphic to add.</param>
+        /// <returns>Reference to Graphic.</returns>
         public T AddGraphic<T>(T graphic) where T : Graphic {
             return AddGraphic(graphic as Graphic) as T;
         }
 
         /// <summary>
-        /// Add multiple graphics to the Scene. 
+        /// Adds multiple Graphic to the Scene. 
         /// </summary>
-        /// <param name="graphics">The IEnumerable containing graphics.</param>
+        /// <param name="graphics">IEnumerable containing Graphic.</param>
         public void AddGraphics(IEnumerable<Graphic> graphics) {
-            _graphics.AddRange(graphics);
+            _updatables.AddRange(graphics);
+            _renderables.AddRange(graphics);
         }
 
         /// <summary>
-        /// Add multiple graphics to the Scene. 
+        /// Adds multiple Graphic to the Scene. 
         /// </summary>
-        /// <param name="graphics">Graphics as variable number of arguments.</param>
+        /// <param name="graphics">Multiple Graphic as array or variable parameters.</param>
         public void AddGraphics(params Graphic[] graphics) {
             AddGraphics((IEnumerable<Graphic>) graphics);
         }
 
         /// <summary>
-        /// Add an Entity to the Scene.
+        /// Adds an Entity to the Scene.
         /// </summary>
-        /// <param name="entity">The Entity to be added.</param>
-        /// <returns>The added Entity.</returns>
+        /// <param name="entity">Entity to add.</param>
+        /// <returns>Reference to Entity.</returns>
         public Entity AddEntity(Entity entity) {
-            _entities.Add(entity);
+            if (entity.Scene == this) {
+                return entity;
+            }
+
+            _updatables.Add(entity);
+            _renderables.Add(entity);
+            _sceneObjects.Add(entity);
+
             entity.SceneAdded(this);
             if (HasStarted && !entity.HasStarted) {
                 entity.Start();
@@ -128,16 +189,23 @@ namespace Raccoon {
             return entity;
         }
 
+        /// <summary>
+        /// Adds an Entity to the Scene.
+        /// </summary>
+        /// <typeparam name="T">Entity based type.</typeparam>
+        /// <param name="entity">Entity to add.</param>
+        /// <returns>Reference to the entity.</returns>
         public T AddEntity<T>(T entity) where T : Entity {
             return AddEntity(entity as Entity) as T;
         }
         
         /// <summary>
-        /// Add multiple entities to the Scene.
+        /// Adds multiple Entity to the Scene.
         /// </summary>
-        /// <param name="entities">The IEnumerable containing entities.</param>
+        /// <param name="entities">IEnumerable containing Entity.</param>
         public void AddEntities(IEnumerable<Entity> entities) {
-            _entities.AddRange(entities);
+            _updatables.AddRange(entities);
+            _renderables.AddRange(entities);
             foreach (Entity e in entities) {
                 e.SceneAdded(this);
                 if (HasStarted && !e.HasStarted) {
@@ -147,107 +215,181 @@ namespace Raccoon {
         }
 
         /// <summary>
-        /// Add multiple entities to the Scene.
+        /// Adds multiple Entity to the Scene.
         /// </summary>
-        /// <param name="entities">Entities as variable number of arguments.</param>
+        /// <param name="entities">Multiple Entity as array or variable parameters.</param>
         public void AddEntities(params Entity[] entities) {
             AddEntities((IEnumerable<Entity>) entities);
         }
 
         /// <summary>
-        /// Remove a Graphic from Scene.
+        /// Remove an IUpdatable from Scene.
         /// </summary>
-        /// <param name="graphic">The Graphic to be removed.</param>
-        public void RemoveGraphic(Graphic graphic) {
-            _graphics.Remove(graphic);
+        /// <param name="updatable">IUpdatable to remove.</param>
+        /// <returns>Reference to IUpdatable.</returns>
+        public bool Remove(IUpdatable updatable) {
+            return _updatables.Remove(updatable);
         }
 
         /// <summary>
-        /// Remove multiple graphics from the Scene.
+        /// Remove an IRenderable from Scene.
         /// </summary>
-        /// <param name="graphics">The IEnumerable containing graphics.</param>
+        /// <param name="renderable">IRenderable to remove.</param>
+        /// <returns>Reference to IRenderable.</returns>
+        public bool Remove(IRenderable renderable) {
+            return _renderables.Remove(renderable);
+        }
+
+        /// <summary>
+        /// Removes an IUpdatable, IRenderable or ISceneObject from Scene.
+        /// Type can implements one or more of them.
+        /// </summary>
+        /// <typeparam name="T">Class based on IUpdatable, IRenderable and/or ISceneObject.</typeparam>
+        /// <param name="obj">Object to removed.</param>
+        /// <returns>True if removed, False otherwise.</returns>
+        public bool Remove<T>(T obj) {
+            bool isValid = false, 
+                 removed = false;
+
+            if (obj is IUpdatable updatable) {
+                isValid = true;
+                removed = Remove(updatable);
+            } 
+
+            if (obj is IRenderable renderable) {
+                isValid = true;
+                removed = Remove(renderable);
+            } 
+
+            if (obj is ISceneObject sceneObject) {
+                isValid = true;
+                if (_sceneObjects.Remove(sceneObject)) {
+                    sceneObject.SceneRemoved();
+                    removed = true;
+                }
+            } 
+
+            if (!isValid) {
+                throw new System.ArgumentException("Object must be an ISceneObject, IUpdatable or IRenderable.");
+            }
+
+            return removed;
+        }
+
+        /// <summary>
+        /// Removes a Graphic from Scene.
+        /// </summary>
+        /// <param name="graphic">Graphic to remove.</param>
+        public bool RemoveGraphic(Graphic graphic) {
+            _updatables.Remove(graphic);
+            return _renderables.Remove(graphic);
+        }
+
+        /// <summary>
+        /// Removes multiple Graphic from Scene.
+        /// </summary>
+        /// <param name="graphics">IEnumerable containing Graphic.</param>
         public void RemoveGraphics(IEnumerable<Graphic> graphics) {
-            _graphics.RemoveRange(graphics);
+            _updatables.RemoveRange(graphics);
+            _renderables.RemoveRange(graphics);
         }
 
         /// <summary>
-        /// Remove multiple graphics from the Scene.
+        /// Removes multiple Graphic from Scene.
         /// </summary>
-        /// <param name="graphics">Graphics as variable number of arguments.</param>
+        /// <param name="graphics">Multiple Graphic as array or variable parameters.</param>
         public void RemoveGraphics(params Graphic[] graphics) {
             RemoveGraphics((IEnumerable<Graphic>) graphics);
         }
 
         /// <summary>
-        /// Remove an Entity from the Scene.
+        /// Removes an Entity from Scene.
         /// </summary>
-        /// <param name="entity">The Entity to be removed.</param>
-        public void RemoveEntity(Entity entity) {
-            if (_entities.Remove(entity)) {
+        /// <param name="entity">Entity to remove.</param>
+        public bool RemoveEntity(Entity entity) {
+            _updatables.Remove(entity);
+            _renderables.Remove(entity);
+            if (_sceneObjects.Remove(entity)) {
                 entity.SceneRemoved();
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
-        /// Remove multiple entities from the Scene.
+        /// Removes multiple Entity from Scene.
         /// </summary>
-        /// <param name="entities">The IEnumerable containing entities.</param>
+        /// <param name="entities">IEnumerable containing Entity.</param>
         public void RemoveEntities(IEnumerable<Entity> entities) {
             foreach (Entity entity in entities) {
-                if (_entities.Remove(entity)) {
+                _updatables.Remove(entity);
+                _renderables.Remove(entity);
+                if (_sceneObjects.Remove(entity)) {
                     entity.SceneRemoved();
                 }
             }
         }
 
         /// <summary>
-        /// Remove multiple entities from the Scene.
+        /// Removes multiple Entity from the Scene.
         /// </summary>
-        /// <param name="entities">Entities as variable number of arguments.</param>
+        /// <param name="entities">Multiple Entity as array or variable parameters.</param>
         public void RemoveEntities(params Entity[] entities) {
             RemoveEntities((IEnumerable<Entity>) entities);
         }
 
         /// <summary>
-        /// Remove multiple Entity using a System.Predicate.
+        /// Removes multiple IUpdatables and IRenderables from Scene using a filter. 
+        /// If it's an ISceneObject, removes too.
         /// </summary>
-        /// <param name="match">A filter to find entities.</param>
-        /// <returns>How many entities were removed.</returns>
-        public int RemoveEntitiesWhere(System.Predicate<Entity> match) {
-            List<Entity> removed = _entities.RemoveWhere(match);
-            foreach (Entity entity in removed) {
-                entity.OnSceneRemoved();
-            }
+        /// <param name="filter">Filter to find Entity.</param>
+        /// <returns>Removed Entity count.</returns>
+        public int RemoveWhere<T>(System.Predicate<T> filter) where T : IUpdatable, IRenderable {
+            List<IUpdatable> removedUpdatable = _updatables.RemoveWhere((IUpdatable u) => filter((T) u));
+            List<IRenderable> removedRenderable = _renderables.RemoveWhere((IRenderable r) => filter((T) r));
 
-            return removed.Count;
-        }
+            int removedCount = 0;
 
-        /// <summary>
-        /// Remove all entities from the Scene.
-        /// </summary>
-        public void ClearEntities() {
-            if (_entities.IsLocked) {
-                foreach (Entity entity in _entities.ToAdd) {
-                    entity.SceneRemoved();
-                }
+            foreach (IUpdatable updatable in removedUpdatable) {
+                Remove(updatable);
 
-                foreach (Entity entity in _entities.ToRemove) {
-                    entity.SceneRemoved();
+                if (updatable is ISceneObject sceneObject) {
+                    removedCount++;
+                    sceneObject.SceneRemoved();
                 }
             }
 
-            foreach (Entity entity in _entities.Items) {
-                entity.SceneRemoved();
+            foreach (IRenderable renderable in removedRenderable) {
+                Remove(renderable);
+
+                if (renderable is ISceneObject sceneObject && sceneObject.Scene == this) {
+                    removedCount++;
+                    sceneObject.SceneRemoved();
+                }
             }
 
-            _entities.Clear();
+            return removedCount;
         }
 
         /// <summary>
-        /// Remove all graphics from the Scene.
+        /// Remove all IUpdatable, IRenderables and ISceneObject from Scene.
         /// </summary>
-        public void ClearGraphics() {
-            _graphics.Clear();
+        public void Clear() {
+            _updatables.Clear();
+            _renderables.Clear();
+
+            if (_sceneObjects.IsLocked) {
+                foreach (ISceneObject sceneObject in _sceneObjects.ToAdd) {
+                    sceneObject.SceneRemoved();
+                }
+            }
+
+            foreach (ISceneObject sceneObject in _sceneObjects.Items) {
+                sceneObject.SceneRemoved();
+            }
+
+            _sceneObjects.Clear();
         }
 
         #endregion Public Methods
@@ -255,40 +397,42 @@ namespace Raccoon {
         #region Public Virtual Methods
 
         /// <summary>
-        /// Called when Scene is added to the Game via Game.AddScene().
+        /// Called when Scene is added to Game via Game.AddScene().
         /// </summary>
-        public virtual void OnAdded() { }
+        public virtual void OnAdded() {
+        }
 
         /// <summary>
         /// Called once to setup Scene.
-        /// Graphics Context is already available from here.
+        /// Graphics Context is already available here.
         /// </summary>
         public virtual void Start() {
             HasStarted = true;
-            foreach (Entity e in _entities) {
-                if (e.HasStarted) {
+
+            foreach (ISceneObject sceneObject in _sceneObjects) {
+                if (sceneObject.HasStarted) {
                     continue;
                 }
 
-                e.Start();
+                sceneObject.Start();
             }
 
             Camera.Start();
         }
 
         /// <summary>
-        /// Called every time Game switches to Scene.
+        /// Called every time Game switches from another Scene.
         /// </summary>
         public virtual void Begin() {
-            if (!HasStarted) {
+            if (!HasStarted || !Game.Instance.IsRunning) {
                 Start();
             }
 
             IsRunning = true;
             Camera.Begin();
 
-            foreach (Entity e in _entities) {
-                e.SceneBegin();
+            foreach (ISceneObject sceneObject in _sceneObjects) {
+                sceneObject.SceneBegin();
             }
         }
 
@@ -297,18 +441,18 @@ namespace Raccoon {
         /// </summary>
         public virtual void End() {
             IsRunning = false;
-            foreach (Entity e in _entities) {
-                e.SceneEnd();
+            foreach (ISceneObject sceneObject in _sceneObjects) {
+                sceneObject.SceneEnd();
             }
 
             Camera.End();
         }
 
         /// <summary>
-        /// Called when Scene is disposed to unload all resources.
+        /// Called when Scene is disposed, to unload all resources.
         /// </summary>
         public virtual void UnloadContent() {
-            foreach (Graphic g in _graphics) {
+            /*foreach (Graphic g in _graphics) {
                 g.Dispose();
             }
 
@@ -316,28 +460,38 @@ namespace Raccoon {
                 foreach (Graphic g in e.Graphics) {
                     g.Dispose();
                 }
-            }
+            }*/
         }
 
         /// <summary>
         /// Runs before Update().
+        /// Call BeforeUpdate() on every IExtendedUpdatable (including ISceneObject), sorted by Order.
         /// </summary>
         public virtual void BeforeUpdate() {
             if (!IsRunning) {
                 return;
             }
 
-            foreach (Entity e in _entities) {
-                if (!e.Active || !e.AutoUpdate) {
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active) {
                     continue;
                 }
 
-                e.BeforeUpdate();
+                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
+                    continue;
+                }
+
+                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                    continue;
+                }
+
+                extendedUpdatable.BeforeUpdate();
             }
         }
 
         /// <summary>
         /// Main Scene Update. Normally all Game main logics stay here.
+        /// Call Update() on every IExtendedUpdatable (including ISceneObject), sorted by Order.
         /// </summary>
         /// <param name="delta">Time difference (in milliseconds) from previous update.</param>
         public virtual void Update(int delta) {
@@ -347,84 +501,86 @@ namespace Raccoon {
 
             Timer += (uint) delta;
 
-            foreach (Graphic g in _graphics) {
-                if (!g.Visible) {
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active) {
                     continue;
                 }
 
-                g.Update(delta);
-            }
-
-            foreach (Entity e in _entities) {
-                if (!e.Active || !e.AutoUpdate) {
+                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
-                e.Update(delta);
+                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                    continue;
+                }
+
+                extendedUpdatable.Update(delta);
             }
         }
 
         /// <summary>
         /// Runs after Update().
+        /// Call LateUpdate() on every IExtendedUpdatable (including ISceneObject), sorted by Order.
         /// </summary>
         public virtual void LateUpdate() {
             if (!IsRunning) {
                 return;
             }
 
-            foreach (Entity e in _entities) {
-                if (!e.Active || !e.AutoUpdate) {
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active) {
                     continue;
                 }
 
-                e.LateUpdate();
+                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
+                    continue;
+                }
+
+                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                    continue;
+                }
+
+                extendedUpdatable.LateUpdate();
             }
 
             Camera.Update(Game.Instance.LastUpdateDeltaTime);
         }
 
         /// <summary>
-        /// Render Graphics and Entities. (In this specific order)
+        /// Render all IRenderables, sorted by Layer.
         /// </summary>
         public virtual void Render() {
             Camera.PrepareRender();
 
-            foreach (Graphic g in _graphics) {
-                if (!g.Visible) {
+            foreach (IRenderable renderable in _renderables) {
+                if (!renderable.Visible) {
                     continue;
                 }
 
-                g.Render();
-            }
-
-            foreach (Entity e in _entities) {
-                if (!e.Visible || !e.AutoRender) {
+                if (renderable is ISceneObject sceneObject && !sceneObject.AutoRender) {
                     continue;
                 }
 
-                e.Render();
+                renderable.Render();
             }
         }
 
         /// <summary>
-        /// Render Debug informations. Collision bounds, for example.
-        /// Everything rendered here doesn't suffer from Game.Scale factor.
+        /// Used to render debug informations. Collision bounds, info text, for example.
+        /// Call DebugRender() on every IRenderable that implements IDebugRenderable (must be Visible).
+        /// Everything rendered here doesn't suffer from Game.PixelScale factor.
         /// </summary>
         public virtual void DebugRender() {
-            foreach (Graphic g in _graphics) {
-                if (!g.Visible || g.IgnoreDebugRender) {
+            foreach (IRenderable renderable in _renderables) {
+                if (!renderable.Visible) {
                     continue;
                 }
 
-                g.DebugRender();
-            }
-
-            foreach (Entity e in _entities) {
-                if (!e.Visible || !e.AutoRender || e.IgnoreDebugRender) {
+                if (!(renderable is IDebugRenderable debugRenderable)) {
                     continue;
                 }
 
-                e.DebugRender();
+                debugRenderable.DebugRender();
             }
 
             Camera.DebugRender();

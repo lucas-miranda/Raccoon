@@ -149,11 +149,8 @@ namespace Raccoon {
             return false;
         }
 
-        public void RegisterTags<T>() {
+        public void RegisterTags<T>() where T : System.Enum {
             System.Type tagType = typeof(T);
-            if (!tagType.IsEnum) {
-                throw new System.ArgumentException("Tags Type must be a Enum.");
-            }
 
             if (!tagType.IsDefined(typeof(System.FlagsAttribute), false)) {
                 throw new System.ArgumentException("Tags Type must contains System.FlagsAttribute and all values declared as power of 2.");
@@ -265,7 +262,7 @@ namespace Raccoon {
             _colliders.Clear();
         }
 
-        public void UpdateColliderTagsEntry(Body collider, BitTag oldTags = default(BitTag)) {
+        public void UpdateColliderTagsEntry(Body collider, BitTag oldTags = default) {
             if (oldTags == BitTag.All || oldTags == BitTag.None) {
                 foreach (KeyValuePair<BitTag, List<Body>> tagColliders in _collidersByTag) {
                     tagColliders.Value.Remove(collider);
@@ -307,7 +304,7 @@ namespace Raccoon {
 
         #region Queries [Single Output]
 
-        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out Contact[] contacts) {
+        public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out ContactList contacts) {
             if (tags == BitTag.None) {
                 contacts = null;
                 return false;
@@ -345,7 +342,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                    if (CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
                         collisionInfo = new CollisionInfo<Body>(otherCollider, contacts);
                         return true;
                     }
@@ -370,7 +367,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
                         collisionInfo = new CollisionInfo<T>(otherCollider.Entity as T, contacts);
                         return true;
                     }
@@ -400,7 +397,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out Contact[] contact)) {
+                    if (CheckCollision(shape, position, otherCollider, out ContactList contact)) {
                         collisionList.Add(otherCollider, contact);
                     }
                 }
@@ -424,7 +421,7 @@ namespace Raccoon {
                     }
 
                     if (otherCollider.Entity is T 
-                      && CheckCollision(shape, position, otherCollider, out Contact[] contacts)) {
+                      && CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
                         collisionList.Add(otherCollider.Entity as T, contacts);
                     }
                 }
@@ -524,16 +521,22 @@ namespace Raccoon {
             return false;
         }
 
-        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out Contact[] contacts, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out ContactList contacts, float maxDistance = float.PositiveInfinity) {
             bool hit = Raycast(position, direction, tags, out CollisionInfo<Body> collisionInfo, maxDistance);
-            contacts = collisionInfo.Contacts;
+
+            if (collisionInfo != null) {
+                contacts = collisionInfo.Contacts;
+            } else {
+                contacts = null;
+            }
+
             return hit;
         }
 
         public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<T> collisionInfo, float maxDistance = float.PositiveInfinity) where T : Entity {
             if (Raycast(position, direction, tags, out CollisionInfo<Body> collidedCollider, maxDistance)
-              && collidedCollider.Subject is T) {
-                collisionInfo = new CollisionInfo<T>(collidedCollider.Subject as T, collidedCollider.Contacts);
+              && collidedCollider.Subject.Entity is T) {
+                collisionInfo = new CollisionInfo<T>(collidedCollider.Subject.Entity as T, collidedCollider.Contacts);
                 return true;
             }
 
@@ -802,17 +805,19 @@ namespace Raccoon {
                             bool collidedH = false, 
                                  collidedV = false;
 
+                            ContactList contactsH = new ContactList(),
+                                        contactsV = new ContactList();
+
                             // test for horizontal collision (if it's moving horizontally)
                             if ((singleCheck || movementX != 0)
-                              && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out Contact[] contactsH)) {
+                              && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out contactsH)) {
                                 if (singleCheck) {
                                     collidedH = true;
                                 }
 
-                                if (System.Array.Exists(contactsH, c => c.PenetrationDepth > 0f)) {
-                                    collidedH = true;
-
-                                    if (isMovementCollidable) {
+                                collidedH = true;
+                                if (contactsH.Contains(c => c.PenetrationDepth > 0f)) {
+                                    if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, contactsH))) {
                                         canMoveH = false;
                                         distanceX = 0;
                                         directionY = Math.Sign(directionY);
@@ -823,15 +828,15 @@ namespace Raccoon {
 
                             // test for vertical collision (if it's moving vertically)
                             if ((singleCheck || movementY != 0)
-                              && CheckCollision(body.Shape, moveVerticalPos, otherBody, out Contact[] contactsV)) {
+                              && CheckCollision(body.Shape, moveVerticalPos, otherBody, out contactsV)) {
                                 if (singleCheck) {
                                     collidedV = true;
                                 }
 
-                                if (System.Array.Exists(contactsV, c => c.PenetrationDepth > 0f)) {
-                                    collidedV = true;
-
-                                    if (isMovementCollidable) {
+                                collidedV = true;
+                                if (contactsV.Contains(c => c.PenetrationDepth > 0f)) {
+                                    if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(canMoveH ? movementX : 0, movementY), new CollisionInfo<Body>(otherBody, contactsV))) {
+                                    //if (isMovementCollidable) {
                                         canMoveV = false;
                                         distanceY = 0;
                                         directionX = Math.Sign(directionX);
@@ -851,7 +856,23 @@ namespace Raccoon {
                                     collisionAxes.Y = collidedV ? movementY : 0;
                                 }
 
-                                body.CollidedWith(otherBody, collisionAxes);
+                                if (collisionAxes.X == 0f && collisionAxes.Y == 0f) {
+                                    body.CollidedWith(
+                                        otherBody, 
+                                        collisionAxes, 
+                                        new CollisionInfo<Body>(otherBody, contactsH), 
+                                        new CollisionInfo<Body>(otherBody, contactsV)
+                                    );
+                                } else {
+                                    body.CollidedWith(
+                                        otherBody, 
+                                        collisionAxes, 
+                                        collisionAxes.X == 0 ? null : new CollisionInfo<Body>(otherBody, contactsH), 
+                                        collisionAxes.Y == 0 ? null : new CollisionInfo<Body>(otherBody, contactsV)
+                                    );
+                                }
+
+
                                 //otherBody.CollidedWith(body, -collisionAxes);
 
 #if DEBUG
@@ -930,18 +951,6 @@ namespace Raccoon {
             }
         }
 
-        private bool CheckCollision(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
-            return _collisionFunctions[A.GetType()][B.GetType()](A, APos, B, BPos, out contacts);
-        }
-
-        private bool CheckCollision(IShape A, Vector2 APos, Body B, out Contact[] contacts) {
-            return CheckCollision(A, APos, B.Shape, B.Position, out contacts);
-        }
-
-        private bool CheckCollision(Body A, Body B, out Contact[] contacts) {
-            return CheckCollision(A.Shape, A.Position, B.Shape, B.Position, out contacts);
-        }
-
         [System.Diagnostics.Conditional("DEBUG")]
         private void ValidateTag(BitTag tag, string paramName = "tag") {
             if (!_collidersByTag.ContainsKey(tag)) {
@@ -960,6 +969,20 @@ namespace Raccoon {
 
         #region Internal Methods
 
+        internal bool CheckCollision(IShape A, Vector2 APos, IShape B, Vector2 BPos, out ContactList contacts) {
+            bool ret = _collisionFunctions[A.GetType()][B.GetType()](A, APos, B, BPos, out Contact[] c);
+            contacts = new ContactList(c);
+            return ret;
+        }
+
+        internal bool CheckCollision(IShape A, Vector2 APos, Body B, out ContactList contacts) {
+            return CheckCollision(A, APos, B.Shape, B.Position, out contacts);
+        }
+
+        internal bool CheckCollision(Body A, Body B, out ContactList contacts) {
+            return CheckCollision(A.Shape, A.Position, B.Shape, B.Position, out contacts);
+        }
+
 #if DEBUG
         internal void ClearTimers() {
             UpdatePositionExecutionTime = SolveConstraintsExecutionTime = CollisionDetectionBroadPhaseExecutionTime 
@@ -968,5 +991,6 @@ namespace Raccoon {
 #endif
 
         #endregion InternalMethods
+
     }
 }

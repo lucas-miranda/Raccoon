@@ -21,18 +21,20 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LINUX</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;WINDOWS PLATFORM_X86</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>TRACE;LINUX</DefineConstants>
+    <DefineConstants>TRACE;WINDOWS PLATFORM_X86</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
@@ -44,9 +46,16 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
+    <Compile Include="Core\IDebugRenderable.cs" />
+    <Compile Include="Core\IExtendedRenderable.cs" />
+    <Compile Include="Core\IRenderable.cs" />
+    <Compile Include="Core\IExtendedUpdatable.cs" />
+    <Compile Include="Core\ISceneObject.cs" />
+    <Compile Include="Core\IUpdatable.cs" />
     <Compile Include="Core\Physics\CollisionInfo.cs" />
     <Compile Include="Core\Physics\CollisionList.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
+    <Compile Include="Core\Physics\ContactList.cs" />
     <Compile Include="Core\Physics\Shapes\GridShape.cs" />
     <Compile Include="Core\Physics\Shapes\PolygonShape.cs" />
     <Compile Include="Core\Physics\Shapes\BoxShape.cs" />
@@ -67,6 +76,9 @@
     <Compile Include="Core\Physics\Physics.Helper.cs" />
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
+    <Compile Include="Core\Transform.cs" />
+    <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
+    <Compile Include="Graphics\Drawables\Animation.Track.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />
