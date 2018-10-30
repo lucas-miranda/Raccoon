@@ -71,8 +71,10 @@ namespace Raccoon.Graphics {
 
             // create AtlasSubTextures
             foreach (KeyValuePair<string, Dictionary<string, List<JObject>>> animationData in animationsData) {
+                string key = animationData.Key.ToLowerInvariant();
+
                 if (animationData.Value["all"].Count == 1) {
-                    _subTextures.Add(animationData.Key, new AtlasSubTexture(Texture, sourceRegion));
+                    _subTextures.Add(key, new AtlasSubTexture(Texture, sourceRegion));
                 } else {
                     AtlasAnimation animation = new AtlasAnimation(Texture, sourceRegion);
 
@@ -90,7 +92,7 @@ namespace Raccoon.Graphics {
                         }
                     }
 
-                    _subTextures.Add(animationData.Key, animation);
+                    _subTextures.Add(key, animation);
                 }
             }
         }
@@ -104,7 +106,7 @@ namespace Raccoon.Graphics {
 
         public AtlasSubTexture this[string name] {
             get {
-                return _subTextures[name];
+                return _subTextures[name.ToLowerInvariant()];
             }
         }
 
@@ -133,7 +135,7 @@ namespace Raccoon.Graphics {
         }
 
         public static AtlasSubTexture Retrieve(string name, string subName) {
-            return _bank[name][subName];
+            return _bank[name][subName.ToLowerInvariant()];
         }
 
         #endregion Public Static Methods

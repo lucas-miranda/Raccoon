@@ -93,7 +93,7 @@ namespace Raccoon {
         }
 
         public Range Projection(Vector2 position, Vector2 axis) {
-            return null;
+            return Range.Empty;
         }
 
         public Vector2[] CalculateAxes() {

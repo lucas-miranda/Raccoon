@@ -424,7 +424,7 @@ namespace Raccoon {
         /// Called every time Game switches from another Scene.
         /// </summary>
         public virtual void Begin() {
-            if (!HasStarted) {
+            if (!HasStarted || !Game.Instance.IsRunning) {
                 Start();
             }
 

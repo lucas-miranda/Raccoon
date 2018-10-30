@@ -104,6 +104,11 @@
             return PolarToCartesian(new Vector2(Clamp(value.Length(), -radius, radius), Angle(value)));
         }
 
+        public static Vector2 CircleClamp(Vector2 value, Vector2 circleCenter, float radius = 1f) {
+            value -= circleCenter;
+            return circleCenter + PolarToCartesian(new Vector2(Clamp(value.Length(), -radius, radius), Angle(value)));
+        }
+
         public static float DispersionNormalized(float value, float center) {
             return (value - center) / center;
         }

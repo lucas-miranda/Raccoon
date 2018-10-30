@@ -92,24 +92,13 @@ namespace Raccoon {
         #region Private Methods
 
         private void OnParentAdded() {
-            if (Entity.Scene != Parent.Entity.Scene) {
-                if (Entity.Scene != null) {
-                    Entity.SceneRemoved();
-                }
-
-                if (Parent.Entity.Scene != null) {
-                    Entity.SceneAdded(Parent.Entity.Scene);
-                }
-            }
-
-            if (!Entity.HasStarted && Parent.Entity.HasStarted) {
-                Entity.Start();
-            }
+            Entity.AutoRender = Entity.AutoUpdate = false;
         }
 
         private void OnParentRemoved() {
+            Entity.AutoRender = Entity.AutoUpdate = true;
             if (Entity.Scene != null) {
-                Entity.SceneRemoved();
+                Entity.RemoveSelf();
             }
         }
 

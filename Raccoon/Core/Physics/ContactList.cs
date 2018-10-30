@@ -1,5 +1,8 @@
-﻿namespace Raccoon {
-    public class ContactList {
+﻿using System.Collections;
+using System.Collections.Generic;
+
+namespace Raccoon {
+    public class ContactList : IEnumerable<Contact>, IEnumerable {
         private readonly Contact[] _entries;
         
         public ContactList(int capacity) {
@@ -19,6 +22,7 @@
         }
 
         public int Count { get { return _entries.Length; } }
+
         public Contact this[int index] { get { return _entries[index]; } }
 
         public bool Contains(System.Predicate<Contact> predicate) {
@@ -27,6 +31,16 @@
 
         public int FindIndex(System.Predicate<Contact> predicate) {
             return System.Array.FindIndex(_entries, predicate);
+        }
+
+        public IEnumerator<Contact> GetEnumerator() {
+            foreach (Contact c in _entries) {
+                yield return c;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return _entries.GetEnumerator();
         }
     }
 }

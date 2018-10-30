@@ -262,7 +262,7 @@ namespace Raccoon {
             _colliders.Clear();
         }
 
-        public void UpdateColliderTagsEntry(Body collider, BitTag oldTags = default(BitTag)) {
+        public void UpdateColliderTagsEntry(Body collider, BitTag oldTags = default) {
             if (oldTags == BitTag.All || oldTags == BitTag.None) {
                 foreach (KeyValuePair<BitTag, List<Body>> tagColliders in _collidersByTag) {
                     tagColliders.Value.Remove(collider);
@@ -523,14 +523,20 @@ namespace Raccoon {
 
         public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out ContactList contacts, float maxDistance = float.PositiveInfinity) {
             bool hit = Raycast(position, direction, tags, out CollisionInfo<Body> collisionInfo, maxDistance);
-            contacts = collisionInfo.Contacts;
+
+            if (collisionInfo != null) {
+                contacts = collisionInfo.Contacts;
+            } else {
+                contacts = null;
+            }
+
             return hit;
         }
 
         public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<T> collisionInfo, float maxDistance = float.PositiveInfinity) where T : Entity {
             if (Raycast(position, direction, tags, out CollisionInfo<Body> collidedCollider, maxDistance)
-              && collidedCollider.Subject is T) {
-                collisionInfo = new CollisionInfo<T>(collidedCollider.Subject as T, collidedCollider.Contacts);
+              && collidedCollider.Subject.Entity is T) {
+                collisionInfo = new CollisionInfo<T>(collidedCollider.Subject.Entity as T, collidedCollider.Contacts);
                 return true;
             }
 

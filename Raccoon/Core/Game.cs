@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -85,7 +86,14 @@ Scene:
 
             System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
                 System.Exception e = (System.Exception) args.ExceptionObject;
-                Debug.Log("crash-report", $"[Unhandled Exception] {e.Message}\n{e.StackTrace}\n");
+
+                using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
+                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n\n\n");
+                }
+
+#if WINDOWS
+                System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
+#endif
             };
 
             // fps
@@ -121,15 +129,15 @@ Scene:
             Dispose(false);
         }
 
-        #endregion
+#endregion
 
-        #region Static Public Properties
+#region Static Public Properties
 
         public static Game Instance { get; private set; }
 
-        #endregion Static Public Properties
+#endregion Static Public Properties
 
-        #region Public Properties
+#region Public Properties
 
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
@@ -142,6 +150,7 @@ Scene:
         public bool HardwareModeSwitch { get { return XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch; } set { XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch = value; } }
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
+        public string StartSceneName { get; private set; }
         public int LastUpdateDeltaTime { get; private set; }
         public int X { get { return XNAGameWrapper.Window.Position.X; } }
         public int Y { get { return XNAGameWrapper.Window.Position.Y; } }
@@ -160,6 +169,7 @@ Scene:
         public Vector2 WindowCenter { get; private set; }
         public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
         public Vector2 ScreenCenter { get { return (ScreenSize / 2f).ToVector2(); } }
+        public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
         public Font StdFont { get; private set; }
@@ -209,9 +219,9 @@ Scene:
         public bool DebugMode { get { return false; } }
 #endif
 
-        #endregion
+#endregion
 
-        #region Internal Properties
+#region Internal Properties
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
@@ -226,9 +236,9 @@ Scene:
         internal Canvas DebugCanvas { get; private set; }
 #endif
 
-        #endregion Internal Properties
+#endregion Internal Properties
 
-        #region Public Methods
+#region Public Methods
 
         public void Start() {
             Debug.Info("| Raccoon Started |");
@@ -241,8 +251,11 @@ Scene:
                 throw new System.ArgumentException($"Scene '{startScene}' not found", "startScene");
             }
 
-            SwitchScene(startScene);
-            UpdateCurrentScene();
+            StartSceneName = startScene;
+
+            IsRunning = false;
+            PreviousScene = Scene = NextScene = null;
+
             Start();
         }
 
@@ -326,7 +339,32 @@ Scene:
         }
 
         public T SwitchScene<T>() where T : Scene {
-            return SwitchScene(typeof(T).Name.Replace("Scene", "")) as T;
+            System.Type type = typeof(T);
+            foreach (KeyValuePair<string, Scene> entry in _scenes) {
+                if (entry.Value.GetType() == type) {
+                    return SwitchScene(entry.Key) as T;
+                }
+            }
+
+            throw new System.ArgumentException($"Scene '{type.Name}' is invalid or isn't registered yet.");
+        }
+
+        public Scene SwitchScene(Scene scene) {
+            foreach (KeyValuePair<string, Scene> entry in _scenes) {
+                if (entry.Value == scene) {
+                    return SwitchScene(entry.Key);
+                }
+            }
+
+            throw new System.ArgumentException($"Scene '{scene.GetType().Name}' is invalid or isn't registered yet.");
+        }
+
+        public bool HasScene(string name) {
+            return _scenes.ContainsKey(name);
+        }
+
+        public bool HasScene<T>() where T : Scene {
+            return _scenes.ContainsKey(typeof(T).Name.Replace("Scene", ""));
         }
 
         public Renderer AddRenderer(Renderer renderer) {
@@ -389,16 +427,19 @@ Scene:
             ToggleFullscreen();
         }
 
-        #endregion
+#endregion
 
-        #region Protected Methods
+#region Protected Methods
 
         protected virtual void Initialize() {
             // systems initialization
             Debug.Console.Start();
 
-            OnBegin();
+            OnBegin?.Invoke();
             OnBegin = null;
+
+            SwitchScene(StartSceneName);
+            UpdateCurrentScene();
 
             Scene?.Begin();
 
@@ -515,9 +556,9 @@ Scene:
             }
         }
 
-        #endregion
+#endregion
 
-        #region Private Methods
+#region Private Methods
 
         private void UpdateCurrentScene() {
             if (Scene != null) {
@@ -529,6 +570,7 @@ Scene:
                 }
             }
 
+            PreviousScene = Scene;
             Scene = NextScene;
 
             if (Scene != null && MainRenderer != null) {
@@ -693,6 +735,6 @@ Scene:
             BasicShader.ResetParameters();
         }
 
-        #endregion Private Methods
+#endregion Private Methods
     }
 }

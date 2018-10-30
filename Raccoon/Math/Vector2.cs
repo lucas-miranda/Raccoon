@@ -167,6 +167,10 @@ namespace Raccoon {
             return Projection(points as ICollection<Vector2>);
         }
 
+        public float Projection(Vector2 point) {
+            return Dot(this, point);
+        }
+
         public override bool Equals(object obj) {
             return obj is Vector2 && Equals((Vector2) obj);
         }

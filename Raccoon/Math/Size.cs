@@ -11,7 +11,7 @@ namespace Raccoon {
         #region Public Members
 
         public static readonly Size Empty = new Size(0);
-        public static readonly Size One = new Size(1);
+        public static readonly Size Unit = new Size(1);
 
         public float Width, Height;
 

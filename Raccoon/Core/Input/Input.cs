@@ -116,6 +116,10 @@ namespace Raccoon.Input {
             return Instance._keyboardState[(Keys) key] == KeyState.Up;
         }
 
+        public static bool IsAnyKeyPressed() {
+            return PressedKeys.Count > 0;
+        }
+
         public static InputButtonState KeyboardState(Key key) {
             KeyState previousState = Instance._keyboardPreviousState[(Keys) key],
                      currentState = Instance._keyboardState[(Keys) key];

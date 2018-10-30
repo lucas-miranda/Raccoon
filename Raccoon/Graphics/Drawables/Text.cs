@@ -37,7 +37,8 @@
 
         #region Public Methods
 
-        public override void Dispose() { }
+        public override void Dispose() {
+        }
 
         #endregion Public Methods
 

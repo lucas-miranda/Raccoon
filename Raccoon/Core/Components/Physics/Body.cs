@@ -93,7 +93,7 @@ namespace Raccoon.Components {
 
                 _movement = value;
 
-                if (Entity != null) {
+                if (Entity != null && _movement != null) {
                     _movement.OnAdded(this);
                 }
             }
