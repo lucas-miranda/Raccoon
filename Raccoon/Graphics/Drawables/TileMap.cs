@@ -66,32 +66,30 @@ namespace Raccoon.Graphics {
             Rows = rows;
             Size = new Size(Columns * TileSize.Width, Rows * TileSize.Height);
 
+            // prepare vertex buffer
             VertexPositionColorTexture[] previousVertices = null,
                                          newVertices = new VertexPositionColorTexture[Columns * Rows * 4];
 
-            // prepare vertex buffer
-            if (_vertexBuffer == null || newVertices.Length > _vertexBuffer.VertexCount) {
-                if (_vertexBuffer != null) {
-                    _vertexBuffer.GetData(previousVertices, 0, _vertexBuffer.VertexCount);
-                }
-
-                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, newVertices.Length, BufferUsage.WriteOnly);
-            } else {
+            if (_vertexBuffer != null) {
+                previousVertices = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
                 _vertexBuffer.GetData(previousVertices, 0, _vertexBuffer.VertexCount);
+            } 
+
+            if (_vertexBuffer == null || newVertices.Length > _vertexBuffer.VertexCount) {
+                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, newVertices.Length, BufferUsage.None);
             }
 
+            // prepare index buffer
             int[] previousIndices = null,
                   newIndices = new int[Columns * Rows * 6];
 
-            // prepare index buffer
-            if (_indexBuffer == null || newIndices.Length > _indexBuffer.IndexCount) {
-                if (_indexBuffer != null) {
-                    _indexBuffer.GetData(previousIndices, 0, _indexBuffer.IndexCount);
-                }
-
-                _indexBuffer = new DynamicIndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, newIndices.Length, BufferUsage.WriteOnly);
-            } else {
+            if (_indexBuffer != null)  {
+                previousIndices = new int[_indexBuffer.IndexCount];
                 _indexBuffer.GetData(previousIndices, 0, _indexBuffer.IndexCount);
+            }
+
+            if (_indexBuffer == null || newIndices.Length > _indexBuffer.IndexCount) {
+                _indexBuffer = new DynamicIndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, newIndices.Length, BufferUsage.None);
             }
 
             uint[] newTilesIds = new uint[Columns * Rows];
@@ -108,7 +106,6 @@ namespace Raccoon.Graphics {
                             oldTileIndexStartId = oldTileId * 6;
 
                         System.Array.Copy(previousVertices, oldTileVertexStartId, newVertices, newTileVertexStartId, 4);
-                        System.Array.Copy(previousIndices, oldTileIndexStartId, newIndices, newTileIndexStartId, 6);
 
                         newTilesIds[newTileId] = Data[oldTileId];
                     } else {
@@ -117,15 +114,15 @@ namespace Raccoon.Graphics {
                             newVertices[newTileVertexStartId + 2] = 
                             newVertices[newTileVertexStartId + 3] = new VertexPositionColorTexture(Microsoft.Xna.Framework.Vector3.Zero, Color.White, Vector2.Zero);
 
-                        newIndices[newTileIndexStartId] = newTileVertexStartId;
-                        newIndices[newTileIndexStartId + 1] = newTileVertexStartId + 1;
-                        newIndices[newTileIndexStartId + 2] = newTileVertexStartId + 2;
-                        newIndices[newTileIndexStartId + 3] = newTileVertexStartId + 2;
-                        newIndices[newTileIndexStartId + 4] = newTileVertexStartId + 1;
-                        newIndices[newTileIndexStartId + 5] = newTileVertexStartId + 3;
-
                         newTilesIds[newTileId] = 0;
                     }
+
+                    newIndices[newTileIndexStartId] = newTileVertexStartId;
+                    newIndices[newTileIndexStartId + 1] = newTileVertexStartId + 1;
+                    newIndices[newTileIndexStartId + 2] = newTileVertexStartId + 2;
+                    newIndices[newTileIndexStartId + 3] = newTileVertexStartId + 2;
+                    newIndices[newTileIndexStartId + 4] = newTileVertexStartId + 1;
+                    newIndices[newTileIndexStartId + 5] = newTileVertexStartId + 3;
                 }
             }
 
