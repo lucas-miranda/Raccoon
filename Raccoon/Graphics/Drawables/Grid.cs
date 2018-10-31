@@ -174,11 +174,11 @@ namespace Raccoon.Graphics {
             bs.SetMaterial(color * Color, Opacity);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
-            device.Indices = _indexBuffer;
-            device.SetVertexBuffer(_vertexBuffer);
 
             // grid
             foreach (var pass in bs) {
+                device.Indices = _indexBuffer;
+                device.SetVertexBuffer(_vertexBuffer);
                 device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
             }
 
@@ -188,7 +188,9 @@ namespace Raccoon.Graphics {
             }
 
             foreach (var pass in bs) {
-                device.DrawIndexedPrimitives(PrimitiveType.LineStrip, _usingVerticesCount - 4, _usingIndicesCount - 8, 8);
+                device.Indices = _indexBuffer;
+                device.SetVertexBuffer(_vertexBuffer);
+                device.DrawIndexedPrimitives(PrimitiveType.LineList, _usingVerticesCount - 4, _usingIndicesCount - 8, 4);
             }
 
             bs.ResetParameters();
