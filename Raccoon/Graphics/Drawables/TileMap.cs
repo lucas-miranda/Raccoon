@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-
 using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
@@ -14,7 +13,8 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private int _tileSetRows, _tileSetColumns, _triangleCount;
-        private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[0];
+        private DynamicVertexBuffer _vertexBuffer;
+        private DynamicIndexBuffer _indexBuffer;
 
         #endregion Private Members
 
@@ -66,30 +66,75 @@ namespace Raccoon.Graphics {
             Rows = rows;
             Size = new Size(Columns * TileSize.Width, Rows * TileSize.Height);
 
-            VertexPositionColorTexture[] newVertices = new VertexPositionColorTexture[Columns * Rows * 6];
+            VertexPositionColorTexture[] previousVertices = null,
+                                         newVertices = new VertexPositionColorTexture[Columns * Rows * 4];
+
+            // prepare vertex buffer
+            if (_vertexBuffer == null || newVertices.Length > _vertexBuffer.VertexCount) {
+                if (_vertexBuffer != null) {
+                    _vertexBuffer.GetData(previousVertices, 0, _vertexBuffer.VertexCount);
+                }
+
+                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, newVertices.Length, BufferUsage.WriteOnly);
+            } else {
+                _vertexBuffer.GetData(previousVertices, 0, _vertexBuffer.VertexCount);
+            }
+
+            int[] previousIndices = null,
+                  newIndices = new int[Columns * Rows * 6];
+
+            // prepare index buffer
+            if (_indexBuffer == null || newIndices.Length > _indexBuffer.IndexCount) {
+                if (_indexBuffer != null) {
+                    _indexBuffer.GetData(previousIndices, 0, _indexBuffer.IndexCount);
+                }
+
+                _indexBuffer = new DynamicIndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, newIndices.Length, BufferUsage.WriteOnly);
+            } else {
+                _indexBuffer.GetData(previousIndices, 0, _indexBuffer.IndexCount);
+            }
+
             uint[] newTilesIds = new uint[Columns * Rows];
             for (int y = 0; y < Rows; y++) {
                 for (int x = 0; x < Columns; x++) {
-                    int newTileId = (y * Columns + x) * 6;
+                    int newTileId = (y * Columns) + x,
+                        newTileVertexStartId = newTileId * 4,
+                        newTileIndexStartId = newTileId * 6;
+
                     if (y < oldRows && x < oldColumns) {
-                        int oldTileId = (y * oldColumns + x) * 6;
-                        newVertices[newTileId] = _vertices[oldTileId];
-                        newVertices[newTileId + 1] = _vertices[oldTileId + 1];
-                        newVertices[newTileId + 2] = _vertices[oldTileId + 2];
-                        newVertices[newTileId + 3] = _vertices[oldTileId + 3];
-                        newVertices[newTileId + 4] = _vertices[oldTileId + 4];
-                        newVertices[newTileId + 5] = _vertices[oldTileId + 5];
-                        newTilesIds[y * Columns + x] = Data[y * oldColumns + x];
+                        // copy from old data
+                        int oldTileId = (y * oldColumns) + x,
+                            oldTileVertexStartId = oldTileId * 4,
+                            oldTileIndexStartId = oldTileId * 6;
+
+                        System.Array.Copy(previousVertices, oldTileVertexStartId, newVertices, newTileVertexStartId, 4);
+                        System.Array.Copy(previousIndices, oldTileIndexStartId, newIndices, newTileIndexStartId, 6);
+
+                        newTilesIds[newTileId] = Data[oldTileId];
                     } else {
-                        newVertices[newTileId] = newVertices[newTileId + 1] = newVertices[newTileId + 2] = newVertices[newTileId + 3] = newVertices[newTileId + 4] = newVertices[newTileId + 5] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3(0, 0, 0), Color.White, Vector2.Zero);
-                        newTilesIds[y * Columns + x] = 0;
+                        newVertices[newTileVertexStartId] = 
+                            newVertices[newTileVertexStartId + 1] = 
+                            newVertices[newTileVertexStartId + 2] = 
+                            newVertices[newTileVertexStartId + 3] = new VertexPositionColorTexture(Microsoft.Xna.Framework.Vector3.Zero, Color.White, Vector2.Zero);
+
+                        newIndices[newTileIndexStartId] = newTileVertexStartId;
+                        newIndices[newTileIndexStartId + 1] = newTileVertexStartId + 1;
+                        newIndices[newTileIndexStartId + 2] = newTileVertexStartId + 2;
+                        newIndices[newTileIndexStartId + 3] = newTileVertexStartId + 2;
+                        newIndices[newTileIndexStartId + 4] = newTileVertexStartId + 1;
+                        newIndices[newTileIndexStartId + 5] = newTileVertexStartId + 3;
+
+                        newTilesIds[newTileId] = 0;
                     }
                 }
             }
 
-            _vertices = newVertices;
+            _vertexBuffer.SetData(newVertices, 0, newVertices.Length, SetDataOptions.Discard);
+            _indexBuffer.SetData(newIndices, 0, newIndices.Length, SetDataOptions.Discard);
+
             _triangleCount = Columns * Rows * 2;
             Data = newTilesIds;
+
 #if DEBUG
             if (Grid == null) {
                 Grid = new Grid(TileSize) {
@@ -182,12 +227,17 @@ namespace Raccoon.Graphics {
                 throw new System.ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
             }
 
-            int tileId = (y * Columns + x) * 6;
-            Data[y * Columns + x] = gid;
+            int tileId = (y * Columns) + x,
+                vertexTileId = tileId * 4;
+
+            Data[tileId] = gid;
+
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[4];
 
             // empty tile
             if (gid == 0) {
-                _vertices[tileId] = _vertices[tileId + 1] = _vertices[tileId + 2] = _vertices[tileId + 3] = _vertices[tileId + 4] = _vertices[tileId + 5] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3(0, 0, 0), Color.White, Vector2.Zero);
+                vertices[0] = vertices[1] = vertices[2] = vertices[3] = new VertexPositionColorTexture(Microsoft.Xna.Framework.Vector3.Zero, Color.White, Vector2.Zero);
+                _vertexBuffer.SetData(vertexTileId * _vertexBuffer.VertexDeclaration.VertexStride, vertices, 0, 4, _vertexBuffer.VertexDeclaration.VertexStride, SetDataOptions.None);
                 return;
             }
 
@@ -205,59 +255,82 @@ namespace Raccoon.Graphics {
             int id = (int) (gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag)) - 1; // clear flags
             float texLeft = (id % _tileSetColumns) * TileSize.Width, texTop = (id / _tileSetColumns) * TileSize.Height;
 
-            _vertices[tileId] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, 0), Color.White, new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, texTop / Texture.Height));
-            _vertices[tileId + 1] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, 0), Color.White, new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, texTop / Texture.Height));
-            _vertices[tileId + 2] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, 0), Color.White, new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, (texTop + TileSize.Height) / Texture.Height));
+            //  
+            // Vertices layout:
+            //
+            //  1--3/5--7
+            //  |\  | \ |
+            //  | \ |  \|
+            //  0--2/4--6
+            //
 
-            _vertices[tileId + 3] = _vertices[tileId + 2];
-            _vertices[tileId + 4] = new VertexPositionColorTexture(new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, 0), Color.White, new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, (texTop + TileSize.Height) / Texture.Height));
-            _vertices[tileId + 5] = _vertices[tileId];
+            vertices[0] = new VertexPositionColorTexture(
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, 0), 
+                Color.White, 
+                new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
+            );
+
+            vertices[1] = new VertexPositionColorTexture(
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, 0), 
+                Color.White, 
+                new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, texTop / Texture.Height)
+            );
+
+            vertices[2] = new VertexPositionColorTexture(
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, 0), 
+                Color.White, 
+                new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
+            );
+
+            vertices[3] = new VertexPositionColorTexture(
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, 0), 
+                Color.White, 
+                new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, texTop / Texture.Height)
+            );
+
+            //  
+            // Vertices layout:
+            //
+            //  1--3/5--7
+            //  |\  | \ |
+            //  | \ |  \|
+            //  0--2/4--6
+            //
 
             if (isAntiDiagonally) {
-                VertexPositionColorTexture tmp;
-                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, TileSize.Height, 0);
-                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, -TileSize.Height, 0);
+                Microsoft.Xna.Framework.Vector2 texTmp;
 
-                tmp = _vertices[tileId + 4];
-                _vertices[tileId + 4] = _vertices[tileId + 1];
-                _vertices[tileId + 1] = tmp;
+                texTmp = vertices[0].TextureCoordinate;
+                vertices[0].TextureCoordinate = vertices[3].TextureCoordinate;
+                vertices[3].TextureCoordinate = texTmp;
             }
 
             if (flip.HasFlag(ImageFlip.Horizontal)) {
-                VertexPositionColorTexture tmp;
+                Microsoft.Xna.Framework.Vector2 texTmp;
 
-                _vertices[tileId].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, 0, 0);
-                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, 0, 0);
+                texTmp = vertices[0].TextureCoordinate;
+                vertices[0].TextureCoordinate = vertices[2].TextureCoordinate;
+                vertices[2].TextureCoordinate = texTmp;
 
-                tmp = _vertices[tileId + 1];
-                _vertices[tileId + 1] = _vertices[tileId];
-                _vertices[tileId + 5] = _vertices[tileId] = tmp;
-
-                _vertices[tileId + 2].Position += new Microsoft.Xna.Framework.Vector3(-TileSize.Width, 0, 0);
-                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(TileSize.Width, 0, 0);
-
-                tmp = _vertices[tileId + 4];
-                _vertices[tileId + 4] = _vertices[tileId + 2];
-                _vertices[tileId + 3] = _vertices[tileId + 2] = tmp;
+                texTmp = vertices[1].TextureCoordinate;
+                vertices[1].TextureCoordinate = vertices[3].TextureCoordinate;
+                vertices[3].TextureCoordinate = texTmp;
             }
 
             if (flip.HasFlag(ImageFlip.Vertical)) {
-                VertexPositionColorTexture tmp;
+                Microsoft.Xna.Framework.Vector2 texTmp;
 
-                _vertices[tileId].Position += new Microsoft.Xna.Framework.Vector3(0, TileSize.Height, 0);
-                _vertices[tileId + 4].Position += new Microsoft.Xna.Framework.Vector3(0, -TileSize.Height, 0);
+                texTmp = vertices[0].TextureCoordinate;
+                vertices[0].TextureCoordinate = vertices[1].TextureCoordinate;
+                vertices[1].TextureCoordinate = texTmp;
 
-                tmp = _vertices[tileId + 4];
-                _vertices[tileId + 4] = _vertices[tileId];
-                _vertices[tileId + 5] = _vertices[tileId] = tmp;
-
-                _vertices[tileId + 1].Position += new Microsoft.Xna.Framework.Vector3(0, TileSize.Height, 0);
-                _vertices[tileId + 2].Position += new Microsoft.Xna.Framework.Vector3(0, -TileSize.Height, 0);
-
-                tmp = _vertices[tileId + 2];
-                _vertices[tileId + 3] = _vertices[tileId + 2] = _vertices[tileId + 1];
-                _vertices[tileId + 1] = tmp;
+                texTmp = vertices[2].TextureCoordinate;
+                vertices[2].TextureCoordinate = vertices[3].TextureCoordinate;
+                vertices[3].TextureCoordinate = texTmp;
             }
+
+            _vertexBuffer.SetData(vertexTileId * _vertexBuffer.VertexDeclaration.VertexStride, vertices, 0, 4, _vertexBuffer.VertexDeclaration.VertexStride, SetDataOptions.None);
+
         }
 
         public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
@@ -323,7 +396,7 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            if (_vertices.Length == 0) {
+            if (_vertexBuffer.VertexCount == 0) {
                 return;
             }
 
@@ -346,9 +419,13 @@ namespace Raccoon.Graphics {
             // texture
             bs.TextureEnabled = true;
             bs.Texture = Texture;
+
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
             
             foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, _triangleCount);
+                device.Indices = _indexBuffer;
+                device.SetVertexBuffer(_vertexBuffer);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _triangleCount);
             }
 
             bs.ResetParameters();
