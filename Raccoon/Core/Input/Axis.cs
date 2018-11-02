@@ -14,6 +14,9 @@
             Left = left;
         }
 
+        public Axis(Key up, Key right, Key down, Key left) : this(new Button(up), new Button(right), new Button(down), new Button(left)) {
+        }
+
         public Axis(int joystickId, int joystickHorizontalAxisId, int joystickVerticalAxisId, float deadzone = 0.1f) : this(deadzone) {
             JoystickId = joystickId;
             JoystickAxesIds = new int[] { joystickHorizontalAxisId, joystickVerticalAxisId };

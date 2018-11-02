@@ -120,7 +120,11 @@
 
             public Track PingPong() {
                 IsPingPong = true;
-                RepeatTimes = 1;
+
+                if (RepeatTimes < 1) {
+                    RepeatTimes = 1;
+                }
+
                 return this;
             }
 

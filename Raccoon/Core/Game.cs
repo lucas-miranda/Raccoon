@@ -672,13 +672,39 @@ Scene:
 
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
 
-            DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend);
+            DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
+                Shader = BasicShader
+            };
+
+            DebugRenderer.OnBeforeRender += () => {
+                BasicShader.View = DebugRenderer.View;
+                BasicShader.Projection = DebugRenderer.Projection;
+                BasicShader.TextureEnabled = true;
+                BasicShader.UpdateParameters();
+            };
+
+            DebugRenderer.OnAfterRender += () => {
+                BasicShader.ResetParameters();
+            };
+
             MainRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
+                Shader = BasicShader,
                 RecalculateProjectionSize = () => {
                     float zoom = Camera.Current == null ? 1f : Camera.Current.Zoom;
                     float scaleFactor = 1f / (zoom * PixelScale);
                     return new Size(Width / zoom, Height / zoom);
                 }
+            };
+
+            MainRenderer.OnBeforeRender += () => {
+                BasicShader.View = MainRenderer.View;
+                BasicShader.Projection = MainRenderer.Projection;
+                BasicShader.TextureEnabled = true;
+                BasicShader.UpdateParameters();
+            };
+
+            MainRenderer.OnAfterRender += () => {
+                BasicShader.ResetParameters();
             };
 
             MainCanvas = new Canvas(Width, Height, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents) {
@@ -725,15 +751,13 @@ Scene:
             MainCanvas.Begin(BackgroundColor);
 
             foreach (Renderer renderer in Instance.Renderers) {
-                renderer.Begin(SpriteSortMode.Texture, SamplerState.PointClamp, DepthStencilState.Default, null, BasicShader.XNAEffect, null);
+                renderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
             }
             
             Render();
 
             foreach (Renderer renderer in Instance.Renderers) {
-                PrepareShader(renderer);
                 renderer.End();
-                CleanupShader();
             }
 
             MainCanvas.End();
@@ -784,17 +808,6 @@ Scene:
             MainSpriteBatch.End();
 
             _fpsCount++;
-        }
-
-        private void PrepareShader(Renderer renderer) {
-            BasicShader.View = renderer.View;
-            BasicShader.Projection = renderer.Projection;
-            BasicShader.TextureEnabled = true;
-            BasicShader.UpdateParameters();
-        }
-
-        private void CleanupShader() {
-            BasicShader.ResetParameters();
         }
 
 #endregion Private Methods

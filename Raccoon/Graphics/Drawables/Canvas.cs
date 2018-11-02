@@ -103,7 +103,7 @@ namespace Raccoon.Graphics {
                 Clear(clearColor.Value);
             }
 
-            InternalRenderer?.Begin(SpriteSortMode.Texture, SamplerState.PointClamp, DepthStencilState.Default, null, Game.Instance.BasicShader.XNAEffect, null);
+            InternalRenderer?.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
         }
 
         public void End() {

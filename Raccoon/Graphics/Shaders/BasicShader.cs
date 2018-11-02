@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    internal class BasicShader : Shader {
+    public class BasicShader : Shader {
         #region Public Members
 
         [System.Flags]
@@ -30,6 +30,13 @@ namespace Raccoon.Graphics {
         #endregion Private Members
 
         #region Constructors
+
+        public BasicShader(string filename) : base(filename) {
+            WorldViewProjectionParameter = XNAEffect.Parameters["WorldViewProj"];
+            DiffuseColorParameter = XNAEffect.Parameters["DiffuseColor"];
+            TextureParameter = XNAEffect.Parameters["Texture"];
+            ResetParameters();
+        }
 
         public BasicShader(Effect basicEffect) : base(basicEffect) {
             WorldViewProjectionParameter = XNAEffect.Parameters["WorldViewProj"];

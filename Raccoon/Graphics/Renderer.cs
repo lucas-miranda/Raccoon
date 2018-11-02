@@ -20,6 +20,8 @@ namespace Raccoon.Graphics {
 
         public System.Func<Size> RecalculateProjectionSize = DefaultRecalculateProjectionSize;
 
+        public System.Action OnBeforeRender, OnAfterRender;
+
         #endregion Public Members
 
         #region Private Members
@@ -28,9 +30,7 @@ namespace Raccoon.Graphics {
 
         private Size _previousProjectionSize;
 
-        private Matrix _world = Matrix.Identity, 
-                       _view = Matrix.Identity, 
-                       _projection = Matrix.Identity;
+        private Matrix _projection = Matrix.Identity;
 
         #endregion Private Members
 
@@ -59,6 +59,20 @@ namespace Raccoon.Graphics {
 
         public BlendState BlendState { get; private set; }
         public bool IsBatching { get; private set; }
+        public Shader Shader { get; set; }
+        public SpriteSortMode SpriteSortMode { get; set; } = SpriteSortMode.Texture;
+        public Matrix World { get; set; } = Matrix.Identity;
+        public Matrix View { get; set; } = Matrix.Identity;
+
+        public Matrix Projection {
+            get {
+                return _projection;
+            }
+
+            set {
+                _projection = value;
+            }
+        }
 
         #endregion Public Properties
 
@@ -72,39 +86,17 @@ namespace Raccoon.Graphics {
         internal Effect LastEffect { get; private set; }
         internal Matrix? LastTransform { get; private set; }
 
-        internal Matrix World {
-            get {
-                return _world;
-            }
-
-            set {
-                _world = value;
-            }
-        }
-
-        internal Matrix View {
-            get {
-                return _view;
-            }
-
-            set {
-                _view = value;
-            }
-        }
-
-        internal Matrix Projection {
-            get {
-                return _projection;
-            }
-
-            set {
-                _projection = value;
-            }
-        }
-
         #endregion Internal Properties
 
         #region Public Methods
+
+        public virtual void BeforeRender() {
+            OnBeforeRender?.Invoke();
+        }
+
+        public virtual void AfterRender() {
+            OnAfterRender?.Invoke();
+        }
 
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
             Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
@@ -324,12 +316,12 @@ namespace Raccoon.Graphics {
 
         #region Internal Methods
 
-        internal void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Effect effect = null, Matrix? transform = null) {
-            LastSortMode = sortMode;
+        internal void Begin(SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Matrix? transform = null) {
+            LastSortMode = SpriteSortMode;
             LastSamplerState = samplerState;
             LastDepthStencilState = depthStencilState;
             LastRasterizerState = rasterizerState;
-            LastEffect = effect;
+            LastEffect = Shader == null ? Game.Instance.BasicShader.XNAEffect : Shader.XNAEffect;
             LastTransform = transform;
 
             Begin();
@@ -349,9 +341,12 @@ namespace Raccoon.Graphics {
         }
 
         internal void End() {
-            SpriteBatch.End();
+            BeforeRender();
 
+            SpriteBatch.End();
             IsBatching = false;
+
+            AfterRender();
         }
 
         #endregion Internal Methods

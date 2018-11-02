@@ -52,7 +52,7 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            Grid.Render(Position + position, Rotation + rotation, Scale * scale, Flipped ^ flip, Color.White, Scroll + scroll);
+            Grid.Render(Position + position - Origin, Rotation + rotation, Scale * scale, Flipped ^ flip, Color.White, Scroll + scroll);
 #endif
         }
 
