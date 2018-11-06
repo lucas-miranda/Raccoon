@@ -282,7 +282,7 @@ namespace Raccoon.Input {
             MouseMovement = newMousePosition - _mousePosition;
 
             if (LockMouseOnCenter) {
-                _mousePosition = new Vector2(Game.Instance.Width / 2, Game.Instance.Height / 2);
+                _mousePosition = new Vector2(Game.Instance.WindowSize) / (2 * Game.Instance.PixelScale * Game.Instance.KeepProportionsScale);
                 Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
             } else {
                 _mousePosition = newMousePosition;

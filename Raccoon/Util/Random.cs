@@ -116,6 +116,15 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Returns a random Vector2 in a determined area.
+        /// </summary>
+        /// <param name="area">A area's Size.</param>
+        /// <returns>A random Vector2 in range (x: [0, 0], y: [width, height]).</returns>
+        public static Vector2 Vector2(Size size) {
+            return Vector2(new Rectangle(size));
+        }
+
+        /// <summary>
         /// Returns a random single Direction.
         /// </summary>
         /// <returns>A random single Direction.</returns>

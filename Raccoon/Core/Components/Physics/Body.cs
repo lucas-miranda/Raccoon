@@ -58,6 +58,7 @@ namespace Raccoon.Components {
         public float Right { get { return Shape != null ? Position.X + Shape.BoundingBox.Width / 2f : Position.X; } }
         public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Height / 2f : Position.Y; } }
         public float Left { get { return Shape != null ? Position.X - Shape.BoundingBox.Width / 2f : Position.X; } }
+        public Rectangle Bounds { get { return new Rectangle(Position - Shape.BoundingBox / 2f, Shape.BoundingBox); } }
         public ReadOnlyCollection<Body> CollisionList { get; }
 
 #if DEBUG

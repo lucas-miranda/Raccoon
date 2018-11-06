@@ -444,8 +444,6 @@ Scene:
             SwitchScene(StartSceneName);
             UpdateCurrentScene();
 
-            Scene?.Begin();
-
             // late systems initialization
             Util.Tween.Tweener.Instance.Start();
         }

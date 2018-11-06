@@ -117,8 +117,16 @@ namespace Raccoon {
             return !(r.Left < Left || r.Right > Right || r.Top < Top || r.Bottom > Bottom);
         }
 
-        public bool ContainsInclusive(Vector2 v) {
+        public bool ContainsLeftInclusive(Vector2 v) {
             return !(v.X < Left || v.X >= Right || v.Y < Top || v.Y >= Bottom);
+        }
+
+        public bool ContainsRightInclusive(Vector2 v) {
+            return !(v.X <= Left || v.X > Right || v.Y <= Top || v.Y > Bottom);
+        }
+
+        public bool ContainsInclusive(Vector2 v) {
+            return !(v.X < Left || v.X > Right || v.Y < Top || v.Y > Bottom);
         }
 
         public bool Intersects(Rectangle r) {
