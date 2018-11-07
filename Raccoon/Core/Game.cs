@@ -178,7 +178,6 @@ Scene:
         public Renderer MainRenderer { get; private set; }
         public Renderer DebugRenderer { get; private set; }
         public System.TimeSpan Time { get; private set; }
-        public ResizeMode ResizeMode { get; set; } = ResizeMode.ExpandView;
 
         public string Title {
             get {
@@ -213,6 +212,8 @@ Scene:
                 MainCanvas.Resize(Size);
             }
         }
+
+        public ResizeMode ResizeMode { get; set; } = ResizeMode.ExpandView;
 
 #if DEBUG
         public bool DebugMode { get; set; }
@@ -397,6 +398,17 @@ Scene:
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
 
+        public void ResizeWindow(int width, int height, bool fullscreen) {
+            Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
+
+            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
+            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+        }
+
         public void ResizeWindow(Size size) {
             ResizeWindow((int) size.Width, (int) size.Height);
         }
@@ -407,8 +419,20 @@ Scene:
             Size newWindowSize = Size.Empty;
             if (!isSwitchingToFullscreen) {
                 XNAGameWrapper.GraphicsDeviceManager.ToggleFullScreen();
-                newWindowSize = _windowedModeBounds.Size;
-                WindowPosition = _windowedModeBounds.Position;
+
+                if (_windowedModeBounds.IsEmpty) {
+                    newWindowSize = WindowSize;
+                    WindowPosition = new Vector2(32);
+                } else {
+                    newWindowSize = _windowedModeBounds.Size;
+                    WindowPosition = _windowedModeBounds.Position;
+
+#if WINDOWS
+                    if (WindowPosition == Vector2.Zero) {
+                        WindowPosition += new Vector2(32);
+                    }
+#endif
+                }
             } else {
                 _windowedModeBounds = new Rectangle(WindowPosition, WindowSize);
                 var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
@@ -592,70 +616,63 @@ Scene:
                 return;
             }
 
-            if (WindowSize.Width == windowClientBounds.Width && WindowSize.Height == windowClientBounds.Height) {
-                return;
-            }
+            RefreshViewMode();
 
-            Size previousWindowSize = WindowSize;
+            // user callback
+            OnWindowResize();
+        }
 
+        private void RefreshViewMode() {
+            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+            Size previousWindowSize = WindowSize; 
             DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
             WindowSize = new Size(windowClientBounds.Width, windowClientBounds.Height);
             WindowCenter = (WindowSize / 2f).ToVector2();
 
             switch (ResizeMode) {
                 case ResizeMode.KeepProportions:
-                    KeepProportionsScale = Math.Max(1f, WindowHeight / (Height * PixelScale));
+                    KeepProportionsScale = WindowHeight / (Height * PixelScale);
 
                     // width correction
                     float internalGameWidth = Width * PixelScale * KeepProportionsScale;
-                    if (WindowWidth > internalGameWidth) {
-                        _gameCanvasPosition = new Vector2((WindowWidth - internalGameWidth) / 2f, 0f);
-                    } else {
-                        _gameCanvasPosition = Vector2.Zero;
-                    }
-
-#if DEBUG
-                    if (DebugCanvas != null) {
-                        DebugCanvas.Resize(WindowSize);
-                        DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
-                    }
-#endif
-
+                    _gameCanvasPosition = new Vector2((WindowWidth - internalGameWidth) / 2f, 0f);
                     break;
 
                 case ResizeMode.ExpandView:
-                default:
+                    KeepProportionsScale = 1f;
                     _gameCanvasPosition = Vector2.Zero;
+
                     Size = WindowSize / PixelScale;
                     Center = (Size / 2f).ToVector2();
-
-                    // internal resize
-                    // renderer
-                    foreach (Renderer renderer in Renderers) {
-                        renderer.RecalculateProjection();
-                    }
-
-                    // canvas
-                    RenderTargetStack.Clear();
-
-                    // game renderers projection
-                    if (MainCanvas != null) {
-                        MainCanvas.Resize(Size);
-                        MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
-                    }
-
-#if DEBUG
-                    if (DebugCanvas != null) {
-                        DebugCanvas.Resize(WindowSize);
-                        DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
-                    }
-#endif
                     break;
 
+                default:
+                    break;
             }
 
-            // user callback
-            OnWindowResize();
+
+            // internal resize
+            // renderer
+            foreach (Renderer renderer in Renderers) {
+                renderer.RecalculateProjection();
+            }
+
+            // canvas
+            RenderTargetStack.Clear();
+
+            // game renderers projection
+            if (MainCanvas != null) {
+                MainCanvas.Resize(Size);
+                MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
+            }
+
+#if DEBUG
+            if (DebugCanvas != null) {
+                DebugCanvas.Resize(WindowSize);
+                DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
+            }
+#endif
+
         }
 
         private void InternalLoadContent() {
@@ -715,7 +732,7 @@ Scene:
             };
 
             float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
-            _framerateMonitorSize = new Size(monitorFrameWidth, 82); // new Rectangle(, );
+            _framerateMonitorSize = new Size(monitorFrameWidth, 82); 
             for (int i = 0; i < FramerateMonitorValuesCount; i++) {
                 FramerateValues.Add(0);
             }
@@ -796,7 +813,6 @@ Scene:
                 Color.White,
                 0f,
                 Microsoft.Xna.Framework.Vector2.Zero,
-                //new Microsoft.Xna.Framework.Vector2(KeepProportionsScale),
                 Microsoft.Xna.Framework.Vector2.One,
                 SpriteEffects.None,
                 0f
