@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Raccoon.Input {
     public enum MouseButton {
+        None = 0,
         Left,
         Middle,
         Right,
@@ -282,8 +283,9 @@ namespace Raccoon.Input {
             MouseMovement = newMousePosition - _mousePosition;
 
             if (LockMouseOnCenter) {
-                _mousePosition = new Vector2(Game.Instance.WindowSize) / (2 * Game.Instance.PixelScale * Game.Instance.KeepProportionsScale);
-                Mouse.SetPosition(Game.Instance.WindowWidth / 2, Game.Instance.WindowHeight / 2);
+                Vector2 halfWindowPos = Util.Math.Floor(new Vector2(Game.Instance.WindowSize) / 2f);
+                _mousePosition = halfWindowPos / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale);
+                Mouse.SetPosition((int) halfWindowPos.X, (int) halfWindowPos.Y);
             } else {
                 _mousePosition = newMousePosition;
             }
