@@ -241,10 +241,10 @@ Fall Through
                 return;
             }
 
-            if (OnGround && !_isWalkingOnRamp) {
+            if (OnGround && !_isWalkingOnRamp && !IsJumping) {
                 // checks if it's touching the ground
                 if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out ContactList contacts)
-                  || contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f))) {
+                  || !contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f))) {
                     Fall();
                 }
             }
@@ -254,10 +254,11 @@ Fall Through
         }
 
         public override void PhysicsLateUpdate() {
-            Body.CollidesMultiple(CollisionTags, out CollisionList<Body> collisionList);
+            Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> topCollisionList);
+            Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> bottomCollisionList);
 
-            bool touchedBottom = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
-                 touchedTop = collisionList.Contains(ci => ci.Contacts.Contains(c => Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
+            bool touchedBottom = bottomCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
+                 touchedTop = topCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
 
             if (_isTryingToFallThrough && _applyFall) {
                 Fall();
@@ -414,7 +415,7 @@ Fall Through
             // Vertical Velocity //
             ///////////////////////
 
-            //? _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
+            _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
 
             if (!_isWalkingOnRamp) {
                 if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
@@ -560,7 +561,7 @@ Fall Through
                 return false;
             }
 
-            int contactIndex = ascContacts.FindIndex(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f));
+            int contactIndex = ascContacts.FindIndex(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Down.Projection(c.Normal), .3f, 1f));
 
             // check if it's on a valid ascending ramp
             if (contactIndex <= -1) {
@@ -579,7 +580,7 @@ Fall Through
             displacement = rampMoveDisplacement;
 
             Body.MoveBufferX = 0;
-            /*Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
+            Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
             /*Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");*/
 
             return true;
