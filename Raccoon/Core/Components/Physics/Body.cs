@@ -113,12 +113,11 @@ namespace Raccoon.Components {
 
         public override void OnAdded(Entity entity) {
             if (entity.Scene == null) {
+                Active = false;
                 return;
             }
 
             base.OnAdded(entity);
-            Physics.Instance.AddCollider(this);
-            _isPhysicsActive = true;
 
             if (Movement != null && Movement.Body != this) {
                 Movement.OnAdded(this);
@@ -127,8 +126,6 @@ namespace Raccoon.Components {
 
         public override void OnRemoved() {
             base.OnRemoved();
-            Physics.Instance.RemoveCollider(this);
-            _isPhysicsActive = false;
 
             Movement?.OnRemoved();
         }
@@ -365,6 +362,28 @@ namespace Raccoon.Components {
         #endregion Public Methods
 
         #region Protected Methods
+
+        protected override void OnActivate() {
+            base.OnActivate();
+
+            if (Entity.Scene == null || _isPhysicsActive) {
+                return;
+            }
+
+            Physics.Instance.AddCollider(this);
+            _isPhysicsActive = true;
+        }
+
+        protected override void OnDeactivate() {
+            base.OnDeactivate();
+
+            if (!_isPhysicsActive) {
+                return;
+            }
+
+            Physics.Instance.RemoveCollider(this);
+            _isPhysicsActive = false;
+        }
 
         protected virtual void BeginCollision(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             OnBeginCollision?.Invoke(otherBody, collisionAxes);

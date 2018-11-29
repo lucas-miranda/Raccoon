@@ -42,20 +42,21 @@ Jump
   Jumps: {14}
   Can Jump? {15}
   Is Jumping? {16}
-  Is Still Jumping? {17}
-  Height: {18}
+  Just Jumped? {17}
+  Is Still Jumping? {18}
+  Height: {19}
 
-  can keep current jump? {19}
-  jump max y: {20}
+  can keep current jump? {20}
+  jump max y: {21}
 
 Ramps
-  is Walking On Ramp? {21}
+  is Walking On Ramp? {22}
 
 Fall Through 
-  Can Fall Through? {22}
+  Can Fall Through? {23}
   
-  is trying to fall through? {23}
-  apply fall? {24}
+  is trying to fall through? {24}
+  apply fall? {25}
 ";
 
         // jump
@@ -191,8 +192,8 @@ Fall Through
 
         #region Public Methods
 
-        public override void Update(int delta) {
-            base.Update(delta);
+        public override void BeforeUpdate() {
+            base.BeforeUpdate();
             if (!CanContinuousJump) {
                 if (!_canKeepCurrentJump && !_requestedJump) {
                     _lastTimeFirstRequestToJump = 0;
@@ -206,12 +207,16 @@ Fall Through
                 _requestedJump = false;
             }
 
+            IsStillJumping = false;
+            CanFallThrough = false;
+        }
+
+        public override void Update(int delta) {
+            base.Update(delta);
+
             if (IsFalling && _ledgeJumpTime <= LedgeJumpMaxTime) {
                 _ledgeJumpTime += delta;
             }
-
-            IsStillJumping = false;
-            CanFallThrough = false;
         }
 
         public override void DebugRender() {
@@ -223,13 +228,17 @@ Fall Through
                 Body.Force, GravityForce * GravityScale,
                 Enabled, CanMove,
                 OnGround, IsFalling,
-                Jumps, CanJump, IsJumping, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+                Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
                 _isWalkingOnRamp,
                 CanFallThrough, _isTryingToFallThrough, _applyFall
             );
 
             Debug.DrawString(null, new Vector2(10f, 10f), info);
-            Debug.DrawLine(new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), Graphics.Color.Yellow);
+            Debug.DrawLine(
+                new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), 
+                new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), 
+                Graphics.Color.Yellow
+            );
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
         }
@@ -257,8 +266,16 @@ Fall Through
             Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> topCollisionList);
             Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> bottomCollisionList);
 
-            bool touchedBottom = bottomCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))),
-                 touchedTop = topCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
+            bool touchedBottom = false,
+                 touchedTop = false;
+
+            if (topCollisionList != null) {
+                touchedBottom = bottomCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f)));
+            }
+
+            if (bottomCollisionList != null) {
+                touchedTop = topCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
+            }
 
             if (_isTryingToFallThrough && _applyFall) {
                 Fall();

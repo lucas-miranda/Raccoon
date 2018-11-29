@@ -141,12 +141,12 @@ namespace Raccoon.Components {
         }
 
         public virtual void BeforeUpdate() {
-        }
-
-        public virtual void Update(int delta) {
             Axis = NextAxis;
             TargetVelocity = Axis * MaxVelocity;
             NextAxis = Vector2.Zero;
+        }
+
+        public virtual void Update(int delta) {
         }
 
         public virtual void LateUpdate() {
