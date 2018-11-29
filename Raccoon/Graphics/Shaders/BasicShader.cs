@@ -126,6 +126,11 @@ namespace Raccoon.Graphics {
 
             set {
                 _texture = value;
+
+                if (TextureParameter == null) {
+                    return;
+                }
+
                 if (_texture == null) {
                     TextureParameter.SetValue((Texture2D) null);
                     return;
