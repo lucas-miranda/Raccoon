@@ -79,14 +79,9 @@ namespace Raccoon.Graphics {
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public string Filename { get; private set; }
+        public Texture2D XNATexture { get; private set; }
 
         #endregion Public Properties
-
-        #region Internal Properties
-
-        internal Texture2D XNATexture { get; private set; }
-
-        #endregion Internal Properties
 
         #region Public Methods
 

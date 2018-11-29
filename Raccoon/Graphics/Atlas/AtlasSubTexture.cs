@@ -7,5 +7,6 @@
 
         public Texture Texture { get; }
         public Rectangle SourceRegion { get; protected set; }
+        public Rectangle ClippingRegion { get; set; }
     }
 }

@@ -74,7 +74,16 @@ namespace Raccoon.Graphics {
                 string key = animationData.Key.ToLowerInvariant();
 
                 if (animationData.Value["all"].Count == 1) {
-                    _subTextures.Add(key, new AtlasSubTexture(Texture, sourceRegion));
+                    JToken frameRegion = animationData.Value["all"][0]["frame"];
+
+                    Rectangle clippingRegion = new Rectangle(
+                                                   frameRegion.Value<int>("x"), 
+                                                   frameRegion.Value<int>("y"), 
+                                                   frameRegion.Value<int>("w"), 
+                                                   frameRegion.Value<int>("h")
+                                               );
+
+                    _subTextures.Add(key, new AtlasSubTexture(Texture, sourceRegion) { ClippingRegion = clippingRegion });
                 } else {
                     AtlasAnimation animation = new AtlasAnimation(Texture, sourceRegion);
 
@@ -136,6 +145,10 @@ namespace Raccoon.Graphics {
 
         public static AtlasSubTexture Retrieve(string name, string subName) {
             return _bank[name][subName.ToLowerInvariant()];
+        }
+
+        public static AtlasAnimation RetrieveAnimation(string name, string subName) {
+            return _bank[name][subName.ToLowerInvariant()] as AtlasAnimation;
         }
 
         #endregion Public Static Methods

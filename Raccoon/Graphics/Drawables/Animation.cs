@@ -68,6 +68,8 @@ namespace Raccoon.Graphics {
             foreach (KeyValuePair<KeyType, Track> track in animation.Tracks) {
                 Add(track.Key, new Track(track.Value));
             }
+
+            Origin = animation.Origin;
         }
 
         #endregion Constructors

@@ -120,20 +120,47 @@ namespace Raccoon.Graphics {
             return new Vector2(screenPos.X, screenPos.Y); 
         } 
 
-        public void RecalculateProjection() {
+        public Matrix RecalculateProjection() {
             Size size = RecalculateProjectionSize();
 
             if (size == _previousProjectionSize) {
-                return;
+                return _projection;
             }
 
             Matrix.CreateOrthographicOffCenter(0f, size.Width, size.Height, 0f, 0f, -1f, out _projection);
             _previousProjectionSize = size;
+
+            return _projection;
         }
 
         #region Draw Texture on Destination Rectangle
 
+        public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
+            SpriteBatch.Draw(
+                canvas.XNARenderTarget, 
+                destinationRectangle,
+                sourceRectangle, 
+                color, 
+                Math.ToRadians(rotation), 
+                origin, 
+                (SpriteEffects) flip, 
+                0f
+            );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
+        }
+
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 destinationRectangle,
@@ -144,23 +171,43 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 destinationRectangle,
                 sourceRectangle, 
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 destinationRectangle,
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Shader shader = null) {
@@ -171,7 +218,33 @@ namespace Raccoon.Graphics {
 
         #region Draw Texture with Position
 
+        public void Draw(Canvas canvas, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
+            SpriteBatch.Draw(
+                canvas.XNARenderTarget, 
+                position, 
+                sourceRectangle, 
+                color, 
+                Math.ToRadians(rotation), 
+                origin, 
+                scale, 
+                (SpriteEffects) flip, 
+                0f
+            );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
+        }
+
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 position, 
@@ -183,9 +256,17 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 position, 
@@ -197,23 +278,43 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 position, 
                 sourceRectangle, 
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.Draw(
                 texture.XNATexture, 
                 position, 
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Shader shader = null) {
@@ -225,6 +326,10 @@ namespace Raccoon.Graphics {
         #region Draw Text from String
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
@@ -236,9 +341,17 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
@@ -250,15 +363,27 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
                 position, 
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null) {
@@ -270,6 +395,10 @@ namespace Raccoon.Graphics {
         #region Draw Text from StringBuilder
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
@@ -281,9 +410,17 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
@@ -295,15 +432,27 @@ namespace Raccoon.Graphics {
                 (SpriteEffects) flip, 
                 0f
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                BeforeRender();
+            }
+
             SpriteBatch.DrawString(
                 font.SpriteFont, 
                 text, 
                 position, 
                 color
             );
+
+            if (SpriteSortMode == SpriteSortMode.Immediate) {
+                AfterRender();
+            }
         }
 
         public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Shader shader = null) {

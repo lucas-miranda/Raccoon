@@ -21,7 +21,7 @@ namespace Raccoon.Graphics {
 
         public Image(AtlasSubTexture subTexture) : this(subTexture.Texture) {
             SourceRegion = subTexture.SourceRegion;
-            ClippingRegion = new Rectangle(SourceRegion.Width, SourceRegion.Height);
+            ClippingRegion = subTexture.ClippingRegion;
         }
 
         public Image(AtlasAnimation animTexture) : this(animTexture.Texture) {

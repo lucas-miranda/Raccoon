@@ -84,14 +84,9 @@ namespace Raccoon.Graphics {
         public int MultiSampleCount { get { return XNARenderTarget.MultiSampleCount; } }
         public CanvasUsage Usage { get { return (CanvasUsage) XNARenderTarget.RenderTargetUsage; } }
         public Renderer InternalRenderer { get; set; }
+        public RenderTarget2D XNARenderTarget { get { return Texture.XNATexture as RenderTarget2D; } }
 
         #endregion Public Properties
-
-        #region Internal Properties
-
-        internal RenderTarget2D XNARenderTarget { get { return Texture.XNATexture as RenderTarget2D; } }
-
-        #endregion Internal Properties
 
         #region Public Methods
 
@@ -108,15 +103,7 @@ namespace Raccoon.Graphics {
 
         public void End() {
             if (InternalRenderer != null) {
-                BasicShader bs = Game.Instance.BasicShader;
-                bs.View = InternalRenderer.View;
-                bs.Projection = InternalRenderer.Projection;
-                bs.TextureEnabled = true;
-                bs.UpdateParameters();
-
                 InternalRenderer.End();
-
-                bs.ResetParameters();
             }
 
             Game.Instance.RenderTargetStack.Pop();
