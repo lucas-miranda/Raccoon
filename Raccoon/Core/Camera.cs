@@ -55,6 +55,10 @@ namespace Raccoon {
                     value = Math.Round(value);
                 }
 
+                if (Bounds.Width < Width && Bounds.Height < Height) {
+                    return;
+                }
+
                 _position = !UseBounds ? value : Math.Clamp(value, new Rectangle(Bounds.Position, Bounds.Size - Size));
                 _needViewRefresh = true;
             }
