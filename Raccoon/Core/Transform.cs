@@ -27,6 +27,7 @@ namespace Raccoon {
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
+        public bool IsHandledByParent { get; private set; }
 
         public Transform Parent {
             get {
@@ -92,14 +93,19 @@ namespace Raccoon {
         #region Private Methods
 
         private void OnParentAdded() {
-            Entity.AutoRender = Entity.AutoUpdate = false;
+            if (Entity.Scene == null) {
+                IsHandledByParent = true;
+            } else {
+                LocalPosition -= Parent.Position;
+            }
         }
 
         private void OnParentRemoved() {
-            Entity.AutoRender = Entity.AutoUpdate = true;
-            if (Entity.Scene != null) {
-                Entity.RemoveSelf();
+            if (!IsHandledByParent) {
+                LocalPosition += Parent.Position;
             }
+
+            IsHandledByParent = false;
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

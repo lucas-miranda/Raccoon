@@ -27,6 +27,7 @@ namespace Raccoon {
         #region Private Members
 
         private Renderer _renderer;
+        private Scene _scene;
 
         #endregion Private Members
 
@@ -56,7 +57,24 @@ namespace Raccoon {
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; } = new Locker<Graphic>(Graphic.LayerComparer);
         public Locker<Component> Components { get; } = new Locker<Component>();
-        public Scene Scene { get; private set; }
+
+        public Scene Scene {
+            get {
+                if (Transform.IsHandledByParent) {
+                    return Transform.Parent.Entity.Scene;
+                }
+
+                return _scene;
+            }
+
+            private set {
+                if (Transform.IsHandledByParent) {
+                    return;
+                }
+
+                _scene = value;
+            }
+        }
 
         public Graphic Graphic {
             get {
@@ -112,7 +130,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (child.Entity.Scene == Scene) {
+                if (!child.IsHandledByParent) {
                     continue;
                 }
 
@@ -136,7 +154,15 @@ namespace Raccoon {
                 c.OnRemoved();
             }
 
+            if (Transform.Parent != null) {
+                Transform.Parent = null;
+            }
+
             foreach (Transform child in Transform) {
+                if (!child.IsHandledByParent) {
+                    continue;
+                }
+
                 child.Entity.SceneRemoved();
             }
 
@@ -159,6 +185,10 @@ namespace Raccoon {
 
         public virtual void SceneBegin() {
             foreach (Transform child in Transform) {
+                if (!child.IsHandledByParent) {
+                    continue;
+                }
+
                 child.Entity.SceneBegin();
             }
 
@@ -167,6 +197,10 @@ namespace Raccoon {
 
         public virtual void SceneEnd() {
             foreach (Transform child in Transform) {
+                if (!child.IsHandledByParent) {
+                    continue;
+                }
+
                 child.Entity.SceneEnd();
             }
 
@@ -183,7 +217,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.Entity.Active) {
+                if (!child.IsHandledByParent || !child.Entity.Active) {
                     continue;
                 }
 
@@ -213,7 +247,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.Entity.Active) {
+                if (!child.IsHandledByParent || !child.Entity.Active) {
                     continue;
                 }
 
@@ -233,7 +267,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.Entity.Active) {
+                if (!child.IsHandledByParent || !child.Entity.Active) {
                     continue;
                 }
 
@@ -261,7 +295,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.Entity.Visible) {
+                if (!child.IsHandledByParent || !child.Entity.Visible) {
                     continue;
                 }
 
@@ -290,7 +324,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.Entity.Visible) {
+                if (!child.IsHandledByParent || !child.Entity.Visible) {
                     continue;
                 }
 
