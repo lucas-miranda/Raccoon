@@ -11,7 +11,9 @@ namespace Raccoon {
     public class Game : System.IDisposable {
         #region Public Events
 
-        public event System.Action OnRender = delegate { }, 
+        public event System.Action OnBeforeRender = delegate { },
+                                   OnRender = delegate { }, 
+                                   OnAfterRender = delegate { },
                                    OnDebugRender = delegate { },
                                    OnBegin = delegate { }, 
                                    OnBeforeUpdate = delegate { },
@@ -177,7 +179,10 @@ Scene:
         public Color BackgroundColor { get; set; }
         public Renderer MainRenderer { get; private set; }
         public Renderer DebugRenderer { get; private set; }
+        public Renderer ScreenRenderer { get; private set; }
         public System.TimeSpan Time { get; private set; }
+        public PrimitiveBatch DebugPrimitiveBatch { get; private set; }
+        public BasicShader BasicShader { get; private set; }
 
         public string Title {
             get {
@@ -228,8 +233,6 @@ Scene:
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
-        internal SpriteBatch MainSpriteBatch { get; private set; }
-        internal BasicShader BasicShader { get; private set; }
         internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
@@ -676,7 +679,10 @@ Scene:
         }
 
         private void InternalLoadContent() {
-            //XNAGameWrapper.GraphicsDevice.p
+            // default content
+            DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
+            StdFont = new Font(DefaultResourceContentManager.Load<SpriteFont>("Zoomy"));
+            BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
 
             // window and resolution
             DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
@@ -685,7 +691,10 @@ Scene:
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
 
-            MainSpriteBatch = new SpriteBatch(GraphicsDevice);
+            ScreenRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
+                Shader = BasicShader,
+                SpriteSortMode = SpriteSortMode.Deferred
+            };
 
             DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
                 Shader = BasicShader
@@ -738,11 +747,7 @@ Scene:
             }
 #endif
 
-            // default content
-            DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
-            StdFont = new Font(DefaultResourceContentManager.Load<SpriteFont>("Zoomy"));
-            BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
-
+            DebugPrimitiveBatch = new PrimitiveBatch();
 
             Initialize();
         }
@@ -763,6 +768,8 @@ Scene:
         }
 
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {
+            OnBeforeRender();
+
             MainCanvas.Begin(BackgroundColor);
 
             foreach (Renderer renderer in Instance.Renderers) {
@@ -782,7 +789,9 @@ Scene:
 
             // debug render
             DebugCanvas.Begin(Color.Transparent);
+            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
             DebugRender(metrics);
+            DebugPrimitiveBatch.End();
             DebugCanvas.End();
 #endif
 
@@ -790,36 +799,39 @@ Scene:
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(Color.Black);
 
-            MainSpriteBatch.Begin(SpriteSortMode.Immediate, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            ScreenRenderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
 
-            // TODO: Add a way to register custom canvas to render here (each one should have a ID for sorting)
-            MainSpriteBatch.Draw(
-                MainCanvas.XNARenderTarget, 
+            ScreenRenderer.Draw(
+                MainCanvas, 
                 _gameCanvasPosition, 
                 null, 
+                0f,
+                new Vector2(PixelScale * KeepProportionsScale), 
+                ImageFlip.None, 
                 Color.White, 
-                0f, 
-                Microsoft.Xna.Framework.Vector2.Zero, 
-                new Microsoft.Xna.Framework.Vector2(PixelScale * KeepProportionsScale), 
-                SpriteEffects.None, 
-                0f
+                Vector2.Zero, 
+                Vector2.One
             );
 
 #if DEBUG
-            MainSpriteBatch.Draw(
-                DebugCanvas.XNARenderTarget, 
+            ScreenRenderer.Draw(
+                DebugCanvas, 
                 _gameCanvasPosition,
                 null,
-                Color.White,
                 0f,
-                Microsoft.Xna.Framework.Vector2.Zero,
-                Microsoft.Xna.Framework.Vector2.One,
-                SpriteEffects.None,
-                0f
+                Vector2.One,
+                ImageFlip.None,
+                Color.White,
+                Vector2.Zero,
+                Vector2.One
             );
 #endif
 
-            MainSpriteBatch.End();
+            ScreenRenderer.End();
+
+            ScreenRenderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            OnAfterRender();
+            ScreenRenderer.End();
 
             _fpsCount++;
         }
