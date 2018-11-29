@@ -698,7 +698,7 @@ namespace Raccoon {
             for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
                 Body body = _narrowPhaseBodies[j];
 
-                if (body.Entity == null) {
+                if (!body.Active || body.Entity == null || !body.Entity.Active) {
                     continue;
                 }
 
@@ -793,6 +793,10 @@ namespace Raccoon {
                     if (bodyCollidableTags != BitTag.None || movementCollidableTags != BitTag.None) {
                         for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
                             Body otherBody = _narrowPhaseBodies[k];
+
+                            if (!otherBody.Active || otherBody.Entity == null || !otherBody.Entity.Active) {
+                                continue;
+                            }
 
                             bool isBodyCollidable     = otherBody.Tags.HasAny(bodyCollidableTags),
                                  isMovementCollidable = otherBody.Tags.HasAny(movementCollidableTags);
