@@ -314,7 +314,7 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == shape) {
+                    if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
@@ -338,7 +338,7 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == shape) {
+                    if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
@@ -363,7 +363,7 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == shape) {
+                    if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
@@ -393,7 +393,7 @@ namespace Raccoon {
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == shape) {
+                    if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
@@ -416,7 +416,7 @@ namespace Raccoon {
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == shape) {
+                    if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
@@ -457,7 +457,7 @@ namespace Raccoon {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
-                    if (otherCollider.Shape == null) {
+                    if (otherCollider.Shape == null || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
 
