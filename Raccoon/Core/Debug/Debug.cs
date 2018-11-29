@@ -291,28 +291,12 @@ namespace Raccoon {
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
+            Vector2[] points = new Vector2[] {
+                (-cameraPos + from) * zoom,
+                (-cameraPos + to) * zoom
+            };
 
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(from.X, from.Y, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(to.X, to.Y, 0f), Color.White)
-                    }, 0, 1);
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawLines(points, color, 0, new Vector2(1f), Vector2.Zero, cyclic: false);
         }
 
         [Conditional("DEBUG")]
@@ -357,30 +341,12 @@ namespace Raccoon {
                 origin = Vector2.Zero;
             }
 
-            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[points.Count];
+            List<Vector2> pointList = new List<Vector2>();
             for (int i = 0; i < points.Count; i++) {
-                Vector2 point = points[i];
-                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
+                pointList.Add((-cameraPos + points[i]) * zoom);
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X - origin.Value.X, -cameraPos.Y - origin.Value.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, points.Count - 1);
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawLines(pointList, color, 0, new Vector2(1f), origin.Value);
         }
 
         [Conditional("DEBUG")]
@@ -412,51 +378,17 @@ namespace Raccoon {
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
-            Vector2 rotOrigin = Vector2.Zero;
-
-            if (origin.HasValue) {
-                rotOrigin = origin.Value;
-            } else {
+            if (!origin.HasValue) {
+                //origin = rectangle.Size.ToVector2() / 2f;
+                //rectangle.Position += origin.Value;
                 origin = Vector2.Zero;
-                rotOrigin = rectangle.Size.ToVector2() / 2f;
             }
 
             if (!scale.HasValue) {
                 scale = Vector2.One;
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.Value.X, scale.Value.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-rotOrigin.X, -rotOrigin.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(
-                    -cameraPos.X + rotOrigin.X + rectangle.X - origin.Value.X, 
-                    -cameraPos.Y + rotOrigin.Y + rectangle.Y - origin.Value.Y,
-                    0f
-                )
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor[5] {
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Width, 0f, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(rectangle.Width, rectangle.Height, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, rectangle.Height, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f), Color.White)
-                    }, 0, 4);
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawHollowRectangle((-cameraPos + rectangle.Position) * zoom, rectangle.Size, color, rotation, scale.Value * zoom, origin.Value);
         }
 
         [Conditional("DEBUG")]
@@ -494,46 +426,7 @@ namespace Raccoon {
                 segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
             }
 
-            float theta = (float) (2.0 * Math.PI / segments);
-            float t, c = (float) System.Math.Cos(theta), s = (float) System.Math.Sin(theta); // precalculate the sine and cosine
-
-            float x = radius * Math.Cos(rotation);
-            float y = radius * Math.Sin(rotation);
-
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X + center.X, -cameraPos.Y + center.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[segments + 1];
-
-            int i;
-            for (i = 0; i < vertices.Length; i++) {
-                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
-
-                // apply the rotation matrix
-                t = x;
-                x = c * x - s * y;
-                y = s * t + c * y;
-            }
-
-            foreach (var pass in bs) {
-                if (dashed) {
-                    Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, segments / 2);
-                } else {
-                    Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments);
-                }
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawHollowCircle((-cameraPos + center) * zoom, radius, color, zoom, Vector2.Zero);
         }
 
         [Conditional("DEBUG")]
@@ -652,30 +545,13 @@ namespace Raccoon {
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
+            Vector2[] points = new Vector2[] {
+                (-cameraPos + triangle.A) * zoom,
+                (-cameraPos + triangle.B) * zoom,
+                (-cameraPos + triangle.C) * zoom
+            };
 
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip,
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor[4] {
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.B.X, triangle.B.Y, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.C.X, triangle.C.Y, 0f), Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(triangle.A.X, triangle.A.Y, 0f), Color.White)
-                    }, 0, 3);
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawLines(points, color, 0, new Vector2(zoom), Vector2.Zero);
         }
 
         [Conditional("DEBUG")]
@@ -699,11 +575,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawPolygon(Camera camera, Polygon polygon, Color color) {
-            Vector2[] points = new Vector2[polygon.VertexCount + 1];
-            polygon.Vertices.CopyTo(points, 0);
-            points[points.Length - 1] = points[0];
-
-            DrawLines(camera, points, color);
+            DrawLines(camera, polygon.Vertices, color);
         }
 
         [Conditional("DEBUG")]
