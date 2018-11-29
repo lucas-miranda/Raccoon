@@ -72,15 +72,16 @@ namespace Raccoon {
             return Start(coroutine());
         }
 
-        public void Start(Coroutine coroutine) {
+        public Coroutine Start(Coroutine coroutine) {
             if (_runningCoroutines.Contains(coroutine)) {
-                return;
+                return coroutine;
             } else if (_pausedCoroutines.Contains(coroutine)) {
                 coroutine.Resume();
-                return;
+                return coroutine;
             }
 
             _runningCoroutines.Add(coroutine);
+            return coroutine;
         }
 
         public void ClearAll() {

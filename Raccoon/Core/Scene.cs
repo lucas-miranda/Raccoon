@@ -206,7 +206,9 @@ namespace Raccoon {
         public void AddEntities(IEnumerable<Entity> entities) {
             _updatables.AddRange(entities);
             _renderables.AddRange(entities);
+
             foreach (Entity e in entities) {
+                _sceneObjects.Add(e);
                 e.SceneAdded(this);
                 if (HasStarted && !e.HasStarted) {
                     e.Start();

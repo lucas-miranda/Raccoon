@@ -77,6 +77,9 @@ namespace Raccoon {
             }
         }
 
+        public Matrix View { get; private set; }
+        public Matrix Projection { get; private set; }
+
         #endregion Public Properties
 
         #region Public Methods
@@ -121,13 +124,14 @@ namespace Raccoon {
         #region Private Members
 
         private void Refresh() {
-            Game.Instance.MainRenderer.RecalculateProjection();
+            Projection = Game.Instance.MainRenderer.RecalculateProjection();
+            Game.Instance.DebugRenderer.RecalculateProjection();
 
             Vector3 cameraPos = new Vector3(Position, 0f),
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
-            Game.Instance.MainRenderer.View = _view;
+            Game.Instance.MainRenderer.View = View = _view;
         }
 
         #endregion Private Members
