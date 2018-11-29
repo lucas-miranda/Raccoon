@@ -272,7 +272,7 @@ namespace Raccoon {
                 Polygon[] polygons = new Polygon[convexComponents.Count];
                 for (int i = 0; i < convexComponents.Count; i++) {
                     Polygon p = new Polygon(convexComponents[i]);
-                    p.Translate(gridPos + grid.ConvertTilePosition(gridPos, column, row));
+                    p.Translate(grid.ConvertTilePosition(gridPos, column, row));
                     polygons[i] = p;
                 }
 
