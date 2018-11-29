@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
+    <Compile Include="Core\Components\CoroutineHandler.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
     <Compile Include="Core\Definitions\ResizeMode.cs" />
     <Compile Include="Core\IDebugRenderable.cs" />
