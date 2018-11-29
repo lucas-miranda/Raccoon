@@ -25,7 +25,7 @@ namespace Raccoon.Util {
         /// </summary>
         /// <returns>True or False.</returns>
         public static bool Boolean() {
-            return Integer(0, 1) == 1;
+            return Integer(1, 100) <= 50;
         }
 
         /// <summary>
@@ -122,6 +122,10 @@ namespace Raccoon.Util {
         /// <returns>A random Vector2 in range (x: [0, 0], y: [width, height]).</returns>
         public static Vector2 Vector2(Size size) {
             return Vector2(new Rectangle(size));
+        }
+
+        public static Vector2 Vector2(Vector2 min, Vector2 max) {
+            return new Vector2(Single(min.X, max.X), Single(min.Y, max.Y));
         }
 
         /// <summary>
