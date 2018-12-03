@@ -137,6 +137,10 @@ namespace Raccoon {
             return !(r.Right < Left || r.Left >= Right || r.Bottom < Top || r.Top >= Bottom);
         }
 
+        public bool IntersectsBothInclusive(Rectangle r) {
+            return !(r.Right < Left || r.Left > Right || r.Bottom < Top || r.Top > Bottom);
+        }
+
         public Vector2 ClosestPoint(Vector2 point) {
             return Util.Math.Clamp(point, this);
         }
