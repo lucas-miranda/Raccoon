@@ -126,7 +126,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                c.OnAdded(this);
+                c.OnSceneAdded();
             }
 
             foreach (Transform child in Transform) {
@@ -151,7 +151,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                c.OnRemoved();
+                c.OnSceneRemoved();
             }
 
             if (Transform.Parent != null) {

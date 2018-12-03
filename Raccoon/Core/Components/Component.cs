@@ -48,6 +48,7 @@ namespace Raccoon.Components {
         #region Public Methods
 
         public virtual void OnAdded(Entity entity) {
+            Debug.Assert(entity != null);
             Entity = entity;
             OnActivate();
         }
@@ -57,12 +58,20 @@ namespace Raccoon.Components {
             OnDeactivate();
         }
 
+        public virtual void OnSceneAdded() {
+        }
+
+        public virtual void OnSceneRemoved() {
+        }
+
         public virtual void BeforeUpdate() {
+            Debug.Assert(Entity != null);
         }
 
         public abstract void Update(int delta);
 
         public virtual void LateUpdate() {
+            Debug.Assert(Entity != null);
         }
 
         public abstract void Render();

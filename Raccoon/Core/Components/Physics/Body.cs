@@ -44,7 +44,7 @@ namespace Raccoon.Components {
 
         #region Public Properties
 
-        public IShape Shape { get; private set; }
+        public IShape Shape { get; set; }
         public IMaterial Material { get; set; }
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
@@ -128,6 +128,28 @@ namespace Raccoon.Components {
             base.OnRemoved();
 
             Movement?.OnRemoved();
+        }
+
+        public override void OnSceneAdded() {
+            base.OnSceneAdded();
+
+            if (Entity.Scene == null || _isPhysicsActive) {
+                return;
+            }
+
+            Physics.Instance.AddCollider(this);
+            _isPhysicsActive = true;
+        }
+
+        public override void OnSceneRemoved() {
+            base.OnSceneRemoved();
+
+            if (!_isPhysicsActive) {
+                return;
+            }
+
+            Physics.Instance.RemoveCollider(this);
+            _isPhysicsActive = false;
         }
 
         public override void BeforeUpdate() {
