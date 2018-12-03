@@ -1,6 +1,7 @@
 ﻿namespace Raccoon.Util.Graphics {
     public class EmissionOptions {
         public string AnimationKey { get; set; }
+
         public int MinCount { get; set; } = 1;
         public int MaxCount { get; set; } = 1;
         public int Count { get { return MaxCount; } set { MinCount = MaxCount = value; } }

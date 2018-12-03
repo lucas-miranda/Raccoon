@@ -38,7 +38,8 @@ namespace Raccoon.Util.Graphics {
             uint timeToStart = 0;
             for (int i = 0; i < count; i++) {
                 Particle particle = new Particle() {
-                    Animation = new Animation(particleModel.Animation),
+                    Layer = particleModel.Layer,
+                    Animation = new Animation(particleModel.Animation)
                 };
 
                 Vector2 displacement = Random.Vector2(emissionOptions.DisplacementMin, emissionOptions.DisplacementMax);
