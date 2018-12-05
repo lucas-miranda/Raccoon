@@ -382,6 +382,18 @@ namespace Raccoon {
             }
         }
 
+        public Vector2[] Intersects(Line segment) {
+            List<Vector2> intersections = new List<Vector2>();
+
+            foreach (Line edge in Edges()) {
+                if (edge.IntersectionPoint(segment, out Vector2 intersectionPoint)) {
+                    intersections.Add(intersectionPoint);
+                }
+            }
+
+            return intersections.ToArray();
+        }
+
         public List<Vector2[]> ConvexComponents() {
             if (_needRecalculateComponents) {
                 _needRecalculateComponents = false;
