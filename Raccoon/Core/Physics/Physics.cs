@@ -318,7 +318,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out contacts)) {
+                    if (CheckCollision(shape, position - shape.Origin, otherCollider, out contacts)) {
                         return true;
                     }
                 }
@@ -342,7 +342,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
+                    if (CheckCollision(shape, position - shape.Origin, otherCollider, out ContactList contacts)) {
                         collisionInfo = new CollisionInfo<Body>(otherCollider, contacts);
                         return true;
                     }
@@ -367,7 +367,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T && CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
+                    if (otherCollider.Entity is T && CheckCollision(shape, position - shape.Origin, otherCollider, out ContactList contacts)) {
                         collisionInfo = new CollisionInfo<T>(otherCollider.Entity as T, contacts);
                         return true;
                     }
@@ -397,7 +397,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (CheckCollision(shape, position, otherCollider, out ContactList contact)) {
+                    if (CheckCollision(shape, position - shape.Origin, otherCollider, out ContactList contact)) {
                         collisionList.Add(otherCollider, contact);
                     }
                 }
@@ -421,7 +421,7 @@ namespace Raccoon {
                     }
 
                     if (otherCollider.Entity is T 
-                      && CheckCollision(shape, position, otherCollider, out ContactList contacts)) {
+                      && CheckCollision(shape, position - shape.Origin, otherCollider, out ContactList contacts)) {
                         collisionList.Add(otherCollider.Entity as T, contacts);
                     }
                 }
@@ -434,7 +434,7 @@ namespace Raccoon {
 
         #region Raycast [Single Output]
 
-        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<Body> collisionInfo, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<Body> collisionInfo, float maxDistance = float.MaxValue) {
             if (tags == BitTag.None) {
                 collisionInfo = null;
                 return false;
@@ -521,7 +521,7 @@ namespace Raccoon {
             return false;
         }
 
-        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out ContactList contacts, float maxDistance = float.PositiveInfinity) {
+        public bool Raycast(Vector2 position, Vector2 direction, BitTag tags, out ContactList contacts, float maxDistance = float.MaxValue) {
             bool hit = Raycast(position, direction, tags, out CollisionInfo<Body> collisionInfo, maxDistance);
 
             if (collisionInfo != null) {
@@ -533,7 +533,7 @@ namespace Raccoon {
             return hit;
         }
 
-        public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<T> collisionInfo, float maxDistance = float.PositiveInfinity) where T : Entity {
+        public bool Raycast<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionInfo<T> collisionInfo, float maxDistance = float.MaxValue) where T : Entity {
             if (Raycast(position, direction, tags, out CollisionInfo<Body> collidedCollider, maxDistance)
               && collidedCollider.Subject.Entity is T) {
                 collisionInfo = new CollisionInfo<T>(collidedCollider.Subject.Entity as T, collidedCollider.Contacts);
@@ -548,7 +548,7 @@ namespace Raccoon {
 
         #region Raycast [Multiple Output]
 
-        public bool RaycastMultiple(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<Body> collisionList, float maxDistance = float.PositiveInfinity) {
+        public bool RaycastMultiple(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<Body> collisionList, float maxDistance = float.MaxValue) {
             collisionList = new CollisionList<Body>();
 
             if (tags == BitTag.None) {
@@ -590,7 +590,7 @@ namespace Raccoon {
         }
 
 
-        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<T> collisionList, float maxDistance = float.PositiveInfinity) where T : Entity {
+        public bool RaycastMultiple<T>(Vector2 position, Vector2 direction, BitTag tags, out CollisionList<T> collisionList, float maxDistance = float.MaxValue) where T : Entity {
             collisionList = new CollisionList<T>();
 
             if (tags == BitTag.None) {

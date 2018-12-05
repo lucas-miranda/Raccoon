@@ -130,19 +130,34 @@ namespace Raccoon {
         }
 
         private bool TestSAT(Vector2 startPoint, Vector2 endPoint, Polygon polygon, IEnumerable<Vector2> axes, out Contact? contact) {
+            Vector2[] intersections = polygon.Intersects(new Line(startPoint, endPoint));
+
+            // no intersections, no contact
+            if (intersections.Length == 0) {
+                contact = null;
+                return false;
+            }
+
             Contact leastPenetrationContact = new Contact {
-                Position = polygon[0],
+                Position =  intersections[0],
                 PenetrationDepth = float.PositiveInfinity
             };
 
+            if (intersections.Length > 1 && Math.DistanceSquared(startPoint, intersections[1]) < Math.DistanceSquared(startPoint, intersections[0])) {
+                // test if second intersection point it's closer than first one
+                leastPenetrationContact.Position = intersections[1];
+            }
+
             foreach (Vector2 axis in axes) {
-                Range projectionA = axis.Projection(startPoint, endPoint), projectionB = polygon.Projection(axis);
+                Range projectionA = axis.Projection(startPoint, endPoint), 
+                      projectionB = polygon.Projection(axis);
+
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
                     return false;
                 }
 
-                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
