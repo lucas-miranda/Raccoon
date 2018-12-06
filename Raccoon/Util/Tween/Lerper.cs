@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 
 using Raccoon.Graphics;
 
@@ -7,21 +6,70 @@ namespace Raccoon.Util.Tween {
     #region Base Lerper
 
     public abstract class Lerper {
-        public Lerper(object owner, string name, Func<float, float> easing) {
+        #region Constructors
+
+        public Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) {
             Owner = owner;
-            Property = Owner.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             Name = name;
-            From = To = Value;
             Easing = easing;
+
+            System.Type ownerType = Owner.GetType();
+
+            switch (memberType) {
+                case MemberTypes.Property:
+                    PropertyInfo propertyInfo = Owner.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    MemberInfo = propertyInfo;
+                    DataType = propertyInfo.PropertyType;
+                    break;
+
+                case MemberTypes.Field:
+                    FieldInfo fieldInfo = Owner.GetType().GetField(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    MemberInfo = fieldInfo;
+                    DataType = fieldInfo.FieldType;
+                    break;
+
+                default:
+                    throw new System.NotSupportedException($"Member type '{memberType}'.");
+            }
+
+            From = To = Value;
         }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         public object Owner { get; protected set; }
-        public PropertyInfo Property { get; protected set; }
+        public MemberInfo MemberInfo { get; protected set; }
+        public System.Type DataType { get; protected set; }
         public string Name { get; protected set; }
-        public Func<float, float> Easing { get; set; }
+        public System.Func<float, float> Easing { get; set; }
         public object From { get; set; }
         public object To { get; set; }
-        public object Value { get { return Property.GetValue(Owner); } set { Property.SetValue(Owner, value); } }
+
+        public object Value {
+            get {
+                if (MemberInfo is PropertyInfo propertyInfo) {
+                    return propertyInfo.GetValue(Owner);
+                } else if (MemberInfo is FieldInfo fieldInfo) {
+                    return fieldInfo.GetValue(Owner);
+                }
+
+                return null;
+            }
+
+            set {
+                if (MemberInfo is PropertyInfo propertyInfo) {
+                    propertyInfo.SetValue(Owner, value);
+                } else if (MemberInfo is FieldInfo fieldInfo) {
+                    fieldInfo.SetValue(Owner, value);
+                }
+            }
+        }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         public virtual void Begin() {
             Value = From;
@@ -32,6 +80,8 @@ namespace Raccoon.Util.Tween {
         }
 
         public abstract void Interpolate(float t);
+
+        #endregion Public Methods
     }
 
     #endregion Base Lerper
@@ -39,7 +89,8 @@ namespace Raccoon.Util.Tween {
     #region Number Lerper
 
     public class NumberLerper : Lerper {
-        public NumberLerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+        public NumberLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        }
 
         public new float From { get { return (float) base.From; } set { base.From = value; } }
         public new float To { get { return (float) base.To; } set { base.To = value; } }
@@ -55,7 +106,8 @@ namespace Raccoon.Util.Tween {
     #region Vector2 Lerper
 
     public class Vector2Lerper : Lerper {
-        public Vector2Lerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+        public Vector2Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        }
 
         public new Vector2 From { get { return (Vector2) base.From; } set { base.From = value; } }
         public new Vector2 To { get { return (Vector2) base.To; } set { base.To = value; } }
@@ -71,7 +123,8 @@ namespace Raccoon.Util.Tween {
     #region Size Lerper
 
     public class SizeLerper : Lerper {
-        public SizeLerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+        public SizeLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        }
 
         public new Size From { get { return (Size) base.From; } set { base.From = value; } }
         public new Size To { get { return (Size) base.To; } set { base.To = value; } }
@@ -87,7 +140,8 @@ namespace Raccoon.Util.Tween {
     #region Rectangle Lerper
 
     public class RectangleLerper : Lerper {
-        public RectangleLerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+        public RectangleLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        }
 
         public new Rectangle From { get { return (Rectangle) base.From; } set { base.From = value; } }
         public new Rectangle To { get { return (Rectangle) base.To; } set { base.To = value; } }
@@ -104,7 +158,8 @@ namespace Raccoon.Util.Tween {
     #region Color Lerper
 
     public class ColorLerper : Lerper {
-        public ColorLerper(object owner, string name, Func<float, float> easing) : base(owner, name, easing) { }
+        public ColorLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        }
 
         public new Color From { get { return (Color) base.From; } set { base.From = value; } }
         public new Color To { get { return (Color) base.To; } set { base.To = value; } }

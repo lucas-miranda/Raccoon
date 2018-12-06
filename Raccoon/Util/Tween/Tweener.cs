@@ -1,98 +1,85 @@
-using System.Collections.Generic;
+using Raccoon.Util.Collections;
 
 namespace Raccoon.Util.Tween {
     public class Tweener {
-        #region Private Static Readonly Members
-
-        private static readonly Tweener _instance = new Tweener();
-
-        #endregion Private Static Readonly Members
-
         #region Private Members
 
-        private List<Tween> _tweens, _toAdd, _toRemove;
+        private Locker<Tween> _tweens = new Locker<Tween>();
 
         #endregion Private Members
 
         #region Constructors
 
         private Tweener() {
-            _tweens = new List<Tween>();
-            _toAdd = new List<Tween>();
-            _toRemove = new List<Tween>();
-            IsRunning = true;
         }
 
         #endregion Constructors
 
         #region Public Static Properties
 
-        public static Tweener Instance { get { return _instance; } }
-        public static bool IsRunning { get; set; }
+        public static Tweener Instance { get; } = new Tweener();
+        public static bool IsRunning { get; set; } = true;
 
         #endregion Public Static Properties
 
-        #region Public Static Methods
+        #region Public Methods 
 
-        public static Tween Create<T>(T subject, int duration) where T : class {
-            Tween t = new Tween(subject, duration);
-            Instance.Add(t);
-            return t;
-        }
+        public static Tween Create<T>(T subject, int duration, bool autoPlay = false) where T : class {
+            Tween tween = Add(new Tween(subject, duration));
 
-        #endregion Public Static Methods
-
-        #region Public Methods
-
-        public void Start() {
-            foreach (Tween tween in _tweens) {
+            if (autoPlay) {
                 tween.Play();
             }
+
+            return tween;
         }
 
-        public void Update(int delta) {
-            if (!IsRunning) {
-                return;
-            }
-
-            if (_toAdd.Count > 0) {
-                _tweens.AddRange(_toAdd);
-                _toAdd.Clear();
-            }
-
-            foreach (Tween tween in _tweens) {
-                tween.Update(delta);
-                if (tween.HasEnded) {
-                    _toRemove.Add(tween);
-                }
-            }
-
-            if (_toRemove.Count > 0) {
-                foreach (Tween tween in _toRemove) {
-                    _tweens.Remove(tween);
-                }
-
-                _toRemove.Clear();
-            }
+        public static Tween Add(Tween tween) {
+            Instance._tweens.Add(tween);
+            return tween;
         }
 
-        public void Add(Tween tween) {
-            _toAdd.Add(tween);
+        public static bool Remove(Tween tween) {
+            if (Instance._tweens.Remove(tween)) {
+                tween.Pause();
+                return true;
+            }
+
+            return false;
         }
 
-        public void Remove(Tween tween) {
-            _toRemove.Add(tween);
-            tween.Pause();
-        }
-
-        public void Play(Tween tween, bool forceReset = true) {
-            if (!_tweens.Contains(tween)) {
-                _tweens.Add(tween);
+        public static void Play(Tween tween, bool forceReset = true) {
+            if (!Instance._tweens.Contains(tween)) {
+                Instance._tweens.Add(tween);
             }
 
             tween.Play(forceReset);
         }
 
         #endregion Public Methods
+
+        #region Internal Methods
+
+        internal void Start() {
+            foreach (Tween tween in _tweens) {
+                tween.Play();
+            }
+        }
+
+        internal void Update(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
+            foreach (Tween tween in _tweens) {
+                tween.Update(delta);
+
+                if (tween.HasEnded) {
+                    _tweens.Remove(tween);
+                }
+            }
+        }
+
+        #endregion Internal Methods
     }
 }
