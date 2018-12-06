@@ -6,12 +6,19 @@ namespace Raccoon.Util.Tween {
     #region Base Lerper
 
     public abstract class Lerper {
+        #region Private Members
+
+        private object _totalAdditionalValue;
+
+        #endregion Private Members
+
         #region Constructors
 
-        public Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) {
+        public Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) {
             Owner = owner;
             Name = name;
             Easing = easing;
+            IsAdditional = additional;
 
             System.Type ownerType = Owner.GetType();
 
@@ -32,6 +39,7 @@ namespace Raccoon.Util.Tween {
                     throw new System.NotSupportedException($"Member type '{memberType}'.");
             }
 
+            _totalAdditionalValue = System.Activator.CreateInstance(DataType);
             From = To = Value;
         }
 
@@ -43,6 +51,7 @@ namespace Raccoon.Util.Tween {
         public MemberInfo MemberInfo { get; protected set; }
         public System.Type DataType { get; protected set; }
         public string Name { get; protected set; }
+        public bool IsAdditional { get; private set; }
         public System.Func<float, float> Easing { get; set; }
         public object From { get; set; }
         public object To { get; set; }
@@ -59,10 +68,20 @@ namespace Raccoon.Util.Tween {
             }
 
             set {
+                object result;
+
+                if (IsAdditional) {
+                    result = Subtract(value, _totalAdditionalValue);
+                    _totalAdditionalValue = Add(_totalAdditionalValue, result);
+                    result = Add(Value, result);
+                } else {
+                    result = value;
+                }
+
                 if (MemberInfo is PropertyInfo propertyInfo) {
-                    propertyInfo.SetValue(Owner, value);
+                    propertyInfo.SetValue(Owner, result);
                 } else if (MemberInfo is FieldInfo fieldInfo) {
-                    fieldInfo.SetValue(Owner, value);
+                    fieldInfo.SetValue(Owner, result);
                 }
             }
         }
@@ -82,6 +101,13 @@ namespace Raccoon.Util.Tween {
         public abstract void Interpolate(float t);
 
         #endregion Public Methods
+
+        #region Protected Methods
+
+        protected abstract object Add(object a, object b);
+        protected abstract object Subtract(object a, object b);
+
+        #endregion Protected Methods
     }
 
     #endregion Base Lerper
@@ -89,7 +115,7 @@ namespace Raccoon.Util.Tween {
     #region Number Lerper
 
     public class NumberLerper : Lerper {
-        public NumberLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        public NumberLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) : base(owner, name, memberType, easing, additional) {
         }
 
         public new float From { get { return (float) base.From; } set { base.From = value; } }
@@ -99,6 +125,14 @@ namespace Raccoon.Util.Tween {
         public override void Interpolate(float t) {
             Value = From + (To - From) * Easing(t);
         }
+
+        protected override object Add(object a, object b) {
+            return (float) a + (float) b;
+        }
+
+        protected override object Subtract(object a, object b) {
+            return (float) a - (float) b;
+        }
     }
 
     #endregion Number Lerper
@@ -106,7 +140,7 @@ namespace Raccoon.Util.Tween {
     #region Vector2 Lerper
 
     public class Vector2Lerper : Lerper {
-        public Vector2Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        public Vector2Lerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) : base(owner, name, memberType, easing, additional) {
         }
 
         public new Vector2 From { get { return (Vector2) base.From; } set { base.From = value; } }
@@ -116,6 +150,14 @@ namespace Raccoon.Util.Tween {
         public override void Interpolate(float t) {
             Value = From + (To - From) * Easing(t);
         }
+
+        protected override object Add(object a, object b) {
+            return (Vector2) a + (Vector2) b;
+        }
+
+        protected override object Subtract(object a, object b) {
+            return (Vector2) a - (Vector2) b;
+        }
     }
 
     #endregion Vector2 Lerper
@@ -123,7 +165,7 @@ namespace Raccoon.Util.Tween {
     #region Size Lerper
 
     public class SizeLerper : Lerper {
-        public SizeLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        public SizeLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) : base(owner, name, memberType, easing, additional) {
         }
 
         public new Size From { get { return (Size) base.From; } set { base.From = value; } }
@@ -133,6 +175,14 @@ namespace Raccoon.Util.Tween {
         public override void Interpolate(float t) {
             Value = From + (To - From) * Easing(t);
         }
+
+        protected override object Add(object a, object b) {
+            return (Size) a + (Size) b;
+        }
+
+        protected override object Subtract(object a, object b) {
+            return (Size) a - (Size) b;
+        }
     }
 
     #endregion Size Lerper
@@ -140,7 +190,7 @@ namespace Raccoon.Util.Tween {
     #region Rectangle Lerper
 
     public class RectangleLerper : Lerper {
-        public RectangleLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        public RectangleLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) : base(owner, name, memberType, easing, additional) {
         }
 
         public new Rectangle From { get { return (Rectangle) base.From; } set { base.From = value; } }
@@ -151,6 +201,20 @@ namespace Raccoon.Util.Tween {
             t = Easing(t);
             Value = new Rectangle(From.Position + (To.Position - From.Position) * t, From.Size + (To.Size - From.Size) * t);
         }
+
+        protected override object Add(object a, object b) {
+            Rectangle rectA = (Rectangle) a,
+                      rectB = (Rectangle) b;
+
+            return new Rectangle(rectA.Position + rectB.Position, rectA.Size + rectB.Size);
+        }
+
+        protected override object Subtract(object a, object b) {
+            Rectangle rectA = (Rectangle) a,
+                      rectB = (Rectangle) b;
+
+            return new Rectangle(rectA.Position - rectB.Position, rectA.Size - rectB.Size);
+        }
     }
 
     #endregion Rectangle Lerper
@@ -158,7 +222,7 @@ namespace Raccoon.Util.Tween {
     #region Color Lerper
 
     public class ColorLerper : Lerper {
-        public ColorLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing) : base(owner, name, memberType, easing) {
+        public ColorLerper(object owner, string name, MemberTypes memberType, System.Func<float, float> easing, bool additional) : base(owner, name, memberType, easing, additional) {
         }
 
         public new Color From { get { return (Color) base.From; } set { base.From = value; } }
@@ -167,7 +231,19 @@ namespace Raccoon.Util.Tween {
 
         public override void Interpolate(float t) {
             t = Easing(t);
-            Value = new Color((byte) (From.R + (To.R - From.R) * t), (byte) (From.G + (To.G - From.G) * t), (byte) (From.B + (To.B - From.B) * t));
+            Value = new Color(
+                (byte) (From.R + (To.R - From.R) * t), 
+                (byte) (From.G + (To.G - From.G) * t), 
+                (byte) (From.B + (To.B - From.B) * t)
+            );
+        }
+
+        protected override object Add(object a, object b) {
+            return (Color) a + (Color) b;
+        }
+
+        protected override object Subtract(object a, object b) {
+            return (Color) a - (Color) b;
         }
     }
 

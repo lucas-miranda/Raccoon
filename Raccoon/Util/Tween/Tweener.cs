@@ -24,8 +24,8 @@ namespace Raccoon.Util.Tween {
 
         #region Public Methods 
 
-        public static Tween Create<T>(T subject, int duration, bool autoPlay = false) where T : class {
-            Tween tween = Add(new Tween(subject, duration));
+        public static Tween Create<T>(T subject, int duration, bool autoPlay = false, bool additional = false) where T : class {
+            Tween tween = Add(new Tween(subject, duration, additional: additional));
 
             if (autoPlay) {
                 tween.Play();

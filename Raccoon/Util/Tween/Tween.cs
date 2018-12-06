@@ -5,19 +5,11 @@ using Raccoon.Graphics;
 
 namespace Raccoon.Util.Tween {
     public class Tween {
-        #region Private Static Members
+        #region Private Members
 
         private static Dictionary<System.Type, ConstructorInfo> LerpersAvailable;
 
-        #endregion Private Static Members
-
-        #region Private Events
-
         private event System.Action _onStart, _onUpdate, _onEnd;
-
-        #endregion Private Events
-
-        #region Private Members
 
         private Dictionary<string, Lerper> _lerpers = new Dictionary<string, Lerper>();
         private bool _startReverse;
@@ -31,7 +23,8 @@ namespace Raccoon.Util.Tween {
                 typeof(object),
                 typeof(string),
                 typeof(MemberTypes),
-                typeof(System.Func<float, float>)
+                typeof(System.Func<float, float>),
+                typeof(bool)
             };
 
             LerpersAvailable = new Dictionary<System.Type, ConstructorInfo> {
@@ -57,9 +50,10 @@ namespace Raccoon.Util.Tween {
 
         #region Constructors
 
-        public Tween(object subject, int duration) {
+        public Tween(object subject, int duration, bool additional = false) {
             Subject = subject;
             Duration = duration;
+            IsAdditional = additional;
         }
 
         #endregion Constructors
@@ -72,6 +66,7 @@ namespace Raccoon.Util.Tween {
         public int RepeatTimes { get; set; }
         public int TimesPlayed { get; private set; }
         public float Time { get; private set; }
+        public bool IsAdditional { get; private set; }
         public bool HasEnded { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool IsLooping { get { return RepeatTimes < 0; } set { RepeatTimes = value ? -1 : 0; } }
@@ -285,7 +280,15 @@ namespace Raccoon.Util.Tween {
 
             // create
             if (LerpersAvailable.TryGetValue(dataType, out ConstructorInfo constructorInfo)) {
-                lerper = (Lerper) constructorInfo.Invoke(new object[] { Subject, property.Name, subjectMember.MemberType, new System.Func<float, float>(Ease.Linear) });
+                lerper = (Lerper) constructorInfo.Invoke(
+                    new object[] {
+                        Subject,
+                        property.Name,
+                        subjectMember.MemberType,
+                        new System.Func<float, float>(Ease.Linear),
+                        IsAdditional
+                    }
+                );
             }
 
             if (lerper == null) {
