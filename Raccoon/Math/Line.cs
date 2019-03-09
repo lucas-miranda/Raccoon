@@ -54,6 +54,7 @@ namespace Raccoon {
         public float Slope { get { return PointB.X - PointA.X != 0 ? (PointB.Y - PointA.Y) / (PointB.X - PointA.X) : float.PositiveInfinity; } }
         public float YIntercept { get { return PointB.X - PointA.X != 0 ? (PointA.Y * PointB.X - PointA.X * PointB.Y) / (PointB.X - PointA.X) : float.PositiveInfinity; } }
         public float Angle { get { return Math.WrapAngle(Math.Angle(PointA, PointB)); } }
+        public Vector2 MidPoint { get { return GetPointNormalized(.5f); } }
         /*public float M { get { return Slope; } }
         public float A { get; }
         public float B { get; }
