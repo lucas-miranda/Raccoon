@@ -134,13 +134,13 @@ Scene:
 
 #endregion
 
-#region Static Public Properties
+        #region Static Public Properties
 
         public static Game Instance { get; private set; }
 
-#endregion Static Public Properties
+        #endregion Static Public Properties
 
-#region Public Properties
+        #region Public Properties
 
         public bool Disposed { get; private set; }
         public bool IsRunning { get; private set; }
@@ -227,9 +227,9 @@ Scene:
         public bool DebugMode { get { return false; } }
 #endif
 
-#endregion
+        #endregion
 
-#region Internal Properties
+        #region Internal Properties
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
@@ -243,9 +243,9 @@ Scene:
         internal Canvas DebugCanvas { get; private set; }
 #endif
 
-#endregion Internal Properties
+        #endregion Internal Properties
 
-#region Public Methods
+        #region Public Methods
 
         public void Start() {
             Debug.Info("| Raccoon Started |");
@@ -457,9 +457,9 @@ Scene:
             ToggleFullscreen();
         }
 
-#endregion
+        #endregion
 
-#region Protected Methods
+        #region Protected Methods
 
         protected virtual void Initialize() {
             // systems initialization
@@ -585,9 +585,9 @@ Scene:
             }
         }
 
-#endregion
+        #endregion
 
-#region Private Methods
+        #region Private Methods
 
         private void UpdateCurrentScene() {
             if (Scene != null) {
@@ -616,7 +616,6 @@ Scene:
                 XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
                 XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
                 XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
-                return;
             }
 
             RefreshViewMode();
@@ -836,6 +835,6 @@ Scene:
             _fpsCount++;
         }
 
-#endregion Private Methods
+        #endregion Private Methods
     }
 }
