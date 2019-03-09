@@ -393,7 +393,7 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
-            if (_vertexBuffer.VertexCount == 0) {
+            if (_vertexBuffer == null || _vertexBuffer.VertexCount == 0) {
                 return;
             }
 
