@@ -1,5 +1,4 @@
-﻿using Raccoon.Components;
-using Raccoon.Graphics;
+﻿using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -11,19 +10,18 @@ namespace Raccoon {
         public PolygonShape(params Vector2[] points) {
             _normalizedPolygon = new Polygon(points);
             _normalizedPolygon.Translate(-_normalizedPolygon.Center);
-            Shape = new Polygon(_normalizedPolygon);
-            BoundingBox = Shape.BoundingBox();
+            Recalculate();
         }
 
         public PolygonShape(Polygon polygon) {
             _normalizedPolygon = polygon;
             _normalizedPolygon.Translate(-_normalizedPolygon.Center);
-            Shape = new Polygon(_normalizedPolygon);
-            BoundingBox = Shape.BoundingBox();
+            Recalculate();
         }
 
         public int Area { get { return (int) (BoundingBox.Width * BoundingBox.Height); } }
         public Size BoundingBox { get; private set; }
+        public Rectangle ShapeBoundingBox { get; private set; }
         public Polygon Shape { get; private set; }
 
         public Vector2 Origin {
@@ -33,9 +31,7 @@ namespace Raccoon {
 
             set {
                 _origin = value;
-                Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(Rotation, Shape.Center - _origin);
-                BoundingBox = Shape.BoundingBox();
+                Recalculate();
             }
         }
 
@@ -46,15 +42,13 @@ namespace Raccoon {
 
             set {
                 _rotation = value;
-                Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(_rotation, Shape.Center - Origin);
-                BoundingBox = Shape.BoundingBox();
+                Recalculate();
             }
         }
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position, BoundingBox), Color.Indigo, 0f, Origin + BoundingBox / 2f);
+            Debug.DrawRectangle(new Rectangle(position - Origin + ShapeBoundingBox.Position, ShapeBoundingBox.Size), Color.Indigo, 0f);
 
             Polygon polygon = new Polygon(Shape);
             polygon.Translate(position - Origin);
@@ -104,8 +98,31 @@ namespace Raccoon {
 
         public void Rotate(float degrees) {
             _rotation += degrees;
-            Shape.RotateAround(degrees, Shape.Center - Origin);
+            Shape.RotateAround(degrees, Shape.Center + Origin);
             BoundingBox = Shape.BoundingBox();
+        }
+
+        private void Recalculate() {
+            Shape = new Polygon(_normalizedPolygon);
+            Shape.RotateAround(Rotation, Shape.Center + Origin);
+            BoundingBox = Shape.BoundingBox();
+
+            Rectangle shapeBoundingBox = Rectangle.Empty;
+            foreach (Vector2 point in Shape) {
+                if (point.X < shapeBoundingBox.Left) {
+                    shapeBoundingBox.Left = point.X;
+                } else if (point.X > shapeBoundingBox.Right) {
+                    shapeBoundingBox.Right = point.X;
+                }
+
+                if (point.Y < shapeBoundingBox.Top) {
+                    shapeBoundingBox.Top = point.Y;
+                } else if (point.Y > shapeBoundingBox.Bottom) {
+                    shapeBoundingBox.Bottom = point.Y;
+                }
+            }
+
+            ShapeBoundingBox = shapeBoundingBox;
         }
     }
 }
