@@ -1,4 +1,4 @@
-﻿namespace Raccoon.Util {
+namespace Raccoon.Util {
     public static class Math {
         public const float Epsilon = 0.0001f;
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
@@ -225,6 +225,14 @@
 
         public static double Truncate(double n) {
             return System.Math.Truncate(n);
+        }
+
+        public static float Map(float value, float min, float max, float targetMin, float targetMax) {
+            return targetMin + (value / (max - min)) * (targetMax - targetMin);
+        }
+
+        public static float Map(float value, Range range, Range targetRange) {
+            return Map(value, range.Min, range.Max, targetRange.Min, targetRange.Max);
         }
 
         #region Comparison
