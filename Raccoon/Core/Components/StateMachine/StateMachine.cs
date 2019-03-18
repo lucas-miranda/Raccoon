@@ -107,7 +107,13 @@ namespace Raccoon.Components {
         }
 
         public void ChangeState(T label) {
-            NextState = _states[label];
+            State<T> nextState = _states[label];
+
+            if (nextState == CurrentState) {
+                return;
+            }
+
+            NextState = nextState;
             CurrentCoroutine.Stop(); // avoid running current state update 
         }
 
