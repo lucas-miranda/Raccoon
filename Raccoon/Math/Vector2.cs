@@ -71,6 +71,10 @@ namespace Raccoon {
         }
 
         public static Vector2 Normalize(Vector2 v) {
+            if (Math.EqualsEstimate(v.X, 0f) && Math.EqualsEstimate(v.Y, 0f)) {
+                return Zero;
+            }
+
             float invLength = 1.0f / (float) System.Math.Sqrt(v.X * v.X + v.Y * v.Y);
             return new Vector2(v.X * invLength, v.Y * invLength);
         }
