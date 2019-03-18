@@ -101,9 +101,9 @@ namespace Raccoon.Util {
         /// <summary>
         /// Returns a random normalized Vector2.
         /// </summary>
-        /// <returns>A random Vector2 in range (x: [-1, 1], y: [-1, 1]).</returns>
+        /// <returns>A random Vector2 in range.</returns>
         public static Vector2 Vector2() {
-            return new Vector2((float) (Double() * 2 - 1), (float) (Double() * 2 - 1));
+            return Math.PolarToCartesian(1f, Integer(0, 359));
         }
 
         /// <summary>
@@ -204,7 +204,40 @@ namespace Raccoon.Util {
                 i--;
             }
 
-            return default(T);
+            return default;
+        }
+
+        /// <summary>
+        /// Choose a random value, using chances values as input array and returning a id of the choosed one.
+        /// </summary>
+        /// <param name="chanceValues">Integer chances.</param>
+        /// <returns>Id of the chance value choosed.</returns>
+        public static int Choose(int[] chanceValues) {
+            if (chanceValues.Length == 0) {
+                throw new System.ArgumentException("Can't choose without a defined chance value.");
+            }
+
+            int total = 0;
+
+            foreach (int value in chanceValues) {
+                total += value;
+            }
+
+            if (total <= 0) {
+                throw new System.ArgumentException("Chances values total sum must be greater than zero.");
+            }
+
+            int targetChance = Integer(1, total);
+            for (int i = 0; i < chanceValues.Length; i++) {
+                int chance = chanceValues[i];
+                targetChance -= chance;
+
+                if (targetChance <= 0) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
     }
 }

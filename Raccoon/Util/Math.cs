@@ -1,4 +1,4 @@
-namespace Raccoon.Util {
+﻿namespace Raccoon.Util {
     public static class Math {
         public const float Epsilon = 0.0001f;
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
