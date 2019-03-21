@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Raccoon.Util;
+using System.Collections.Generic;
 
 namespace Raccoon.Graphics.Primitives {
     public class PolygonPrimitive : PrimitiveGraphic {
@@ -9,7 +10,7 @@ namespace Raccoon.Graphics.Primitives {
             Color = color;
         }
 
-        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Raccoon.Polygon(points), color) { }
+        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Polygon(points), color) { }
 
         #endregion Constructors
 
@@ -42,12 +43,17 @@ namespace Raccoon.Graphics.Primitives {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f) * Game.Instance.MainRenderer.World;
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Renderer.World;
+
             bs.View = Game.Instance.MainRenderer.View;
             bs.Projection = Game.Instance.MainRenderer.Projection;
 
             // material
-            bs.SetMaterial(color, Opacity);
+            bs.SetMaterial(color * Color, Opacity);
 
             foreach (var pass in bs) {
                 Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, Shape.VertexCount);
