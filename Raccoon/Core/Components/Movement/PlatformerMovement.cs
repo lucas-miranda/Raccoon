@@ -252,8 +252,8 @@ Fall Through
 
             if (OnGround && !_isWalkingOnRamp && !IsJumping) {
                 // checks if it's touching the ground
-                if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out ContactList contacts)
-                  || !contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f))) {
+                if (!Physics.Instance.QueryMultipleCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> collisions)
+                  || !collisions.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f)))) {
                     Fall();
                 }
             }
@@ -339,7 +339,8 @@ Fall Through
                 return;
             }
 
-            if (!otherBody.Tags.HasAny(FallThroughTags)) {
+            if (!otherBody.Tags.HasAny(FallThroughTags) 
+              && vCollisionInfo != null && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth > 0f || Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Up), 0f, 1f))) {
                 if (vCollisionInfo != null) {
                     _isTryingToFallThrough = false;
                 }
@@ -352,13 +353,15 @@ Fall Through
                 vCollisionInfo = hCollisionInfo;
             }
 
-            if (collisionAxes.Y > 0 && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
-                if (CanFallThrough) {
-                    _applyFall = true;
-                } else if (_isTryingToFallThrough) {
-                    _isTryingToFallThrough = false;
+            if (collisionAxes.Y > 0) {
+                if (vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 1f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
+                    if (CanFallThrough) {
+                        _applyFall = true;
+                    } else if (_isTryingToFallThrough) {
+                        _isTryingToFallThrough = false;
+                    }
                 }
-            } else if (collisionAxes.Y >= 0) {
+            } else if (collisionAxes.Y > 0) {
                 if (vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth == 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .4f, 1f))) {
                     _isAboveSomething = true;
                     _applyFall = false;
@@ -367,6 +370,7 @@ Fall Through
                 if (!_isAboveSomething && (otherBody.Shape is GridShape || Body.Bottom > otherBody.Top)) {
                     _applyFall = true;
                 } 
+            } else {
             }
         }
 
