@@ -78,7 +78,7 @@
             }
 
             public void Reset() {
-                HasEnded = !(FramesRegions.Length > 1);
+                HasEnded = Durations.Length == 0 || (Durations.Length == 1 && Durations[0] == 0);
                 CurrentFrameIndex = IsReverse ? FramesRegions.Length - 1 : 0;
                 TimesPlayed = 0;
             }
