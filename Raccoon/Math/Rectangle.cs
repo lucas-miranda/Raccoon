@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -141,6 +141,22 @@ namespace Raccoon {
             return !(r.Right < Left || r.Left > Right || r.Bottom < Top || r.Top > Bottom);
         }
 
+        public bool Intersects(Polygon polygon) {
+            foreach (Vector2 vertex in polygon) {
+                if (ContainsInclusive(vertex)) {
+                    return true;
+                }
+            }
+
+            foreach (Line edge in Edges()) {
+                if (polygon.Intersects(edge).Length > 0 || polygon.IsInside(edge.PointA)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public Vector2 ClosestPoint(Vector2 point) {
             return Util.Math.Clamp(point, this);
         }
@@ -153,6 +169,13 @@ namespace Raccoon {
         public void Deflate(float w, float h) {
             Width -= w;
             Height -= h;
+        }
+
+        public IEnumerable<Line> Edges() {
+            yield return new Line(TopLeft, TopRight);
+            yield return new Line(TopRight, BottomRight);
+            yield return new Line(BottomRight, BottomLeft);
+            yield return new Line(BottomLeft, TopLeft);
         }
         
         public override bool Equals(object obj) {
