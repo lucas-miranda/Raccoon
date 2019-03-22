@@ -303,23 +303,34 @@ namespace Raccoon {
         }
 
         public Size BoundingBox() {
-            Rectangle boundingBox = new Rectangle();
+            if (VertexCount <= 1) {
+                return Size.Empty;
+            }
 
-            foreach (Vector2 vertex in _vertices) {
-                if (vertex.X < boundingBox.Left) {
-                    boundingBox.Left = vertex.X;
-                } else if (vertex.X > boundingBox.Right) {
-                    boundingBox.Right = vertex.X;
+            Vector2 firstVertex = _vertices[0];
+
+            float top = firstVertex.Y,
+                  left = firstVertex.X,
+                  bottom = firstVertex.Y,
+                  right = firstVertex.X;
+
+            for (int i = 1; i < VertexCount; i++) {
+                Vector2 vertex = _vertices[i];
+
+                if (vertex.X < left) {
+                    left = vertex.X;
+                } else if (vertex.X > right) {
+                    right = vertex.X;
                 }
 
-                if (vertex.Y < boundingBox.Top) {
-                    boundingBox.Top = vertex.Y;
-                } else if (vertex.Y > boundingBox.Bottom) {
-                    boundingBox.Bottom = vertex.Y;
+                if (vertex.Y < top) {
+                    top = vertex.Y;
+                } else if (vertex.Y > bottom) {
+                    bottom = vertex.Y;
                 }
             }
 
-            return boundingBox.Size;
+            return new Size(right - left, bottom - top);
         }
 
         public Vector2 ClosestPoint(Vector2 point) {
