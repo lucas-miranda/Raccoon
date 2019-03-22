@@ -50,8 +50,8 @@ namespace Raccoon {
             PolygonShape polygonShapeA = A as PolygonShape;
             GridShape gridB = B as GridShape;
 
-            Rectangle polygonBoundingBox = new Rectangle(APos - polygonShapeA.BoundingBox / 2f, polygonShapeA.BoundingBox),
-                      gridBoundingBox = new Rectangle(BPos, gridB.BoundingBox);
+            Rectangle polygonBoundingBox = polygonShapeA.BoundingBox + APos,
+                      gridBoundingBox = gridB.BoundingBox + BPos;
 
             // test grid bounds
             if (!gridBoundingBox.Intersects(polygonBoundingBox)) {

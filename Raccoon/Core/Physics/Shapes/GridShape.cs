@@ -13,27 +13,39 @@ namespace Raccoon {
         private Dictionary<uint, TileShape> _collisionShapes = new Dictionary<uint, TileShape>();
         private readonly TileShape[,] _tilesData;
 
+        private Vector2 _origin;
+
         public GridShape(Size tileSize, int columns, int rows) {
             TileSize = tileSize;
             Columns = columns;
             Rows = rows;
             TileBounds = new Rectangle(Vector2.Zero, new Size(Columns, Rows));
-            BoundingBox = TileBounds.Size * TileSize;
+            BoundingBox = new Rectangle(Vector2.Zero, TileBounds.Size * TileSize);
             _tilesData = new TileShape[Rows, Columns];
             BoxTilePolygon = new Polygon(Vector2.Zero, new Vector2(TileSize.Width, 0), TileSize.ToVector2(), new Vector2(0, TileSize.Height));
         }
 
         public float Width { get { return BoundingBox.Width; } }
         public float Height { get { return BoundingBox.Height; } }
-        public Size Size { get { return BoundingBox; } }
+        public Size Size { get { return BoundingBox.Size; } }
         public Size TileSize { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public int Area { get; }
-        public Vector2 Origin { get; set; }
-        public Size BoundingBox { get; private set; }
+        public Rectangle BoundingBox { get; private set; }
         public Rectangle TileBounds { get; private set; }
         public Polygon BoxTilePolygon { get; private set; }
+
+        public Vector2 Origin {
+            get {
+                return _origin;
+            }
+
+            set {
+                _origin = value;
+                BoundingBox = new Rectangle(-Origin, TileBounds.Size * TileSize);
+            }
+        }
 
 #if DEBUG
         public Color CollisionTilesColor { get; set; } = Color.Red;

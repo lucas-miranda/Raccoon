@@ -3,14 +3,14 @@ using Raccoon.Util;
 
 namespace Raccoon {
     public class BoxShape : IShape {
-        private Polygon _normalizedPolygon;
+        private readonly Polygon _normalizedPolygon;
         private Vector2 _origin;
 
         public BoxShape(int width, int height) {
             Width = width;
             Height = height;
             Area = Width * Height;
-            BoundingBox = Size;
+            BoundingBox = new Rectangle(-(Size / 2f).ToVector2(), Size);
 
             Axes = new Vector2[] {
                 Vector2.Right,
@@ -25,9 +25,9 @@ namespace Raccoon {
             HalwidthExtents = new Vector2(Extents[0], Extents[1]);
 
             _normalizedPolygon = new Polygon(
-                Axes[0] * -HalwidthExtents + Axes[1] *  HalwidthExtents,
-                Axes[0] *  HalwidthExtents + Axes[1] *  HalwidthExtents,
-                Axes[0] *  HalwidthExtents + Axes[1] * -HalwidthExtents,
+                Axes[0] * -HalwidthExtents + Axes[1] * HalwidthExtents,
+                Axes[0] * HalwidthExtents + Axes[1] * HalwidthExtents,
+                Axes[0] * HalwidthExtents + Axes[1] * -HalwidthExtents,
                 Axes[0] * -HalwidthExtents + Axes[1] * -HalwidthExtents
             );
 
@@ -41,7 +41,7 @@ namespace Raccoon {
         public int Height { get; }
         public int Area { get; }
         public Size Size { get { return new Size(Width, Height); } }
-        public Size BoundingBox { get; private set; }
+        public Rectangle BoundingBox { get; private set; }
         public Vector2[] Axes { get; private set; }
         public Vector2 HalwidthExtents { get; }
         public float[] Extents { get; }
@@ -55,7 +55,7 @@ namespace Raccoon {
             set {
                 _origin = value;
                 Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(Rotation, Shape.Center - Origin);
+                Shape.RotateAround(Rotation, Shape.Center + Origin);
                 BoundingBox = Shape.BoundingBox();
             }
         }
@@ -70,16 +70,14 @@ namespace Raccoon {
                 Axes[1] = Math.Rotate(Vector2.Up, value);
 
                 Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(value, Shape.Center - Origin);
+                Shape.RotateAround(value, Shape.Center + Origin);
                 BoundingBox = Shape.BoundingBox();
             }
         }
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position, BoundingBox), Color.Indigo, 0f, Vector2.One, Origin + (BoundingBox / 2f).ToVector2());
-
-            //Debug.DrawRectangle(new Rectangle(position - HalwidthExtents, BoundingBox), color, Rotation);
+            Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
 
             // draw using Polygon
             Polygon polygon = new Polygon(Shape);
@@ -94,8 +92,7 @@ namespace Raccoon {
             }*/
 
             // centroid
-            Debug.DrawCircle(position - Origin, 1, Color.White, 10);
-
+            Debug.DrawCircle(position - Origin + BoundingBox.Center, 1, Color.White, 10);
         }
 
         public bool ContainsPoint(Vector2 point) {

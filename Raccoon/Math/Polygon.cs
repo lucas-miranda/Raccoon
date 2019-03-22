@@ -302,9 +302,9 @@ namespace Raccoon {
             return axis.Projection(_vertices);
         }
 
-        public Size BoundingBox() {
+        public Rectangle BoundingBox() {
             if (VertexCount <= 1) {
-                return Size.Empty;
+                return Rectangle.Empty;
             }
 
             Vector2 firstVertex = _vertices[0];
@@ -330,7 +330,7 @@ namespace Raccoon {
                 }
             }
 
-            return new Size(right - left, bottom - top);
+            return new Rectangle(new Vector2(left, top), new Vector2(right, bottom));
         }
 
         public Vector2 ClosestPoint(Vector2 point) {

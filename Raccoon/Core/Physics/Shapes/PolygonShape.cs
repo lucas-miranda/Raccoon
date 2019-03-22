@@ -20,8 +20,7 @@ namespace Raccoon {
         }
 
         public int Area { get { return (int) (BoundingBox.Width * BoundingBox.Height); } }
-        public Size BoundingBox { get; private set; }
-        public Rectangle ShapeBoundingBox { get; private set; }
+        public Rectangle BoundingBox { get; private set; }
         public Polygon Shape { get; private set; }
 
         public Vector2 Origin {
@@ -48,7 +47,7 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(new Rectangle(position - Origin + ShapeBoundingBox.Position, ShapeBoundingBox.Size), Color.Indigo, 0f);
+            Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
 
             Polygon polygon = new Polygon(Shape);
             polygon.Translate(position - Origin);
@@ -106,23 +105,6 @@ namespace Raccoon {
             Shape = new Polygon(_normalizedPolygon);
             Shape.RotateAround(Rotation, Shape.Center + Origin);
             BoundingBox = Shape.BoundingBox();
-
-            Rectangle shapeBoundingBox = Rectangle.Empty;
-            foreach (Vector2 point in Shape) {
-                if (point.X < shapeBoundingBox.Left) {
-                    shapeBoundingBox.Left = point.X;
-                } else if (point.X > shapeBoundingBox.Right) {
-                    shapeBoundingBox.Right = point.X;
-                }
-
-                if (point.Y < shapeBoundingBox.Top) {
-                    shapeBoundingBox.Top = point.Y;
-                } else if (point.Y > shapeBoundingBox.Bottom) {
-                    shapeBoundingBox.Bottom = point.Y;
-                }
-            }
-
-            ShapeBoundingBox = shapeBoundingBox;
         }
     }
 }

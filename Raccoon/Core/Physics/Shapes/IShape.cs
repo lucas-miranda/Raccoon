@@ -5,7 +5,7 @@ using Raccoon.Util;
 namespace Raccoon {
     public interface IShape {
         int Area { get; }
-        Size BoundingBox { get; }
+        Rectangle BoundingBox { get; }
         Vector2 Origin { get; set; }
 
         void DebugRender(Vector2 position, Color color);

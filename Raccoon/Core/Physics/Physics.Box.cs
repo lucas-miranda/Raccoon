@@ -122,8 +122,8 @@ namespace Raccoon {
             BoxShape boxA = A as BoxShape;
             GridShape gridB = B as GridShape;
 
-            Rectangle boxBoundingBox = new Rectangle(APos - boxA.BoundingBox / 2f, boxA.BoundingBox),
-                      gridBoundingBox = new Rectangle(BPos, gridB.BoundingBox);
+            Rectangle boxBoundingBox = boxA.BoundingBox + APos,
+                      gridBoundingBox = gridB.BoundingBox + BPos;
 
             // test grid bounds
             if (!gridBoundingBox.Intersects(boxBoundingBox)) {
