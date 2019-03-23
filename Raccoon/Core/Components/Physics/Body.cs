@@ -54,7 +54,7 @@ namespace Raccoon.Components {
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
         public bool IsResting { get; private set; } = true;
-        public float Top { get { return Shape != null ? Position.Y + Shape.BoundingBox.Left : Position.Y; } }
+        public float Top { get { return Shape != null ? Position.Y + Shape.BoundingBox.Top : Position.Y; } }
         public float Right { get { return Shape != null ? Position.X + Shape.BoundingBox.Right : Position.X; } }
         public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Bottom : Position.Y; } }
         public float Left { get { return Shape != null ? Position.X + Shape.BoundingBox.Left : Position.X; } }
