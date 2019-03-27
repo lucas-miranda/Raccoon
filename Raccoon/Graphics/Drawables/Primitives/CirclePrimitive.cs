@@ -7,10 +7,6 @@ namespace Raccoon.Graphics.Primitives {
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
-
-#if DEBUG
-        private readonly IndexBuffer _debug_indexBuffer;
-#endif
         
         private int _segments;
         private float _radius;

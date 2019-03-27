@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
 using Raccoon.Util;
 
 namespace Raccoon {
