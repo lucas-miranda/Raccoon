@@ -11,11 +11,11 @@ namespace Raccoon {
         }
 
         public bool Contains(T subject) {
-            return FindIndex(p => p.Equals(subject)) > -1;
+            return FindIndex(p => p.Subject.Equals(subject)) > -1;
         }
 
         public bool Contains(object subject) {
-            return FindIndex(p => p.Equals(subject)) > -1;
+            return FindIndex(p => p.Subject.Equals(subject)) > -1;
         }
 
         public bool Contains(System.Predicate<CollisionInfo<T>> predicate) {
