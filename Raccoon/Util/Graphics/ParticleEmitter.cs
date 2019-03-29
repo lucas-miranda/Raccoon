@@ -39,13 +39,24 @@ namespace Raccoon.Util.Graphics {
             for (int i = 0; i < count; i++) {
                 Particle particle = new Particle() {
                     Layer = particleModel.Layer,
-                    Animation = new Animation(particleModel.Animation)
+                    Animation = new Animation(particleModel.Animation) {
+                        Position = particleModel.Animation.Position
+                    }
                 };
 
-                Vector2 displacement = Random.Vector2(emissionOptions.DisplacementMin, emissionOptions.DisplacementMax);
+                Vector2 displacement = emissionOptions.DisplacementMin;
+
+                if (emissionOptions.DisplacementMin != emissionOptions.DisplacementMax) {
+                    displacement = Random.Vector2(emissionOptions.DisplacementMin, emissionOptions.DisplacementMax);
+                }
+
                 particle.Transform.Position = position + displacement;
 
-                uint duration = (uint) Random.Integer((int) emissionOptions.DurationMin, (int) emissionOptions.DurationMax);
+                uint duration = emissionOptions.DurationMin;
+
+                if (emissionOptions.DurationMin != emissionOptions.DurationMax) {
+                    duration = (uint) Random.Integer((int) emissionOptions.DurationMin, (int) emissionOptions.DurationMax);
+                }
 
                 particle.Prepare(duration, timeToStart, emissionOptions.AnimationKey);
                 timeToStart += emissionOptions.DelayBetweenEmissions;
