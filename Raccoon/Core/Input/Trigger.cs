@@ -5,7 +5,7 @@
 
         public float Value { get; protected set; }
 
-        public override void Update() {
+        public override void Update(int delta) {
             Value = 0;
             if (JoystickId > -1) {
                 Value = Input.JoyAxisValue(JoystickId, JoystickButtonId);

@@ -27,19 +27,27 @@
         public bool IsDown { get; protected set; }
         public bool IsPressed { get; protected set; }
         public bool IsReleased { get; protected set; } = true;
+        public uint HoldDuration { get; private set; }
 
-        public virtual void Update() {
-            if (_forceState || (Key != Key.None && Input.IsKeyDown(Key)) || (_usingMouseButton && Input.IsMouseButtonDown(MouseButton)) || (JoystickId > -1 && Input.IsJoyButtonDown(JoystickId, JoystickButtonId))) {
+        public virtual void Update(int delta) {
+            if (_forceState 
+              || (Key != Key.None && Input.IsKeyDown(Key)) 
+              || (_usingMouseButton && Input.IsMouseButtonDown(MouseButton)) 
+              || (JoystickId > -1 && Input.IsJoyButtonDown(JoystickId, JoystickButtonId))) {
                 if (IsReleased) {
                     IsPressed = IsDown = true;
                     IsReleased = false;
+                    HoldDuration = 0u;
                 } else if (IsPressed) {
                     IsPressed = false;
+                } else {
+                    HoldDuration += (uint) delta;
                 }
             } else {
                 if (!IsReleased) {
                     IsReleased = true;
                     IsPressed = IsDown = false;
+                    HoldDuration += (uint) delta;
                 }
             }
         }

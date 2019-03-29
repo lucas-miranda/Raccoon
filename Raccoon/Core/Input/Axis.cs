@@ -33,7 +33,7 @@
         public Button Left { get; set; }
         public Vector2 Value { get { return new Vector2(X, Y); } }
 
-        public virtual void Update() {
+        public virtual void Update(int delta) {
             X = Y = 0;
 
             if (_forceState) {
@@ -42,28 +42,28 @@
             } else {
                 // buttons
                 if (Left != null) {
-                    Left.Update();
+                    Left.Update(delta);
                     if (Left.IsDown) {
                         X = -1;
                     }
                 }
 
                 if (Right != null) {
-                    Right.Update();
+                    Right.Update(delta);
                     if (Right.IsDown) {
                         X += 1;
                     }
                 }
 
                 if (Up != null) {
-                    Up.Update();
+                    Up.Update(delta);
                     if (Up.IsDown) {
                         Y = -1;
                     }
                 }
 
                 if (Down != null) {
-                    Down.Update();
+                    Down.Update(delta);
                     if (Down.IsDown) {
                         Y += 1;
                     }

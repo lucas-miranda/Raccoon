@@ -166,21 +166,21 @@ namespace Raccoon {
         #region Internal Methods
 
         internal void Update(int delta) {
-            PageUpButton.Update();
+            PageUpButton.Update(delta);
             if (PageUpButton.IsPressed) {
                 _pageScroll -= new Vector2(0, Font.LineSpacing * 4f);
             } else if (PageUpButton.IsDown) {
                 _pageScroll -= new Vector2(0, Font.LineSpacing * 2f);
             }
 
-            PageDownButton.Update();
+            PageDownButton.Update(delta);
             if (PageDownButton.IsPressed) {
                 _pageScroll = Math.Approach(_pageScroll, Vector2.Zero, new Vector2(0, Font.LineSpacing * 4f));
             } else if (PageDownButton.IsDown) {
                 _pageScroll = Math.Approach(_pageScroll, Vector2.Zero, new Vector2(0, Font.LineSpacing * 2f));
             }
 
-            PageEndButton.Update();
+            PageEndButton.Update(delta);
             if (PageEndButton.IsPressed) {
                 _pageScroll = Vector2.Zero;
             }

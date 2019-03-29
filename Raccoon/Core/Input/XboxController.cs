@@ -64,7 +64,7 @@ namespace Raccoon.Input {
         public Button Back { get { return Button(Label.Back); } }
         public Button Start { get { return Button(Label.Start); } }
 
-        public override void Update() {
+        public override void Update(int delta) {
             if (Enabled && IsConnected) {
                 GamePadState gamepadState = GamePad.GetState(JoyId);
                 DUp.ForceState(gamepadState.DPad.Up == ButtonState.Pressed);
@@ -73,7 +73,7 @@ namespace Raccoon.Input {
                 DLeft.ForceState(gamepadState.DPad.Left == ButtonState.Pressed);
             }
 
-            base.Update();
+            base.Update(delta);
         }
 
         public override string ToString() {

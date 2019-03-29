@@ -29,7 +29,7 @@ namespace Raccoon.Input {
         protected Dictionary<string, Axis> Axes { get; set; }
         protected Dictionary<string, Button> Buttons { get; set; }
         
-        public virtual void Update() {
+        public virtual void Update(int delta) {
             // connection events
             if (!_wasConnected && IsConnected) {
                 OnConnected?.Invoke();
@@ -44,11 +44,11 @@ namespace Raccoon.Input {
             }
 
             foreach (Button btn in Buttons.Values) {
-                btn.Update();
+                btn.Update(delta);
             }
 
             foreach (Axis axis in Axes.Values) {
-                axis.Update();
+                axis.Update(delta);
             }
         }
 
