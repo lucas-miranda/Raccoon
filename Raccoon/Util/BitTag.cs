@@ -81,6 +81,14 @@ namespace Raccoon.Util {
             return HasAny((System.IConvertible) tag);
         }
 
+        public T ToEnum<T>() where T : System.Enum {
+            return (T) System.Enum.ToObject(typeof(T), LiteralValue);
+        }
+
+        public object ToEnum() {
+            return System.Enum.ToObject(EnumType, LiteralValue);
+        }
+
         public override bool Equals(object obj) {
             return obj is BitTag ? Equals((BitTag) obj) : base.Equals(obj);
         }
