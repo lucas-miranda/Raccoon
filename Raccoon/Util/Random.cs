@@ -140,7 +140,7 @@ namespace Raccoon.Util {
         /// Tests a random integer percent value.
         /// </summary>
         /// <param name="chance">Percent value in range [1, 100].</param>
-        /// <returns>True if random value is less than chance, False otherwise.</returns>
+        /// <returns>True if random value is less than or equals chance, False otherwise.</returns>
         public static bool PercentInteger(int chance) {
             return Integer(1, 100) <= chance;
         }
