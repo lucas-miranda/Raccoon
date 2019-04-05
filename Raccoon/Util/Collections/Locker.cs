@@ -31,8 +31,7 @@ namespace Raccoon.Util.Collections {
         public ReadOnlyCollection<T> ToAdd { get { return _toAdd.AsReadOnly(); } }
         public ReadOnlyCollection<T> ToRemove { get { return _toRemove.AsReadOnly(); } }
         public ReadOnlyCollection<T> Items { get { return _items.AsReadOnly(); } }
-
-        public bool IsReadOnly => throw new System.NotImplementedException();
+        public bool IsReadOnly { get { return false; } }
 
         public T this[int i] {
             get {
@@ -187,6 +186,17 @@ namespace Raccoon.Util.Collections {
                 while (enumerator.MoveNext()) {
                     yield return enumerator.Current;
                 }
+            }
+
+            Unlock();
+            Upkeep();
+        }
+
+        public IEnumerable<T> ReverseIterator() {
+            Lock();
+
+            for (int i = _items.Count - 1; i >= 0; i--) {
+                yield return _items[i];
             }
 
             Unlock();
