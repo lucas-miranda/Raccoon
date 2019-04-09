@@ -283,7 +283,7 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Transform.Position, Transform.Rotation);
+                g.Render(Transform.Position, Transform.Rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.One, null, Layer);
             }
 
             foreach (Component c in Components) {

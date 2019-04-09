@@ -5,14 +5,23 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
     public class Shader : IEnumerable {
+        #region Private Members
+
+        private static int NextId = 0;
+        private static readonly Dictionary<string, int> ShaderIds = new Dictionary<string, int>(); 
+
+        #endregion Private Members
+
         #region Constructors
 
         public Shader(string filename) {
             Load(filename);
+            UpdateId();
         }
 
         internal Shader(Effect effect) {
             XNAEffect = effect;
+            UpdateId();
         }
 
         #endregion Constructors
@@ -26,6 +35,7 @@ namespace Raccoon.Graphics {
 
         #region Internal Properties
 
+        internal int Id { get; private set; }
         internal protected Effect XNAEffect { get; set; }
 
         #endregion Internal Properties
@@ -84,17 +94,29 @@ namespace Raccoon.Graphics {
             XNAEffect.Parameters[name].SetValue(value);
         }
 
-        /*public void SetParameter(string name, Microsoft.Xna.Framework.Matrix value) {
-            effect.Parameters[name].SetValue(value);
+        public Microsoft.Xna.Framework.Matrix GetParameterMatrix(string name) {
+            return XNAEffect.Parameters[name].GetValueMatrix();
+        }
+
+        public void SetParameter(string name, Microsoft.Xna.Framework.Matrix value) {
+            XNAEffect.Parameters[name].SetValue(value);
+        }
+
+        public Microsoft.Xna.Framework.Matrix[] GetParameterMatrixArray(string name, int count) {
+            return XNAEffect.Parameters[name].GetValueMatrixArray(count);
         }
 
         public void SetParameter(string name, Microsoft.Xna.Framework.Matrix[] value) {
-            effect.Parameters[name].SetValue(value);
+            XNAEffect.Parameters[name].SetValue(value);
+        }
+
+        public Microsoft.Xna.Framework.Quaternion GetParameterQuaternion(string name) {
+            return XNAEffect.Parameters[name].GetValueQuaternion();
         }
 
         public void SetParameter(string name, Microsoft.Xna.Framework.Quaternion value) {
-            effect.Parameters[name].SetValue(value);
-        }*/
+            XNAEffect.Parameters[name].SetValue(value);
+        }
 
         public Vector2 GetParameterVector2(string name) {
             return new Vector2(XNAEffect.Parameters[name].GetValueVector2());
@@ -144,7 +166,7 @@ namespace Raccoon.Graphics {
             OnApply();
             foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
                 pass.Apply();
-                yield return null;
+                yield return pass;
             }
         }
 
@@ -168,5 +190,19 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        private void UpdateId() {
+            if (!ShaderIds.TryGetValue(XNAEffect.Name, out int id)) {
+                id = NextId;
+                NextId++;
+                ShaderIds.Add(XNAEffect.Name, id);
+            }
+
+            Id = id;
+        }
+
+        #endregion Private Methods
     }
 }

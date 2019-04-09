@@ -139,7 +139,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertexBuffer.SetData(_vertices);
         }
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations

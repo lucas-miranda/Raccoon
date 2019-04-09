@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class Image : Graphic {
@@ -49,7 +49,7 @@ namespace Raccoon.Graphics {
             }
 
             set {
-                _texture = value ?? throw new ArgumentNullException("Invalid texture");
+                _texture = value ?? throw new System.ArgumentNullException("Invalid texture");
                 SourceRegion = _texture.Bounds;
                 if (ClippingRegion.IsEmpty) {
                     ClippingRegion = SourceRegion;
@@ -66,7 +66,7 @@ namespace Raccoon.Graphics {
 
             set {
                 if (value.Left < Texture.Bounds.Left || value.Top < Texture.Bounds.Top || value.Right > Texture.Bounds.Right || value.Bottom > Texture.Bounds.Bottom) {
-                    throw new ArgumentOutOfRangeException("SourceRegion", value, "Value must be within texture bounds");
+                    throw new System.ArgumentOutOfRangeException("SourceRegion", value, "Value must be within texture bounds");
                 }
 
                 _sourceRegion = value;
@@ -80,7 +80,7 @@ namespace Raccoon.Graphics {
 
             set {
                 if (value.Left < 0 || value.Top < 0 || value.Right > _sourceRegion.Width || value.Bottom > _sourceRegion.Height) {
-                    throw new ArgumentOutOfRangeException("ClippingRegion", value, $"Value must be within source region bounds {_sourceRegion}");
+                    throw new System.ArgumentOutOfRangeException("ClippingRegion", value, $"Value must be within source region bounds {_sourceRegion}");
                 }
 
                 _clippingRegion = value;
@@ -193,13 +193,13 @@ namespace Raccoon.Graphics {
 
         #region Protected Methods 
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             if (DestinationRegion.IsEmpty) {
-                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
                 return;
             }
 
-            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, Shader);
+            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
         }
 
         #endregion Protected Methods 

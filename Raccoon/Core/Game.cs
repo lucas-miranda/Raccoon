@@ -215,6 +215,7 @@ Scene:
                 }
 
                 MainCanvas.Resize(Size);
+                MainRenderer.RecalculateProjection();
             }
         }
 
@@ -666,6 +667,7 @@ Scene:
             if (MainCanvas != null) {
                 MainCanvas.Resize(Size);
                 MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
+                MainRenderer.RecalculateProjection();
             }
 
 #if DEBUG
@@ -690,28 +692,11 @@ Scene:
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
 
-            ScreenRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
-                Shader = BasicShader,
-                SpriteSortMode = SpriteSortMode.Deferred
-            };
+            ScreenRenderer = new Renderer();
+            DebugRenderer = new Renderer();
 
-            DebugRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
-                Shader = BasicShader
-            };
-
-            DebugRenderer.OnBeforeRender += () => {
-                BasicShader.View = DebugRenderer.View;
-                BasicShader.Projection = DebugRenderer.Projection;
-                BasicShader.TextureEnabled = true;
-                BasicShader.UpdateParameters();
-            };
-
-            DebugRenderer.OnAfterRender += () => {
-                BasicShader.ResetParameters();
-            };
-
-            MainRenderer = new Renderer(Graphics.BlendState.AlphaBlend) {
-                Shader = BasicShader,
+            MainRenderer = new Renderer(autoHandleAlphaBlendedSprites: true) {
+                DepthStencilState = DepthStencilState.Default,
                 RecalculateProjectionSize = () => {
                     float zoom = Camera.Current == null ? 1f : Camera.Current.Zoom;
                     float scaleFactor = 1f / (zoom * PixelScale);
@@ -719,28 +704,18 @@ Scene:
                 }
             };
 
-            MainRenderer.OnBeforeRender += () => {
-                BasicShader.View = MainRenderer.View;
-                BasicShader.Projection = MainRenderer.Projection;
-                BasicShader.TextureEnabled = true;
-                BasicShader.UpdateParameters();
-            };
-
-            MainRenderer.OnAfterRender += () => {
-                BasicShader.ResetParameters();
-            };
-
-            MainCanvas = new Canvas(Width, Height, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents) {
+            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = MainRenderer
             };
 
 #if DEBUG
-            DebugCanvas = new Canvas(WindowWidth, WindowHeight, false, Graphics.SurfaceFormat.Color, Graphics.DepthFormat.None, 0, CanvasUsage.PreserveContents) {
+            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = DebugRenderer
             };
 
             float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
             _framerateMonitorSize = new Size(monitorFrameWidth, 82); 
+
             for (int i = 0; i < FramerateMonitorValuesCount; i++) {
                 FramerateValues.Add(0);
             }
@@ -772,9 +747,9 @@ Scene:
             MainCanvas.Begin(BackgroundColor);
 
             foreach (Renderer renderer in Instance.Renderers) {
-                renderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
+                renderer.Begin();
             }
-            
+
             Render();
 
             foreach (Renderer renderer in Instance.Renderers) {
@@ -796,9 +771,9 @@ Scene:
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.Violet);
 
-            ScreenRenderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            ScreenRenderer.Begin();
 
             ScreenRenderer.Draw(
                 MainCanvas, 
@@ -828,7 +803,7 @@ Scene:
 
             ScreenRenderer.End();
 
-            ScreenRenderer.Begin(SamplerState.PointClamp, DepthStencilState.Default, null, null);
+            ScreenRenderer.Begin();
             OnAfterRender();
             ScreenRenderer.End();
 

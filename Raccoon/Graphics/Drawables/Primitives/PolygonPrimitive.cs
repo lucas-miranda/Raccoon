@@ -28,7 +28,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             if (Shape.VertexCount == 0) {
                 return;
             }
@@ -36,8 +36,8 @@ namespace Raccoon.Graphics.Primitives {
             Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[Shape.VertexCount * 2];
             for (int i = 0; i < Shape.VertexCount; i++) {
                 Vector2 vertex = Shape[i], nextVertex = Shape[(i + 1) % Shape.VertexCount];
-                vertices[i * 2] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(vertex.X - Origin.X, vertex.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White);
-                vertices[i * 2 + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(nextVertex.X - Origin.X, nextVertex.Y - Origin.Y, 0), Microsoft.Xna.Framework.Color.White);
+                vertices[i * 2] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(vertex.X - Origin.X, vertex.Y - Origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White);
+                vertices[i * 2 + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(nextVertex.X - Origin.X, nextVertex.Y - Origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White);
             }
 
             BasicShader bs = Game.Instance.BasicShader;
