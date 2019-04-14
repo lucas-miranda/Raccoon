@@ -1,7 +1,5 @@
-﻿using Raccoon.Util;
-
-namespace Raccoon.Graphics {
-    public class Image : Graphic {
+﻿namespace Raccoon.Graphics {
+    public class Image : Graphic, System.IDisposable {
         #region Private Members
 
         private Texture _texture;
@@ -42,6 +40,8 @@ namespace Raccoon.Graphics {
         #endregion Constructors
 
         #region Public Properties
+
+        public bool IsDisposed { get; private set; }
 
         public Texture Texture {
             get {
@@ -178,11 +178,16 @@ namespace Raccoon.Graphics {
         #endregion Primitives
 
         public override void Dispose() {
-            if (Texture == null) {
+            if (Texture == null || IsDisposed) {
                 return;
             }
 
-            Texture.Dispose();
+            if (!Texture.IsDisposed) {
+                Texture.Dispose();
+            }
+
+            Texture = null;
+            IsDisposed = true;
         }
 
         public override string ToString() {

@@ -61,6 +61,22 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
+		public static Texture ConvertBitmapToTexture(GraphicsDevice graphicsDevice, System.Drawing.Bitmap bitmap) {
+			// Buffer size is size of color array multiplied by 4 because   
+			// each pixel has four color bytes  
+			int bufferSize = bitmap.Height * bitmap.Width * 4;
+
+			// Create new memory stream and save image to stream so   
+			// we don't have to save and read file  
+			System.IO.MemoryStream memoryStream = new System.IO.MemoryStream(bufferSize);
+			bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+			// Creates a texture from IO.Stream - our memory stream  
+			Texture2D texture2D = Texture2D.FromStream(graphicsDevice, memoryStream);
+
+			return new Texture(texture2D);
+		}
+
         public void Begin(BlendState blendState = null, SamplerState sampler = null, DepthStencilState depthStencil = null, RasterizerState rasterizer = null, Matrix? transform = null) {
             BlendState = blendState ?? BlendState.AlphaBlend;
             SamplerState = sampler ?? SamplerState.PointClamp;
@@ -102,6 +118,12 @@ namespace Raccoon.Graphics {
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+        }
+
+        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+            Texture texture = font.Rasterize(GraphicsDevice, text, out Size textSize);
+            batchItem.Set(texture, position, null, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
         }
 
         #endregion Public Methods

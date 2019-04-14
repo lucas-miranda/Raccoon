@@ -160,51 +160,20 @@ namespace Raccoon.Graphics {
 
         #region Draw Text from String
 
-        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color, 
-                Math.ToRadians(rotation), 
-                origin, 
-                scale, 
-                (SpriteEffects) flip, 
-                0f
-            );
-            */
+        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color, 
-                Math.ToRadians(rotation), 
-                origin, 
-                scale, 
-                (SpriteEffects) flip, 
-                0f
-            );
-            */
+        public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color
-            );
-            */
+        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null) {
-            DrawString(font, text, position, color, Vector2.One, shader);
+        public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null, float layerDepth = 1f) {
+            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, layerDepth);
         }
 
         #endregion Draw Text from String
@@ -291,6 +260,10 @@ namespace Raccoon.Graphics {
             SpriteBatch.End();
 
             AfterRender();
+
+            if (SpriteBatch.Shader is BasicShader batch) {
+                batch.ResetParameters();
+            }
         }
 
         #endregion Internal Methods

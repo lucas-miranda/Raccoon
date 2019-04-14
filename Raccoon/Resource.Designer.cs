@@ -63,9 +63,9 @@ namespace Raccoon {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] BasicEffect {
+        internal static byte[] _04b03 {
             get {
-                object obj = ResourceManager.GetObject("BasicEffect", resourceCulture);
+                object obj = ResourceManager.GetObject("_04b03", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace Raccoon {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] Zoomy {
+        internal static byte[] BasicEffect {
             get {
-                object obj = ResourceManager.GetObject("Zoomy", resourceCulture);
+                object obj = ResourceManager.GetObject("BasicEffect", resourceCulture);
                 return ((byte[])(obj));
             }
         }

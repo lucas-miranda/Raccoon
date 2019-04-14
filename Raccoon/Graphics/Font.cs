@@ -1,58 +1,90 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System.Collections.ObjectModel;
+﻿namespace Raccoon.Graphics {
+    public class Font : System.IDisposable {
+        private float _size;
 
-namespace Raccoon.Graphics {
-    public class Font {
         #region Constructors
 
-        public Font(string name) {
-            Name = name;
-            Load();
+        static Font() {
+            Service = new FontService();
         }
 
-        internal Font(SpriteFont spriteFont) {
-            SpriteFont = spriteFont;
-            DefaultCharacter = '?';
+        public Font(string name, float size = 12f) {
+            Face = new SharpFont.Face(Service.Library, System.IO.Path.Combine(Game.Instance.ContentDirectory, name));
+            Size = size;
+        }
+
+        public Font(byte[] file, int faceIndex, float size = 12f) {
+            Face = new SharpFont.Face(Service.Library, file, faceIndex);
+            Size = size;
+        }
+
+        internal Font(SharpFont.Face fontFace) {
+            Face = fontFace;
         }
 
         #endregion Constructors
 
         #region Public Properties
 
-        public string Name { get; private set; }
-        public ReadOnlyCollection<char> Characters { get { return SpriteFont.Characters; } }
-        public char? DefaultCharacter { get { return SpriteFont.DefaultCharacter; } set { SpriteFont.DefaultCharacter = value; } }
-        public int LineSpacing { get { return SpriteFont.LineSpacing; } set { SpriteFont.LineSpacing = value; } }
-        public float Spacing { get { return SpriteFont.Spacing; } set { SpriteFont.Spacing = value; } }
+        public string FamilyName { get { return Face.FamilyName; } }
+        public SharpFont.Face Face { get; private set; }
+        public float LineSpacing { get { return 0; } }
+        public float Spacing { get { return 0; } }
+        public bool IsDisposed { get; private set; }
+
+        public float Size {
+            get {
+                return _size;
+            }
+
+            set {
+                _size = value;
+                Face.SetCharSize(0, _size, 0, 96);
+            }
+        }
 
         #endregion Public Properties
 
         #region Internal Properties
 
-        internal SpriteFont SpriteFont { get; private set; }
+        internal static FontService Service { get; }
 
         #endregion Internal Properties
 
         #region Public Methods
 
         public Vector2 MeasureText(string text) {
-            Microsoft.Xna.Framework.Vector2 dimensions = SpriteFont.MeasureString(text);
-            return new Vector2(dimensions.X, dimensions.Y);
+            return FontService.MeasureString(Face, text).ToVector2();
+        }
+
+        public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text, out Size textSize) {
+            System.Drawing.Bitmap bitmap = Service.RasterizeString(Face, text, System.Drawing.Color.White, out textSize);
+
+            if (bitmap == null) {
+                throw new System.InvalidOperationException("FontService can't create a valid Bitmap.");
+            }
+
+            return SpriteBatch.ConvertBitmapToTexture(graphicsDevice, bitmap);
+        }
+
+        public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text) {
+            return Rasterize(graphicsDevice, text, out _);
+        }
+
+        public void Dispose() {
+            if (Face == null || IsDisposed) {
+                return;
+            }
+
+            if (!Face.IsDisposed) {
+                Face.Dispose();
+                Face = null;
+            }
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods
 
-        #region Internal Methods
-
-        internal void Load() {
-            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
-                throw new NoSuitableGraphicsDeviceException("Font needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
-            }
-
-            SpriteFont = Game.Instance.XNAGameWrapper.Content.Load<SpriteFont>(Name);
-            DefaultCharacter = '?';
-        }
-
-        #endregion Internal Methods
     }
 }

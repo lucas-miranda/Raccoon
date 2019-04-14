@@ -362,9 +362,10 @@ namespace Raccoon.Graphics {
             shader.TextureEnabled = false;
 
             graphicsDevice.RasterizerState = RasterizerState.CullNone;
-            graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            graphicsDevice.DepthStencilState = DepthStencilState.None;
             
             foreach (var pass in shader) {
+                graphicsDevice.Textures[0] = null;
                 graphicsDevice.Indices = _indexBuffer;
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
                 graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexId / 3);
@@ -422,6 +423,7 @@ namespace Raccoon.Graphics {
 
 
             BasicShader shader = Shader as BasicShader;
+            shader.ResetParameters();
 
             // transformations
             shader.World = world;
@@ -434,9 +436,10 @@ namespace Raccoon.Graphics {
             shader.TextureEnabled = false;
 
             graphicsDevice.RasterizerState = RasterizerState.CullNone;
-            graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            graphicsDevice.DepthStencilState = DepthStencilState.None;
             
             foreach (var pass in shader) {
+                graphicsDevice.Textures[0] = null;
                 graphicsDevice.Indices = _indexBuffer;
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
                 graphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, _hollowIndicesCount / 2);

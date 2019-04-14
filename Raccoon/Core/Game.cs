@@ -73,7 +73,7 @@ Scene:
 
         #endregion Private Members
 
-        #region Constructor
+        #region Constructors
 
         public Game(string title = "Raccoon Game", int windowWidth = 1280, int windowHeight = 720, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
@@ -132,7 +132,7 @@ Scene:
             Dispose(false);
         }
 
-#endregion
+        #endregion Constructors
 
         #region Static Public Properties
 
@@ -682,7 +682,8 @@ Scene:
         private void InternalLoadContent() {
             // default content
             DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
-            StdFont = new Font(DefaultResourceContentManager.Load<SpriteFont>("Zoomy"));
+            
+            StdFont = new Font(Resource._04b03, 0, 12f);
             BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
 
             // window and resolution
@@ -704,12 +705,12 @@ Scene:
                 }
             };
 
-            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
+            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
                 InternalRenderer = MainRenderer
             };
 
 #if DEBUG
-            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
+            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
                 InternalRenderer = DebugRenderer
             };
 
@@ -744,6 +745,19 @@ Scene:
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {
             OnBeforeRender();
 
+#if DEBUG
+            GraphicsMetrics metrics = GraphicsDevice.Metrics;
+
+            // debug render
+            DebugCanvas.Begin(Color.Transparent);
+
+            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
+            DebugRender(metrics);
+            DebugPrimitiveBatch.End();
+
+            DebugCanvas.End();
+#endif
+
             MainCanvas.Begin(BackgroundColor);
 
             foreach (Renderer renderer in Instance.Renderers) {
@@ -758,16 +772,7 @@ Scene:
 
             MainCanvas.End();
 
-#if DEBUG
-            GraphicsMetrics metrics = GraphicsDevice.Metrics;
-
-            // debug render
-            DebugCanvas.Begin(Color.Transparent);
-            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
-            DebugRender(metrics);
-            DebugPrimitiveBatch.End();
-            DebugCanvas.End();
-#endif
+            BasicShader.ResetParameters();
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
