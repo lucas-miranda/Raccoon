@@ -267,8 +267,6 @@ namespace Raccoon {
                 gBearingX = face.Glyph.Metrics.HorizontalBearingX.ToSingle();
                 gWidth = face.Glyph.Metrics.Width.ToSingle();
 
-                DebugChar rc = new DebugChar(c, gAdvanceX, gBearingX, gWidth);
-
                 #endregion Load character
 
                 for (int j = 0; j < renderTimes; j++) {
@@ -280,8 +278,9 @@ namespace Raccoon {
                         x += underrun;
                     }
 
+                    float currentUnderrun = 0;
                     if (trackingUnderrun) {
-                        rc.Underrun = underrun;
+                        currentUnderrun = underrun;
                     }
 
                     if (trackingUnderrun && underrun <= 0) {
@@ -296,8 +295,8 @@ namespace Raccoon {
                     GlyphRenderData glyphRenderData = null;
 
                     if (generateRenderData) {
-                        glyphRenderData = new GlyphRenderData() {
-                            Underrun = rc.Underrun
+                        glyphRenderData = new GlyphRenderData(c, gAdvanceX, gBearingX) {
+                            Underrun = currentUnderrun
                         };
 
                         if (ftbmp.Width > 0 && ftbmp.Rows > 0) {
@@ -309,8 +308,7 @@ namespace Raccoon {
 
                             glyphRenderData.Bitmap = ftbmp.ToGdipBitmap(System.Drawing.Color.White);
 
-                            rc.Width = glyphRenderData.Width;
-                            rc.BearingX = face.Glyph.BitmapLeft;
+                            glyphRenderData.HorizontalBearingX = face.Glyph.BitmapLeft;
                         }
                     }
 
@@ -331,8 +329,6 @@ namespace Raccoon {
                         x += overrun;
                     }
 
-                    rc.Overrun = overrun;
-
                     if (generateRenderData) {
                         glyphRenderData.Overrun = overrun;
                     }
@@ -343,9 +339,8 @@ namespace Raccoon {
                     x += face.Glyph.Advance.X.ToSingle(); // same as Metrics.HorizontalAdvance?
                     y += face.Glyph.Advance.Y.ToSingle();
 
-                    rc.RightEdge = x;
-
                     if (generateRenderData) {
+                        glyphRenderData.RightEdge = x;
                         glyphs.Add(glyphRenderData);
                     }
 
@@ -365,7 +360,10 @@ namespace Raccoon {
                             kern = 0;
                         }
 
-                        rc.Kern = kern;
+                        if (generateRenderData) {
+                            glyphRenderData.Kern = kern;
+                        }
+
                         x += kern;
                     }
 
@@ -390,53 +388,5 @@ namespace Raccoon {
 		}
 
         #endregion Private Methods
-
-        #region Class DebugChar
-
-		private class DebugChar {
-        #region Public Properties
-
-            public char Char { get; set; }
-			public float AdvanceX { get; set; }
-			public float BearingX { get; set; }
-			public float Width { get; set; }
-			public float Underrun { get; set; }
-			public float Overrun { get; set; }
-			public float Kern { get; set; }
-			public float RightEdge { get; set; }
-
-            #endregion Public Properties
-
-            #region Constructors
-
-            public DebugChar(char c, float advanceX, float bearingX, float width) {
-				Char = c;
-                AdvanceX = advanceX;
-                BearingX = bearingX;
-                Width = width;
-			}
-
-            #endregion Constructors
-
-            #region Public Methods
-
-			public static void PrintHeader() {
-				System.Diagnostics.Debug.Print(
-                    "    {1,5} {2,5} {3,5} {4,5} {5,5} {6,5} {7,5}",
-					"", "adv", "bearing", "wid", "undrn", "ovrrn", "kern", "redge"
-                );
-			}
-
-			public override string ToString() {
-				return string.Format(
-                           "'{0}' {1,5:F0} {2,5:F0} {3,5:F0} {4,5:F0} {5,5:F0} {6,5:F0} {7,5:F0}",
-                           Char, AdvanceX, BearingX, Width, Underrun, Overrun, Kern, RightEdge
-                       );
-			}
-
-            #endregion Public Methods
-		}
-
-        #endregion Class DebugChar
 	}
 }
