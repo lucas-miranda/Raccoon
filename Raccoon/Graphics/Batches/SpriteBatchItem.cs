@@ -71,7 +71,7 @@ namespace Raccoon.Graphics {
                 VertexData[1].TextureCoordinate = texCoord;
 
                 texCoord = VertexData[3].TextureCoordinate;
-                VertexData[3].TextureCoordinate = VertexData[9].TextureCoordinate;
+                VertexData[3].TextureCoordinate = VertexData[0].TextureCoordinate;
                 VertexData[0].TextureCoordinate = texCoord;
             }
         }

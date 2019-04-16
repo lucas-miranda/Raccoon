@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 
 namespace Raccoon.Graphics {
     public class SpriteBatch {
@@ -122,11 +123,50 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            List<(Vector2 Position, Rectangle SourceArea)> glyphs = font.RenderMap.PrepareText(text, out _);
+            List<(Vector2, Rectangle)> glyphs = font.RenderMap.PrepareText(text, out Size textSize);
 
-            foreach ((Vector2 Position, Rectangle SourceArea) in glyphs) {
+            float cos = 0f, 
+                  sin = 0f;
+
+            if (rotation != 0f) {
+                cos = Util.Math.Cos(rotation);
+                sin = Util.Math.Sin(rotation);
+            }
+
+            for (int i = 0; i < glyphs.Count; i++) {
+                (Vector2 GlyphPosition, Rectangle SourceArea) = glyphs[i];
+
                 ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
-                batchItem.Set(font.RenderMap.Texture, position + Position, SourceArea, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+
+                Vector2 pos = GlyphPosition;
+
+                if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
+                    pos.X = textSize.Width - pos.X - SourceArea.Width;
+                }
+
+                if ((flip & ImageFlip.Vertical) != ImageFlip.None) {
+                    pos.Y = textSize.Height - pos.Y - SourceArea.Height;
+                }
+
+                pos *= scale;
+
+                if (rotation != 0f) {
+                    pos = origin + new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
+                }
+
+                batchItem.Set(
+                    font.RenderMap.Texture,
+                    position + pos,
+                    SourceArea,
+                    rotation,
+                    scale,
+                    flip,
+                    color,
+                    origin,
+                    scroll,
+                    shader,
+                    layerDepth
+                );
             }
         }
 
@@ -221,12 +261,9 @@ namespace Raccoon.Graphics {
             for (int i = 0; i < itemsCount; i++) {
                 SpriteBatchItem batchItem = batchItems[i];
 
-                if (batchItem.Texture != texture) {
+                if (batchItem.Texture != texture || (batchItem.Shader != shader && (batchItem.Shader != null || shader != Shader))) {
                     DrawQuads(startIndex, endIndex - 1, texture, shader);
-                    startIndex = endIndex;
                     texture = batchItem.Texture;
-                } else if (batchItem.Shader != shader && (batchItem.Shader != null || shader != Shader)) {
-                    DrawQuads(startIndex, endIndex - 1, texture, shader);
                     shader = batchItem.Shader ?? Shader;
                     startIndex = endIndex;
                 }

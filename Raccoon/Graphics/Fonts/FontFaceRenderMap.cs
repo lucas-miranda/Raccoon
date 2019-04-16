@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using Raccoon.Graphics;
 using Raccoon.Util;
 
@@ -147,7 +148,7 @@ namespace Raccoon.Fonts {
                 }
             }
 
-            textSize = new Size();
+            textSize.Height = penPosition.Y + lineHeight;
             return preparedText;
         }
 

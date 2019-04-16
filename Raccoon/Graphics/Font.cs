@@ -2,7 +2,11 @@
 
 namespace Raccoon.Graphics {
     public class Font : System.IDisposable {
+        #region Private Memebers
+
         private float _size;
+
+        #endregion Private Memebers
 
         #region Constructors
 
