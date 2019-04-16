@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Raccoon.Graphics {
     public class SpriteBatch {
@@ -121,9 +122,12 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
-            Texture texture = font.Rasterize(GraphicsDevice, text, out Size textSize);
-            batchItem.Set(texture, position, null, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            List<(Vector2 Position, Rectangle SourceArea)> glyphs = font.RenderMap.PrepareText(text);
+
+            foreach ((Vector2 Position, Rectangle SourceArea) in glyphs) {
+                ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+                batchItem.Set(font.RenderMap.Texture, position + Position, SourceArea, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            }
         }
 
         #endregion Public Methods

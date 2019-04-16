@@ -75,6 +75,10 @@ namespace Raccoon {
 
         #region Public Methods
 
+        public static float ConvertEMToPx(Face face, int em) {
+            return em / (float) face.UnitsPerEM * face.Size.Metrics.NominalWidth;
+        }
+
         public static Size MeasureString(Face face, string text) {
             ProcessGlyphs(face, text, out Size size, out _);
             return size;
@@ -195,8 +199,92 @@ namespace Raccoon {
 
         #region Private Methods
 
-        private static float ConvertEMToPx(Face face, int em) {
-            return em / (float) face.UnitsPerEM * face.Size.Metrics.NominalWidth;
+        public static FontFaceRenderMap CreateFaceRenderMap(Face face) {
+            FontFaceRenderMap renderMap = new FontFaceRenderMap(face, new Size(face.Size.Metrics.NominalWidth, face.Size.Metrics.NominalHeight));
+
+            float underrun = 0,
+                  overrun = 0,
+                  x = 0, 
+                  y = 0;
+
+            // prepare texture
+            int sideSize = (int) Math.Ceiling(System.Math.Sqrt(face.GlyphCount)) * face.Size.Metrics.NominalWidth;
+            int textureSideSize = Util.Math.CeilingPowerOfTwo(sideSize);
+
+            Graphics.Texture texture = new Graphics.Texture(textureSideSize, textureSideSize);
+
+            // prepare texture data copying glyphs bitmaps
+            Graphics.Color[] textureData = new Graphics.Color[textureSideSize * textureSideSize];
+
+            Rectangle glyphArea = new Rectangle(renderMap.GlyphSlotSize);
+
+            uint charCode = face.GetFirstChar(out uint glyphIndex);
+
+            while (glyphIndex != 0) {
+                ProcessGlyph(face, charCode, generateRenderData: true, renderTimes: 1, ref underrun, trackingUnderrun: true, ref x, ref y, ref overrun, isEndOfLine: true);
+
+                face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                face.Glyph.RenderGlyph(RenderMode.Normal);
+
+                FTBitmap ftBitmap = face.Glyph.Bitmap;
+
+                if (ftBitmap != null && ftBitmap.Width > 0 && ftBitmap.Rows > 0) {
+                    if (ftBitmap.PixelMode != PixelMode.Gray) {
+                        throw new NotImplementedException("Supported PixelMode formats are: Gray");
+                    }
+
+                    CopyBitmapToDestinationArea(textureData, textureSideSize, glyphArea.Position, ftBitmap);
+
+                    renderMap.RegisterGlyph(
+                        charCode, 
+                        new Rectangle(glyphArea.Position, new Size(ftBitmap.Width, ftBitmap.Rows)),
+                        face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
+                        face.Glyph.Metrics.HorizontalBearingY.ToSingle(),
+                        new Vector2(face.Glyph.Advance.X.ToSingle(), face.Glyph.Advance.Y.ToSingle())
+                    );
+
+                    glyphArea.X += glyphArea.Width;
+
+                    if (glyphArea.X >= textureSideSize) {
+                        glyphArea.Y += glyphArea.Height;
+                        glyphArea.X = 0;
+                    }
+                } else {
+                    renderMap.RegisterGlyph(
+                        charCode, 
+                        Rectangle.Empty,
+                        face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
+                        face.Glyph.Metrics.HorizontalBearingY.ToSingle(),
+                        new Vector2(face.Glyph.Advance.X.ToSingle(), face.Glyph.Advance.Y.ToSingle())
+                    );
+                }
+
+                charCode = face.GetNextChar(charCode, out glyphIndex);
+            }
+
+            // render glyphs
+            texture.SetData(textureData);
+            renderMap.Texture = texture;
+
+            return renderMap;
+
+            void CopyBitmapToDestinationArea(Graphics.Color[] data, int dataRowSize, Vector2 destinationTopleft, FTBitmap ftBitmap) {
+                byte[] buffer = ftBitmap.BufferData;
+                int dataOffset,
+                    bufferOffset,
+                    pitch = Math.Abs(ftBitmap.Pitch);
+
+                for (int row = 0; row < ftBitmap.Rows; row++) {
+                    dataOffset = (int) ((destinationTopleft.Y + row) * dataRowSize + destinationTopleft.X);
+                    bufferOffset = row * pitch;
+
+                    for (int column = 0; column < ftBitmap.Width; column++, dataOffset++) {
+                        byte px = buffer[bufferOffset + column];
+
+                        data[dataOffset] = new Graphics.Color(px, px, px, px);
+                    }
+                }
+            }
         }
 
         private static void ProcessGlyphs(Face face, string text, out Size size, out int lines) {
@@ -210,36 +298,28 @@ namespace Raccoon {
         private static void ProcessGlyphs(Face face, string text, bool generateRenderData, out Size size, out int lines, out List<GlyphRenderData> glyphs) {
             glyphs = new List<GlyphRenderData>();
 
-			float stringWidth = 0,
+            float stringWidth = 0,
                   overrun = 0,
                   underrun = 0,
                   kern,
                   lineHeight = face.Size.Metrics.NominalHeight,
-                  x = 0, 
-                  y = 0,
-                  gAdvanceX, gBearingX, gWidth,
-                  descent = Math.Abs(ConvertEMToPx(face, face.BBox.Bottom)), // using positive descent for simplicity
-                  ascent = ConvertEMToPx(face, face.BBox.Top);
+                  x = 0,
+                  y = 0;
 
             lines = 0;
 
             bool isEndOfLine = false,
                  trackingUnderrun = true;
 
-            int renderTimes = 0;
-
-            uint glyphIndex;
-            FTBitmap ftbmp = null;
+            int renderTimes;
 
             for (int i = 0; i < text.Length; i++) {
-                #region Load character
+                char charCode = text[i];
 
-                char c = text[i];
-
-                if (c == '\n') { // new line
+                if (charCode == '\n') { // new line
                     y += lineHeight;
                     continue;
-                } else if (c == '\r') { // carriage return
+                } else if (charCode == '\r') { // carriage return
                     // do nothing, just ignore
                     // TODO: maybe add an option to detect when carriage return handling is needed (older MAC OS systems)
                     continue;
@@ -247,128 +327,37 @@ namespace Raccoon {
                     isEndOfLine = true;
                 }
 
-                if (c == '\t') { // tabulation
+                if (charCode == '\t') { // tabulation
                     // will render a tabulation representation using whitespaces
-                    glyphIndex = face.GetCharIndex(' ');
+                    charCode = ' ';
                     renderTimes = TabulationWhitespacesSize;
                 } else {
-                    glyphIndex = face.GetCharIndex(c);
                     renderTimes = 1;
                 }
 
-                face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                GlyphRenderData[] currentGlyphs = ProcessGlyph(face, charCode, generateRenderData, renderTimes, ref underrun, trackingUnderrun, ref x, ref y, ref overrun, isEndOfLine);
 
-                if (generateRenderData) {
-                    face.Glyph.RenderGlyph(RenderMode.Normal);
-                    ftbmp = face.Glyph.Bitmap;
+                glyphs.AddRange(currentGlyphs);
+
+                #region Kerning (for NEXT character)
+
+                // Adjust for kerning between this character and the next.
+                if (face.HasKerning && !isEndOfLine) {
+                    char nextCharCode = text[i + 1];
+                    kern = face.GetKerning(face.GetCharIndex(charCode), face.GetCharIndex(nextCharCode), KerningMode.Default).X.ToSingle();
+
+                    if (Math.Abs(kern) > face.Glyph.Advance.X.ToSingle() * 5f) {
+                        kern = 0;
+                    }
+
+                    if (generateRenderData) {
+                        currentGlyphs[currentGlyphs.Length - 1].Kern = kern;
+                    }
+
+                    x += kern;
                 }
 
-                gAdvanceX = face.Glyph.Advance.X.ToSingle();
-                gBearingX = face.Glyph.Metrics.HorizontalBearingX.ToSingle();
-                gWidth = face.Glyph.Metrics.Width.ToSingle();
-
-                #endregion Load character
-
-                for (int j = 0; j < renderTimes; j++) {
-                    #region Underrun
-
-                    underrun += -gBearingX;
-
-                    if (x == 0) {
-                        x += underrun;
-                    }
-
-                    float currentUnderrun = 0;
-                    if (trackingUnderrun) {
-                        currentUnderrun = underrun;
-                    }
-
-                    if (trackingUnderrun && underrun <= 0) {
-                        underrun = 0;
-                        trackingUnderrun = false;
-                    }
-
-                    #endregion Underrun
-
-                    #region Prepare GlyphRenderData
-
-                    GlyphRenderData glyphRenderData = null;
-
-                    if (generateRenderData) {
-                        glyphRenderData = new GlyphRenderData(c, gAdvanceX, gBearingX) {
-                            Underrun = currentUnderrun
-                        };
-
-                        if (ftbmp.Width > 0 && ftbmp.Rows > 0) {
-                            glyphRenderData.Size = new Size(ftbmp.Width, ftbmp.Rows);
-                            glyphRenderData.Position = new Vector2(
-                                Math.Round(x + face.Glyph.BitmapLeft),
-                                Math.Round(y + ascent - face.Glyph.Metrics.HorizontalBearingY.ToSingle())
-                            );
-
-                            glyphRenderData.Bitmap = ftbmp.ToGdipBitmap(System.Drawing.Color.White);
-
-                            glyphRenderData.HorizontalBearingX = face.Glyph.BitmapLeft;
-                        }
-                    }
-
-                    #endregion Prepare GlyphRenderData
-
-                    #region Overrun
-
-                    if (gBearingX + gWidth > 0 || gAdvanceX > 0) {
-                        overrun -= Math.Max(gBearingX + gWidth, gAdvanceX);
-                        if (overrun <= 0) {
-                            overrun = 0;
-                        }
-                    }
-
-                    overrun += gBearingX == 0 && gWidth == 0 ? 0 : gBearingX + gWidth - gAdvanceX;
-
-                    if (isEndOfLine && j == renderTimes - 1) {
-                        x += overrun;
-                    }
-
-                    if (generateRenderData) {
-                        glyphRenderData.Overrun = overrun;
-                    }
-
-                    #endregion Overrun
-
-                    // Advance pen positions for drawing the next character.
-                    x += face.Glyph.Advance.X.ToSingle(); // same as Metrics.HorizontalAdvance?
-                    y += face.Glyph.Advance.Y.ToSingle();
-
-                    if (generateRenderData) {
-                        glyphRenderData.RightEdge = x;
-                        glyphs.Add(glyphRenderData);
-                    }
-
-                    #if DEBUG && PRINT_RENDER_DEBUG
-                    spacingError = bmp.Width - (int) Math.Round(rc.RightEdge);
-                    renderedChars.Add(rc);
-                    #endif
-
-                    #region Kerning (for NEXT character)
-
-                    // Adjust for kerning between this character and the next.
-                    if (face.HasKerning && !isEndOfLine) {
-                        char cNext = text[i + 1];
-                        kern = face.GetKerning(glyphIndex, face.GetCharIndex(cNext), KerningMode.Default).X.ToSingle();
-
-                        if (Math.Abs(kern) > gAdvanceX * 5f) {
-                            kern = 0;
-                        }
-
-                        if (generateRenderData) {
-                            glyphRenderData.Kern = kern;
-                        }
-
-                        x += kern;
-                    }
-
-                    #endregion Kerning (for NEXT character)
-                }
+                #endregion Kerning (for NEXT character)
 
                 if (isEndOfLine) {
                     isEndOfLine = false;
@@ -381,6 +370,132 @@ namespace Raccoon {
             }
 
             size = new Size(stringWidth, y + lineHeight);
+        }
+
+        private static GlyphRenderData[] ProcessGlyph(Face face, uint charCode, bool generateRenderData, int renderTimes, ref float underrun, bool trackingUnderrun, ref float x, ref float y, ref float overrun, bool isEndOfLine) {
+            #region Load character
+
+            FTBitmap ftbmp = null;
+            float ascent = ConvertEMToPx(face, face.BBox.Top);
+
+            uint glyphIndex = face.GetCharIndex(charCode);
+            face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+
+            if (generateRenderData) {
+                face.Glyph.RenderGlyph(RenderMode.Normal);
+                ftbmp = face.Glyph.Bitmap;
+            }
+
+            float gAdvanceX = face.Glyph.Advance.X.ToSingle();
+            float gBearingX = face.Glyph.Metrics.HorizontalBearingX.ToSingle();
+            float gWidth = face.Glyph.Metrics.Width.ToSingle();
+
+            #endregion Load character
+
+            GlyphRenderData[] glyphs =  new GlyphRenderData[generateRenderData ? renderTimes : 0];
+
+            for (int j = 0; j < renderTimes; j++) {
+                #region Underrun
+
+                underrun += -gBearingX;
+
+                if (x == 0) {
+                    x += underrun;
+                }
+
+                float currentUnderrun = 0;
+                if (trackingUnderrun) {
+                    currentUnderrun = underrun;
+                }
+
+                if (trackingUnderrun && underrun <= 0) {
+                    underrun = 0;
+                    trackingUnderrun = false;
+                }
+
+                #endregion Underrun
+
+                #region Prepare GlyphRenderData
+
+                GlyphRenderData glyphRenderData = null;
+
+                if (generateRenderData) {
+                    glyphRenderData = new GlyphRenderData((char) charCode, gAdvanceX, gBearingX) {
+                        Underrun = currentUnderrun
+                    };
+
+                    glyphs[j] = glyphRenderData;
+
+                    if (ftbmp.Width > 0 && ftbmp.Rows > 0) {
+                        glyphRenderData.Size = new Size(ftbmp.Width, ftbmp.Rows);
+                        glyphRenderData.Position = new Vector2(
+                            Math.Round(x + face.Glyph.BitmapLeft),
+                            Math.Round(y + ascent - face.Glyph.Metrics.HorizontalBearingY.ToSingle())
+                        );
+
+                        glyphRenderData.Bitmap = ftbmp.ToGdipBitmap(System.Drawing.Color.White);
+
+                        glyphRenderData.HorizontalBearingX = face.Glyph.BitmapLeft;
+                    }
+                }
+
+                #endregion Prepare GlyphRenderData
+
+                #region Overrun
+
+                if (gBearingX + gWidth > 0 || gAdvanceX > 0) {
+                    overrun -= Math.Max(gBearingX + gWidth, gAdvanceX);
+                    if (overrun <= 0) {
+                        overrun = 0;
+                    }
+                }
+
+                overrun += gBearingX == 0 && gWidth == 0 ? 0 : gBearingX + gWidth - gAdvanceX;
+
+                if (isEndOfLine && j == renderTimes - 1) {
+                    x += overrun;
+                }
+
+                if (generateRenderData) {
+                    glyphRenderData.Overrun = overrun;
+                }
+
+                #endregion Overrun
+
+                // Advance pen positions for drawing the next character.
+                x += face.Glyph.Advance.X.ToSingle(); // same as Metrics.HorizontalAdvance?
+                y += face.Glyph.Advance.Y.ToSingle();
+
+                if (generateRenderData) {
+                    glyphRenderData.RightEdge = x;
+                }
+
+                #if DEBUG && PRINT_RENDER_DEBUG
+                spacingError = bmp.Width - (int) Math.Round(rc.RightEdge);
+                renderedChars.Add(rc);
+                #endif
+
+                #region Kerning (for NEXT character)
+
+                // Adjust for kerning between this character and the next.
+                if (face.HasKerning && !isEndOfLine && renderTimes > 1) {
+                    float kern = face.GetKerning(glyphIndex, glyphIndex, KerningMode.Default).X.ToSingle(); // get kerning to the same character, since renderTimes is greater than 1
+
+                    if (Math.Abs(kern) > face.Glyph.Advance.X.ToSingle() * 5f) {
+                        kern = 0;
+                    }
+
+                    if (generateRenderData) {
+                        glyphRenderData.Kern = kern;
+                    }
+
+                    x += kern;
+                }
+
+                #endregion Kerning (for NEXT character)
+            }
+
+            return glyphs;
         }
 
         private void AddFormat(string name, string ext) {

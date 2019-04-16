@@ -1,5 +1,5 @@
 ﻿namespace Raccoon.Graphics {
-    public class Text : Image {
+    public class Text : Graphic, System.IDisposable {
         #region Private Members
 
         private Font _font;
@@ -32,6 +32,8 @@
 
         #region Public Properties
 
+        public bool IsDisposed { get; private set; }
+
         public Font Font {
             get {
                 return _font;
@@ -43,7 +45,6 @@
                 }
 
                 _font = value;
-                NeedsReload = true;
             }
         }
 
@@ -59,7 +60,6 @@
 
                 _value = value;
                 Size = new Size(Font.MeasureText(_value));
-                NeedsReload = true;
             }
         }
 
@@ -72,22 +72,17 @@
                 return;
             }
 
-            base.Dispose();
+            _font = null;
 
-            if (!Font.IsDisposed) {
-                Font.Dispose();
-                Font = null;
-            }
+            IsDisposed = true;
         }
 
         #endregion Public Methods
 
         #region Protected Methods
 
-        protected override void Load() {
-            base.Load();
-            Texture = Font.Rasterize(Renderer.SpriteBatch.GraphicsDevice, Value, out Size size);
-            Size = size;
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1) {
+            Renderer.DrawString(Font, Value, Position + position, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
         }
 
         #endregion Protected Methods

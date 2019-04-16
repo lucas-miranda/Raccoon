@@ -95,6 +95,7 @@
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Strip.cs" />
+    <Compile Include="Graphics\Fonts\FontFaceRenderMap.cs" />
     <Compile Include="Graphics\Fonts\FontFormat.cs" />
     <Compile Include="Graphics\Fonts\FontService.cs" />
     <Compile Include="Graphics\Fonts\GlyphRenderData.cs" />

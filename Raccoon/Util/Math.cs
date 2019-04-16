@@ -142,7 +142,7 @@
         }
 
         public static bool IsPowerOfTwo(uint n) {
-            return (n & (n - 1)) == 0;
+            return (n & (n - 1U)) == 0U;
         }
 
         public static bool IsPowerOfTwo(long n) {
@@ -151,6 +151,19 @@
 
         public static bool IsPowerOfTwo(ulong n) {
             return (n & (n - 1UL)) == 0UL;
+        }
+
+        public static int CeilingPowerOfTwo(int n) {
+            // reference: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+            n--;
+            n |= n >> 1;
+            n |= n >> 2;
+            n |= n >> 4;
+            n |= n >> 8;
+            n |= n >> 16;
+            n++;
+
+            return n;
         }
 
         public static float Min(float n1, float n2) {

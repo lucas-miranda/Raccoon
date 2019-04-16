@@ -1,4 +1,6 @@
-﻿namespace Raccoon.Graphics {
+﻿using Raccoon.Fonts;
+
+namespace Raccoon.Graphics {
     public class Font : System.IDisposable {
         private float _size;
 
@@ -11,15 +13,18 @@
         public Font(string name, float size = 12f) {
             Face = new SharpFont.Face(Service.Library, System.IO.Path.Combine(Game.Instance.ContentDirectory, name));
             Size = size;
+            PrepareRenderMap();
         }
 
         public Font(byte[] file, int faceIndex, float size = 12f) {
             Face = new SharpFont.Face(Service.Library, file, faceIndex);
             Size = size;
+            PrepareRenderMap();
         }
 
         internal Font(SharpFont.Face fontFace) {
             Face = fontFace;
+            PrepareRenderMap();
         }
 
         #endregion Constructors
@@ -49,6 +54,8 @@
 
         internal static FontService Service { get; }
 
+        internal FontFaceRenderMap RenderMap { get; private set; }
+
         #endregion Internal Properties
 
         #region Public Methods
@@ -57,6 +64,17 @@
             return FontService.MeasureString(Face, text).ToVector2();
         }
 
+        /*
+        public Texture RequestText(string text) {
+            // TODO: add support to unicode characters
+            foreach (char c in text) {
+                FontFaceRenderMap.Glyph glyph = RenderMap.Glyphs[c];
+
+            }
+        }
+        */
+
+        /*
         public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text, out Size textSize) {
             System.Drawing.Bitmap bitmap = Service.RasterizeString(Face, text, System.Drawing.Color.White, out textSize);
 
@@ -70,6 +88,7 @@
         public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text) {
             return Rasterize(graphicsDevice, text, out _);
         }
+        */
 
         public void Dispose() {
             if (Face == null || IsDisposed) {
@@ -86,5 +105,13 @@
 
         #endregion Public Methods
 
+
+        #region Private Methods
+
+        private void PrepareRenderMap() {
+            RenderMap = FontService.CreateFaceRenderMap(Face);
+        }
+
+        #endregion Private Methods
     }
 }
