@@ -162,15 +162,15 @@ namespace Raccoon.Graphics {
         }
 
         public void Dispose() {
-            if (_isFromContentManager || XNATexture == null || IsDisposed) {
+            if (_isFromContentManager || IsDisposed) {
                 return;
             }
 
-            if (!XNATexture.IsDisposed) {
+            if (XNATexture != null && !XNATexture.IsDisposed) {
                 XNATexture.Dispose();
+                XNATexture = null;
             }
 
-            XNATexture = null;
             IsDisposed = true;
         }
 

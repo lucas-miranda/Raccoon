@@ -178,15 +178,15 @@
         #endregion Primitives
 
         public override void Dispose() {
-            if (Texture == null || IsDisposed) {
+            if (IsDisposed) {
                 return;
             }
 
-            if (!Texture.IsDisposed) {
+            if (Texture != null && !Texture.IsDisposed) {
                 Texture.Dispose();
+                Texture = null;
             }
 
-            Texture = null;
             IsDisposed = true;
         }
 

@@ -3,7 +3,7 @@ using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Fonts {
-    internal class FontFaceRenderMap {
+    internal class FontFaceRenderMap : System.IDisposable {
         #region Constructors
 
         public FontFaceRenderMap(SharpFont.Face face, Size glyphSlotSize) {
@@ -15,10 +15,11 @@ namespace Raccoon.Fonts {
 
         #region Public Properties
 
-        public SharpFont.Face Face { get; }
+        public SharpFont.Face Face { get; private set; }
         public Texture Texture { get; set; }
         public Size GlyphSlotSize { get; }
-        public Dictionary<uint, Glyph> Glyphs { get; } = new Dictionary<uint, Glyph>();
+        public Dictionary<uint, Glyph> Glyphs { get; private set; } = new Dictionary<uint, Glyph>();
+        public bool IsDisposed { get; private set; }
 
         #endregion Public Properties
 
@@ -30,8 +31,10 @@ namespace Raccoon.Fonts {
             return glyph;
         }
 
-        public List<(Vector2 Position, Rectangle SourceArea)> PrepareText(string text) {
+        public List<(Vector2 Position, Rectangle SourceArea)> PrepareText(string text, out Size textSize) {
             List<(Vector2 Position, Rectangle SourceArea)> preparedText = new List<(Vector2, Rectangle)>();
+
+            textSize = Size.Empty;
 
             float ascent = FontService.ConvertEMToPx(Face, Face.BBox.Top),
                   overrun = 0,
@@ -52,7 +55,7 @@ namespace Raccoon.Fonts {
                     continue;
                 } else if (charCode == '\r') { // carriage return
                     // do nothing, just ignore
-                    // TODO: maybe add an option to detect when carriage return handling is needed (older MAC OS systems)
+                    // TODO: maybe add an option to detect when carriage return handling is needed (MAC OS 9 or older)
                     continue;
                 } else if (i + 1 == text.Length || text[i + 1] == '\n' || (i + 2 < text.Length && text[i + 1] == '\r' && text[i + 2] == '\n')) {
                     isEndOfLine = true;
@@ -136,13 +139,37 @@ namespace Raccoon.Fonts {
                     isEndOfLine = false;
                     //lines++;
 
-                    //stringWidth = Math.Max(stringWidth, penPosition.X);
+                    if (penPosition.X > textSize.Width) {
+                        textSize.Width = penPosition.X;
+                    }
 
                     /*underrun =*/ overrun = penPosition.X = 0;
                 }
             }
 
+            textSize = new Size();
             return preparedText;
+        }
+
+        public Size MeasureString(string text) {
+            PrepareText(text, out Size textSize);
+            return textSize;
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (Texture != null && !Texture.IsDisposed) {
+                Texture.Dispose();
+                Texture = null;
+            }
+
+            Face = null;
+            Glyphs = null;
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods

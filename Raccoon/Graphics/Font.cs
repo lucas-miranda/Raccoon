@@ -13,16 +13,14 @@ namespace Raccoon.Graphics {
         public Font(string name, float size = 12f) {
             Face = new SharpFont.Face(Service.Library, System.IO.Path.Combine(Game.Instance.ContentDirectory, name));
             Size = size;
-            PrepareRenderMap();
         }
 
         public Font(byte[] file, int faceIndex, float size = 12f) {
             Face = new SharpFont.Face(Service.Library, file, faceIndex);
             Size = size;
-            PrepareRenderMap();
         }
 
-        internal Font(SharpFont.Face fontFace) {
+        public Font(SharpFont.Face fontFace) {
             Face = fontFace;
             PrepareRenderMap();
         }
@@ -33,8 +31,9 @@ namespace Raccoon.Graphics {
 
         public string FamilyName { get { return Face.FamilyName; } }
         public SharpFont.Face Face { get; private set; }
-        public float LineSpacing { get { return 0; } }
-        public float Spacing { get { return 0; } }
+        public Texture Texture { get { return RenderMap?.Texture; } }
+        public float LineSpacing { get { return Face.Size.Metrics.NominalHeight; } }
+        public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face, Face.BBox.Right - Face.BBox.Left); } }
         public bool IsDisposed { get; private set; }
 
         public float Size {
@@ -45,6 +44,7 @@ namespace Raccoon.Graphics {
             set {
                 _size = value;
                 Face.SetCharSize(0, _size, 0, 96);
+                PrepareRenderMap();
             }
         }
 
@@ -61,43 +61,22 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public Vector2 MeasureText(string text) {
-            return FontService.MeasureString(Face, text).ToVector2();
+            return RenderMap.MeasureString(text).ToVector2();
         }
-
-        /*
-        public Texture RequestText(string text) {
-            // TODO: add support to unicode characters
-            foreach (char c in text) {
-                FontFaceRenderMap.Glyph glyph = RenderMap.Glyphs[c];
-
-            }
-        }
-        */
-
-        /*
-        public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text, out Size textSize) {
-            System.Drawing.Bitmap bitmap = Service.RasterizeString(Face, text, System.Drawing.Color.White, out textSize);
-
-            if (bitmap == null) {
-                throw new System.InvalidOperationException("FontService can't create a valid Bitmap.");
-            }
-
-            return SpriteBatch.ConvertBitmapToTexture(graphicsDevice, bitmap);
-        }
-
-        public Texture Rasterize(Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice, string text) {
-            return Rasterize(graphicsDevice, text, out _);
-        }
-        */
 
         public void Dispose() {
             if (Face == null || IsDisposed) {
                 return;
             }
 
-            if (!Face.IsDisposed) {
+            if (Face != null && !Face.IsDisposed) {
                 Face.Dispose();
                 Face = null;
+            }
+
+            if (RenderMap != null && !RenderMap.IsDisposed) {
+                RenderMap.Dispose();
+                RenderMap = null;
             }
 
             IsDisposed = true;
@@ -109,6 +88,10 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void PrepareRenderMap() {
+            if (RenderMap != null) {
+                RenderMap.Dispose();
+            }
+
             RenderMap = FontService.CreateFaceRenderMap(Face);
         }
 

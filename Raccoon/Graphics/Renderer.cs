@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
@@ -177,57 +175,6 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Draw Text from String
-
-        #region Draw Text from StringBuilder
-
-        public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color, 
-                Math.ToRadians(rotation), 
-                origin, 
-                scale, 
-                (SpriteEffects) flip, 
-                0f
-            );
-            */
-        }
-
-        public void DrawString(Font font, StringBuilder text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color, 
-                Math.ToRadians(rotation), 
-                origin, 
-                scale, 
-                (SpriteEffects) flip, 
-                0f
-            );
-            */
-        }
-
-        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Vector2 scroll, Shader shader = null) {
-            /*
-            SpriteBatch.DrawString(
-                font.SpriteFont, 
-                text, 
-                position, 
-                color
-            );
-            */
-        }
-
-        public void DrawString(Font font, StringBuilder text, Vector2 position, Color color, Shader shader = null) {
-            DrawString(font, text, position, color, Vector2.One, shader);
-        }
-
-        #endregion Draw Text from StringBuilder
 
         #endregion Public Methods
 

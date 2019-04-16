@@ -98,7 +98,6 @@
     <Compile Include="Graphics\Fonts\FontFaceRenderMap.cs" />
     <Compile Include="Graphics\Fonts\FontFormat.cs" />
     <Compile Include="Graphics\Fonts\FontService.cs" />
-    <Compile Include="Graphics\Fonts\GlyphRenderData.cs" />
     <Compile Include="Graphics\Shaders\BasicShader.cs" />
     <Compile Include="Graphics\Shaders\IBasicShader.cs" />
     <Compile Include="Math\Triangle.cs" />

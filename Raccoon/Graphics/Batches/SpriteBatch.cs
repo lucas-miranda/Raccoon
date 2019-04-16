@@ -122,7 +122,7 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            List<(Vector2 Position, Rectangle SourceArea)> glyphs = font.RenderMap.PrepareText(text);
+            List<(Vector2 Position, Rectangle SourceArea)> glyphs = font.RenderMap.PrepareText(text, out _);
 
             foreach ((Vector2 Position, Rectangle SourceArea) in glyphs) {
                 ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
