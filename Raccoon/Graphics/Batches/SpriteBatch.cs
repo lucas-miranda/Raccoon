@@ -133,9 +133,7 @@ namespace Raccoon.Graphics {
                 sin = Util.Math.Sin(rotation);
             }
 
-            for (int i = 0; i < glyphs.Count; i++) {
-                (Vector2 GlyphPosition, Rectangle SourceArea) = glyphs[i];
-
+            foreach ((Vector2 GlyphPosition, Rectangle SourceArea) in glyphs) {
                 ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
 
                 Vector2 pos = GlyphPosition;
