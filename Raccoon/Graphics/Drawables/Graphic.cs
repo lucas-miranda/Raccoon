@@ -1,5 +1,13 @@
-﻿namespace Raccoon.Graphics {
+﻿using Raccoon.Util;
+
+namespace Raccoon.Graphics {
     public abstract class Graphic : IUpdatable, IRenderable {
+        #region Public Members
+
+        public static int LayersCount = 10000;
+
+        #endregion Public Members
+
         #region Private Members
 
         private float _opacity = 1f;
@@ -47,7 +55,17 @@
         public Shader Shader { get; set; }
         public ImageFlip Flipped { get; set; }
         public Color Color { get; set; } = Color.White;
-        public float Opacity { get { return _opacity; } set { _opacity = Util.Math.Clamp(value, 0f, 1f); } }
+        public float Opacity { get { return _opacity; } set { _opacity = Math.Clamp(value, 0f, 1f); } }
+
+        public float LayerDepth {
+            get {
+                return ConvertLayerToLayerDepth(Layer);
+            }
+
+            set {
+                Layer = ConvertLayerDepthToLayer(value);
+            }
+        }
 
         public bool FlippedBoth {
             get {
@@ -93,6 +111,14 @@
             return System.Math.Sign(a.Layer - b.Layer);
         }
 
+        public static float ConvertLayerToLayerDepth(int layer) {
+            return (LayersCount / 2 - layer) / (float) LayersCount;
+        }
+
+        public static int ConvertLayerDepthToLayer(float layerDepth) {
+            return LayersCount / 2 - (int) (layerDepth * LayersCount);
+        }
+
         public virtual void Update(int delta) {
             if (NeedsReload) {
                 Load();
@@ -101,30 +127,30 @@
         }
 
         public void Render() {
-            Render(Vector2.Zero, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+            Render(Vector2.Zero, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
         }
 
         public void Render(Vector2 position) {
-            Render(position, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+            Render(position, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
         }
 
         public void Render(Vector2 position, float rotation) {
-            Render(position, rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+            Render(position, rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale) {
-            Render(position, rotation, scale, ImageFlip.None, Color.White, Vector2.Zero, Shader);
+            Render(position, rotation, scale, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip) {
-            Render(position, rotation, scale, flip, Color.White, Vector2.Zero, Shader);
+            Render(position, rotation, scale, flip, Color.White, Vector2.Zero, Shader, 0);
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color) {
-            Render(position, rotation, scale, flip, color, Vector2.Zero, Shader);
+            Render(position, rotation, scale, flip, color, Vector2.Zero, Shader, 0);
         }
 
-        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null) {
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, int layer = 0) {
 #if DEBUG
             _lastPosition = position;
             _lastRotation = rotation;
@@ -135,7 +161,7 @@
 #endif
 
             BeforeDraw();
-            Draw(position, rotation, scale, flip, color, scroll, shader);
+            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ConvertLayerToLayerDepth(Layer + layer));
             AfterDraw();
         }
 
@@ -159,7 +185,7 @@
         protected virtual void BeforeDraw() {
         }
 
-        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null);
+        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f);
 
         protected virtual void AfterDraw() {
         }

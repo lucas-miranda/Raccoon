@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.IO;
+﻿using System.IO;
+
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    public class Texture {
+    public class Texture : System.IDisposable {
         #region Private Static Members
 
         private static Texture _white, _black;
@@ -18,9 +18,17 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
+        public Texture() {
+        }
+
         public Texture(int width, int height) {
-            if (width <= 0) throw new ArgumentException("Value must be greater than 0", "width");
-            if (height <= 0) throw new ArgumentException("Value must be greater than 0", "height");
+            if (width <= 0) {
+                throw new System.ArgumentException("Value must be greater than 0", "width");
+            }
+
+            if (height <= 0) {
+                throw new System.ArgumentException("Value must be greater than 0", "height");
+            }
 
             Load(width, height);
         }
@@ -80,6 +88,7 @@ namespace Raccoon.Graphics {
         public int Height { get { return (int) Size.Height; } }
         public string Filename { get; private set; }
         public Texture2D XNATexture { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         #endregion Public Properties
 
@@ -129,14 +138,6 @@ namespace Raccoon.Graphics {
             XNATexture.SaveAsPng(stream, width, height);
         }
 
-        public void Dispose() {
-            if (_isFromContentManager || XNATexture == null) {
-                return;
-            }
-
-            XNATexture.Dispose();
-        }
-
         public void Reload() {
             if (string.IsNullOrWhiteSpace(Filename)) {
                 return;
@@ -152,10 +153,25 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            if (XNATexture == null) throw new NullReferenceException($"Texture '{Filename}' not found");
+            if (XNATexture == null) {
+                throw new System.NullReferenceException($"Texture '{Filename}' not found");
+            }
 
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;
+        }
+
+        public void Dispose() {
+            if (_isFromContentManager || IsDisposed) {
+                return;
+            }
+
+            if (XNATexture != null && !XNATexture.IsDisposed) {
+                XNATexture.Dispose();
+                XNATexture = null;
+            }
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods
@@ -163,7 +179,9 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected void Load(int width, int height) {
-            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            }
 
             XNATexture = new Texture2D(Game.Instance.XNAGameWrapper.GraphicsDevice, width, height);
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
@@ -171,7 +189,9 @@ namespace Raccoon.Graphics {
         }
 
         protected void Load(string filename) {
-            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            }
 
             Filename = filename;
             if (Filename.EndsWith(".bmp") || Filename.EndsWith(".gif") || Filename.EndsWith(".jpg") || Filename.EndsWith(".png") || Filename.EndsWith(".tif") || Filename.EndsWith(".dds")) {
@@ -183,7 +203,9 @@ namespace Raccoon.Graphics {
                 XNATexture = Game.Instance.XNAGameWrapper.Content.Load<Texture2D>(Filename);
             }
 
-            if (XNATexture == null) throw new NullReferenceException($"Texture '{Filename}' not found");
+            if (XNATexture == null) {
+                throw new System.NullReferenceException($"Texture '{Filename}' not found");
+            }
 
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;

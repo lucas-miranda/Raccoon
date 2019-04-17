@@ -1,5 +1,6 @@
 ﻿namespace Raccoon.Graphics {
     public abstract class PrimitiveGraphic : Graphic {
+        /*
         #region Private Members
 
         private bool _restartRenderer;
@@ -12,8 +13,9 @@
             base.BeforeDraw();
             
             if (Renderer != null && Renderer.IsBatching) {
-                BasicShader bs = Game.Instance.BasicShader;
                 _restartRenderer = true;
+
+                BasicShader bs = Game.Instance.BasicShader;
                 bs.View = Renderer.View;
                 bs.Projection = Renderer.Projection;
                 bs.TextureEnabled = true;
@@ -33,5 +35,6 @@
         }
 
         #endregion Protected Methods
+        */
     }
 }
