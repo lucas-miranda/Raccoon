@@ -44,6 +44,8 @@ namespace Raccoon.Graphics {
             TextureParameter = XNAEffect.Parameters["Texture"];
             ResetParameters();
         }
+        public BasicShader(byte[] basicEffectCode) : this(new Effect(Game.Instance.GraphicsDevice, basicEffectCode) { Name = "BasicEffect" }) {
+        }
 
         #endregion Constructors
 
@@ -218,6 +220,12 @@ namespace Raccoon.Graphics {
         protected override void OnApply() {
             base.OnApply();
             UpdateParameters();
+        }
+
+        protected override void BeforePassApply() {
+            base.BeforePassApply();
+
+            XNAEffect.GraphicsDevice.Textures[0] = TextureEnabled ? Texture.XNATexture : null;
         }
 
         #endregion Protected Methods

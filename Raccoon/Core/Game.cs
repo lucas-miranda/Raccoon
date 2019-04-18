@@ -150,13 +150,12 @@ Scene:
         public bool IsMouseVisible { get { return XNAGameWrapper.IsMouseVisible; } set { XNAGameWrapper.IsMouseVisible = value; } }
         public bool AllowResize { get { return XNAGameWrapper.Window.AllowUserResizing; } set { XNAGameWrapper.Window.AllowUserResizing = value; } }
         public bool HasFocus { get { return XNAGameWrapper.IsActive; } }
-        public bool HardwareModeSwitch { get { return XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch; } set { XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch = value; } }
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public string StartSceneName { get; private set; }
         public int LastUpdateDeltaTime { get; private set; }
-        public int X { get { return XNAGameWrapper.Window.Position.X; } }
-        public int Y { get { return XNAGameWrapper.Window.Position.Y; } }
+        public int X { get { return XNAGameWrapper.Window.ClientBounds.X; } }
+        public int Y { get { return XNAGameWrapper.Window.ClientBounds.Y; } }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
@@ -170,7 +169,6 @@ Scene:
         public Size DisplaySize { get; private set; }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
-        public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
         public Vector2 DisplayCenter { get { return (DisplaySize / 2f).ToVector2(); } }
         public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
@@ -196,6 +194,17 @@ Scene:
 #else
                 Core.Window.Title = _title;
 #endif
+            }
+        }
+
+        public Vector2 WindowPosition {
+            get {
+                return new Vector2(X, Y);
+            }
+
+            set {
+                //XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y);
+                SDL2.SDL.SDL_SetWindowPosition(XNAGameWrapper.Window.Handle, (int) value.X, (int) value.Y);
             }
         }
 
@@ -237,7 +246,6 @@ Scene:
         internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
-        internal ResourceContentManager DefaultResourceContentManager { get; private set; }
         internal float KeepProportionsScale { get; private set; } = 1f;
 
 #if DEBUG
@@ -511,7 +519,7 @@ Scene:
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
-        protected virtual void DebugRender(GraphicsMetrics metrics) {
+        protected virtual void DebugRender() {
 #if DEBUG
             if (DebugMode) {
                 OnDebugRender();
@@ -527,9 +535,14 @@ Scene:
                     string.Format(
                         DiagnosticsTextFormat, 
                         Time.ToString(@"hh\:mm\:ss\.fff"),
+                        0,
+                        0,
+                        0,
+                        /*
                         metrics.DrawCount,
                         metrics.SpriteCount,
                         metrics.TextureCount,
+                        */
                         Physics.UpdatePositionExecutionTime,
                         Physics.SolveConstraintsExecutionTime,
                         Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
@@ -608,11 +621,11 @@ Scene:
         }
 
         private void InternalOnWindowResize(object sender, System.EventArgs e) {
-            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
             if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
-                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+                DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
                 XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
                 XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
                 XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
@@ -625,7 +638,7 @@ Scene:
         }
 
         private void RefreshViewMode() {
-            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
             Size previousWindowSize = WindowSize; 
             DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
             WindowSize = new Size(windowClientBounds.Width, windowClientBounds.Height);
@@ -680,10 +693,8 @@ Scene:
 
         private void InternalLoadContent() {
             // default content
-            DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
-            
             StdFont = new Font(Resource._04b03, 0, 12f);
-            BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
+            BasicShader = new BasicShader(Resource.BasicEffect);
 
             // window and resolution
             DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
@@ -728,7 +739,6 @@ Scene:
 
         private void InternalUnloadContent() {
             Scene.UnloadContent();
-            DefaultResourceContentManager.Unload();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();
         }
@@ -745,13 +755,13 @@ Scene:
             OnBeforeRender();
 
 #if DEBUG
-            GraphicsMetrics metrics = GraphicsDevice.Metrics;
+            //!GraphicsMetrics metrics = GraphicsDevice.Metrics;
 
             // debug render
             DebugCanvas.Begin(Color.Transparent);
 
             DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
-            DebugRender(metrics);
+            DebugRender();
             DebugPrimitiveBatch.End();
 
             DebugCanvas.End();

@@ -106,10 +106,6 @@ namespace Raccoon.Graphics {
             XNATexture.GetData(level, rect, data, startIndex, elementCount);
         }
 
-        public void GetData<T>(int level, int arraySlice, Rectangle? rect, T[] data, int startIndex, int elementCount) where T : struct {
-            XNATexture.GetData(level, arraySlice, rect, data, startIndex, elementCount);
-        }
-
         public void SetData<T>(T[] data) where T : struct {
             XNATexture.SetData(data);
         }
@@ -122,12 +118,8 @@ namespace Raccoon.Graphics {
             XNATexture.SetData(level, rect, data, startIndex, elementCount);
         }
 
-        public void SetData<T>(int level, int arraySlice, Rectangle? rect, T[] data, int startIndex, int elementCount) where T : struct {
-            XNATexture.SetData(level, arraySlice, rect, data, startIndex, elementCount);
-        }
-
         public void Reload(Stream textureStream) {
-            XNATexture.Reload(textureStream);
+            //XNATexture.Reload(textureStream);
         }
 
         public void SaveAsJpeg(Stream stream, int width, int height) {
@@ -195,7 +187,7 @@ namespace Raccoon.Graphics {
 
             Filename = filename;
             if (Filename.EndsWith(".bmp") || Filename.EndsWith(".gif") || Filename.EndsWith(".jpg") || Filename.EndsWith(".png") || Filename.EndsWith(".tif") || Filename.EndsWith(".dds")) {
-                using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                using (FileStream stream = File.Open(Path.Combine(Game.Instance.ContentDirectory, Filename), FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
                 }
             } else {

@@ -66,7 +66,7 @@ namespace Raccoon.Input {
 
         public override void Update(int delta) {
             if (Enabled && IsConnected) {
-                GamePadState gamepadState = GamePad.GetState(JoyId);
+                GamePadState gamepadState = GamePad.GetState((Microsoft.Xna.Framework.PlayerIndex) JoyId);
                 DUp.ForceState(gamepadState.DPad.Up == ButtonState.Pressed);
                 DRight.ForceState(gamepadState.DPad.Right == ButtonState.Pressed);
                 DDown.ForceState(gamepadState.DPad.Down == ButtonState.Pressed);

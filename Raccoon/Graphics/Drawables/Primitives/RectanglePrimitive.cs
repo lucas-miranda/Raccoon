@@ -143,14 +143,14 @@ namespace Raccoon.Graphics.Primitives {
             bs.Alpha = Opacity;
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (var pass in bs) {
+            foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
 
                 if (Filled) {
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, 2);
                 } else {
-                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, 4);
+                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, _vertexBuffer.VertexCount, 0, 4);
                 }
             }
 

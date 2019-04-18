@@ -63,22 +63,6 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
-		public static Texture ConvertBitmapToTexture(GraphicsDevice graphicsDevice, System.Drawing.Bitmap bitmap) {
-			// Buffer size is size of color array multiplied by 4 because   
-			// each pixel has four color bytes  
-			int bufferSize = bitmap.Height * bitmap.Width * 4;
-
-			// Create new memory stream and save image to stream so   
-			// we don't have to save and read file  
-			System.IO.MemoryStream memoryStream = new System.IO.MemoryStream(bufferSize);
-			bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
-
-			// Creates a texture from IO.Stream - our memory stream  
-			Texture2D texture2D = Texture2D.FromStream(graphicsDevice, memoryStream);
-
-			return new Texture(texture2D);
-		}
-
         public void Begin(BlendState blendState = null, SamplerState sampler = null, DepthStencilState depthStencil = null, RasterizerState rasterizer = null, Matrix? transform = null) {
             BlendState = blendState ?? BlendState.AlphaBlend;
             SamplerState = sampler ?? SamplerState.PointClamp;
@@ -278,15 +262,17 @@ namespace Raccoon.Graphics {
         private void DrawQuads(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader) {
             int batchCount = endBatchIndex - startBatchIndex + 1;
 
-            if (AllowIBasicShaderEffectParameterClone && shader != Shader && Shader is IBasicShader stdShader && shader is IBasicShader currentShader) {
-                currentShader.World = stdShader.World;
-                currentShader.View = stdShader.View;
-                currentShader.Projection = stdShader.Projection;
+            if (shader is IBasicShader currentShader) {
                 currentShader.Texture = texture;
-            }
+
+                if (AllowIBasicShaderEffectParameterClone && currentShader != Shader && Shader is IBasicShader defaultShader) {
+                    currentShader.World = defaultShader.World;
+                    currentShader.View = defaultShader.View;
+                    currentShader.Projection = defaultShader.Projection;
+                }
+            } 
             
-            foreach (var pass in shader) {
-                GraphicsDevice.Textures[0] = texture.XNATexture;
+            foreach (object pass in shader) {
                 GraphicsDevice.DrawUserIndexedPrimitives(
                     PrimitiveType.TriangleList,
                     _vertexBuffer,

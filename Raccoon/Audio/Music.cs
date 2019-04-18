@@ -93,7 +93,7 @@ namespace Raccoon.Audio {
         public void Play() {
             PrepareMediaPlayer();
             if (CurrentTime.TotalSeconds > 0) {
-                MediaPlayer.Play(XNASong, _currentTime);
+                //! MediaPlayer.Play(XNASong, _currentTime);
             } else {
                 MediaPlayer.Play(XNASong);
             }
@@ -103,7 +103,8 @@ namespace Raccoon.Audio {
 
         public void Play(TimeSpan? startPosition) {
             PrepareMediaPlayer();
-            MediaPlayer.Play(XNASong, startPosition);
+            //! MediaPlayer.Play(XNASong, startPosition);
+            MediaPlayer.Play(XNASong);
             IsPlaying = true;
         }
 

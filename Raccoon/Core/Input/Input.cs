@@ -43,7 +43,7 @@ namespace Raccoon.Input {
         private Vector2 _mousePosition;
 
         // joystick
-        private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
+        //private Dictionary<int, JoystickState> _joysticksState = new Dictionary<int, JoystickState>(), _joysticksPreviousState = new Dictionary<int, JoystickState>();
 
         #endregion Private Members
 
@@ -63,7 +63,7 @@ namespace Raccoon.Input {
             _specialKeysToChar[Key.Period] = '.';
             _specialKeysToChar[Key.Comma] = ',';
 
-            Game.Instance.XNAGameWrapper.Window.TextInput += ProcessTextInput;
+            //! Game.Instance.XNAGameWrapper.Window.TextInput += ProcessTextInput;
             Game.Instance.XNAGameWrapper.Activated += (object sender, System.EventArgs e) => {
                 _activated = true;
             };
@@ -141,22 +141,27 @@ namespace Raccoon.Input {
         }
 
         public static bool IsJoyButtonPressed(int joystickId, int buttonId) {
-            return (!Instance._joysticksPreviousState.ContainsKey(joystickId) || Instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Released) && Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
+            //return (!Instance._joysticksPreviousState.ContainsKey(joystickId) || Instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Released) && Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
+            return false;
         }
 
         public static bool IsJoyButtonDown(int joystickId, int buttonId) {
-            return Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
+            //return Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Pressed;
+            return false;
         }
 
         public static bool IsJoyButtonReleased(int joystickId, int buttonId) {
-            return Instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Pressed && (!Instance._joysticksState.ContainsKey(joystickId) || Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released);
+            //return Instance._joysticksPreviousState[joystickId].Buttons[buttonId] == ButtonState.Pressed && (!Instance._joysticksState.ContainsKey(joystickId) || Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released);
+            return false;
         }
 
         public static bool IsJoyButtonUp(int joystickId, int buttonId) {
-            return Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released;
+            //return Instance._joysticksState[joystickId].Buttons[buttonId] == ButtonState.Released;
+            return true;
         }
 
         public static InputButtonState JoyButtonState(int joystickId, int buttonId) {
+            /*
             ButtonState previousState = Instance._joysticksState[joystickId].Buttons[buttonId],
                         currentState = Instance._joysticksPreviousState[joystickId].Buttons[buttonId];
 
@@ -173,14 +178,19 @@ namespace Raccoon.Input {
             }
 
             return InputButtonState.Down;
+            */
+
+            return InputButtonState.Up;
         }
 
         public static float JoyAxisValue(int joystickId, int axisId) {
-            return Instance._joysticksState[joystickId].Axes[axisId];
+            //return Instance._joysticksState[joystickId].Axes[axisId];
+            return 0f;
         }
 
         public static bool IsJoystickConnected(int joystickId) {
-            return Instance._joysticksState.ContainsKey(joystickId) && Instance._joysticksState[joystickId].IsConnected;
+        //return Instance._joysticksState.ContainsKey(joystickId) && Instance._joysticksState[joystickId].IsConnected;
+            return false;
         }
 
         public static bool IsMouseButtonPressed(MouseButton button) {
@@ -224,6 +234,7 @@ namespace Raccoon.Input {
             }
 
             // joystick states
+            /*
             _joysticksPreviousState.Clear();
             int id = 0;
             JoysticksConnected = 0;
@@ -244,6 +255,7 @@ namespace Raccoon.Input {
                     _joysticksState.Remove(i);
                 }
             }
+            */
 
             // keyboard state
             _keyboardPreviousState = _keyboardState;
@@ -312,9 +324,11 @@ namespace Raccoon.Input {
 
         #region Private Methods
 
+        /*
         private void ProcessTextInput(object sender, Microsoft.Xna.Framework.TextInputEventArgs e) {
             OnTextInput(e.Character, (Key) e.Key);
         }
+        */
 
         #endregion Private Methods
     }

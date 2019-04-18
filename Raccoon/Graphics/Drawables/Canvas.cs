@@ -16,10 +16,6 @@ namespace Raccoon.Graphics {
           : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, surfaceFormat, depthFormat, multiSampleCount, usage))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, RenderTargetUsage usage, bool shared, int arraySize) 
-          : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, surfaceFormat, depthFormat, multiSampleCount, usage, shared, arraySize))) {
-        }
-
         #endregion Constructors
 
         #region Public Properties
