@@ -1,9 +1,22 @@
-﻿namespace Raccoon.Input {
+﻿using Microsoft.Xna.Framework;
+
+namespace Raccoon.Input {
+    public enum GamePadThumbStick {
+        Left = 0,
+        Right
+    }
+
     public class Axis {
+        #region Private Members
+
         private float _forceX, _forceY;
         private bool _forceState;
 
-        public Axis(float deadzone = 0.1f) {
+        #endregion Private Members
+
+        #region Constructors
+
+        public Axis(float deadzone = .1f) {
             DeadZone = deadzone;
         }
 
@@ -17,21 +30,31 @@
         public Axis(Key up, Key right, Key down, Key left) : this(new Button(up), new Button(right), new Button(down), new Button(left)) {
         }
 
-        public Axis(int joystickId, int joystickHorizontalAxisId, int joystickVerticalAxisId, float deadzone = 0.1f) : this(deadzone) {
-            JoystickId = joystickId;
-            JoystickAxesIds = new int[] { joystickHorizontalAxisId, joystickVerticalAxisId };
+        public Axis(PlayerIndex gamepadIndex, GamePadThumbStick thumbstick, float deadzone = 0.1f) : this(deadzone) {
+            GamePadIndex = gamepadIndex;
+            ThumbStick = thumbstick;
+            UseGamePad = true;
         }
 
-        public int JoystickId { get; set; } = -1;
-        public int[] JoystickAxesIds { get; set; }
+        #endregion Constructors
+
+        #region Public Properties
+
+        public PlayerIndex GamePadIndex { get; set; }
+        public GamePadThumbStick ThumbStick { get; set; }
+        public bool UseGamePad { get; set; }
         public float X { get; protected set; }
         public float Y { get; protected set; }
-        public float DeadZone { get; set; } = 0.1f;
+        public float DeadZone { get; set; } = .1f;
         public Button Up { get; set; }
         public Button Right { get; set; }
         public Button Down { get; set; }
         public Button Left { get; set; }
         public Vector2 Value { get { return new Vector2(X, Y); } }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         public virtual void Update(int delta) {
             X = Y = 0;
@@ -44,45 +67,53 @@
                 if (Left != null) {
                     Left.Update(delta);
                     if (Left.IsDown) {
-                        X = -1;
+                        X = -1f;
                     }
                 }
 
                 if (Right != null) {
                     Right.Update(delta);
                     if (Right.IsDown) {
-                        X += 1;
+                        X += 1f;
                     }
                 }
 
                 if (Up != null) {
                     Up.Update(delta);
                     if (Up.IsDown) {
-                        Y = -1;
+                        Y = -1f;
                     }
                 }
 
                 if (Down != null) {
                     Down.Update(delta);
                     if (Down.IsDown) {
-                        Y += 1;
+                        Y += 1f;
                     }
                 }
 
                 // joystick axes
-                if (JoystickId > -1) {
-                    X += Input.JoyAxisValue(JoystickId, JoystickAxesIds[0]);
-                    Y += Input.JoyAxisValue(JoystickId, JoystickAxesIds[1]);
+                if (UseGamePad) {
+                    Vector2 thumbStick;
+
+                    if (ThumbStick == GamePadThumbStick.Left) {
+                        thumbStick = Input.GamePadLeftThumbStickValue(GamePadIndex);
+                    } else {
+                        thumbStick = Input.GamePadRightThumbStickValue(GamePadIndex);
+                    }
+
+                    X += thumbStick.X;
+                    Y += thumbStick.Y;
                 }
             }
 
             // deadzone
-            if (DeadZone > 0 && Value.LengthSquared() <= DeadZone * DeadZone) {
-                X = Y = 0;
+            if (DeadZone > 0f && Value.LengthSquared() <= DeadZone * DeadZone) {
+                X = Y = 0f;
             }
 
-            X = Util.Math.Clamp(X, -1, 1);
-            Y = Util.Math.Clamp(Y, -1, 1);
+            X = Util.Math.Clamp(X, -1f, 1f);
+            Y = Util.Math.Clamp(Y, -1f, 1f);
         }
 
         public void ForceState(float x, float y) {
@@ -94,5 +125,7 @@
         public override string ToString() {
             return $"[Axis | X: {X}, Y: {Y}]";
         }
+
+        #endregion Public Methods
     }
 }
