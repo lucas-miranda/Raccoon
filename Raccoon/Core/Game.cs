@@ -114,7 +114,6 @@ Scene:
             XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // window and game internal size
-            WindowSize = new Size(windowWidth, windowHeight);
             WindowCenter = (WindowSize / 2f).ToVector2();
             Size = WindowSize / PixelScale;
             Center = (Size / 2f).ToVector2();
@@ -154,8 +153,6 @@ Scene:
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public string StartSceneName { get; private set; }
         public int LastUpdateDeltaTime { get; private set; }
-        public int X { get { return XNAGameWrapper.Window.ClientBounds.X; } }
-        public int Y { get { return XNAGameWrapper.Window.ClientBounds.Y; } }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
@@ -164,9 +161,8 @@ Scene:
         public int DisplayHeight { get { return (int) DisplaySize.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
-        public Size WindowSize { get; private set; }
-        public Size WindowMinimunSize { get; set; }
-        public Size DisplaySize { get; private set; }
+        public Size WindowSize { get { return new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height); } }
+        public Size DisplaySize { get { return new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height); } }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
         public Vector2 DisplayCenter { get { return (DisplaySize / 2f).ToVector2(); } }
@@ -199,12 +195,33 @@ Scene:
 
         public Vector2 WindowPosition {
             get {
-                return new Vector2(X, Y);
+                return new Vector2(XNAGameWrapper.Window.ClientBounds.X, XNAGameWrapper.Window.ClientBounds.Y);
             }
 
             set {
-                //XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y);
                 SDL2.SDL.SDL_SetWindowPosition(XNAGameWrapper.Window.Handle, (int) value.X, (int) value.Y);
+            }
+        }
+
+        public Size WindowMinimumSize {
+            get {
+                SDL2.SDL.SDL_GetWindowMinimumSize(XNAGameWrapper.Window.Handle, out int minWidth, out int minHeight);
+                return new Size(minWidth, minHeight);
+            }
+
+            set {
+                SDL2.SDL.SDL_SetWindowMinimumSize(XNAGameWrapper.Window.Handle, (int) value.Width, (int) value.Height);
+            }
+        }
+
+        public Size WindowMaximumSize {
+            get {
+                SDL2.SDL.SDL_GetWindowMaximumSize(XNAGameWrapper.Window.Handle, out int maxWidth, out int maxHeight);
+                return new Size(maxWidth, maxHeight);
+            }
+
+            set {
+                SDL2.SDL.SDL_SetWindowMaximumSize(XNAGameWrapper.Window.Handle, (int) value.Width, (int) value.Height);
             }
         }
 
@@ -405,8 +422,8 @@ Scene:
 
             var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
 
@@ -415,8 +432,8 @@ Scene:
 
             var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
@@ -626,8 +643,8 @@ Scene:
             // checks if preffered backbuffer size is the same as current window size
             if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
                 DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimumSize.Width, displayMode.Width);
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimumSize.Height, displayMode.Height);
                 XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
             }
 
@@ -640,8 +657,6 @@ Scene:
         private void RefreshViewMode() {
             Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
             Size previousWindowSize = WindowSize; 
-            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
-            WindowSize = new Size(windowClientBounds.Width, windowClientBounds.Height);
             WindowCenter = (WindowSize / 2f).ToVector2();
 
             switch (ResizeMode) {
@@ -697,8 +712,6 @@ Scene:
             BasicShader = new BasicShader(Resource.BasicEffect);
 
             // window and resolution
-            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
-
             if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }

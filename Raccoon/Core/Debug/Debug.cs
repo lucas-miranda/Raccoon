@@ -28,7 +28,7 @@ namespace Raccoon {
 
         private bool _useLogToFile;
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
-        private Vector2 _screenMessagePosition = new Vector2(ScreenMessageStartPosition.X, Game.Instance.WindowHeight + ScreenMessageStartPosition.Y);
+        private Vector2 _screenMessagePosition;
         private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
         private Locker<Alarm> _alarms = new Locker<Alarm>();
 
