@@ -141,7 +141,7 @@ namespace Raccoon.Graphics {
                             topStart = new Microsoft.Xna.Framework.Vector3(pivot.X, pivot.Y, 0f);
 
                             // apply correction on previous pair of points too (for a nice alignment)
-                            var upCorrection = new Microsoft.Xna.Framework.Vector3(up.X, up.Y, 0f);
+                            Microsoft.Xna.Framework.Vector3 upCorrection = new Microsoft.Xna.Framework.Vector3(up.X, up.Y, 0f);
                             vertices[vertexStart - 2].Position = previousBottomPoint + upCorrection;
                             vertices[vertexStart - 1].Position = previousTopPoint + upCorrection;
                         } else {
@@ -157,7 +157,7 @@ namespace Raccoon.Graphics {
                             bottomStart = new Microsoft.Xna.Framework.Vector3(pivot.X, pivot.Y, 0f);
 
                             // apply correction on previous pair of points too (for a nice alignment)
-                            var downCorrection = new Microsoft.Xna.Framework.Vector3(down.X, down.Y, 0f);
+                            Microsoft.Xna.Framework.Vector3 downCorrection = new Microsoft.Xna.Framework.Vector3(down.X, down.Y, 0f);
                             vertices[vertexStart - 2].Position = previousBottomPoint + downCorrection;
                             vertices[vertexStart - 1].Position = previousTopPoint + downCorrection;
                         }
