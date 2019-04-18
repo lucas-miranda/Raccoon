@@ -43,6 +43,20 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
+#if DEBUG
+
+        /// <summary>
+        /// Track number of draw calls.
+        /// </summary>
+        public static int TotalDrawCalls { get; private set; }
+
+        /// <summary>
+        /// Sprite count at current buffer.
+        /// </summary>
+        public static int SpriteCount { get; private set; }
+
+#endif
+
         public GraphicsDevice GraphicsDevice { get; set; }
         public bool IsBatching { get; private set; }
         public Shader Shader { get; set; }
@@ -92,6 +106,12 @@ namespace Raccoon.Graphics {
             if (AutoHandleAlphaBlendedSprites) {
                 Render(ref _transparencyBatchItems, _nextItemWithTransparencyIndex, DepthStencilState.DepthRead);
             }
+
+#if DEBUG
+
+            SpriteCount = _nextItemIndex + _nextItemWithTransparencyIndex;
+
+            #endif
 
             IsBatching = false;
         }
@@ -284,8 +304,24 @@ namespace Raccoon.Graphics {
                     VertexPositionColorTexture.VertexDeclaration
                 );
             }
+
+#if DEBUG
+            TotalDrawCalls++;
+#endif
         }
 
         #endregion Private Methods
+
+        #region Internal Methods
+
+#if DEBUG
+
+        internal static void ResetMetrics() {
+            TotalDrawCalls = SpriteCount = 0;
+        }
+
+#endif
+
+        #endregion Internal Methods
     }
 }

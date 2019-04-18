@@ -240,7 +240,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicEffect.fxc" />
-    <None Include="BasicEffect.xnb" />
     <None Include="packages.config" />
     <None Include="app.manifest" />
   </ItemGroup>

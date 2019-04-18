@@ -11,8 +11,9 @@ namespace Raccoon.Graphics {
 
         private DynamicVertexBuffer _vertexBuffer;
         private DynamicIndexBuffer _indexBuffer;
-        private List<PrimitiveBatchItem> _batchFilledItems = new List<PrimitiveBatchItem>(),
-                                         _batchHollowItems = new List<PrimitiveBatchItem>();
+
+        private readonly List<PrimitiveBatchItem> _batchFilledItems = new List<PrimitiveBatchItem>(),
+                                                  _batchHollowItems = new List<PrimitiveBatchItem>();
 
         private int _filledVerticesCount, _filledIndicesCount, _hollowVerticesCount, _hollowIndicesCount;
 
@@ -29,6 +30,25 @@ namespace Raccoon.Graphics {
         #endregion Constructors
 
         #region Public Properties
+
+#if DEBUG
+
+        /// <summary>
+        /// Track number of hollow primitives draw calls.
+        /// </summary>
+        public static int TotalHollowDrawCalls { get; private set; }
+
+        /// <summary>
+        /// Track number of filled primitives draw calls.
+        /// </summary>
+        public static int TotalFilledDrawCalls { get; private set; }
+
+        /// <summary>
+        /// Primitive count at current buffer.
+        /// </summary>
+        public static int PrimitivesCount { get; private set; }
+
+#endif
 
         public Shader Shader { get; set; }
         public bool IsBatching { get; private set; }
@@ -51,6 +71,14 @@ namespace Raccoon.Graphics {
             GraphicsDevice graphicsDevice = Game.Instance.GraphicsDevice;
             RenderFilledItems(graphicsDevice, ref _world, ref _view, ref _projection);
             RenderHollowItems(graphicsDevice, ref _world, ref _view, ref _projection);
+
+#if DEBUG
+
+            TotalFilledDrawCalls = _batchFilledItems.Count;
+            TotalHollowDrawCalls = _batchHollowItems.Count;
+
+            #endif
+
             IsBatching = false;
         }
 
@@ -371,6 +399,10 @@ namespace Raccoon.Graphics {
             }
 
             shader.ResetParameters();
+
+#if DEBUG
+            TotalFilledDrawCalls++;
+#endif
         }
 
         private void RenderHollowItems(GraphicsDevice graphicsDevice, ref Matrix world, ref Matrix view, ref Matrix projection) {
@@ -444,8 +476,24 @@ namespace Raccoon.Graphics {
             }
 
             shader.ResetParameters();
+
+#if DEBUG
+            TotalHollowDrawCalls++;
+#endif
         }
 
         #endregion Private Methods
+
+        #region Internal Methods
+        
+#if DEBUG
+
+        internal static void ResetMetrics() {
+            TotalHollowDrawCalls = TotalFilledDrawCalls = 0;
+        }
+
+#endif
+
+        #endregion Internal Methods
     }
 }

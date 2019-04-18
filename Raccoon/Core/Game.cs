@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 using Raccoon.Graphics;
@@ -29,19 +28,21 @@ namespace Raccoon {
 #if DEBUG
         private static readonly string DiagnosticsTextFormat = @"Time: {0}
 
-Draw Calls: {1}, Sprites: {2}
-Texture: {3}
+Batches:
+  Total Draw Calls: {1}
+  Sprites: {2}, Primitives: {3}
+  Textures: {4}
 
 Physics:
-  Update Position: {4}ms
-  Solve Constraints: {5}ms
-  Coll Broad Phase: (C: {6}): {7}ms
-  Coll Narrow Phase: (C: {8}): {9}ms
+  Update Position: {5}ms
+  Solve Constraints: {6}ms
+  Coll Broad Phase: (C: {7}): {8}ms
+  Coll Narrow Phase: (C: {9}): {10}ms
 
 Scene:
-  Updatables: {10}
-  Renderables: {11}
-  Objects: {12}";
+  Updatables: {11}
+  Renderables: {12}
+  Objects: {13}";
 
         private readonly string WindowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
@@ -114,8 +115,8 @@ Scene:
             XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // window and game internal size
-            WindowCenter = (WindowSize / 2f).ToVector2();
-            Size = WindowSize / PixelScale;
+            WindowCenter = new Vector2(windowWidth / 2f, windowHeight/2f);
+            Size = new Size(windowWidth, windowHeight) / PixelScale;
             Center = (Size / 2f).ToVector2();
 
             OnBeforeUpdate = () => {
@@ -233,7 +234,14 @@ Scene:
             set {
                 _pixelScale = value;
 
-                Size = WindowSize / _pixelScale;
+                if (IsRunning) {
+                    Size = WindowSize / _pixelScale;
+                } else {
+                    // when game isn't running yet, probably GraphicsDeviceManager hasn't applied changes to window size
+                    // so just use preffered back buffer size instead current window size
+                    Size = new Size(XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth, XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight) / _pixelScale;
+                }
+
                 Center = (Size / 2f).ToVector2();
 
                 if (!IsRunning) {
@@ -420,7 +428,7 @@ Scene:
         public void ResizeWindow(int width, int height) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
-            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
@@ -430,7 +438,7 @@ Scene:
         public void ResizeWindow(int width, int height, bool fullscreen) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
-            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
@@ -464,7 +472,7 @@ Scene:
                 }
             } else {
                 _windowedModeBounds = new Rectangle(WindowPosition, WindowSize);
-                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+                DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
                 newWindowSize = new Size(displayMode.Width, displayMode.Height);
             }
 
@@ -551,19 +559,23 @@ Scene:
                     new Vector2(WindowWidth - 260, 15), 
                     string.Format(
                         DiagnosticsTextFormat, 
+
+                        // time
                         Time.ToString(@"hh\:mm\:ss\.fff"),
-                        0,
-                        0,
-                        0,
-                        /*
-                        metrics.DrawCount,
-                        metrics.SpriteCount,
-                        metrics.TextureCount,
-                        */
+
+                        // batches
+                        Graphics.SpriteBatch.TotalDrawCalls + PrimitiveBatch.TotalFilledDrawCalls + PrimitiveBatch.TotalHollowDrawCalls,
+                        Graphics.SpriteBatch.SpriteCount,
+                        PrimitiveBatch.PrimitivesCount,
+                        "-",
+
+                        // physics
                         Physics.UpdatePositionExecutionTime,
                         Physics.SolveConstraintsExecutionTime,
                         Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
                         Physics.CollidersNarrowPhaseCount, Physics.CollisionDetectionNarrowPhaseExecutionTime,
+
+                        // scene
                         Scene == null ? "0" : Scene.UpdatableCount.ToString(),
                         Scene == null ? "0" : Scene.RenderableCount.ToString(),
                         Scene == null ? "0" : Scene.SceneObjectsCount.ToString()
@@ -578,6 +590,7 @@ Scene:
                 int previousFramerateValue = FramerateValues[0], currentFramerateValue;
                 Vector2 monitorBottomLeft = framerateMonitorRect.BottomLeft;
                 Vector2 previousPos = monitorBottomLeft + new Vector2(1, -previousFramerateValue - 1), currentPos;
+
                 for (int i = 1; i < FramerateValues.Count; i++) {
                     currentFramerateValue = FramerateValues[i];
                     currentPos = monitorBottomLeft + new Vector2(1 + i * FramerateMonitorDataSpacing, -currentFramerateValue - 1);
@@ -765,20 +778,12 @@ Scene:
         }
 
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {
-            OnBeforeRender();
-
 #if DEBUG
-            //!GraphicsMetrics metrics = GraphicsDevice.Metrics;
-
-            // debug render
-            DebugCanvas.Begin(Color.Transparent);
-
-            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
-            DebugRender();
-            DebugPrimitiveBatch.End();
-
-            DebugCanvas.End();
+            Graphics.SpriteBatch.ResetMetrics();
+            PrimitiveBatch.ResetMetrics();
 #endif
+
+            OnBeforeRender();
 
             MainCanvas.Begin(BackgroundColor);
 
@@ -794,7 +799,18 @@ Scene:
 
             MainCanvas.End();
 
-            BasicShader.ResetParameters();
+#if DEBUG
+
+            // debug render
+            DebugCanvas.Begin(Color.Transparent);
+
+            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
+            DebugRender();
+            DebugPrimitiveBatch.End();
+
+            DebugCanvas.End();
+#endif
+
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
