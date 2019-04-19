@@ -166,27 +166,57 @@ namespace Raccoon.Input {
 
         #region GamePad
 
-        public static bool IsGamePadButtonPressed(PlayerIndex gamepadIndex, Buttons buttonId) {
-            return (!Instance._gamepadsPreviousState.ContainsKey(gamepadIndex) || Instance._gamepadsPreviousState[gamepadIndex].IsButtonUp(buttonId))
-              && Instance._gamepadsState[gamepadIndex].IsButtonDown(buttonId);
+        public static bool IsGamePadButtonPressed(GamePadIndex gamepadIndex, Buttons buttonId) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return false;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return (!Instance._gamepadsPreviousState.ContainsKey(playerIndex) || Instance._gamepadsPreviousState[playerIndex].IsButtonUp(buttonId))
+              && Instance._gamepadsState[playerIndex].IsButtonDown(buttonId);
         }
 
-        public static bool IsGamePadButtonDown(PlayerIndex gamepadIndex, Buttons buttonId) {
-            return Instance._gamepadsState[gamepadIndex].IsButtonDown(buttonId);
+        public static bool IsGamePadButtonDown(GamePadIndex gamepadIndex, Buttons buttonId) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return false;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return Instance._gamepadsState[playerIndex].IsButtonDown(buttonId);
         }
 
-        public static bool IsGamePadButtonReleased(PlayerIndex gamepadIndex, Buttons buttonId) {
-            return Instance._gamepadsPreviousState[gamepadIndex].IsButtonDown(buttonId)
-              && (!Instance._gamepadsState.ContainsKey(gamepadIndex) || Instance._gamepadsState[gamepadIndex].IsButtonUp(buttonId));
+        public static bool IsGamePadButtonReleased(GamePadIndex gamepadIndex, Buttons buttonId) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return false;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return Instance._gamepadsPreviousState[playerIndex].IsButtonDown(buttonId)
+              && (!Instance._gamepadsState.ContainsKey(playerIndex) || Instance._gamepadsState[playerIndex].IsButtonUp(buttonId));
         }
 
-        public static bool IsGamePadButtonUp(PlayerIndex gamepadIndex, Buttons buttonId) {
-            return Instance._gamepadsState[gamepadIndex].IsButtonUp(buttonId);
+        public static bool IsGamePadButtonUp(GamePadIndex gamepadIndex, Buttons buttonId) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return true;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return Instance._gamepadsState[playerIndex].IsButtonUp(buttonId);
         }
 
-        public static InputButtonState GamePadButtonState(PlayerIndex gamepadIndex, Buttons buttonId) {
-            bool isPreviousStateDown = Instance._gamepadsState[gamepadIndex].IsButtonDown(buttonId),
-                 isCurrentStateDown = Instance._gamepadsPreviousState[gamepadIndex].IsButtonDown(buttonId);
+        public static InputButtonState GamePadButtonState(GamePadIndex gamepadIndex, Buttons buttonId) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return InputButtonState.Up;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            bool isPreviousStateDown = Instance._gamepadsState[playerIndex].IsButtonDown(buttonId),
+                 isCurrentStateDown = Instance._gamepadsPreviousState[playerIndex].IsButtonDown(buttonId);
 
             if (!isPreviousStateDown) {
                 if (isCurrentStateDown) {
@@ -203,24 +233,34 @@ namespace Raccoon.Input {
             return InputButtonState.Down;
         }
 
-        public static Vector2 GamePadLeftThumbStickValue(PlayerIndex gamepadIndex) {
-            return new Vector2(Instance._gamepadsState[gamepadIndex].ThumbSticks.Left);
+        public static Vector2 GamePadThumbStickValue(GamePadIndex gamepadIndex, GamePadThumbStick thumbStick) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return Vector2.Zero;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return new Vector2(thumbStick == GamePadThumbStick.Left ? Instance._gamepadsState[playerIndex].ThumbSticks.Left : Instance._gamepadsState[playerIndex].ThumbSticks.Right);
         }
 
-        public static Vector2 GamePadRightThumbStickValue(PlayerIndex gamepadIndex) {
-            return new Vector2(Instance._gamepadsState[gamepadIndex].ThumbSticks.Right);
+        public static float GamePadTriggerValue(GamePadIndex gamepadIndex, GamePadTriggerButton triggerButton) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return 0f;
+            }
+
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
+
+            return triggerButton == GamePadTriggerButton.Left ? Instance._gamepadsState[playerIndex].Triggers.Left : Instance._gamepadsState[playerIndex].Triggers.Right;
         }
 
-        public static float GamePadLeftTriggerValue(PlayerIndex gamepadIndex) {
-            return Instance._gamepadsState[gamepadIndex].Triggers.Left;
-        }
+        public static bool IsGamepadConnected(GamePadIndex gamepadIndex) {
+            if (gamepadIndex == GamePadIndex.None) {
+                return false;
+            }
 
-        public static float GamePadRightTriggerValue(PlayerIndex gamepadIndex) {
-            return Instance._gamepadsState[gamepadIndex].Triggers.Right;
-        }
+            PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
 
-        public static bool IsGamepadConnected(PlayerIndex gamepadIndex) {
-            return Instance._gamepadsState.ContainsKey(gamepadIndex) && Instance._gamepadsState[gamepadIndex].IsConnected;
+            return Instance._gamepadsState.ContainsKey(playerIndex) && Instance._gamepadsState[playerIndex].IsConnected;
         }
 
         #endregion GamePad
@@ -272,7 +312,8 @@ namespace Raccoon.Input {
             // gamepad states
             GamePadsConnected = 0;
 
-            for (PlayerIndex gamepadIndex = PlayerIndex.One; gamepadIndex <= PlayerIndex.Four; gamepadIndex++) {
+            PlayerIndex lastPlayerIndex = (PlayerIndex) (MaxGamePads - 1);
+            for (PlayerIndex gamepadIndex = PlayerIndex.One; gamepadIndex <= lastPlayerIndex; gamepadIndex++) {
                 if (_gamepadsState.ContainsKey(gamepadIndex)) {
                     _gamepadsPreviousState[gamepadIndex] = _gamepadsState[gamepadIndex];
                 } else {

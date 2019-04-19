@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using Microsoft.Xna.Framework;
-
 namespace Raccoon.Input {
     /*public enum PlayStationLabel {
         Triangle, Square, Circle, Cross,
@@ -28,7 +26,7 @@ namespace Raccoon.Input {
         public Controller() {
         }
 
-        public Controller(PlayerIndex gamepadIndex) {
+        public Controller(GamePadIndex gamepadIndex) {
             GamePadIndex = gamepadIndex;
         }
 
@@ -36,10 +34,9 @@ namespace Raccoon.Input {
 
         #region Public Methods
 
-        public PlayerIndex GamePadIndex { get; set; }
+        public GamePadIndex GamePadIndex { get; set; }
         public bool Enabled { get; set; } = true;
-        public bool IsUsingGamePad { get; set; }
-        public bool IsConnected { get { return !IsUsingGamePad || Input.IsGamepadConnected(GamePadIndex); } }
+        public bool IsConnected { get { return GamePadIndex == GamePadIndex.None || Input.IsGamepadConnected(GamePadIndex); } }
 
         #endregion Public Methods
 

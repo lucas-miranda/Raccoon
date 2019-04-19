@@ -74,6 +74,9 @@
     <Compile Include="Core\Definitions\ResizeMode.cs" />
     <Compile Include="Core\IDebugRenderable.cs" />
     <Compile Include="Core\IExtendedRenderable.cs" />
+    <Compile Include="Core\Input\GamePadIndex.cs" />
+    <Compile Include="Core\Input\GamePadThumbStick.cs" />
+    <Compile Include="Core\Input\GamePadTriggerButton.cs" />
     <Compile Include="Core\IRenderable.cs" />
     <Compile Include="Core\IExtendedUpdatable.cs" />
     <Compile Include="Core\ISceneObject.cs" />

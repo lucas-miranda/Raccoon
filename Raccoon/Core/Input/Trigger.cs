@@ -1,11 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Raccoon.Input {
-    public enum GamePadTriggerButton {
-        Left = 0,
-        Right
-    }
-
+﻿namespace Raccoon.Input {
     public class Trigger {
         #region Constructors
 
@@ -13,21 +6,19 @@ namespace Raccoon.Input {
             Key = key;
         } 
 
-        public Trigger(PlayerIndex gamepadIndex, GamePadTriggerButton gamepadTriggerButton) {
+        public Trigger(GamePadIndex gamepadIndex, GamePadTriggerButton gamepadTriggerButton) {
             GamePadIndex = gamepadIndex;
             TriggerButton = gamepadTriggerButton;
-            UseGamePad = true;
         }
 
         #endregion Constructors
 
         #region Public Properties
 
-        public PlayerIndex GamePadIndex { get; set; }
+        public GamePadIndex GamePadIndex { get; set; }
         public GamePadTriggerButton TriggerButton { get; set; }
         public Key Key { get; set; }
         public float Value { get; protected set; }
-        public bool UseGamePad { get; set; }
         public bool IsDown { get; protected set; }
         public bool IsPressed { get; protected set; }
         public bool IsReleased { get; protected set; } = true;
@@ -40,12 +31,8 @@ namespace Raccoon.Input {
         public void Update(int delta) {
             Value = 0;
 
-            if (UseGamePad) {
-                if (TriggerButton == GamePadTriggerButton.Left) {
-                    Value = Input.GamePadLeftTriggerValue(GamePadIndex);
-                } else {
-                    Value = Input.GamePadRightTriggerValue(GamePadIndex);
-                }
+            if (GamePadIndex != GamePadIndex.None) {
+                Value = Input.GamePadTriggerValue(GamePadIndex, TriggerButton);
             }
 
             if (Key != Key.None) {
@@ -74,7 +61,7 @@ namespace Raccoon.Input {
         }
 
         public override string ToString() {
-            return $"[Trigger |" + (Key != Key.None ? $" Key: {Key}" : " ") + (UseGamePad ? $" GamePad Id: {GamePadIndex} Trigger Button: {TriggerButton}" : "") + $" | Value: {Value} |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
+            return $"[Trigger |" + (Key != Key.None ? $" Key: {Key}" : " ") + (GamePadIndex != GamePadIndex.None ? $" GamePad Id: {GamePadIndex} Trigger Button: {TriggerButton}" : "") + $" | Value: {Value} |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
         }
 
         #endregion Public Methods

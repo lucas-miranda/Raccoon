@@ -1,11 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Raccoon.Input {
-    public enum GamePadThumbStick {
-        Left = 0,
-        Right
-    }
-
+﻿namespace Raccoon.Input {
     public class Axis {
         #region Private Members
 
@@ -30,19 +23,17 @@ namespace Raccoon.Input {
         public Axis(Key up, Key right, Key down, Key left) : this(new Button(up), new Button(right), new Button(down), new Button(left)) {
         }
 
-        public Axis(PlayerIndex gamepadIndex, GamePadThumbStick thumbstick, float deadzone = 0.1f) : this(deadzone) {
+        public Axis(GamePadIndex gamepadIndex, GamePadThumbStick thumbstick, float deadzone = .1f) : this(deadzone) {
             GamePadIndex = gamepadIndex;
             ThumbStick = thumbstick;
-            UseGamePad = true;
         }
 
         #endregion Constructors
 
         #region Public Properties
 
-        public PlayerIndex GamePadIndex { get; set; }
+        public GamePadIndex GamePadIndex { get; set; }
         public GamePadThumbStick ThumbStick { get; set; }
-        public bool UseGamePad { get; set; }
         public float X { get; protected set; }
         public float Y { get; protected set; }
         public float DeadZone { get; set; } = .1f;
@@ -93,14 +84,8 @@ namespace Raccoon.Input {
                 }
 
                 // joystick axes
-                if (UseGamePad) {
-                    Vector2 thumbStick;
-
-                    if (ThumbStick == GamePadThumbStick.Left) {
-                        thumbStick = Input.GamePadLeftThumbStickValue(GamePadIndex);
-                    } else {
-                        thumbStick = Input.GamePadRightThumbStickValue(GamePadIndex);
-                    }
+                if (GamePadIndex != GamePadIndex.None) {
+                    Vector2 thumbStick = Input.GamePadThumbStickValue(GamePadIndex, ThumbStick);
 
                     X += thumbStick.X;
                     Y += thumbStick.Y;

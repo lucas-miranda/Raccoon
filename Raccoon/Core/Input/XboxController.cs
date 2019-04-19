@@ -14,7 +14,7 @@ namespace Raccoon.Input {
 
         #region Constructors
 
-        public XboxController(PlayerIndex gamepadIndex) : base(gamepadIndex) {
+        public XboxController(GamePadIndex gamepadIndex) : base(gamepadIndex) {
             // axes
             AddAxis(Label.LeftStick, new Axis(GamePadIndex, GamePadThumbStick.Left));
             AddAxis(Label.RightStick, new Axis(GamePadIndex, GamePadThumbStick.Right));
