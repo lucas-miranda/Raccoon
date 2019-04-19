@@ -120,7 +120,9 @@
     <Compile Include="Graphics\Fonts\FontFormat.cs" />
     <Compile Include="Graphics\Fonts\FontService.cs" />
     <Compile Include="Graphics\Shaders\BasicShader.cs" />
-    <Compile Include="Graphics\Shaders\IBasicShader.cs" />
+    <Compile Include="Graphics\Shaders\IShaderVertexColor.cs" />
+    <Compile Include="Graphics\Shaders\IShaderTexture.cs" />
+    <Compile Include="Graphics\Shaders\IShaderTransform.cs" />
     <Compile Include="Math\Triangle.cs" />
     <Compile Include="Test\Extensions\EnumTest.cs" />
     <Compile Include="Test\Math\CircleTest.cs" />

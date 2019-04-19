@@ -93,7 +93,7 @@ namespace Raccoon.Graphics {
                 throw new System.InvalidOperationException("Begin() must be called before End().");
             }
 
-            if (Shader is IBasicShader shader) {
+            if (Shader is IShaderTransform shader) {
                 shader.World = Transform * shader.World;
             }
 
@@ -282,15 +282,16 @@ namespace Raccoon.Graphics {
         private void DrawQuads(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader) {
             int batchCount = endBatchIndex - startBatchIndex + 1;
 
-            if (shader is IBasicShader currentShader) {
-                currentShader.Texture = texture;
-
-                if (AllowIBasicShaderEffectParameterClone && currentShader != Shader && Shader is IBasicShader defaultShader) {
-                    currentShader.World = defaultShader.World;
-                    currentShader.View = defaultShader.View;
-                    currentShader.Projection = defaultShader.Projection;
-                }
+            if (shader is IShaderTexture currentShaderText) {
+                currentShaderText.TextureEnabled = true;
+                currentShaderText.Texture = texture;
             } 
+
+            if (AllowIBasicShaderEffectParameterClone && shader != Shader && Shader is IShaderTransform defaultShader && shader is IShaderTransform currentShaderTrans) {
+                currentShaderTrans.World = defaultShader.World;
+                currentShaderTrans.View = defaultShader.View;
+                currentShaderTrans.Projection = defaultShader.Projection;
+            }
             
             foreach (object pass in shader) {
                 GraphicsDevice.DrawUserIndexedPrimitives(
