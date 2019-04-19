@@ -25,7 +25,7 @@ namespace Raccoon.Input {
     public class Input {
         #region Public Members
 
-        public static System.Action<char, Key> OnTextInput = delegate { };
+        public static System.Action<char> OnTextInput = delegate { };
 
         #endregion Public Members
 
@@ -67,7 +67,8 @@ namespace Raccoon.Input {
             _specialKeysToChar[Key.Period] = '.';
             _specialKeysToChar[Key.Comma] = ',';
 
-            //! Game.Instance.XNAGameWrapper.Window.TextInput += ProcessTextInput;
+            TextInputEXT.TextInput += ProcessTextInput;
+
             Game.Instance.XNAGameWrapper.Activated += (object sender, System.EventArgs e) => {
                 _activated = true;
             };
@@ -358,11 +359,9 @@ namespace Raccoon.Input {
 
         #region Private Methods
 
-        /*
-        private void ProcessTextInput(object sender, Microsoft.Xna.Framework.TextInputEventArgs e) {
-            OnTextInput(e.Character, (Key) e.Key);
+        private void ProcessTextInput(char charCode) {
+            OnTextInput(charCode);
         }
-        */
 
         #endregion Private Methods
     }
