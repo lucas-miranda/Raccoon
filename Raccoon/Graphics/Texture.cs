@@ -118,16 +118,23 @@ namespace Raccoon.Graphics {
             XNATexture.SetData(level, rect, data, startIndex, elementCount);
         }
 
-        public void Reload(Stream textureStream) {
-            //XNATexture.Reload(textureStream);
-        }
-
         public void SaveAsJpeg(Stream stream, int width, int height) {
             XNATexture.SaveAsJpeg(stream, width, height);
         }
 
         public void SaveAsPng(Stream stream, int width, int height) {
             XNATexture.SaveAsPng(stream, width, height);
+        }
+
+        public void Reload(Stream textureStream) {
+            XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, textureStream);
+
+            if (XNATexture == null) {
+                throw new System.NullReferenceException($"Texture not found");
+            }
+
+            Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
+            Size = Bounds.Size;
         }
 
         public void Reload() {
@@ -140,7 +147,7 @@ namespace Raccoon.Graphics {
             } else {
                 XNATexture.Dispose();
 
-                using (FileStream stream = File.Open(Game.Instance.ContentDirectory + Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                using (FileStream stream = File.Open(Path.Combine(Game.Instance.ContentDirectory, Filename), FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
                 }
             }
