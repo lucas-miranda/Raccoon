@@ -162,6 +162,18 @@ namespace Raccoon.Input {
             return InputButtonState.Down;
         }
 
+        public static void SetInputLocation(Rectangle rectangle) {
+            TextInputEXT.SetInputRectangle(rectangle);
+        }
+
+        public static void StartTextInput() {
+            TextInputEXT.StartTextInput();
+        }
+
+        public static void StopTextInput() {
+            TextInputEXT.StopTextInput();
+        }
+
         #endregion Keyboard
 
         #region GamePad
