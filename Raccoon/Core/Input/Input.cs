@@ -321,6 +321,8 @@ namespace Raccoon.Input {
                 return;
             }
 
+            #region GamePad
+
             // gamepad states
             GamePadsConnected = 0;
 
@@ -344,6 +346,10 @@ namespace Raccoon.Input {
                 GamePadsConnected++;
             }
 
+            #endregion GamePad
+
+            #region Keyboard
+
             // keyboard state
             _keyboardPreviousState = _keyboardState;
             _keyboardState = Keyboard.GetState();
@@ -354,6 +360,10 @@ namespace Raccoon.Input {
             for (int i = 0; i < _xnaPressedKeys.Length; i++) {
                 _pressedKeys.Add((Key) _xnaPressedKeys[i]);
             }
+
+            #endregion Keyboard
+
+            #region Mouse
 
             // mouse
             MouseState XNAMouseState = Mouse.GetState();
@@ -406,6 +416,8 @@ namespace Raccoon.Input {
 
             MouseScrollWheelDelta = XNAMouseState.ScrollWheelValue - MouseScrollWheel;
             MouseScrollWheel = XNAMouseState.ScrollWheelValue;
+
+            #endregion Mouse
         }
 
         #endregion Public Methods

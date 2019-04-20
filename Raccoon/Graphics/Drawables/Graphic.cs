@@ -48,7 +48,12 @@ namespace Raccoon.Graphics {
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public float Width { get { return Size.Width; } }
         public float Height { get { return Size.Height; } }
+
+        /// <summary>
+        /// Clockwise rotation in degrees.
+        /// </summary>
         public float Rotation { get; set; }
+
         public Size Size { get; protected set; }
         public Renderer Renderer { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;

@@ -4,6 +4,7 @@
 
         private Font _font;
         private string _value;
+        private Size _unscaledSize;
 
         #endregion Private Members
 
@@ -45,6 +46,11 @@
                 }
 
                 _font = value;
+
+                if (!string.IsNullOrEmpty(_value)) {
+                    _unscaledSize = new Size(_font.MeasureText(_value));
+                    Size = _unscaledSize * Scale;
+                }
             }
         }
 
@@ -59,7 +65,19 @@
                 }
 
                 _value = value;
-                Size = new Size(Font.MeasureText(_value));
+                _unscaledSize = new Size(_font.MeasureText(_value));
+                Size = _unscaledSize * Scale;
+            }
+        }
+
+        public new Vector2 Scale {
+            get {
+                return base.Scale;
+            }
+
+            set {
+                base.Scale = value;
+                Size = _unscaledSize * value;
             }
         }
 

@@ -741,12 +741,14 @@ Scene:
                 }
             };
 
-            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
+            GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+
+            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = MainRenderer
             };
 
 #if DEBUG
-            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
+            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = DebugRenderer
             };
 
@@ -814,7 +816,7 @@ Scene:
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Violet);
+            GraphicsDevice.Clear(Color.Purple);
 
             ScreenRenderer.Begin();
 

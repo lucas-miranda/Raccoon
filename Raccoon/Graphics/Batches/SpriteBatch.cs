@@ -150,10 +150,10 @@ namespace Raccoon.Graphics {
                     pos.Y = textSize.Height - pos.Y - SourceArea.Height;
                 }
 
-                pos *= scale;
+                pos = pos * scale - origin;
 
                 if (rotation != 0f) {
-                    pos = origin + new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
+                    pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
                 }
 
                 batchItem.Set(
@@ -164,7 +164,7 @@ namespace Raccoon.Graphics {
                     scale,
                     flip,
                     color,
-                    origin,
+                    Vector2.Zero,
                     scroll,
                     shader,
                     layerDepth

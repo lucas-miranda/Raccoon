@@ -142,6 +142,8 @@ namespace Raccoon.Graphics.Primitives {
             bs.DiffuseColor = color * Color;
             bs.Alpha = Opacity;
 
+            bs.TextureEnabled = false;
+
             GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
