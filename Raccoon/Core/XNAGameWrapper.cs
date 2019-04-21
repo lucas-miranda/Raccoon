@@ -66,9 +66,6 @@ namespace Raccoon {
 
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            if (disposing) {
-                GraphicsDeviceManager.Dispose();
-            }
         }
 
         #endregion Protected Methods

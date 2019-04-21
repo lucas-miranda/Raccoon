@@ -43,6 +43,20 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
+#if DEBUG
+
+        /// <summary>
+        /// Track number of draw calls.
+        /// </summary>
+        public static int TotalDrawCalls { get; private set; }
+
+        /// <summary>
+        /// Sprite count at current buffer.
+        /// </summary>
+        public static int SpriteCount { get; private set; }
+
+#endif
+
         public GraphicsDevice GraphicsDevice { get; set; }
         public bool IsBatching { get; private set; }
         public Shader Shader { get; set; }
@@ -63,22 +77,6 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
-		public static Texture ConvertBitmapToTexture(GraphicsDevice graphicsDevice, System.Drawing.Bitmap bitmap) {
-			// Buffer size is size of color array multiplied by 4 because   
-			// each pixel has four color bytes  
-			int bufferSize = bitmap.Height * bitmap.Width * 4;
-
-			// Create new memory stream and save image to stream so   
-			// we don't have to save and read file  
-			System.IO.MemoryStream memoryStream = new System.IO.MemoryStream(bufferSize);
-			bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
-
-			// Creates a texture from IO.Stream - our memory stream  
-			Texture2D texture2D = Texture2D.FromStream(graphicsDevice, memoryStream);
-
-			return new Texture(texture2D);
-		}
-
         public void Begin(BlendState blendState = null, SamplerState sampler = null, DepthStencilState depthStencil = null, RasterizerState rasterizer = null, Matrix? transform = null) {
             BlendState = blendState ?? BlendState.AlphaBlend;
             SamplerState = sampler ?? SamplerState.PointClamp;
@@ -95,7 +93,7 @@ namespace Raccoon.Graphics {
                 throw new System.InvalidOperationException("Begin() must be called before End().");
             }
 
-            if (Shader is IBasicShader shader) {
+            if (Shader is IShaderTransform shader) {
                 shader.World = Transform * shader.World;
             }
 
@@ -108,6 +106,12 @@ namespace Raccoon.Graphics {
             if (AutoHandleAlphaBlendedSprites) {
                 Render(ref _transparencyBatchItems, _nextItemWithTransparencyIndex, DepthStencilState.DepthRead);
             }
+
+#if DEBUG
+
+            SpriteCount = _nextItemIndex + _nextItemWithTransparencyIndex;
+
+            #endif
 
             IsBatching = false;
         }
@@ -146,10 +150,10 @@ namespace Raccoon.Graphics {
                     pos.Y = textSize.Height - pos.Y - SourceArea.Height;
                 }
 
-                pos *= scale;
+                pos = pos * scale - origin;
 
                 if (rotation != 0f) {
-                    pos = origin + new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
+                    pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
                 }
 
                 batchItem.Set(
@@ -160,7 +164,7 @@ namespace Raccoon.Graphics {
                     scale,
                     flip,
                     color,
-                    origin,
+                    Vector2.Zero,
                     scroll,
                     shader,
                     layerDepth
@@ -278,15 +282,18 @@ namespace Raccoon.Graphics {
         private void DrawQuads(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader) {
             int batchCount = endBatchIndex - startBatchIndex + 1;
 
-            if (AllowIBasicShaderEffectParameterClone && shader != Shader && Shader is IBasicShader stdShader && shader is IBasicShader currentShader) {
-                currentShader.World = stdShader.World;
-                currentShader.View = stdShader.View;
-                currentShader.Projection = stdShader.Projection;
-                currentShader.Texture = texture;
+            if (shader is IShaderTexture currentShaderText) {
+                currentShaderText.TextureEnabled = true;
+                currentShaderText.Texture = texture;
+            } 
+
+            if (AllowIBasicShaderEffectParameterClone && shader != Shader && Shader is IShaderTransform defaultShader && shader is IShaderTransform currentShaderTrans) {
+                currentShaderTrans.World = defaultShader.World;
+                currentShaderTrans.View = defaultShader.View;
+                currentShaderTrans.Projection = defaultShader.Projection;
             }
             
-            foreach (var pass in shader) {
-                GraphicsDevice.Textures[0] = texture.XNATexture;
+            foreach (object pass in shader) {
                 GraphicsDevice.DrawUserIndexedPrimitives(
                     PrimitiveType.TriangleList,
                     _vertexBuffer,
@@ -298,8 +305,24 @@ namespace Raccoon.Graphics {
                     VertexPositionColorTexture.VertexDeclaration
                 );
             }
+
+#if DEBUG
+            TotalDrawCalls++;
+#endif
         }
 
         #endregion Private Methods
+
+        #region Internal Methods
+
+#if DEBUG
+
+        internal static void ResetMetrics() {
+            TotalDrawCalls = SpriteCount = 0;
+        }
+
+#endif
+
+        #endregion Internal Methods
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 using Raccoon.Graphics;
@@ -29,19 +28,21 @@ namespace Raccoon {
 #if DEBUG
         private static readonly string DiagnosticsTextFormat = @"Time: {0}
 
-Draw Calls: {1}, Sprites: {2}
-Texture: {3}
+Batches:
+  Total Draw Calls: {1}
+  Sprites: {2}, Primitives: {3}
+  Textures: {4}
 
 Physics:
-  Update Position: {4}ms
-  Solve Constraints: {5}ms
-  Coll Broad Phase: (C: {6}): {7}ms
-  Coll Narrow Phase: (C: {8}): {9}ms
+  Update Position: {5}ms
+  Solve Constraints: {6}ms
+  Coll Broad Phase: (C: {7}): {8}ms
+  Coll Narrow Phase: (C: {9}): {10}ms
 
 Scene:
-  Updatables: {10}
-  Renderables: {11}
-  Objects: {12}";
+  Updatables: {11}
+  Renderables: {12}
+  Objects: {13}";
 
         private readonly string WindowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
@@ -114,9 +115,8 @@ Scene:
             XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // window and game internal size
-            WindowSize = new Size(windowWidth, windowHeight);
-            WindowCenter = (WindowSize / 2f).ToVector2();
-            Size = WindowSize / PixelScale;
+            WindowCenter = new Vector2(windowWidth / 2f, windowHeight/2f);
+            Size = new Size(windowWidth, windowHeight) / PixelScale;
             Center = (Size / 2f).ToVector2();
 
             OnBeforeUpdate = () => {
@@ -150,13 +150,10 @@ Scene:
         public bool IsMouseVisible { get { return XNAGameWrapper.IsMouseVisible; } set { XNAGameWrapper.IsMouseVisible = value; } }
         public bool AllowResize { get { return XNAGameWrapper.Window.AllowUserResizing; } set { XNAGameWrapper.Window.AllowUserResizing = value; } }
         public bool HasFocus { get { return XNAGameWrapper.IsActive; } }
-        public bool HardwareModeSwitch { get { return XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch; } set { XNAGameWrapper.GraphicsDeviceManager.HardwareModeSwitch = value; } }
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public string StartSceneName { get; private set; }
         public int LastUpdateDeltaTime { get; private set; }
-        public int X { get { return XNAGameWrapper.Window.Position.X; } }
-        public int Y { get { return XNAGameWrapper.Window.Position.Y; } }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
@@ -165,12 +162,10 @@ Scene:
         public int DisplayHeight { get { return (int) DisplaySize.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
-        public Size WindowSize { get; private set; }
-        public Size WindowMinimunSize { get; set; }
-        public Size DisplaySize { get; private set; }
+        public Size WindowSize { get { return new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height); } }
+        public Size DisplaySize { get { return new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height); } }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
-        public Vector2 WindowPosition { get { return new Vector2(X, Y); } set { XNAGameWrapper.Window.Position = new Microsoft.Xna.Framework.Point((int) value.X, (int) value.Y); } }
         public Vector2 DisplayCenter { get { return (DisplaySize / 2f).ToVector2(); } }
         public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
@@ -199,6 +194,38 @@ Scene:
             }
         }
 
+        public Vector2 WindowPosition {
+            get {
+                return new Vector2(XNAGameWrapper.Window.ClientBounds.X, XNAGameWrapper.Window.ClientBounds.Y);
+            }
+
+            set {
+                SDL2.SDL.SDL_SetWindowPosition(XNAGameWrapper.Window.Handle, (int) value.X, (int) value.Y);
+            }
+        }
+
+        public Size WindowMinimumSize {
+            get {
+                SDL2.SDL.SDL_GetWindowMinimumSize(XNAGameWrapper.Window.Handle, out int minWidth, out int minHeight);
+                return new Size(minWidth, minHeight);
+            }
+
+            set {
+                SDL2.SDL.SDL_SetWindowMinimumSize(XNAGameWrapper.Window.Handle, (int) value.Width, (int) value.Height);
+            }
+        }
+
+        public Size WindowMaximumSize {
+            get {
+                SDL2.SDL.SDL_GetWindowMaximumSize(XNAGameWrapper.Window.Handle, out int maxWidth, out int maxHeight);
+                return new Size(maxWidth, maxHeight);
+            }
+
+            set {
+                SDL2.SDL.SDL_SetWindowMaximumSize(XNAGameWrapper.Window.Handle, (int) value.Width, (int) value.Height);
+            }
+        }
+
         public float PixelScale {
             get {
                 return _pixelScale;
@@ -207,7 +234,14 @@ Scene:
             set {
                 _pixelScale = value;
 
-                Size = WindowSize / _pixelScale;
+                if (IsRunning) {
+                    Size = WindowSize / _pixelScale;
+                } else {
+                    // when game isn't running yet, probably GraphicsDeviceManager hasn't applied changes to window size
+                    // so just use preffered back buffer size instead current window size
+                    Size = new Size(XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth, XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight) / _pixelScale;
+                }
+
                 Center = (Size / 2f).ToVector2();
 
                 if (!IsRunning) {
@@ -237,7 +271,6 @@ Scene:
         internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
-        internal ResourceContentManager DefaultResourceContentManager { get; private set; }
         internal float KeepProportionsScale { get; private set; } = 1f;
 
 #if DEBUG
@@ -395,20 +428,20 @@ Scene:
         public void ResizeWindow(int width, int height) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
-            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResizeWindow(int width, int height, bool fullscreen) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
-            var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimunSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimunSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
         }
@@ -439,7 +472,7 @@ Scene:
                 }
             } else {
                 _windowedModeBounds = new Rectangle(WindowPosition, WindowSize);
-                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+                DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
                 newWindowSize = new Size(displayMode.Width, displayMode.Height);
             }
 
@@ -511,7 +544,7 @@ Scene:
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
-        protected virtual void DebugRender(GraphicsMetrics metrics) {
+        protected virtual void DebugRender() {
 #if DEBUG
             if (DebugMode) {
                 OnDebugRender();
@@ -526,14 +559,23 @@ Scene:
                     new Vector2(WindowWidth - 260, 15), 
                     string.Format(
                         DiagnosticsTextFormat, 
+
+                        // time
                         Time.ToString(@"hh\:mm\:ss\.fff"),
-                        metrics.DrawCount,
-                        metrics.SpriteCount,
-                        metrics.TextureCount,
+
+                        // batches
+                        Graphics.SpriteBatch.TotalDrawCalls + PrimitiveBatch.TotalFilledDrawCalls + PrimitiveBatch.TotalHollowDrawCalls,
+                        Graphics.SpriteBatch.SpriteCount,
+                        PrimitiveBatch.PrimitivesCount,
+                        "-",
+
+                        // physics
                         Physics.UpdatePositionExecutionTime,
                         Physics.SolveConstraintsExecutionTime,
                         Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
                         Physics.CollidersNarrowPhaseCount, Physics.CollisionDetectionNarrowPhaseExecutionTime,
+
+                        // scene
                         Scene == null ? "0" : Scene.UpdatableCount.ToString(),
                         Scene == null ? "0" : Scene.RenderableCount.ToString(),
                         Scene == null ? "0" : Scene.SceneObjectsCount.ToString()
@@ -548,6 +590,7 @@ Scene:
                 int previousFramerateValue = FramerateValues[0], currentFramerateValue;
                 Vector2 monitorBottomLeft = framerateMonitorRect.BottomLeft;
                 Vector2 previousPos = monitorBottomLeft + new Vector2(1, -previousFramerateValue - 1), currentPos;
+
                 for (int i = 1; i < FramerateValues.Count; i++) {
                     currentFramerateValue = FramerateValues[i];
                     currentPos = monitorBottomLeft + new Vector2(1 + i * FramerateMonitorDataSpacing, -currentFramerateValue - 1);
@@ -608,13 +651,13 @@ Scene:
         }
 
         private void InternalOnWindowResize(object sender, System.EventArgs e) {
-            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
             if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
-                var displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimunSize.Width, displayMode.Width);
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimunSize.Height, displayMode.Height);
+                DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimumSize.Width, displayMode.Width);
+                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimumSize.Height, displayMode.Height);
                 XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
             }
 
@@ -625,10 +668,8 @@ Scene:
         }
 
         private void RefreshViewMode() {
-            var windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
             Size previousWindowSize = WindowSize; 
-            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
-            WindowSize = new Size(windowClientBounds.Width, windowClientBounds.Height);
             WindowCenter = (WindowSize / 2f).ToVector2();
 
             switch (ResizeMode) {
@@ -680,14 +721,10 @@ Scene:
 
         private void InternalLoadContent() {
             // default content
-            DefaultResourceContentManager = new ResourceContentManager(XNAGameWrapper.Services, Resource.ResourceManager);
-            
             StdFont = new Font(Resource._04b03, 0, 12f);
-            BasicShader = new BasicShader(DefaultResourceContentManager.Load<Effect>("BasicEffect"));
+            BasicShader = new BasicShader(Resource.BasicEffect);
 
             // window and resolution
-            DisplaySize = new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height);
-
             if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
@@ -704,12 +741,14 @@ Scene:
                 }
             };
 
-            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
+            GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+
+            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = MainRenderer
             };
 
 #if DEBUG
-            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.DiscardContents) {
+            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
                 InternalRenderer = DebugRenderer
             };
 
@@ -728,7 +767,6 @@ Scene:
 
         private void InternalUnloadContent() {
             Scene.UnloadContent();
-            DefaultResourceContentManager.Unload();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();
         }
@@ -742,20 +780,12 @@ Scene:
         }
 
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {
-            OnBeforeRender();
-
 #if DEBUG
-            GraphicsMetrics metrics = GraphicsDevice.Metrics;
-
-            // debug render
-            DebugCanvas.Begin(Color.Transparent);
-
-            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
-            DebugRender(metrics);
-            DebugPrimitiveBatch.End();
-
-            DebugCanvas.End();
+            Graphics.SpriteBatch.ResetMetrics();
+            PrimitiveBatch.ResetMetrics();
 #endif
+
+            OnBeforeRender();
 
             MainCanvas.Begin(BackgroundColor);
 
@@ -771,11 +801,22 @@ Scene:
 
             MainCanvas.End();
 
-            BasicShader.ResetParameters();
+#if DEBUG
+
+            // debug render
+            DebugCanvas.Begin(Color.Transparent);
+
+            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
+            DebugRender();
+            DebugPrimitiveBatch.End();
+
+            DebugCanvas.End();
+#endif
+
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Violet);
+            GraphicsDevice.Clear(Color.Purple);
 
             ScreenRenderer.Begin();
 

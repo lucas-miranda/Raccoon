@@ -81,7 +81,9 @@
         }
 
         public static int Clamp(int value, int min, int max) {
-            return Microsoft.Xna.Framework.MathHelper.Clamp(value, min, max);
+			value = (value > max) ? max : value;
+			value = (value < min) ? min : value;
+			return value;
         }
 
         public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) {
@@ -133,9 +135,11 @@
             return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
         }
 
+        /*
         public static float LerpPrecise(float start, float end, float t) {
             return Microsoft.Xna.Framework.MathHelper.LerpPrecise(start, end, t);
         }
+        */
 
         public static bool IsPowerOfTwo(int n) {
             return (n & (n - 1)) == 0;
@@ -171,11 +175,11 @@
         }
 
         public static int Min(int n1, int n2) {
-            return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
+			return n1 < n2 ? n1 : n2;
         }
 
         public static int Max(int n1, int n2) {
-            return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
+			return n1 > n2 ? n1 : n2;
         }
 
         public static Vector2 Max(Vector2 v1, Vector2 v2) {

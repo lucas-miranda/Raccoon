@@ -23,34 +23,41 @@ namespace Raccoon.Graphics {
                 sourceRectangle = new Rectangle(texture.Size);
             }
 
-            float cos = Math.Cos(rotation),
-                  sin = Math.Sin(rotation);
+            Vector2 topLeft = -origin * scale,
+                    topRight = (-origin + new Vector2(destinationRectangle.Width, 0f)) * scale,
+                    bottomRight = (-origin + destinationRectangle.Size) * scale,
+                    bottomLeft = (-origin + new Vector2(0f, destinationRectangle.Height)) * scale;
 
-            Vector2 topLeftOrigin = -origin * scale,
-                    topRightOrigin = (-origin + new Vector2(destinationRectangle.Width, 0f)) * scale,
-                    bottomRightOrigin = (-origin + destinationRectangle.Size) * scale,
-                    bottomLeftOrigin = (-origin + new Vector2(0f, destinationRectangle.Height)) * scale;
+            if (rotation != 0) {
+                float cos = Math.Cos(rotation),
+                      sin = Math.Sin(rotation);
+
+                topLeft = new Vector2(topLeft.X * cos - topLeft.Y * sin, topLeft.X * sin + topLeft.Y * cos);
+                topRight = new Vector2(topRight.X * cos - topRight.Y * sin, topRight.X * sin + topRight.Y * cos);
+                bottomRight = new Vector2(bottomRight.X * cos - bottomRight.Y * sin, bottomRight.X * sin + bottomRight.Y * cos);
+                bottomLeft = new Vector2(bottomLeft.X * cos - bottomLeft.Y * sin, bottomLeft.X * sin + bottomLeft.Y * cos);
+            }
 
             VertexData[0] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.X + (topLeftOrigin.X * cos - topLeftOrigin.Y * sin), destinationRectangle.Y + (topLeftOrigin.X * sin + topLeftOrigin.Y * cos), layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + topLeft, layerDepth), 
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[1] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.X + (topRightOrigin.X * cos - topRightOrigin.Y * sin), destinationRectangle.Y + (topRightOrigin.X * sin + topRightOrigin.Y * cos), layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + topRight, layerDepth), 
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[2] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.X + (bottomRightOrigin.X * cos - bottomRightOrigin.Y * sin), destinationRectangle.Y + (bottomRightOrigin.X * sin + bottomRightOrigin.Y * cos), layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + bottomRight, layerDepth), 
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
 
             VertexData[3] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.X + (bottomLeftOrigin.X * cos - bottomLeftOrigin.Y * sin), destinationRectangle.Y + (bottomLeftOrigin.X * sin + bottomLeftOrigin.Y * cos), layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + bottomLeft, layerDepth), 
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );

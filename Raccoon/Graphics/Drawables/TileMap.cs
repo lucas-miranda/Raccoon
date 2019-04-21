@@ -419,10 +419,10 @@ namespace Raccoon.Graphics {
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
             
-            foreach (var pass in bs) {
+            foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _triangleCount);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, _triangleCount);
             }
 
             bs.ResetParameters();

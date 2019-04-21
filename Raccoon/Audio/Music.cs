@@ -92,20 +92,21 @@ namespace Raccoon.Audio {
 
         public void Play() {
             PrepareMediaPlayer();
-            if (CurrentTime.TotalSeconds > 0) {
-                MediaPlayer.Play(XNASong, _currentTime);
-            } else {
-                MediaPlayer.Play(XNASong);
-            }
+
+            CurrentTime = TimeSpan.FromSeconds(0);
+            MediaPlayer.Play(XNASong);
 
             IsPlaying = true;
         }
 
+        /*
         public void Play(TimeSpan? startPosition) {
             PrepareMediaPlayer();
-            MediaPlayer.Play(XNASong, startPosition);
+            //! MediaPlayer.Play(XNASong, startPosition);
+            MediaPlayer.Play(XNASong);
             IsPlaying = true;
         }
+        */
 
         public void Resume() {
             if (CurrentMusic == this) {
@@ -142,6 +143,7 @@ namespace Raccoon.Audio {
 
         protected void Load(string filename) {
             XNASong = Game.Instance.XNAGameWrapper.Content.Load<Song>(filename);
+
             if (XNASong == null) {
                 throw new NullReferenceException($"Music '{filename}' not found");
             }

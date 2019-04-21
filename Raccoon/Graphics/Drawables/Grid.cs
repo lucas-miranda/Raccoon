@@ -176,10 +176,10 @@ namespace Raccoon.Graphics {
             GraphicsDevice device = Game.Instance.GraphicsDevice;
 
             // grid
-            foreach (var pass in bs) {
+            foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, Columns - 1 + (Rows - 1));
+                device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, _vertexBuffer.VertexCount, 0, Columns - 1 + (Rows - 1));
             }
 
             // borders
@@ -187,10 +187,10 @@ namespace Raccoon.Graphics {
                 bs.DiffuseColor = color * BorderColor;
             }
 
-            foreach (var pass in bs) {
+            foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.LineList, _usingVerticesCount - 4, _usingIndicesCount - 8, 4);
+                device.DrawIndexedPrimitives(PrimitiveType.LineList, _usingVerticesCount - 4, 0, _vertexBuffer.VertexCount, _usingIndicesCount - 8, 4);
             }
 
             bs.ResetParameters();

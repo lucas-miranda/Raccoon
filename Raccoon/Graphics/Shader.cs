@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 
 using Microsoft.Xna.Framework.Graphics;
@@ -16,6 +17,11 @@ namespace Raccoon.Graphics {
 
         public Shader(string filename) {
             Load(filename);
+            UpdateId();
+        }
+
+        public Shader(byte[] shaderCode) {
+            XNAEffect = new Effect(Game.Instance.GraphicsDevice, shaderCode);
             UpdateId();
         }
 
@@ -78,8 +84,8 @@ namespace Raccoon.Graphics {
             XNAEffect.Parameters[name].SetValue(value);
         }
 
-        public float[] GetParameterFloatArray(string name) {
-            return XNAEffect.Parameters[name].GetValueSingleArray();
+        public float[] GetParameterFloatArray(string name, int count) {
+            return XNAEffect.Parameters[name].GetValueSingleArray(count);
         }
 
         public void SetParameter(string name, float[] value) {
@@ -126,8 +132,8 @@ namespace Raccoon.Graphics {
             XNAEffect.Parameters[name].SetValue(value);
         }
 
-        public Vector2[] GetParameterVector2Array(string name) {
-            Microsoft.Xna.Framework.Vector2[] xnaVec2Arr = XNAEffect.Parameters[name].GetValueVector2Array();
+        public Vector2[] GetParameterVector2Array(string name, int count) {
+            Microsoft.Xna.Framework.Vector2[] xnaVec2Arr = XNAEffect.Parameters[name].GetValueVector2Array(count);
             Vector2[] vec2Arr = new Vector2[xnaVec2Arr.Length];
             for (int i = 0; i < xnaVec2Arr.Length; i++) {
                 vec2Arr[i] = new Vector2(xnaVec2Arr[i]);
@@ -164,7 +170,9 @@ namespace Raccoon.Graphics {
 
         public IEnumerator GetEnumerator() {
             OnApply();
+
             foreach (EffectPass pass in XNAEffect.CurrentTechnique.Passes) {
+                BeforePassApply();
                 pass.Apply();
                 yield return pass;
             }
@@ -177,12 +185,22 @@ namespace Raccoon.Graphics {
         protected virtual void OnApply() {
         }
 
+        protected virtual void BeforePassApply() {
+        }
+
         protected void Load(string filename) {
             if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Shader needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(filename);
+            if (filename.EndsWith(".fxb") || filename.EndsWith(".fxc")) {
+                filename = Path.Combine(Game.Instance.ContentDirectory, filename);
+                XNAEffect = new Effect(Game.Instance.GraphicsDevice, File.ReadAllBytes(filename)) {
+                    Name = Path.GetFileNameWithoutExtension(filename)
+                };
+            } else {
+                XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(filename);
+            }
 
             if (XNAEffect == null) {
                 throw new System.NullReferenceException($"Shader '{filename}' not found");
@@ -194,6 +212,10 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateId() {
+            if (string.IsNullOrWhiteSpace(XNAEffect.Name)) {
+                XNAEffect.Name = $"Shader {NextId}";
+            }
+
             if (!ShaderIds.TryGetValue(XNAEffect.Name, out int id)) {
                 id = NextId;
                 NextId++;

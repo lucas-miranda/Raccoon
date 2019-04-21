@@ -198,10 +198,10 @@ namespace Raccoon.Graphics {
             }
 
             // pass along transfom matrices
-            if (SpriteBatch.Shader is IBasicShader spriteBatchBasicShader) {
-                spriteBatchBasicShader.World = World;
-                spriteBatchBasicShader.View = View;
-                spriteBatchBasicShader.Projection = Projection;
+            if (SpriteBatch.Shader is IShaderTransform spriteBatch_Shader_Transform) {
+                spriteBatch_Shader_Transform.World = World;
+                spriteBatch_Shader_Transform.View = View;
+                spriteBatch_Shader_Transform.Projection = Projection;
             }
 
             SpriteBatch.End();

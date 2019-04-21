@@ -1,5 +1,6 @@
-﻿using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 
 namespace Raccoon.Input {
     public class XboxController : Controller {
@@ -11,38 +12,42 @@ namespace Raccoon.Input {
             Back, Start
         }
 
-        public XboxController(int joyId) : base(joyId) {
+        #region Constructors
+
+        public XboxController(GamePadIndex gamepadIndex) : base(gamepadIndex) {
             // axes
-            AddAxis(Label.LeftStick, new Axis(JoyId, 0, 1));
-            AddAxis(Label.RightStick, new Axis(JoyId, 3, 4));
+            AddAxis(Label.LeftStick, new Axis(GamePadIndex, GamePadThumbStick.Left));
+            AddAxis(Label.RightStick, new Axis(GamePadIndex, GamePadThumbStick.Right));
 
             // dpad
-            AddButton(Label.DUp, new Button());
-            AddButton(Label.DRight, new Button());
-            AddButton(Label.DDown, new Button());
-            AddButton(Label.DLeft, new Button());
+            AddButton(Label.DUp, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.DPadUp));
+            AddButton(Label.DRight, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.DPadRight));
+            AddButton(Label.DDown, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.DPadDown));
+            AddButton(Label.DLeft, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.DPadLeft));
             AddAxis(Label.DPad, new Axis(Button(Label.DUp), Button(Label.DRight), Button(Label.DDown), Button(Label.DLeft)));
 
             // buttons
-            AddButton(Label.A, new Button(JoyId, 0));
-            AddButton(Label.B, new Button(JoyId, 1));
-            AddButton(Label.X, new Button(JoyId, 2));
-            AddButton(Label.Y, new Button(JoyId, 3));
-            AddButton(Label.LB, new Button(JoyId, 4));
-            AddButton(Label.RB, new Button(JoyId, 5));
-            AddButton(Label.Back, new Button(JoyId, 6));
-            AddButton(Label.Start, new Button(JoyId, 7));
+            AddButton(Label.A, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.A));
+            AddButton(Label.B, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.B));
+            AddButton(Label.X, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.X));
+            AddButton(Label.Y, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.Y));
+            AddButton(Label.LB, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.LeftShoulder));
+            AddButton(Label.RB, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.RightShoulder));
+            AddButton(Label.Back, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.Back));
+            AddButton(Label.Start, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.Start));
 
             // sticks
-            AddButton(Label.LeftStick, new Button(JoyId, 8));
-            AddButton(Label.RightStick, new Button(JoyId, 9));
+            AddButton(Label.LeftStick, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.LeftStick));
+            AddButton(Label.RightStick, new Button(GamePadIndex, Microsoft.Xna.Framework.Input.Buttons.RightStick));
 
             // triggers
-            AddButton(Label.LT, new Trigger(JoyId, 2));
-            AddButton(Label.RT, new Trigger(JoyId, 5));
+            AddTrigger(Label.LT, new Trigger(GamePadIndex, GamePadTriggerButton.Left));
+            AddTrigger(Label.RT, new Trigger(GamePadIndex, GamePadTriggerButton.Right));
         }
 
-        public XboxController() : this(0) { }
+        #endregion Constructors
+
+        #region Public Properties
 
         public Axis LeftStick { get { return Axis(Label.LeftStick); } }
         public Axis RightStick { get { return Axis(Label.RightStick); } }
@@ -53,8 +58,8 @@ namespace Raccoon.Input {
         public Button Y { get { return Button(Label.Y); } }
         public Button LB { get { return Button(Label.LB); } }
         public Button RB { get { return Button(Label.RB); } }
-        public Trigger LT { get { return (Trigger) Button(Label.LT); } }
-        public Trigger RT { get { return (Trigger) Button(Label.RT); } }
+        public Trigger LT { get { return Trigger(Label.LT); } }
+        public Trigger RT { get { return Trigger(Label.RT); } }
         public Button LeftStickButton { get { return Button(Label.LeftStick); } }
         public Button RightStickButton { get { return Button(Label.RightStick); } }
         public Button DUp { get { return Button(Label.DUp); } }
@@ -64,31 +69,31 @@ namespace Raccoon.Input {
         public Button Back { get { return Button(Label.Back); } }
         public Button Start { get { return Button(Label.Start); } }
 
-        public override void Update(int delta) {
-            if (Enabled && IsConnected) {
-                GamePadState gamepadState = GamePad.GetState(JoyId);
-                DUp.ForceState(gamepadState.DPad.Up == ButtonState.Pressed);
-                DRight.ForceState(gamepadState.DPad.Right == ButtonState.Pressed);
-                DDown.ForceState(gamepadState.DPad.Down == ButtonState.Pressed);
-                DLeft.ForceState(gamepadState.DPad.Left == ButtonState.Pressed);
-            }
+        #endregion Public Properties
 
-            base.Update(delta);
-        }
+        #region Public Methods
 
         public override string ToString() {
-            string s = $"[XboxController | Id: {JoyId}, Connected? {IsConnected} ";
+            string s = $"[XboxController | GamePad Id: {GamePadIndex}, Connected? {IsConnected} ";
+
             s += "| Axes:";
             foreach (KeyValuePair<string, Axis> axis in Axes) {
-                s += " " + axis.Key + ": " + axis.Value;
+                s += $" {axis.Key}: {axis.Value} ";
             }
 
             s += "| Buttons:";
             foreach (KeyValuePair<string, Button> button in Buttons) {
-                s += " " + button.Key + ": " + button.Value;
+                s += $" {button.Key}: {button.Value}";
+            }
+
+            s += "| Triggers:";
+            foreach (KeyValuePair<string, Trigger> trigger in Triggers) {
+                s += $" {trigger.Key}: {trigger.Value}";
             }
 
             return s + "]";
         }
+
+        #endregion Public Methods
     }
 }
