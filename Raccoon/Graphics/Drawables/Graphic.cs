@@ -4,7 +4,7 @@ namespace Raccoon.Graphics {
     public abstract class Graphic : IUpdatable, IRenderable {
         #region Public Members
 
-        public static int LayersCount = 10000;
+        public static int LayersCount = 10000; // Since we're using 24 bits depth-buffer, max layers count could be: 16777215
 
         #endregion Public Members
 
