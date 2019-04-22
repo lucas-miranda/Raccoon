@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Xna.Framework.Graphics;
@@ -722,7 +722,9 @@ Scene:
         private void InternalLoadContent() {
             // default content
             StdFont = new Font(Resource._04b03, 0, 12f);
-            BasicShader = new BasicShader(Resource.BasicEffect);
+            BasicShader = new BasicShader(Resource.BasicShader) {
+                DepthWriteEnabled = true
+            };
 
             // window and resolution
             if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {

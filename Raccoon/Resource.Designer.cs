@@ -73,9 +73,9 @@ namespace Raccoon {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static byte[] BasicEffect {
+        public static byte[] BasicShader {
             get {
-                object obj = ResourceManager.GetObject("BasicEffect", resourceCulture);
+                object obj = ResourceManager.GetObject("BasicShader", resourceCulture);
                 return ((byte[])(obj));
             }
         }

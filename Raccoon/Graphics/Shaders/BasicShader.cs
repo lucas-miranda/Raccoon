@@ -22,7 +22,7 @@ namespace Raccoon.Graphics {
         private Matrix _world, _view, _projection;
         private Color _diffuseColor;
         private float _alpha;
-        private bool _textureEnabled;
+        private bool _textureEnabled, _depthWriteEnabled;
         private Texture _texture;
 
         private BitTag _dirtyFlags = DirtyFlags.None;
@@ -44,7 +44,8 @@ namespace Raccoon.Graphics {
             TextureParameter = XNAEffect.Parameters["Texture"];
             ResetParameters();
         }
-        public BasicShader(byte[] basicEffectCode) : this(new Effect(Game.Instance.GraphicsDevice, basicEffectCode) { Name = "BasicEffect" }) {
+
+        public BasicShader(byte[] basicEffectCode) : this(new Effect(Game.Instance.GraphicsDevice, basicEffectCode) { Name = "BasicShader" }) {
         }
 
         #endregion Constructors
@@ -142,6 +143,21 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public bool DepthWriteEnabled {
+            get {
+                return _depthWriteEnabled;
+            }
+
+            set {
+                if (value == _depthWriteEnabled) {
+                    return;
+                }
+
+                _depthWriteEnabled = value;
+                _dirtyFlags |= DirtyFlags.TechniqueIndex;
+            }
+        }
+
         #endregion Public Properties
 
         #region Internal Properties
@@ -196,7 +212,11 @@ namespace Raccoon.Graphics {
                 int techniqueIndex = 0;
 
                 if (TextureEnabled) {
-                    techniqueIndex += 1;
+                    techniqueIndex |= 1;
+                }
+
+                if (DepthWriteEnabled) {
+                    techniqueIndex |= 1 << 1;
                 }
 
                 SetCurrentTechnique(techniqueIndex);

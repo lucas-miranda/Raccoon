@@ -244,7 +244,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicEffect.fxc" />
+    <None Include="BasicShader.fxb" />
     <None Include="packages.config" />
     <None Include="app.manifest" />
   </ItemGroup>
