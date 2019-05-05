@@ -107,6 +107,7 @@
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
+    <Compile Include="Graphics\Batches\BatchMode.cs" />
     <Compile Include="Graphics\Batches\PrimitiveBatch.cs" />
     <Compile Include="Graphics\Batches\PrimitiveBatchItem.cs" />
     <Compile Include="Graphics\Batches\SpriteBatch.cs" />

@@ -4,7 +4,7 @@ namespace Raccoon.Graphics {
     public abstract class Graphic : IUpdatable, IRenderable {
         #region Public Members
 
-        public static int LayersCount = 500000; // Since we're using 24 bits depth-buffer, max layers count could be: 16777215
+        public static int LayersCount = 16777214; // Since we're using 24 bits depth-buffer, max layers count could be: 16777215
 
         #endregion Public Members
 
@@ -112,7 +112,7 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public static int LayerComparer(Graphic a, Graphic b) {
-            return System.Math.Sign(a.Layer - b.Layer);
+            return a.Layer.CompareTo(b.Layer);
         }
 
         public static float ConvertLayerToLayerDepth(int layer) {

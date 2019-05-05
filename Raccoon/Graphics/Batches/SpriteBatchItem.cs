@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public class SpriteBatchItem : System.IComparable<SpriteBatchItem> {
+    public class SpriteBatchItem {
         #region Public Properties
 
         public Texture Texture { get; set; }
@@ -90,18 +90,6 @@ namespace Raccoon.Graphics {
 
             Rectangle destinationRectagle = new Rectangle(position, sourceRectangle.Value.Size);
             Set(texture, destinationRectagle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
-        }
-
-        public int CompareTo(SpriteBatchItem other) {
-            if (Shader == other.Shader) {
-                return 0;
-            } else if (Shader == null) {
-                return -1;
-            } else if (other.Shader == null) {
-                return 1;
-            }
-
-            return Shader.Id.CompareTo(other.Shader.Id);
         }
 
         #endregion Public Methods

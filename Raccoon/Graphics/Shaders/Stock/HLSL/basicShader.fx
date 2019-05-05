@@ -88,7 +88,13 @@ VSOutVertexColorDepth VSVertexColorDepth(VSInVertexColor input) {
 PSOut PSVertexColorDepth(VSOutVertexColorDepth input) {
     PSOut psOut;
     psOut.Color = input.Diffuse;
-    psOut.Depth = input.Depth;
+    
+    if (psOut.Color.a < 1.0f) {
+        psOut.Depth = 1.0f;
+    } else {
+        psOut.Depth = input.Depth;
+    }
+
     return psOut;
 }
 
@@ -116,7 +122,13 @@ VSOutVertexColorTextureDepth VSVertexColorTextureDepth(VSInVertexColorTexture in
 PSOut PSVertexColorTextureDepth(VSOutVertexColorTextureDepth input) {
     PSOut psOut;
     psOut.Color = tex2D(Texture, input.TextureCoord) * input.Diffuse;
-    psOut.Depth = input.Depth;
+
+    if (psOut.Color.a < 1.0f) {
+        psOut.Depth = 1.0f;
+    } else {
+        psOut.Depth = input.Depth;
+    }
+
     return psOut;
 }
 
@@ -142,7 +154,7 @@ technique Basic_VertexColor_Depth {
 		VertexShader = compile vs_3_0 VSVertexColorDepth();
 		PixelShader  = compile ps_3_0 PSVertexColorDepth();
 	}
-};      
+};
 
 technique Basic_VertexColor_Texture_Depth {
 	pass P0 {

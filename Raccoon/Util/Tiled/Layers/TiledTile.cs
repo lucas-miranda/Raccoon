@@ -1,6 +1,9 @@
 ﻿namespace Raccoon.Tiled {
     public struct TiledTile {
-        public const uint FlippedHorizontallyFlag = 0x80000000, FlippedVerticallyFlag = 0x40000000, FlippedDiagonallyFlag = 0x20000000;
+        public const uint FlippedHorizontallyFlag = 0x80000000,
+                          FlippedVerticallyFlag = 0x40000000,
+                          FlippedDiagonallyFlag = 0x20000000,
+                          FlippedAllFlags = FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedDiagonallyFlag;
 
         public TiledTile(uint gid) {
             Flipped = ImageFlip.None;

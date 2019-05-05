@@ -5,7 +5,7 @@ namespace Raccoon.Graphics.Primitives {
     public class RectanglePrimitive : PrimitiveGraphic {
         #region Private Members
 
-        private VertexBuffer _vertexBuffer;
+        private DynamicVertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
 
 #if DEBUG
@@ -15,6 +15,7 @@ namespace Raccoon.Graphics.Primitives {
         private VertexPositionColor[] _vertices;
 
         private bool _filled = true;
+        private float _lastAppliedLayerDepth;
 
         #endregion Private Members
 
@@ -111,21 +112,27 @@ namespace Raccoon.Graphics.Primitives {
 
             // update vertices
             // bottom-left
-            _vertices[0].Position = new Microsoft.Xna.Framework.Vector3(0f, Height, 0f);
+            _vertices[0].Position = new Microsoft.Xna.Framework.Vector3(0f, Height, _lastAppliedLayerDepth);
 
             // top-left
-            _vertices[1].Position = new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f);
+            _vertices[1].Position = new Microsoft.Xna.Framework.Vector3(0f, 0f, _lastAppliedLayerDepth);
 
             // bottom-right
-            _vertices[2].Position = new Microsoft.Xna.Framework.Vector3(Width, Height, 0f);
+            _vertices[2].Position = new Microsoft.Xna.Framework.Vector3(Width, Height, _lastAppliedLayerDepth);
 
             // top-right
-            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, 0f); 
+            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth); 
 
             _vertexBuffer.SetData(_vertices);
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            // only update vertices layer depth if parameter value is differente from last applied value (to avoid redundancy calls)
+            if (layerDepth != _lastAppliedLayerDepth) {
+                UpdateVerticesLayerDepth(layerDepth);
+            }
+
+            // TODO: draw using a PrimitiveBatch to group some of them, every Renderer should provide a PrimitiveBatch interface
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
@@ -145,6 +152,13 @@ namespace Raccoon.Graphics.Primitives {
             bs.TextureEnabled = false;
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);
@@ -175,29 +189,29 @@ namespace Raccoon.Graphics.Primitives {
             //  0--2
             //
 
-            _vertexBuffer = new VertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
+            _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
 
             // bottom-left
             _vertices[0] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(0f, Height, 0f),
+                new Microsoft.Xna.Framework.Vector3(0f, Height, _lastAppliedLayerDepth),
                 Microsoft.Xna.Framework.Color.White
             );
 
             // top-left
             _vertices[1] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(0f, 0f, 0f),
+                new Microsoft.Xna.Framework.Vector3(0f, 0f, _lastAppliedLayerDepth),
                 Microsoft.Xna.Framework.Color.White 
             );
 
             // bottom-right
             _vertices[2] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(Width, Height, 0f), 
+                new Microsoft.Xna.Framework.Vector3(Width, Height, _lastAppliedLayerDepth), 
                 Microsoft.Xna.Framework.Color.White 
             );
 
             // top-right
             _vertices[3] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(Width, 0f, 0f), 
+                new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth), 
                 Microsoft.Xna.Framework.Color.White 
             );
 
@@ -209,6 +223,24 @@ namespace Raccoon.Graphics.Primitives {
             _debug_indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, _indexBuffer.IndexCount, BufferUsage.WriteOnly);
 #endif
 
+        }
+
+        private void UpdateVerticesLayerDepth(float layerDepth) {
+            // bottom-left
+            _vertices[0].Position = new Microsoft.Xna.Framework.Vector3(0f, Height, layerDepth);
+
+            // top-left
+            _vertices[1].Position = new Microsoft.Xna.Framework.Vector3(0f, 0f, layerDepth);
+
+            // bottom-right
+            _vertices[2].Position = new Microsoft.Xna.Framework.Vector3(Width, Height, layerDepth);
+
+            // top-right
+            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, layerDepth); 
+
+            _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.None);
+
+            _lastAppliedLayerDepth = layerDepth;
         }
 
         #endregion Private Methods

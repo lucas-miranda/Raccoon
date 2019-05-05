@@ -735,6 +735,7 @@ Scene:
             DebugRenderer = new Renderer();
 
             MainRenderer = new Renderer(autoHandleAlphaBlendedSprites: true) {
+                SpriteBatchMode = BatchMode.DepthBuffer,
                 DepthStencilState = DepthStencilState.Default,
                 RecalculateProjectionSize = () => {
                     float zoom = Camera.Current == null ? 1f : Camera.Current.Zoom;
@@ -746,8 +747,11 @@ Scene:
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
 
             MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
-                InternalRenderer = MainRenderer
+                //InternalRenderer = MainRenderer
+                InternalRenderer = null
             };
+
+            AddRenderer(MainRenderer);
 
 #if DEBUG
             DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
@@ -814,7 +818,6 @@ Scene:
 
             DebugCanvas.End();
 #endif
-
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);

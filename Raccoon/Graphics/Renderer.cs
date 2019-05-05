@@ -2,6 +2,12 @@
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
+    // TODO: Include a PrimitiveBatch and methods that suppports primitives drawing
+
+    /// <summary>
+    /// An all-in-one provider, containing means to draw anything that Raccoon.Graphics can offer.
+    /// Also aims to centralize the rendering setups to make everything looks consistently.
+    /// </summary>
     public class Renderer {
         #region Public Members
 
@@ -39,6 +45,7 @@ namespace Raccoon.Graphics {
 
         public bool IsBatching { get { return SpriteBatch.IsBatching; } }
         public SpriteBatch SpriteBatch { get; private set; }
+        public BatchMode SpriteBatchMode { get; set; }
         public BlendState BlendState { get; set; }
         public SamplerState SamplerState { get; set; }
         public DepthStencilState DepthStencilState { get; set; }
@@ -60,14 +67,6 @@ namespace Raccoon.Graphics {
         #endregion Public Properties
 
         #region Public Methods
-
-        public virtual void BeforeRender() {
-            OnBeforeRender();
-        }
-
-        public virtual void AfterRender() {
-            OnAfterRender();
-        }
 
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
             Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
@@ -104,21 +103,65 @@ namespace Raccoon.Graphics {
             return ref _projection;
         }
 
+        /// <summary>
+        /// Forces every batcher to render stored batches.
+        /// </summary>
+        /// <param name="reinitializeBatches">True, if reinitilizing batchers after flushing is intended, False otherwise.</param>
+        public void Flush(bool reinitializeBatches = true) {
+            if (!SpriteBatch.IsBatching) {
+                return;
+            }
+
+            InternalFlush();
+
+            if (reinitializeBatches) {
+                Begin(SpriteBatch.BatchMode, SpriteBatch.BlendState, SpriteBatch.SamplerState, SpriteBatch.DepthStencilState, SpriteBatch.RasterizerState, SpriteBatch.Transform);
+            }
+        }
+
         #region Draw Texture on Destination Rectangle
 
         public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
@@ -131,22 +174,57 @@ namespace Raccoon.Graphics {
         #region Draw Texture with Position
 
         public void Draw(Canvas canvas, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
@@ -159,18 +237,46 @@ namespace Raccoon.Graphics {
         #region Draw Text from String
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, layerDepth);
+                AfterRender();
+                return;
+            }
+
             SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, layerDepth);
         }
 
@@ -178,10 +284,37 @@ namespace Raccoon.Graphics {
 
         #endregion Public Methods
 
+        #region Protected Methods
+
+        protected virtual void BeforeRender() {
+            OnBeforeRender();
+        }
+
+        protected virtual void AfterRender() {
+            OnAfterRender();
+        }
+
+        #endregion Protected Methods
+
+        #region Private Methods
+
+        public void InternalFlush() {
+            if (!SpriteBatch.IsBatching) {
+                return;
+            }
+
+            PrepareBeforeRender();
+            SpriteBatch.End();
+            AfterRender();
+        }
+
+        #endregion Private Methods
+
         #region Internal Methods
 
-        internal void Begin(BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Matrix? transform = null) {
+        internal void Begin(BatchMode? batchMode = null, BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Matrix? transform = null) {
             SpriteBatch.Begin(
+                batchMode ?? SpriteBatchMode,
                 blendState ?? BlendState, 
                 samplerState ?? SamplerState,
                 depthStencilState ?? DepthStencilState,
@@ -191,6 +324,18 @@ namespace Raccoon.Graphics {
         }
 
         internal void End() {
+            InternalFlush();
+        }
+
+        #endregion Internal Methods
+
+        #region Private Methods
+
+        private void PrepareBeforeRender() {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("SpriteBatch must be initialized and Begin() called previously.");
+            }
+
             BeforeRender();
 
             if (Shader != null && SpriteBatch.Shader != Shader) {
@@ -203,16 +348,8 @@ namespace Raccoon.Graphics {
                 spriteBatch_Shader_Transform.View = View;
                 spriteBatch_Shader_Transform.Projection = Projection;
             }
-
-            SpriteBatch.End();
-
-            AfterRender();
-
-            if (SpriteBatch.Shader is BasicShader batch) {
-                batch.ResetParameters();
-            }
         }
 
-        #endregion Internal Methods
+        #endregion Private Methods
     }
 }

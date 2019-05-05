@@ -26,7 +26,7 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public SpriteBatch(GraphicsDevice graphicsDevice = null, bool autoHandleAlphaBlendedSprites = false) {
-            GraphicsDevice = Game.Instance.GraphicsDevice;
+            GraphicsDevice = graphicsDevice ?? Game.Instance.GraphicsDevice;
             Shader = Game.Instance.BasicShader;
 
             AutoHandleAlphaBlendedSprites = autoHandleAlphaBlendedSprites;
@@ -60,32 +60,39 @@ namespace Raccoon.Graphics {
         public GraphicsDevice GraphicsDevice { get; set; }
         public bool IsBatching { get; private set; }
         public Shader Shader { get; set; }
+
+        /// <summary>
+        /// Auto handle any non-opaque (i.e. with some transparency; Opacity < 1.0f) sprite rendering.
+        /// By drawing first all opaque sprites, with depth write enabled, followed by non-opaque sprites, with only depth read enabled.
+        /// </summary>
         public bool AutoHandleAlphaBlendedSprites { get; private set; }
         public bool AllowIBasicShaderEffectParameterClone { get; set; } = true;
+        public BatchMode BatchMode { get; private set; }
+        public BlendState BlendState { get; private set; }
+        public SamplerState SamplerState { get; private set; }
+        public DepthStencilState DepthStencilState { get; private set; }
+        public RasterizerState RasterizerState { get; private set; }
+        public Matrix Transform { get; private set; }
 
         #endregion Public Properties
 
-        #region Private Properties
-
-        private BlendState BlendState { get; set; }
-        private SamplerState SamplerState { get; set; }
-        private DepthStencilState DepthStencilState { get; set; }
-        private RasterizerState RasterizerState { get; set; }
-        private Matrix Transform { get; set; }
-
-        #endregion Private Properties
-
         #region Public Methods
 
-        public void Begin(BlendState blendState = null, SamplerState sampler = null, DepthStencilState depthStencil = null, RasterizerState rasterizer = null, Matrix? transform = null) {
+        public void Begin(BatchMode batchMode = BatchMode.DrawOrder, BlendState blendState = null, SamplerState sampler = null, DepthStencilState depthStencil = null, RasterizerState rasterizer = null, Matrix? transform = null) {
+            BatchMode = batchMode;
             BlendState = blendState ?? BlendState.AlphaBlend;
             SamplerState = sampler ?? SamplerState.PointClamp;
             DepthStencilState = depthStencil ?? DepthStencilState.None;
             RasterizerState = rasterizer ?? RasterizerState.CullNone;
             Transform = transform ?? Matrix.Identity;
 
-            _nextItemIndex = _nextItemWithTransparencyIndex = 0;
             IsBatching = true;
+
+#if DEBUG
+
+            SpriteCount = 0;
+
+            #endif
         }
 
         public void End() {
@@ -93,25 +100,7 @@ namespace Raccoon.Graphics {
                 throw new System.InvalidOperationException("Begin() must be called before End().");
             }
 
-            if (Shader is IShaderTransform shader) {
-                shader.World = Transform * shader.World;
-            }
-
-            if (Shader is BasicShader basicShader) {
-                basicShader.TextureEnabled = true;
-            }
-
-            Render(ref _batchItems, _nextItemIndex, DepthStencilState);
-
-            if (AutoHandleAlphaBlendedSprites) {
-                Render(ref _transparencyBatchItems, _nextItemWithTransparencyIndex, DepthStencilState.DepthRead);
-            }
-
-#if DEBUG
-
-            SpriteCount = _nextItemIndex + _nextItemWithTransparencyIndex;
-
-            #endif
+            Flush();
 
             IsBatching = false;
         }
@@ -119,11 +108,19 @@ namespace Raccoon.Graphics {
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
@@ -170,6 +167,51 @@ namespace Raccoon.Graphics {
                     layerDepth
                 );
             }
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
+
+        /// <summary>
+        /// Send all stored batches to rendering, but doesn't end batching.
+        /// If auto handle alpha blended sprites is active, be careful! Since it can includes alpha blended sprites too.
+        /// </summary>
+        /// <param name="includeAlphaBlendedSprites">True, if flush can include stored alpha blended sprites (possibly breaking rendering order, unless you know what are doing), otherwise False.</param>
+        public void Flush(bool includeAlphaBlendedSprites = true) {
+            if (!IsBatching) {
+                return;
+            }
+
+            if (Shader is IShaderTransform shader) {
+                shader.World = Transform * shader.World;
+            }
+
+            if (Shader is BasicShader basicShader) {
+                basicShader.TextureEnabled = true;
+            }
+
+            Render(ref _batchItems, _nextItemIndex, DepthStencilState);
+
+            if (AutoHandleAlphaBlendedSprites && includeAlphaBlendedSprites) {
+                Render(ref _transparencyBatchItems, _nextItemWithTransparencyIndex, DepthStencilState.DepthRead);
+
+#if DEBUG
+
+                SpriteCount += _nextItemWithTransparencyIndex;
+
+#endif
+
+                _nextItemWithTransparencyIndex = 0;
+            }
+
+#if DEBUG
+
+            SpriteCount += _nextItemIndex;
+
+#endif
+
+            _nextItemIndex = 0;
         }
 
         #endregion Public Methods
@@ -247,7 +289,27 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            System.Array.Sort(batchItems, 0, itemsCount);
+            // pre-process batches, some modes demands it
+            switch (BatchMode) {
+                case BatchMode.DepthSortAscending:
+                    System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthAscending());
+                    break;
+
+                case BatchMode.DepthSortDescending:
+                    System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthDescending());
+                    break;
+
+                case BatchMode.DepthBuffer:
+                    System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthBuffer());
+                    break;
+
+                case BatchMode.DrawOrder:
+                case BatchMode.Immediate:
+                    break;
+
+                default:
+                    throw new System.NotImplementedException($"SpriteBatch doesn't implements BatchMode '{BatchMode}'.");
+            }
 
             GraphicsDevice.BlendState = BlendState;
             GraphicsDevice.SamplerStates[0] = SamplerState;

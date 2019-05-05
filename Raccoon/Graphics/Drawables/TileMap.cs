@@ -15,6 +15,7 @@ namespace Raccoon.Graphics {
         private int _tileSetRows, _tileSetColumns, _triangleCount;
         private DynamicVertexBuffer _vertexBuffer;
         private DynamicIndexBuffer _indexBuffer;
+        private float _lastAppliedLayerDepth;
 
         #endregion Private Members
 
@@ -38,6 +39,7 @@ namespace Raccoon.Graphics {
         public int Rows { get; private set; }
         public uint[] Data { get; private set; } = new uint[0];
         public Rectangle TileBounds { get { return new Rectangle(0, 0, Columns, Rows); } }
+        public bool IsDisposed { get; private set; }
 
 #if DEBUG
         public Grid Grid { get; private set; }
@@ -68,7 +70,7 @@ namespace Raccoon.Graphics {
 
             // prepare vertex buffer
             VertexPositionColorTexture[] previousVertices = null,
-                                         newVertices = new VertexPositionColorTexture[Columns * Rows * 4];
+                                         newVertices = new VertexPositionColorTexture[columns * rows * 4];
 
             if (_vertexBuffer != null) {
                 previousVertices = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
@@ -81,7 +83,7 @@ namespace Raccoon.Graphics {
 
             // prepare index buffer
             int[] previousIndices = null,
-                  newIndices = new int[Columns * Rows * 6];
+                  newIndices = new int[columns * rows * 6];
 
             if (_indexBuffer != null)  {
                 previousIndices = new int[_indexBuffer.IndexCount];
@@ -153,8 +155,6 @@ namespace Raccoon.Graphics {
 
             Setup(greaterRowSize, data.Length);
 
-            Microsoft.Xna.Framework.Vector3 displacement = new Microsoft.Xna.Framework.Vector3(X, Y, 0);
-            Vector2 texSpriteCount = new Vector2((int) (Texture.Width / TileSize.Width), (int) (Texture.Height / TileSize.Height));
             for (int y = 0; y < data.Length; y++) {
                 for (int x = 0; x < data[y].Length; x++) {
                     SetTile(x, y, data[y][x]);
@@ -165,8 +165,6 @@ namespace Raccoon.Graphics {
         public void SetData(uint[,] data) {
             Setup(data.GetLength(1), data.GetLength(0));
 
-            Microsoft.Xna.Framework.Vector3 displacement = new Microsoft.Xna.Framework.Vector3(X, Y, 0);
-            Vector2 texSpriteCount = new Vector2((int) (Texture.Width / TileSize.Width), (int) (Texture.Height / TileSize.Height));
             for (int y = 0; y < Rows; y++) {
                 for (int x = 0; x < Columns; x++) {
                     SetTile(x, y, data[y, x]);
@@ -233,7 +231,8 @@ namespace Raccoon.Graphics {
 
             // empty tile
             if (gid == 0) {
-                vertices[0] = vertices[1] = vertices[2] = vertices[3] = new VertexPositionColorTexture(Microsoft.Xna.Framework.Vector3.Zero, Color.White, Vector2.Zero);
+                //System.Array.Clear(_vertices, vertexTileId * 4, 4);
+                //vertices[0] = vertices[1] = vertices[2] = vertices[3] = new VertexPositionColorTexture(Microsoft.Xna.Framework.Vector3.Zero, Color.White, Vector2.Zero);
                 _vertexBuffer.SetData(vertexTileId * _vertexBuffer.VertexDeclaration.VertexStride, vertices, 0, 4, _vertexBuffer.VertexDeclaration.VertexStride, SetDataOptions.None);
                 return;
             }
@@ -249,8 +248,9 @@ namespace Raccoon.Graphics {
                 flip |= ImageFlip.Vertical;
             }
 
-            int id = (int) (gid & ~(Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag)) - 1; // clear flags
-            float texLeft = (id % _tileSetColumns) * TileSize.Width, texTop = (id / _tileSetColumns) * TileSize.Height;
+            int id = (int) (gid & ~Tiled.TiledTile.FlippedAllFlags) - 1; // clear flags
+            float texLeft = (id % _tileSetColumns) * TileSize.Width,
+                  texTop = (id / _tileSetColumns) * TileSize.Height;
 
             //  
             // Vertices layout:
@@ -262,25 +262,25 @@ namespace Raccoon.Graphics {
             //
 
             vertices[0] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, 0), 
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, _lastAppliedLayerDepth), 
                 Color.White, 
                 new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
             );
 
             vertices[1] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, 0), 
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, _lastAppliedLayerDepth), 
                 Color.White, 
                 new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, texTop / Texture.Height)
             );
 
             vertices[2] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, 0), 
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, _lastAppliedLayerDepth), 
                 Color.White, 
                 new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
             );
 
             vertices[3] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, 0), 
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, _lastAppliedLayerDepth), 
                 Color.White, 
                 new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, texTop / Texture.Height)
             );
@@ -327,7 +327,6 @@ namespace Raccoon.Graphics {
             }
 
             _vertexBuffer.SetData(vertexTileId * _vertexBuffer.VertexDeclaration.VertexStride, vertices, 0, 4, _vertexBuffer.VertexDeclaration.VertexStride, SetDataOptions.None);
-
         }
 
         public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
@@ -378,9 +377,32 @@ namespace Raccoon.Graphics {
         }
 
         public override void Dispose() {
-            if (Texture != null) {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (Texture != null && !Texture.IsDisposed) {
                 Texture.Dispose();
             }
+
+            if (Grid != null && !Grid.IsDisposed) {
+                Grid.Dispose();
+            }
+
+            if (_vertexBuffer != null && !_vertexBuffer.IsDisposed) {
+                _vertexBuffer.Dispose();
+            }
+
+            if (_indexBuffer != null && !_indexBuffer.IsDisposed) {
+                _indexBuffer.Dispose();
+            }
+
+            _vertexBuffer = null;
+            _indexBuffer = null;
+            Data = null;
+            Grid = null;
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods
@@ -396,6 +418,21 @@ namespace Raccoon.Graphics {
             if (_vertexBuffer == null || _vertexBuffer.VertexCount == 0) {
                 return;
             }
+
+            // only update vertices layer depth if parameter value is differente from last applied value (to avoid redundancy calls)
+            if (layerDepth != _lastAppliedLayerDepth) {
+                UpdateVerticesLayerDepth(layerDepth);
+            }
+
+            /*
+               Note about rendering here instead using Renderer to do the job:
+
+                 I decided to not use Renderer to draw this, since *almost* always the
+               texture used to store tiles will be different from atlases used to other
+               other things. The texture swapping at SpriteBatch will be the same as
+               drawing here and, maybe, drawing here is even better, since we don't need
+               to iterate through all tiles and pack them into SpriteBatchItem. 
+            */
 
             BasicShader bs = Game.Instance.BasicShader;
 
@@ -418,6 +455,12 @@ namespace Raccoon.Graphics {
             bs.Texture = Texture;
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
             
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
@@ -429,5 +472,23 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        private void UpdateVerticesLayerDepth(float layerDepth) {
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
+            _vertexBuffer.GetData(vertices, 0, _vertexBuffer.VertexCount);
+
+            for (int i = 0; i < vertices.Length; i++) {
+                ref VertexPositionColorTexture vertex = ref vertices[i];
+                vertex.Position.Z = layerDepth;
+            }
+
+            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.None);
+
+            _lastAppliedLayerDepth = layerDepth;
+        }
+
+        #endregion Private Methods
     }
 }
