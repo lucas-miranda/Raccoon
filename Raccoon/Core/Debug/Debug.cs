@@ -95,6 +95,11 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
+        public static void Write(object obj) {
+            Write(obj.ToString());
+        }
+
+        [Conditional("DEBUG")]
         public static void Write(string message, string category) {
 #if DEBUG
             Trace.Write(message, category);
@@ -104,8 +109,18 @@ namespace Raccoon {
         }
 
         [Conditional("DEBUG")]
+        public static void Write(object obj, string category) {
+            Write(obj.ToString(), category);
+        }
+
+        [Conditional("DEBUG")]
         public static void WriteLine(string message) {
             Trace.WriteLine(message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void WriteLine(object obj) {
+            WriteLine(obj.ToString());
         }
 
         [Conditional("DEBUG")]
@@ -115,6 +130,11 @@ namespace Raccoon {
 #else
             Trace.WriteLine($"{DateTime.Now.ToString()}  [{category}]  {new string(' ', IndentSize * IndentLevel)}{message}", category);
 #endif
+        }
+
+        [Conditional("DEBUG")]
+        public static void WriteLine(object obj, string category) {
+            WriteLine(obj.ToString(), category);
         }
 
         [Conditional("DEBUG")]
