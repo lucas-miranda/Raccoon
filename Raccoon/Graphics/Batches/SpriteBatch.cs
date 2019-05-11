@@ -87,12 +87,6 @@ namespace Raccoon.Graphics {
             Transform = transform ?? Matrix.Identity;
 
             IsBatching = true;
-
-#if DEBUG
-
-            SpriteCount = 0;
-
-            #endif
         }
 
         public void End() {
@@ -106,6 +100,10 @@ namespace Raccoon.Graphics {
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
+            }
+
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
 
@@ -115,6 +113,10 @@ namespace Raccoon.Graphics {
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
+            }
+
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
 
@@ -124,6 +126,10 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
+            }
+
             List<(Vector2, Rectangle)> glyphs = font.RenderMap.PrepareText(text, out Size textSize);
 
             float cos = 0f, 
