@@ -737,11 +737,7 @@ Scene:
             MainRenderer = new Renderer(autoHandleAlphaBlendedSprites: true) {
                 SpriteBatchMode = BatchMode.DepthBuffer,
                 DepthStencilState = DepthStencilState.Default,
-                RecalculateProjectionSize = () => {
-                    float zoom = Camera.Current == null ? 1f : Camera.Current.Zoom;
-                    float scaleFactor = 1f / (zoom * PixelScale);
-                    return new Size(Width / zoom, Height / zoom);
-                }
+                RecalculateProjectionSize = () => Size
             };
 
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
