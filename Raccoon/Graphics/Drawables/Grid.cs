@@ -193,6 +193,15 @@ namespace Raccoon.Graphics {
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
 
+            // texture
+            bs.TextureEnabled = false;
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+
             // grid
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
@@ -204,6 +213,12 @@ namespace Raccoon.Graphics {
             if (_useBorderColor) {
                 bs.DiffuseColor = color * BorderColor;
             }
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
 
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
