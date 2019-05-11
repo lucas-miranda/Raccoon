@@ -12,6 +12,7 @@ namespace Raccoon.Graphics {
 
         #region Private Members
 
+        private Texture _texture;
         private int _tileSetRows, _tileSetColumns, _triangleCount;
         private DynamicVertexBuffer _vertexBuffer;
         private DynamicIndexBuffer _indexBuffer;
@@ -21,19 +22,26 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
+        public TileMap() : base() {
+        }
+
+        public TileMap(Size tileSize) : base() {
+            TileSize = tileSize;
+        }
+
         public TileMap(Texture texture, Size tileSize) : base() {
             TileSize = tileSize;
             Texture = texture;
             Load();
         }
 
-        public TileMap(string filename, Size tileSize) : this(new Texture(filename), tileSize) { }
+        public TileMap(string filename, Size tileSize) : this(new Texture(filename), tileSize) {
+        }
 
         #endregion Constructors
 
         #region Public Properties
 
-        public Texture Texture { get; set; }
         public Size TileSize { get; private set; }
         public int Columns { get; private set; }
         public int Rows { get; private set; }
@@ -41,9 +49,25 @@ namespace Raccoon.Graphics {
         public Rectangle TileBounds { get { return new Rectangle(0, 0, Columns, Rows); } }
         public bool IsDisposed { get; private set; }
 
+        public Texture Texture {
+            get {
+                return _texture;
+            }
+
+            set {
+                _texture = value;
+
+                if (_texture != null) {
+                    Load();
+                    NeedsReload = true;
+                }
+            }
+        }
+
 #if DEBUG
         public Grid Grid { get; private set; }
 #endif
+
         #endregion Public Properties
 
         #region Public Methods
@@ -410,12 +434,20 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected override void Load() {
+            if ((int) TileSize.Width == 0 || (int) TileSize.Height == 0) {
+                throw new System.InvalidOperationException("TileMap needs a TileSize, with width and height, greater than zero.");
+            }
+
+            if (Texture.Width == 0 || Texture.Height == 0) {
+                throw new System.InvalidOperationException("Invalid texture size.");
+            }
+
             _tileSetColumns = Texture.Width / (int) TileSize.Width;
             _tileSetRows = Texture.Height / (int) TileSize.Height;
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            if (_vertexBuffer == null || _vertexBuffer.VertexCount == 0) {
+            if (_vertexBuffer == null || _vertexBuffer.VertexCount == 0 || Texture == null) {
                 return;
             }
 
