@@ -131,7 +131,7 @@ namespace Raccoon {
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
-            Game.Instance.MainRenderer.View = View = _view;
+            Game.Instance.MainRenderer.View = View = Matrix.CreateScale(Zoom, Zoom, 1f) * _view;
         }
 
         #endregion Private Members
