@@ -337,7 +337,7 @@ namespace Raccoon {
 
         public Graphic AddGraphic(Graphic graphic) {
             if (graphic == null) {
-                return default;
+                throw new System.ArgumentNullException("graphic");
             }
 
             Graphics.Add(graphic);
@@ -373,12 +373,12 @@ namespace Raccoon {
             return AddComponent(component as Component) as T;
         }
 
-        public void RemoveGraphic(Graphic graphic) {
+        public bool RemoveGraphic(Graphic graphic) {
             if (graphic == null) {
-                return;
+                return false;
             }
 
-            Graphics.Remove(graphic);
+            return Graphics.Remove(graphic);
         }
 
         public void RemoveGraphics(IEnumerable<Graphic> graphics) {
