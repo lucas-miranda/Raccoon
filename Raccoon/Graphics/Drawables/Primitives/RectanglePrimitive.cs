@@ -148,7 +148,6 @@ namespace Raccoon.Graphics.Primitives {
             // material
             bs.DiffuseColor = color * Color;
             bs.Alpha = Opacity;
-
             bs.TextureEnabled = false;
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;

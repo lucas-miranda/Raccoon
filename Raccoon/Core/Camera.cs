@@ -12,7 +12,6 @@ namespace Raccoon {
 
         #region Private Members
 
-
         private Vector2 _position;
         private float _zoom = 1f;
         private bool _needViewRefresh;
