@@ -1,4 +1,6 @@
-﻿namespace Raccoon.Graphics.Primitives {
+﻿using Microsoft.Xna.Framework.Graphics;
+
+namespace Raccoon.Graphics.Primitives {
     public class LinePrimitive : PrimitiveGraphic {
         #region Private Members
 
@@ -48,12 +50,21 @@
 
             // material
             bs.SetMaterial(color * Color, Opacity);
+            bs.TextureEnabled = false;
 
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList,
-                    new Microsoft.Xna.Framework.Graphics.VertexPositionColor[2] {
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White),
-                        new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X + _to.X, Position.Y + position.Y - Origin.Y + _to.Y, layerDepth), Microsoft.Xna.Framework.Color.White)
+            GraphicsDevice device = Game.Instance.GraphicsDevice;
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+
+            foreach (object pass in bs) {
+                device.DrawUserPrimitives(PrimitiveType.LineList,
+                    new VertexPositionColor[2] {
+                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White),
+                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X + _to.X, Position.Y + position.Y - Origin.Y + _to.Y, layerDepth), Microsoft.Xna.Framework.Color.White)
                     }, 0, 1);
             }
 
