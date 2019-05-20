@@ -83,6 +83,10 @@ namespace Raccoon {
 
             set {
                 if (Graphics.Count == 0) {
+                    if (value == null) {
+                        return;
+                    }
+
                     AddGraphic(value);
                     return;
                 } else if (value == null) {
