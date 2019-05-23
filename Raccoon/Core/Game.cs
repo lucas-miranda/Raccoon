@@ -156,10 +156,10 @@ Scene:
         public int LastUpdateDeltaTime { get; private set; }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
-        public int WindowWidth { get { return (int) WindowSize.Width; } }
-        public int WindowHeight { get { return (int) WindowSize.Height; } }
-        public int DisplayWidth { get { return (int) DisplaySize.Width; } }
-        public int DisplayHeight { get { return (int) DisplaySize.Height; } }
+        public int WindowWidth { get { return XNAGameWrapper.Window.ClientBounds.Width; } }
+        public int WindowHeight { get { return XNAGameWrapper.Window.ClientBounds.Height; } }
+        public int DisplayWidth { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Width; } }
+        public int DisplayHeight { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
         public Size WindowSize { get { return new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height); } }
@@ -249,7 +249,12 @@ Scene:
                 }
 
                 MainCanvas.Resize(Size);
-                MainRenderer.RecalculateProjection();
+
+                foreach (Renderer renderer in Renderers) {
+                    renderer.RecalculateProjection();
+                }
+
+                ScreenRenderer.RecalculateProjection();
             }
         }
 
@@ -428,11 +433,17 @@ Scene:
         public void ResizeWindow(int width, int height) {
             Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
 
+            if (width == WindowWidth && height == WindowHeight) {
+                return;
+            }
+
             DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
 
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+
+            RefreshViewMode();
         }
 
         public void ResizeWindow(int width, int height, bool fullscreen) {
@@ -444,6 +455,8 @@ Scene:
             XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
             XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
             XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+
+            RefreshViewMode();
         }
 
         public void ResizeWindow(Size size) {
@@ -662,14 +675,9 @@ Scene:
             }
 
             RefreshViewMode();
-
-            // user callback
-            OnWindowResize();
         }
 
         private void RefreshViewMode() {
-            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
-            Size previousWindowSize = WindowSize; 
             WindowCenter = (WindowSize / 2f).ToVector2();
 
             switch (ResizeMode) {
@@ -707,7 +715,6 @@ Scene:
             if (MainCanvas != null) {
                 MainCanvas.Resize(Size);
                 MainCanvas.ClippingRegion = MainCanvas.SourceRegion;
-                MainRenderer.RecalculateProjection();
             }
 
 #if DEBUG
@@ -717,6 +724,10 @@ Scene:
             }
 #endif
 
+            ScreenRenderer.RecalculateProjection();
+
+            // user callback
+            OnWindowResize();
         }
 
         private void InternalLoadContent() {
