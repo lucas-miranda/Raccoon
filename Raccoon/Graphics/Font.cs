@@ -88,7 +88,6 @@ namespace Raccoon.Graphics {
 
         #endregion Public Methods
 
-
         #region Private Methods
 
         private void PrepareRenderMap() {
