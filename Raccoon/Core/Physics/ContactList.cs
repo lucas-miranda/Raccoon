@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Raccoon {
     public class ContactList : IEnumerable<Contact>, IEnumerable {
         private readonly Contact[] _entries;
-        
+
         public ContactList(int capacity) {
             _entries = new Contact[capacity];
         }

@@ -29,7 +29,7 @@ namespace Raccoon.Graphics {
         public static readonly Color Teal = new Color(0x6DFFFF);
         public static readonly Color Pink = new Color(0xFF8EDFFF);
         public static readonly Color Brown = new Color(0xD67C1CFF);
-        
+
         #endregion
 
         #region Public Members
@@ -98,9 +98,9 @@ namespace Raccoon.Graphics {
         public float[] Normalized {
             get {
                 return new float[4] {
-                    R / 255f, 
-                    G / 255f, 
-                    B / 255f, 
+                    R / 255f,
+                    G / 255f,
+                    B / 255f,
                     A / 255f
                 };
             }
@@ -138,9 +138,9 @@ namespace Raccoon.Graphics {
 
         public static Color Lerp(Color start, Color end, float t) {
             return new Color(
-                Math.Lerp(start.R / 255f, end.R / 255f, t), 
-                Math.Lerp(start.G / 255f, end.G / 255f, t), 
-                Math.Lerp(start.B / 255f, end.B / 255f, t), 
+                Math.Lerp(start.R / 255f, end.R / 255f, t),
+                Math.Lerp(start.G / 255f, end.G / 255f, t),
+                Math.Lerp(start.B / 255f, end.B / 255f, t),
                 Math.Lerp(start.A / 255f, end.A / 255f, t)
             );
         }
@@ -299,9 +299,9 @@ namespace Raccoon.Graphics {
             float[] lNormalized = l.Normalized,
                     rNormalized = r.Normalized;
             return new Color(
-                lNormalized[0] * rNormalized[0], 
-                lNormalized[1] * rNormalized[1], 
-                lNormalized[2] * rNormalized[2], 
+                lNormalized[0] * rNormalized[0],
+                lNormalized[1] * rNormalized[1],
+                lNormalized[2] * rNormalized[2],
                 lNormalized[3] * rNormalized[3]
             );
         }

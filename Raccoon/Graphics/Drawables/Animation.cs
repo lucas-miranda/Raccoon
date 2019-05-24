@@ -321,7 +321,7 @@ namespace Raccoon.Graphics {
                 Rectangle frameRegion = new Rectangle(
                     (frameId % columns) * ClippingRegion.Width,
                     (frameId / columns) * ClippingRegion.Height,
-                    ClippingRegion.Width, 
+                    ClippingRegion.Width,
                     ClippingRegion.Height
                 );
             }
@@ -352,8 +352,8 @@ namespace Raccoon.Graphics {
                 } else {
                     // frames range entry (format: from-to)
 
-                    int duration = durationList[frameOrderIndex], 
-                        startRange = int.Parse(match.Groups[1].Value), 
+                    int duration = durationList[frameOrderIndex],
+                        startRange = int.Parse(match.Groups[1].Value),
                         endRange = int.Parse(match.Groups[2].Value);
 
                     durationList.RemoveAt(frameOrderIndex);
@@ -380,7 +380,7 @@ namespace Raccoon.Graphics {
                 if (frameId.Length > 0) {
                     frameList.Add(int.Parse(frameId));
                 } else {
-                    int startRange = int.Parse(match.Groups[1].Value), 
+                    int startRange = int.Parse(match.Groups[1].Value),
                         endRange = int.Parse(match.Groups[2].Value);
 
                     for (int i = startRange; i <= endRange; i++) {

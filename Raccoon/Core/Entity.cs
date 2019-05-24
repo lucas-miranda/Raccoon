@@ -8,14 +8,14 @@ namespace Raccoon {
     public class Entity : ISceneObject {
         #region Public Delegates
 
-        public event System.Action OnSceneAdded = delegate { }, 
-                                   OnSceneRemoved = delegate { }, 
-                                   OnStart = delegate { }, 
-                                   OnSceneBegin = delegate { }, 
-                                   OnSceneEnd = delegate { }, 
-                                   OnBeforeUpdate = delegate { }, 
-                                   OnUpdate = delegate { }, 
-                                   OnLateUpdate = delegate { }, 
+        public event System.Action OnSceneAdded = delegate { },
+                                   OnSceneRemoved = delegate { },
+                                   OnStart = delegate { },
+                                   OnSceneBegin = delegate { },
+                                   OnSceneEnd = delegate { },
+                                   OnBeforeUpdate = delegate { },
+                                   OnUpdate = delegate { },
+                                   OnLateUpdate = delegate { },
                                    OnRender = delegate { };
 
 #if DEBUG

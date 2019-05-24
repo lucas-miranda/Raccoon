@@ -179,7 +179,7 @@ namespace Raccoon {
             yield return new Line(BottomRight, BottomLeft);
             yield return new Line(BottomLeft, TopLeft);
         }
-        
+
         public override bool Equals(object obj) {
             return obj is Rectangle && Equals((Rectangle) obj);
         }
@@ -187,7 +187,7 @@ namespace Raccoon {
         public bool Equals(Rectangle r) {
             return this == r;
         }
-        
+
         public override string ToString() {
             return $"[{X} {Y} {Width} {Height}]";
         }

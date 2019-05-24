@@ -185,12 +185,12 @@ namespace Raccoon.Components {
             // Position and Velocity
             if (ShowDebugInfo) {
                 Debug.DrawString(
-                    Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0), 
-                    string.Format("[{0:0.##}, {1:0.##}]\nVelocity: [{2:0.##}, {3:0.##}]\nM: {4}", 
-                        Position.X, 
-                        Position.Y, 
-                        Velocity.X, 
-                        Velocity.Y, 
+                    Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0),
+                    string.Format("[{0:0.##}, {1:0.##}]\nVelocity: [{2:0.##}, {3:0.##}]\nM: {4}",
+                        Position.X,
+                        Position.Y,
+                        Velocity.X,
+                        Velocity.Y,
                         Mass
                     )
                 );

@@ -45,11 +45,11 @@ namespace Raccoon.Graphics {
                     continue;
                 }
 
-                string spriteName = m.Groups[1].Value, 
+                string spriteName = m.Groups[1].Value,
                        tag = m.Groups[3].Length == 0 ? "none" : m.Groups[3].Value;
 
                 int frameId = m.Groups[2].Length == 0 ? 0 : int.Parse(m.Groups[2].Value);
-                
+
                 if (!animationsData.ContainsKey(spriteName)) {
                     animationsData.Add(spriteName, new Dictionary<string, List<JObject>>());
                     animationsData[spriteName].Add("all", new List<JObject>());
@@ -77,9 +77,9 @@ namespace Raccoon.Graphics {
                     JToken frameRegion = animationData.Value["all"][0]["frame"];
 
                     Rectangle clippingRegion = new Rectangle(
-                                                   frameRegion.Value<int>("x"), 
-                                                   frameRegion.Value<int>("y"), 
-                                                   frameRegion.Value<int>("w"), 
+                                                   frameRegion.Value<int>("x"),
+                                                   frameRegion.Value<int>("y"),
+                                                   frameRegion.Value<int>("w"),
                                                    frameRegion.Value<int>("h")
                                                );
 
@@ -91,9 +91,9 @@ namespace Raccoon.Graphics {
                         foreach (JObject frameData in track.Value) {
                             JToken frameRegion = frameData["frame"];
                             Rectangle clippingRegion = new Rectangle(
-                                                           frameRegion.Value<int>("x"), 
-                                                           frameRegion.Value<int>("y"), 
-                                                           frameRegion.Value<int>("w"), 
+                                                           frameRegion.Value<int>("x"),
+                                                           frameRegion.Value<int>("y"),
+                                                           frameRegion.Value<int>("w"),
                                                            frameRegion.Value<int>("h")
                                                        );
 

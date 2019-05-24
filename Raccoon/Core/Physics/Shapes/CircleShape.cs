@@ -54,6 +54,6 @@ namespace Raccoon {
 
         public Vector2[] CalculateAxes() {
             return new Vector2[] { Vector2.Right };
-        } 
+        }
     }
 }

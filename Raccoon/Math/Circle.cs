@@ -96,7 +96,7 @@
 
             Vector2 p1 = Vector2.Lerp(line.PointA, line.PointB, (float) t1), // intersection point 1
                     p2 = Vector2.Lerp(line.PointA, line.PointB, (float) t2); // intersection point 2
-            bool t1Insersect = 0.0 <= t1 && t1 <= 1.0, 
+            bool t1Insersect = 0.0 <= t1 && t1 <= 1.0,
                  t2Intersect = 0.0 <= t2 && t2 <= 1.0;
             if (t1Insersect && !t2Intersect) {
                 return new Vector2[] { p1 };

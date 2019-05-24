@@ -44,7 +44,7 @@ namespace Raccoon.Util.Graphics {
                 Animation.Pause();
 
                 if (_duration != 0) {
-                    Animation.PlaybackSpeed = _duration / (float) Animation.CurrentTrack.TotalDuration; 
+                    Animation.PlaybackSpeed = _duration / (float) Animation.CurrentTrack.TotalDuration;
                 } else {
                     _duration = (uint) Animation.CurrentTrack.TotalDuration;
                 }

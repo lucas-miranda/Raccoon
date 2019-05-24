@@ -11,10 +11,10 @@ namespace Raccoon {
         #region Public Events
 
         public event System.Action OnBeforeRender = delegate { },
-                                   OnRender = delegate { }, 
+                                   OnRender = delegate { },
                                    OnAfterRender = delegate { },
                                    OnDebugRender = delegate { },
-                                   OnBegin = delegate { }, 
+                                   OnBegin = delegate { },
                                    OnBeforeUpdate = delegate { },
                                    OnLateUpdate = delegate { },
                                    OnWindowResize = delegate { };
@@ -568,10 +568,10 @@ Scene:
 
             if (Debug.ShowPerformanceDiagnostics) {
                 Debug.DrawString(
-                    null, 
-                    new Vector2(WindowWidth - 260, 15), 
+                    null,
+                    new Vector2(WindowWidth - 260, 15),
                     string.Format(
-                        DiagnosticsTextFormat, 
+                        DiagnosticsTextFormat,
 
                         // time
                         Time.ToString(@"hh\:mm\:ss\.fff"),
@@ -766,7 +766,7 @@ Scene:
             };
 
             float monitorFrameWidth = ((FramerateMonitorValuesCount - 1) * FramerateMonitorDataSpacing) + 1;
-            _framerateMonitorSize = new Size(monitorFrameWidth, 82); 
+            _framerateMonitorSize = new Size(monitorFrameWidth, 82);
 
             for (int i = 0; i < FramerateMonitorValuesCount; i++) {
                 FramerateValues.Add(0);
@@ -833,20 +833,20 @@ Scene:
             ScreenRenderer.Begin();
 
             ScreenRenderer.Draw(
-                MainCanvas, 
-                _gameCanvasPosition, 
-                null, 
+                MainCanvas,
+                _gameCanvasPosition,
+                null,
                 0f,
-                new Vector2(PixelScale * KeepProportionsScale), 
-                ImageFlip.None, 
-                Color.White, 
-                Vector2.Zero, 
+                new Vector2(PixelScale * KeepProportionsScale),
+                ImageFlip.None,
+                Color.White,
+                Vector2.Zero,
                 Vector2.One
             );
 
 #if DEBUG
             ScreenRenderer.Draw(
-                DebugCanvas, 
+                DebugCanvas,
                 _gameCanvasPosition,
                 null,
                 0f,

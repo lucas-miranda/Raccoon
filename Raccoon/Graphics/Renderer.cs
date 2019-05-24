@@ -71,7 +71,7 @@ namespace Raccoon.Graphics {
         public void Begin(BatchMode? batchMode = null, BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Matrix? transform = null) {
             SpriteBatch.Begin(
                 batchMode ?? SpriteBatchMode,
-                blendState ?? BlendState, 
+                blendState ?? BlendState,
                 samplerState ?? SamplerState,
                 depthStencilState ?? DepthStencilState,
                 rasterizerState ?? RasterizerState,
@@ -83,27 +83,27 @@ namespace Raccoon.Graphics {
             InternalFlush();
         }
 
-        public Vector2 ConvertScreenToWorld(Vector2 screenPosition) { 
-            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject( 
-                new Vector3(screenPosition, 0f), 
-                Projection, 
-                View, 
+        public Vector2 ConvertScreenToWorld(Vector2 screenPosition) {
+            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject(
+                new Vector3(screenPosition, 0f),
+                Projection,
+                View,
                 Matrix.Identity
-            ); 
- 
-            return new Vector2(worldPos.X, worldPos.Y); 
-        } 
- 
-        public Vector2 ConvertWorldToScreen(Vector2 worldPosition) { 
-            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project( 
-                new Vector3(worldPosition, 0f), 
-                Projection, 
-                View, 
+            );
+
+            return new Vector2(worldPos.X, worldPos.Y);
+        }
+
+        public Vector2 ConvertWorldToScreen(Vector2 worldPosition) {
+            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project(
+                new Vector3(worldPosition, 0f),
+                Projection,
+                View,
                 Matrix.Identity
-            ); 
- 
-            return new Vector2(screenPos.X, screenPos.Y); 
-        } 
+            );
+
+            return new Vector2(screenPos.X, screenPos.Y);
+        }
 
         public ref readonly Matrix RecalculateProjection() {
             Size size = RecalculateProjectionSize();

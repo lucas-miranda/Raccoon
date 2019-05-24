@@ -42,7 +42,7 @@ namespace Raccoon.Components {
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
-        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>                 
+        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
         public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
             MaxVelocity = maxVelocity;
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
@@ -154,7 +154,7 @@ namespace Raccoon.Components {
 
         public virtual void DebugRender() {
         }
-        
+
         public virtual void PhysicsUpdate(float dt) {
             //ResetTouch();
         }
@@ -268,7 +268,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            
+
         }
 
         private void CheckUntouch(Body body) {

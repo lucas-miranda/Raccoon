@@ -9,7 +9,7 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private static int NextId = 0;
-        private static readonly Dictionary<string, int> ShaderIds = new Dictionary<string, int>(); 
+        private static readonly Dictionary<string, int> ShaderIds = new Dictionary<string, int>();
 
         #endregion Private Members
 

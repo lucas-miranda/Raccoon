@@ -94,7 +94,7 @@ namespace Raccoon.Input {
 
             set {
                 Instance._mousePosition = new Vector2(
-                    Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale), 
+                    Util.Math.Clamp(value.X, 0, Game.Instance.WindowWidth) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale),
                     Util.Math.Clamp(value.Y, 0, Game.Instance.WindowHeight) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale)
                 );
 
@@ -353,7 +353,7 @@ namespace Raccoon.Input {
             // keyboard state
             _keyboardPreviousState = _keyboardState;
             _keyboardState = Keyboard.GetState();
-            
+
             _pressedKeys.Clear();
             Keys[] _xnaPressedKeys = _keyboardState.GetPressedKeys();
 
@@ -386,7 +386,7 @@ namespace Raccoon.Input {
 
             // positions
             Vector2 newMousePosition = new Vector2(
-                Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale), 
+                Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale),
                 Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight) / (Game.Instance.PixelScale * Game.Instance.KeepProportionsScale)
             );
 

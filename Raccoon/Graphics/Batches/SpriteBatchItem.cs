@@ -39,25 +39,25 @@ namespace Raccoon.Graphics {
             }
 
             VertexData[0] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.TopLeft + topLeft, layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + topLeft, layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[1] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.TopLeft + topRight, layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + topRight, layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[2] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.TopLeft + bottomRight, layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + bottomRight, layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
 
             VertexData[3] = new VertexPositionColorTexture(
-                new Vector3(destinationRectangle.TopLeft + bottomLeft, layerDepth), 
+                new Vector3(destinationRectangle.TopLeft + bottomLeft, layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );

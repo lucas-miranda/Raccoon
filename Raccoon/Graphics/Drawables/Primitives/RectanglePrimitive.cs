@@ -11,7 +11,7 @@ namespace Raccoon.Graphics.Primitives {
 #if DEBUG
         private IndexBuffer _debug_indexBuffer;
 #endif
-        
+
         private VertexPositionColor[] _vertices;
 
         private bool _filled = true;
@@ -121,7 +121,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertices[2].Position = new Microsoft.Xna.Framework.Vector3(Width, Height, _lastAppliedLayerDepth);
 
             // top-right
-            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth); 
+            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth);
 
             _vertexBuffer.SetData(_vertices);
         }
@@ -137,9 +137,9 @@ namespace Raccoon.Graphics.Primitives {
 
             // transformations
             bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-Origin.X, -Origin.Y, 0f)
                 * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f)
                 * Renderer.World;
 
             bs.View = Renderer.View;
@@ -179,7 +179,7 @@ namespace Raccoon.Graphics.Primitives {
         private void Setup() {
             _vertices = new VertexPositionColor[4];
 
-            //  
+            //
             // Vertices layout:
             //
             //  1--3
@@ -199,19 +199,19 @@ namespace Raccoon.Graphics.Primitives {
             // top-left
             _vertices[1] = new VertexPositionColor(
                 new Microsoft.Xna.Framework.Vector3(0f, 0f, _lastAppliedLayerDepth),
-                Microsoft.Xna.Framework.Color.White 
+                Microsoft.Xna.Framework.Color.White
             );
 
             // bottom-right
             _vertices[2] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(Width, Height, _lastAppliedLayerDepth), 
-                Microsoft.Xna.Framework.Color.White 
+                new Microsoft.Xna.Framework.Vector3(Width, Height, _lastAppliedLayerDepth),
+                Microsoft.Xna.Framework.Color.White
             );
 
             // top-right
             _vertices[3] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth), 
-                Microsoft.Xna.Framework.Color.White 
+                new Microsoft.Xna.Framework.Vector3(Width, 0f, _lastAppliedLayerDepth),
+                Microsoft.Xna.Framework.Color.White
             );
 
             _vertexBuffer.SetData(_vertices);
@@ -235,7 +235,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertices[2].Position = new Microsoft.Xna.Framework.Vector3(Width, Height, layerDepth);
 
             // top-right
-            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, layerDepth); 
+            _vertices[3].Position = new Microsoft.Xna.Framework.Vector3(Width, 0f, layerDepth);
 
             _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.None);
 

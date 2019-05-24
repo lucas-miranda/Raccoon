@@ -19,7 +19,7 @@ namespace Raccoon.Tiled {
             Opacity = objectGroupElement.HasAttribute("opacity") ? float.Parse(objectGroupElement.GetAttribute("opacity"), System.Globalization.CultureInfo.InvariantCulture) : 1f;
             Visible = objectGroupElement.HasAttribute("visible") ? (int.Parse(objectGroupElement.GetAttribute("visible")) == 1) : true;
             Offset = new Vector2(
-                objectGroupElement.HasAttribute("offsetx") ? float.Parse(objectGroupElement.GetAttribute("offsetx"), System.Globalization.CultureInfo.InvariantCulture) : 0f, 
+                objectGroupElement.HasAttribute("offsetx") ? float.Parse(objectGroupElement.GetAttribute("offsetx"), System.Globalization.CultureInfo.InvariantCulture) : 0f,
                 objectGroupElement.HasAttribute("offsety") ? float.Parse(objectGroupElement.GetAttribute("offsety"), System.Globalization.CultureInfo.InvariantCulture) : 0f
             );
             DrawOrder = objectGroupElement.HasAttribute("draworder") ? (TiledDrawOrder) Enum.Parse(typeof(TiledDrawOrder), objectGroupElement.GetAttribute("draworder"), true) : TiledDrawOrder.TopDown;

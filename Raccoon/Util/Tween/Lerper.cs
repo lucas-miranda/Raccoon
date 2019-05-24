@@ -232,8 +232,8 @@ namespace Raccoon.Util.Tween {
         public override void Interpolate(float t) {
             t = Easing(t);
             Value = new Color(
-                (byte) (From.R + (To.R - From.R) * t), 
-                (byte) (From.G + (To.G - From.G) * t), 
+                (byte) (From.R + (To.R - From.R) * t),
+                (byte) (From.G + (To.G - From.G) * t),
                 (byte) (From.B + (To.B - From.B) * t)
             );
         }

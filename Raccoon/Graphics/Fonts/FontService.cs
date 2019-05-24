@@ -173,7 +173,7 @@ namespace Raccoon {
                     CopyBitmapToDestinationArea(textureData, textureSideSize, glyphPosition, ftBitmap);
 
                     renderMap.RegisterGlyph(
-                        charCode, 
+                        charCode,
                         new Rectangle(glyphPosition, new Size(ftBitmap.Width, ftBitmap.Rows)),
                         face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
                         face.Glyph.Metrics.HorizontalBearingY.ToSingle(),
@@ -188,7 +188,7 @@ namespace Raccoon {
 #endif
                 } else {
                     renderMap.RegisterGlyph(
-                        charCode, 
+                        charCode,
                         Rectangle.Empty,
                         face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
                         face.Glyph.Metrics.HorizontalBearingY.ToSingle(),

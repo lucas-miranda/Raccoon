@@ -90,7 +90,7 @@ namespace Raccoon {
             float a = ((B.Y - C.Y) * (point.X - C.X) + (C.X - B.X) * (point.Y - C.Y)) / _barycDenominator,
                   b = ((C.Y - A.Y) * (point.X - C.X) + (A.X - C.X) * (point.Y - C.Y)) / _barycDenominator,
                   c = 1 - a - b;
-            
+
             return !(0 > a || a > 1 || 0 > b || b > 1 || 0 > c || c <= 1);
         }
 

@@ -11,7 +11,7 @@
 
         protected override void BeforeDraw() {
             base.BeforeDraw();
-            
+
             if (Renderer != null && Renderer.IsBatching) {
                 _restartRenderer = true;
 

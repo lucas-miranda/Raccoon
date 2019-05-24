@@ -6,8 +6,8 @@ namespace Raccoon.Util.Collections {
     public class Locker<T> : ICollection<T> {
         #region Private Members
 
-        private List<T> _toAdd = new List<T>(), 
-                        _toRemove = new List<T>(), 
+        private List<T> _toAdd = new List<T>(),
+                        _toRemove = new List<T>(),
                         _items = new List<T>();
 
         private System.Comparison<T> _sortComparer;
@@ -154,7 +154,7 @@ namespace Raccoon.Util.Collections {
                 RemoveItem(item);
             }
 
-            _toRemove.Clear(); 
+            _toRemove.Clear();
         }
 
         public bool Contains(T item) {

@@ -149,7 +149,7 @@ namespace Raccoon {
             }
 
             foreach (Vector2 axis in axes) {
-                Range projectionA = axis.Projection(startPoint, endPoint), 
+                Range projectionA = axis.Projection(startPoint, endPoint),
                       projectionB = polygon.Projection(axis);
 
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {

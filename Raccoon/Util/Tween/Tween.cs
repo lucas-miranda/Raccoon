@@ -16,7 +16,7 @@ namespace Raccoon.Util.Tween {
 
         #endregion Private Members
 
-        #region Static 
+        #region Static
 
         static Tween() {
             System.Type[] types = new System.Type[] {

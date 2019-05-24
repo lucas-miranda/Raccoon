@@ -8,7 +8,7 @@ namespace Raccoon {
 
         private static readonly System.Lazy<Coroutines> _lazy = new System.Lazy<Coroutines>(() => new Coroutines());
 
-        private Locker<Coroutine> _runningCoroutines = new Locker<Coroutine>(), 
+        private Locker<Coroutine> _runningCoroutines = new Locker<Coroutine>(),
                                   _pausedCoroutines = new Locker<Coroutine>();
 
         #endregion Private Members

@@ -271,7 +271,7 @@
         public static float ToRadians(float deg) {
             return (float) (deg * DegToRad);
         }
-        
+
         public static float ToDegrees(float rad) {
             return (float) (rad * RadToDeg);
         }

@@ -88,7 +88,7 @@ namespace Raccoon.Util {
             amount = 0;
             return false;
         }
-        
+
         public bool Overlaps(Range range, out Range overlappedRange) {
             if (Overlaps(range)) {
                 overlappedRange = new Range(Math.Max(Min, range.Min), Math.Min(Max, range.Max));

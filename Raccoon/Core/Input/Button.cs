@@ -53,9 +53,9 @@ namespace Raccoon.Input {
         #region Public Methods
 
         public virtual void Update(int delta) {
-            if (_forceState 
-              || (Key != Key.None && Input.IsKeyDown(Key)) 
-              || (_isUsingMouseButton && Input.IsMouseButtonDown(MouseButton)) 
+            if (_forceState
+              || (Key != Key.None && Input.IsKeyDown(Key))
+              || (_isUsingMouseButton && Input.IsMouseButtonDown(MouseButton))
               || (GamePadIndex != GamePadIndex.None && Input.IsGamePadButtonDown(GamePadIndex, GamePadButton))) {
                 if (IsReleased) {
                     IsPressed = IsDown = true;

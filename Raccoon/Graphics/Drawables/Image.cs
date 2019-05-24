@@ -145,7 +145,7 @@
             Debug.Assert(radius > 0, "Invalid primitive size.");
 
             int diameter = radius * radius;
-            int width = diameter, 
+            int width = diameter,
                 height = diameter;
 
             Color[] data = new Color[(width + 1) * (height + 1)];
@@ -196,7 +196,7 @@
 
         #endregion Public Methods
 
-        #region Protected Methods 
+        #region Protected Methods
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             if (DestinationRegion.IsEmpty) {
@@ -207,6 +207,6 @@
             Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
         }
 
-        #endregion Protected Methods 
+        #endregion Protected Methods
     }
 }

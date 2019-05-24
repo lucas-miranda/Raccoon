@@ -4,15 +4,15 @@ namespace Raccoon.Graphics {
     public class Canvas : Image {
         #region Constructors
 
-        public Canvas(int width, int height) 
+        public Canvas(int width, int height)
           : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat) 
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat)
           : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, surfaceFormat, depthFormat))) {
         }
 
-        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, RenderTargetUsage usage) 
+        public Canvas(int width, int height, bool mipMap, SurfaceFormat surfaceFormat, DepthFormat depthFormat, int multiSampleCount, RenderTargetUsage usage)
           : base(new Texture(new RenderTarget2D(Game.Instance.GraphicsDevice, width, height, mipMap, surfaceFormat, depthFormat, multiSampleCount, usage))) {
         }
 
@@ -71,13 +71,13 @@ namespace Raccoon.Graphics {
             }
 
             RenderTarget2D renderTarget2D = new RenderTarget2D(
-                Game.Instance.GraphicsDevice, 
-                width, 
-                height, 
-                mipmap, 
-                XNARenderTarget.Format, 
-                XNARenderTarget.DepthStencilFormat, 
-                XNARenderTarget.MultiSampleCount, 
+                Game.Instance.GraphicsDevice,
+                width,
+                height,
+                mipmap,
+                XNARenderTarget.Format,
+                XNARenderTarget.DepthStencilFormat,
+                XNARenderTarget.MultiSampleCount,
                 XNARenderTarget.RenderTargetUsage
             );
 

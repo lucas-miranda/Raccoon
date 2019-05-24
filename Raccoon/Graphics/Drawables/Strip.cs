@@ -32,7 +32,7 @@ namespace Raccoon.Graphics {
         public Texture Texture { get; set; }
 
         #endregion Public Properties
-        
+
         #region Protected Properties
 
         protected Vector2[] SectionsPoints { get; private set; } = new Vector2[0];
@@ -51,7 +51,7 @@ namespace Raccoon.Graphics {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) 
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f)
                 * Renderer.World;
 
             //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
@@ -94,7 +94,7 @@ namespace Raccoon.Graphics {
                 Vector2 up = direction.PerpendicularCCW() * upWidth,
                         down = direction.PerpendicularCW() * downWidth;
 
-                //  
+                //
                 // Vertices layout:
                 //
                 //  1--3 5--7
@@ -105,7 +105,7 @@ namespace Raccoon.Graphics {
 
                 int vertexStart = s * 4;
 
-                Microsoft.Xna.Framework.Vector3 topStart = Microsoft.Xna.Framework.Vector3.Zero, 
+                Microsoft.Xna.Framework.Vector3 topStart = Microsoft.Xna.Framework.Vector3.Zero,
                                                 bottomStart = Microsoft.Xna.Framework.Vector3.Zero;
 
                 if (s == 0) {
@@ -170,28 +170,28 @@ namespace Raccoon.Graphics {
                 // start-bottom
                 vertices[vertexStart] = new VertexPositionColorTexture(
                     bottomStart,
-                    Microsoft.Xna.Framework.Color.White, 
+                    Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(0f, 1f)
                 );
 
                 // start-top
                 vertices[vertexStart + 1] = new VertexPositionColorTexture(
                     topStart,
-                    Microsoft.Xna.Framework.Color.White, 
+                    Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(0f, 0f)
                 );
 
                 // end-bottom
                 vertices[vertexStart + 2] = new VertexPositionColorTexture(
-                    new Microsoft.Xna.Framework.Vector3(endPoint.X + down.X, endPoint.Y + down.Y, 0f), 
-                    Microsoft.Xna.Framework.Color.White, 
+                    new Microsoft.Xna.Framework.Vector3(endPoint.X + down.X, endPoint.Y + down.Y, 0f),
+                    Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(1f, 1f)
                 );
 
                 // end-top
                 vertices[vertexStart + 3] = new VertexPositionColorTexture(
-                    new Microsoft.Xna.Framework.Vector3(endPoint.X + up.X, endPoint.Y + up.Y, 0f), 
-                    Microsoft.Xna.Framework.Color.White, 
+                    new Microsoft.Xna.Framework.Vector3(endPoint.X + up.X, endPoint.Y + up.Y, 0f),
+                    Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(1f, 0f)
                 );
             }
@@ -245,7 +245,7 @@ namespace Raccoon.Graphics {
             bs.ResetParameters();
         }
 
-        #endregion Protected Methods 
+        #endregion Protected Methods
 
         #region Private Methods
 
@@ -258,7 +258,7 @@ namespace Raccoon.Graphics {
 #endif
 
             for (int s = 0, i = 0; s < sections; s++, i += 4) {
-                //  
+                //
                 // Vertices layout:
                 //
                 //  1--3/5--7

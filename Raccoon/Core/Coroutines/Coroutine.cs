@@ -28,7 +28,7 @@ namespace Raccoon {
                 DelayInterval = Math.Max(0, DelayInterval - delta);
                 return;
             }
-            
+
             if (!MoveNext(Enumerator)) {
                 Stop();
             }
@@ -85,7 +85,7 @@ namespace Raccoon {
                         _waitingDelay = false;
                         break;
                     }
-                    
+
                     Wait(seconds);
                     return true;
 

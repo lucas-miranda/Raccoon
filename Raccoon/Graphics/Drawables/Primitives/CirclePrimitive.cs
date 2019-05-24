@@ -7,7 +7,7 @@ namespace Raccoon.Graphics.Primitives {
 
         private VertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
-        
+
         private int _segments;
         private float _radius;
         private bool _filled;
@@ -143,7 +143,7 @@ namespace Raccoon.Graphics.Primitives {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f) 
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, 0f)
                 * Renderer.World;
 
             bs.View = Renderer.View;

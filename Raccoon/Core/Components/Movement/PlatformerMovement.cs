@@ -35,7 +35,7 @@ Gravity Force: {9}
 Enabled? {10}
 Can Move? {11}
 
-OnGround? {12} 
+OnGround? {12}
 IsFalling? {13}
 
 Jump
@@ -52,9 +52,9 @@ Jump
 Ramps
   is Walking On Ramp? {22}
 
-Fall Through 
+Fall Through
   Can Fall Through? {23}
-  
+
   is trying to fall through? {24}
   apply fall? {25}
 ";
@@ -222,7 +222,7 @@ Fall Through
         public override void DebugRender() {
             base.DebugRender();
             string info = string.Format(
-                DebugText, 
+                DebugText,
                 Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
                 Velocity, MaxVelocity, TargetVelocity, Acceleration,
                 Body.Force, GravityForce * GravityScale,
@@ -235,8 +235,8 @@ Fall Through
 
             Debug.DrawString(null, new Vector2(10f, 10f), info);
             Debug.DrawLine(
-                new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), 
-                new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f), 
+                new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
+                new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
                 Graphics.Color.Yellow
             );
 
@@ -281,7 +281,7 @@ Fall Through
                 Fall();
             }
 
-            if (touchedBottom) { 
+            if (touchedBottom) {
                 if (!_isTryingToFallThrough) {
                     // falling and reached the ground
                     if (!OnGround) {
@@ -298,7 +298,7 @@ Fall Through
 
                     Velocity = new Vector2(Velocity.X, 0f);
                 }
-            } else if (touchedTop) { 
+            } else if (touchedTop) {
                 // moving up and reached a ceiling
                 if (Velocity.Y < 0 && !_isTryingToFallThrough) {
                     IsJumping = _canKeepCurrentJump = false;
@@ -339,7 +339,7 @@ Fall Through
                 return;
             }
 
-            if (!otherBody.Tags.HasAny(FallThroughTags) 
+            if (!otherBody.Tags.HasAny(FallThroughTags)
               && vCollisionInfo != null && vCollisionInfo.Contacts.Contains(c => c.PenetrationDepth > 0f || Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Up), 0f, 1f))) {
                 if (vCollisionInfo != null) {
                     _isTryingToFallThrough = false;
@@ -369,7 +369,7 @@ Fall Through
 
                 if (!_isAboveSomething && (otherBody.Shape is GridShape || Body.Bottom > otherBody.Top)) {
                     _applyFall = true;
-                } 
+                }
             } else {
             }
         }
@@ -419,12 +419,12 @@ Fall Through
                     }
                 }
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
-                // snaps horizontal velocity to zero, if horizontal axis is on opposite direction 
+                // snaps horizontal velocity to zero, if horizontal axis is on opposite direction
                 velocity.X = 0f;
-            } else if (MaxVelocity.X > 0f) { 
+            } else if (MaxVelocity.X > 0f) {
                 // velocity increasing until reach MaxVelocity.X limit
                 velocity.X = Math.Approach(velocity.X, TargetVelocity.X, Acceleration.X * dt);
-            } else { 
+            } else {
                 // velocity increasing without a limit
                 velocity.X += Math.Sign(Axis.X) * Acceleration.X * dt;
             }
@@ -596,7 +596,7 @@ Fall Through
             if (Math.Sign(rampMoveDisplacement.Y) > 0f) {
                 return false;
             }
-            
+
             // total displacement (added initial collision check vertical correction)
             displacement = rampMoveDisplacement;
 
@@ -616,7 +616,7 @@ Fall Through
                 return false;
             }
 
-            int contactIndex = descContacts.FindIndex(c => Helper.InRangeLeftExclusive(c.PenetrationDepth, 0f, descendingCheck.Y) 
+            int contactIndex = descContacts.FindIndex(c => Helper.InRangeLeftExclusive(c.PenetrationDepth, 0f, descendingCheck.Y)
                                                         && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f));
 
             // check if it's on a valid descending ramp

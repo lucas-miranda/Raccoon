@@ -21,7 +21,7 @@
             float contactsArcAngle = Math.AngleArc(contactA.Normal, contactB.Normal);
             float arcStartAngle, arcEndAngle, weigthedAverage;
 
-            if ((contactAAngle < contactBAngle && contactBAngle - contactAAngle <= 180f) 
+            if ((contactAAngle < contactBAngle && contactBAngle - contactAAngle <= 180f)
               || (contactAAngle > contactBAngle && contactAAngle + contactsArcAngle >= 360)) {
                 arcStartAngle = contactAAngle;
                 arcEndAngle = contactBAngle;

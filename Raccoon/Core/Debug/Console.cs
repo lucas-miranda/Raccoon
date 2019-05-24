@@ -90,7 +90,7 @@ namespace Raccoon {
             bool isDefaultCategory = string.IsNullOrWhiteSpace(category);
 
             Message msg = null;
-            if (MergeIdenticalMessages && isDefaultCategory 
+            if (MergeIdenticalMessages && isDefaultCategory
               && _messages.Count > 0 && _messages[0].Text == message) {
                 msg = _messages[0];
                 msg.Repeat();
@@ -191,14 +191,14 @@ namespace Raccoon {
 
             // total messages
             Renderer.DrawString(
-                Font, 
-                _messages.Count.ToString(), 
-                Renderer.ConvertScreenToWorld(new Vector2(Game.Instance.WindowWidth - 25, 15)), 
-                0f, 
-                Vector2.One, 
-                ImageFlip.None, 
-                Color.White, 
-                Vector2.Zero, 
+                Font,
+                _messages.Count.ToString(),
+                Renderer.ConvertScreenToWorld(new Vector2(Game.Instance.WindowWidth - 25, 15)),
+                0f,
+                Vector2.One,
+                ImageFlip.None,
+                Color.White,
+                Vector2.Zero,
                 Vector2.One
             );
 
@@ -221,15 +221,15 @@ namespace Raccoon {
                 }
 
                 Renderer.DrawString(
-                    Font, 
-                    (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"), 
-                    new Vector2(15f, totalMessagesPos.Y - pageHeightRange.Min), 
-                    0f, 
+                    Font,
+                    (ShowTimestamp ? message.Timestamp.ToString("HH:mm:ss").PadRight(10) : "") + (message.Count == 1 ? message.Text : $"{message.Text} [{message.Count}]"),
+                    new Vector2(15f, totalMessagesPos.Y - pageHeightRange.Min),
+                    0f,
                     Vector2.One,
                     ImageFlip.None,
                     message.Color,
                     Vector2.Zero,
-                    Vector2.One                                  
+                    Vector2.One
                 );
             }
         }

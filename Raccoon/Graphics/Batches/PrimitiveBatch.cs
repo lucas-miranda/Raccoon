@@ -265,7 +265,7 @@ namespace Raccoon.Graphics {
                 y = s * t + c * y;
 
                 indexData[2 * i] = i; // current vertex
-                indexData[2 * i + 1] = (i + 1) % vertexData.Length; 
+                indexData[2 * i + 1] = (i + 1) % vertexData.Length;
             }
 
             PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
@@ -391,7 +391,7 @@ namespace Raccoon.Graphics {
 
             graphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphicsDevice.DepthStencilState = DepthStencilState.None;
-            
+
             foreach (object pass in shader) {
                 graphicsDevice.Indices = _indexBuffer;
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
@@ -468,7 +468,7 @@ namespace Raccoon.Graphics {
 
             graphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphicsDevice.DepthStencilState = DepthStencilState.None;
-            
+
             foreach (object pass in shader) {
                 graphicsDevice.Indices = _indexBuffer;
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
@@ -485,7 +485,7 @@ namespace Raccoon.Graphics {
         #endregion Private Methods
 
         #region Internal Methods
-        
+
 #if DEBUG
 
         internal static void ResetMetrics() {

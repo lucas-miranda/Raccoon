@@ -24,7 +24,7 @@ namespace Raccoon {
 
                 Contact contact1 = new Contact {
                     Position = Math.Max(APos - boxA.HalwidthExtents, BPos - shapeB.HalwidthExtents)
-                }, 
+                },
                         contact2 = new Contact {
                     Position = Math.Min(APos + boxA.HalwidthExtents, BPos + shapeB.HalwidthExtents)
                 };
@@ -134,7 +134,7 @@ namespace Raccoon {
             Polygon polygonA = new Polygon(boxA.Shape);
             polygonA.Translate(APos);
 
-            List<Contact> gridContacts = TestGrid(gridB, BPos, boxBoundingBox, 
+            List<Contact> gridContacts = TestGrid(gridB, BPos, boxBoundingBox,
                 (Polygon tilePolygon) => {
                     TestSAT(polygonA, tilePolygon, out Contact? tileContact);
                     return tileContact;

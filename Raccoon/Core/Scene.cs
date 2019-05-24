@@ -61,18 +61,18 @@ namespace Raccoon {
         public uint Timer { get; private set; }
 
         /// <summary>
-        /// If Scene has already started. 
+        /// If Scene has already started.
         /// A way to know if Start() has already been called, useful to safely use Graphics Context when it's properly ready.
         /// </summary>
-        public bool HasStarted { get; private set; } 
+        public bool HasStarted { get; private set; }
 
         /// <summary>
-        /// If Scene is updating. 
+        /// If Scene is updating.
         /// </summary>
         public bool IsRunning { get; set; }
 
         /// <summary>
-        /// Camera instance. 
+        /// Camera instance.
         /// Can be changed for a custom Camera.
         /// </summary>
         public Camera Camera {
@@ -88,7 +88,7 @@ namespace Raccoon {
             }
         }
 
-        #endregion  
+        #endregion
 
         #region Public Methods
 
@@ -105,12 +105,12 @@ namespace Raccoon {
             if (obj is IUpdatable updatable) {
                 _updatables.Add(updatable);
                 added = true;
-            } 
+            }
 
             if (obj is IRenderable renderable) {
                 _renderables.Add(renderable);
                 added = true;
-            } 
+            }
 
             if (obj is ISceneObject sceneObject) {
                 _sceneObjects.Add(sceneObject);
@@ -120,7 +120,7 @@ namespace Raccoon {
                 if (HasStarted && !sceneObject.HasStarted) {
                     sceneObject.Start();
                 }
-            } 
+            }
 
             if (!added) {
                 throw new System.ArgumentException("Object must be an ISceneObject, IUpdatable or IRenderable.");
@@ -151,7 +151,7 @@ namespace Raccoon {
         }
 
         /// <summary>
-        /// Adds multiple Graphic to the Scene. 
+        /// Adds multiple Graphic to the Scene.
         /// </summary>
         /// <param name="graphics">IEnumerable containing Graphic.</param>
         public void AddGraphics(IEnumerable<Graphic> graphics) {
@@ -160,7 +160,7 @@ namespace Raccoon {
         }
 
         /// <summary>
-        /// Adds multiple Graphic to the Scene. 
+        /// Adds multiple Graphic to the Scene.
         /// </summary>
         /// <param name="graphics">Multiple Graphic as array or variable parameters.</param>
         public void AddGraphics(params Graphic[] graphics) {
@@ -198,7 +198,7 @@ namespace Raccoon {
         public T AddEntity<T>(T entity) where T : Entity {
             return AddEntity(entity as Entity) as T;
         }
-        
+
         /// <summary>
         /// Adds multiple Entity to the Scene.
         /// </summary>
@@ -250,18 +250,18 @@ namespace Raccoon {
         /// <param name="obj">Object to removed.</param>
         /// <returns>True if removed, False otherwise.</returns>
         public bool Remove<T>(T obj) {
-            bool isValid = false, 
+            bool isValid = false,
                  removed = false;
 
             if (obj is IUpdatable updatable) {
                 isValid = true;
                 removed = Remove(updatable);
-            } 
+            }
 
             if (obj is IRenderable renderable) {
                 isValid = true;
                 removed = Remove(renderable);
-            } 
+            }
 
             if (obj is ISceneObject sceneObject) {
                 isValid = true;
@@ -269,7 +269,7 @@ namespace Raccoon {
                     sceneObject.SceneRemoved();
                     removed = true;
                 }
-            } 
+            }
 
             if (!isValid) {
                 throw new System.ArgumentException("Object must be an ISceneObject, IUpdatable or IRenderable.");
@@ -342,7 +342,7 @@ namespace Raccoon {
         }
 
         /// <summary>
-        /// Removes multiple IUpdatables and IRenderables from Scene using a filter. 
+        /// Removes multiple IUpdatables and IRenderables from Scene using a filter.
         /// If it's an ISceneObject, removes too.
         /// </summary>
         /// <param name="filter">Filter to find Entity.</param>

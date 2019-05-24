@@ -120,7 +120,7 @@ namespace Raccoon {
         }
 
         /// <summary>
-        /// Checks if one or more tag exists. 
+        /// Checks if one or more tag exists.
         /// </summary>
         /// <param name="tags">One or more bit tags.</param>
         /// <returns>True if all tags exists, False otherwise.</returns>
@@ -291,7 +291,7 @@ namespace Raccoon {
         public override string ToString() {
             string info = $"Physics:\n  Colliders: {_colliders.Count}\n  Collision Tag Table:\n";
             foreach (KeyValuePair<BitTag, BitTag> entry in _collisionTagTable) {
-                info += $"    {entry.Key} => {entry.Value}\n"; 
+                info += $"    {entry.Key} => {entry.Value}\n";
             }
 
             info += "  Colliders By Tag:\n";
@@ -420,7 +420,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    if (otherCollider.Entity is T 
+                    if (otherCollider.Entity is T
                       && CheckCollision(shape, position - shape.Origin, otherCollider, out ContactList contacts)) {
                         collisionList.Add(otherCollider.Entity as T, contacts);
                     }
@@ -472,7 +472,7 @@ namespace Raccoon {
 
                     switch (otherCollider.Shape) {
                         case GridShape gridShape:
-                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance), 
+                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
                                 (Polygon tilePolygon) => {
                                     TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
                                     return tileContact;
@@ -624,7 +624,7 @@ namespace Raccoon {
 
                     switch (otherCollider.Shape) {
                         case GridShape gridShape:
-                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance), 
+                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
                                 (Polygon tilePolygon) => {
                                     TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
                                     return tileContact;
@@ -755,7 +755,7 @@ namespace Raccoon {
                 double movementXBuffer = diffX - Math.Truncate(diffX),
                        movementYBuffer = diffY - Math.Truncate(diffY);
 
-                bool canMoveH = true, 
+                bool canMoveH = true,
                      canMoveV = true,
                      singleCheck = distanceX == 0 && distanceY == 0;
 
@@ -786,7 +786,7 @@ namespace Raccoon {
                     // check collision with current movement
                     Vector2 moveHorizontalPos = new Vector2(currentX + movementX, currentY),
                             moveVerticalPos   = new Vector2(
-                                                    canMoveH ? (currentX + movementX) : currentX, 
+                                                    canMoveH ? (currentX + movementX) : currentX,
                                                     currentY + movementY
                                                 ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
 
@@ -806,7 +806,7 @@ namespace Raccoon {
                                 continue;
                             }
 
-                            bool collidedH = false, 
+                            bool collidedH = false,
                                  collidedV = false;
 
                             ContactList contactsH = new ContactList(),
@@ -862,16 +862,16 @@ namespace Raccoon {
 
                                 if (collisionAxes.X == 0f && collisionAxes.Y == 0f) {
                                     body.CollidedWith(
-                                        otherBody, 
-                                        collisionAxes, 
-                                        new CollisionInfo<Body>(otherBody, contactsH), 
+                                        otherBody,
+                                        collisionAxes,
+                                        new CollisionInfo<Body>(otherBody, contactsH),
                                         new CollisionInfo<Body>(otherBody, contactsV)
                                     );
                                 } else {
                                     body.CollidedWith(
-                                        otherBody, 
-                                        collisionAxes, 
-                                        collisionAxes.X == 0 ? null : new CollisionInfo<Body>(otherBody, contactsH), 
+                                        otherBody,
+                                        collisionAxes,
+                                        collisionAxes.X == 0 ? null : new CollisionInfo<Body>(otherBody, contactsH),
                                         collisionAxes.Y == 0 ? null : new CollisionInfo<Body>(otherBody, contactsV)
                                     );
                                 }
@@ -904,7 +904,7 @@ namespace Raccoon {
 
                     movementX = movementY = 0;
                 } while (
-                     (canMoveH && Math.Abs(distanceX) >= 1) 
+                     (canMoveH && Math.Abs(distanceX) >= 1)
                   || (canMoveV && Math.Abs(distanceY) >= 1)
                 );
 
@@ -989,7 +989,7 @@ namespace Raccoon {
 
 #if DEBUG
         internal void ClearTimers() {
-            UpdatePositionExecutionTime = SolveConstraintsExecutionTime = CollisionDetectionBroadPhaseExecutionTime 
+            UpdatePositionExecutionTime = SolveConstraintsExecutionTime = CollisionDetectionBroadPhaseExecutionTime
               = CollisionDetectionNarrowPhaseExecutionTime = 0;
         }
 #endif

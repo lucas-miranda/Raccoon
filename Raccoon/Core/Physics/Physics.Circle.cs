@@ -69,7 +69,7 @@ namespace Raccoon {
         }
 
         #endregion Circle vs Polygon
-        
+
         #region Circle vs Grid
 
         private bool CheckCircleGrid(IShape A, Vector2 APos, IShape B, Vector2 BPos, out Contact[] contacts) {
@@ -84,7 +84,7 @@ namespace Raccoon {
                 return false;
             }
 
-            List<Contact> gridContacts = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius), 
+            List<Contact> gridContacts = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius),
                 (Polygon tilePolygon) => {
                     TestSAT(circleA, APos, tilePolygon, out Contact? tileContact);
 

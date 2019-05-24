@@ -132,7 +132,7 @@ namespace Raccoon.Graphics {
 
             List<(Vector2, Rectangle)> glyphs = font.RenderMap.PrepareText(text, out Size textSize);
 
-            float cos = 0f, 
+            float cos = 0f,
                   sin = 0f;
 
             if (rotation != 0f) {
@@ -353,14 +353,14 @@ namespace Raccoon.Graphics {
             if (shader is IShaderTexture currentShaderText) {
                 currentShaderText.TextureEnabled = true;
                 currentShaderText.Texture = texture;
-            } 
+            }
 
             if (AllowIBasicShaderEffectParameterClone && shader != Shader && Shader is IShaderTransform defaultShader && shader is IShaderTransform currentShaderTrans) {
                 currentShaderTrans.World = defaultShader.World;
                 currentShaderTrans.View = defaultShader.View;
                 currentShaderTrans.Projection = defaultShader.Projection;
             }
-            
+
             foreach (object pass in shader) {
                 GraphicsDevice.DrawUserIndexedPrimitives(
                     PrimitiveType.TriangleList,

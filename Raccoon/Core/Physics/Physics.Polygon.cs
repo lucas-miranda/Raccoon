@@ -62,7 +62,7 @@ namespace Raccoon {
             Polygon polygonA = new Polygon(polygonShapeA.Shape);
             polygonA.Translate(APos);
 
-            List<Contact> gridContacts = TestGrid(gridB, BPos, polygonBoundingBox, 
+            List<Contact> gridContacts = TestGrid(gridB, BPos, polygonBoundingBox,
                 (Polygon tilePolygon) => {
                     TestSAT(polygonA, tilePolygon, out Contact? tileContact);
                     return tileContact;

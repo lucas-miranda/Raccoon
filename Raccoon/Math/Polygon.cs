@@ -147,7 +147,7 @@ namespace Raccoon {
                 endPoint = firstPoint.Value;
                 foreach (Vector2 point in points) {
                     if (endPoint == pointOnHull || Math.IsLeft(pointOnHull, endPoint, point)) {
-                        endPoint = point; 
+                        endPoint = point;
                     }
                 }
 
@@ -192,7 +192,7 @@ namespace Raccoon {
         }
 
         #endregion Public Static Methods
-        
+
         #region Public Methods
 
         public void AddVertex(Vector2 vertex) {
@@ -670,7 +670,7 @@ namespace Raccoon {
             }
         }
 
-        #region Triangulate Helper 
+        #region Triangulate Helper
 
         private bool InCone(LinkedListNode<Vector2> A, LinkedListNode<Vector2> B) {
 
@@ -684,7 +684,7 @@ namespace Raccoon {
                 return Math.IsLeft(a, b, prevA) && Math.IsLeft(b, a, nextA);
             }
 
-            // else A is reflex 
+            // else A is reflex
             return Math.IsLeftOn(a, b, nextA) || Math.IsLeftOn(b, a, prevA);
         }
 
@@ -738,7 +738,7 @@ namespace Raccoon {
             return (!Math.IsLeft(a, b, c) ^ !Math.IsLeft(a, b, d)) && (!Math.IsLeft(c, d, a) ^ !Math.IsLeft(c, d, b));
         }
 
-        #endregion Triangulate Helper 
+        #endregion Triangulate Helper
 
         #endregion Private Methods
     }

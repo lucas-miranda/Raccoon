@@ -87,7 +87,7 @@ namespace Raccoon {
             Current = this;
             _needViewRefresh = true;
         }
-        
+
         public virtual void Begin() {
             if (Current != this) {
                 Current = this;

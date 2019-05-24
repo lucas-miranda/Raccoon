@@ -4,7 +4,7 @@
 
         public Trigger(Key key) {
             Key = key;
-        } 
+        }
 
         public Trigger(GamePadIndex gamepadIndex, GamePadTriggerButton gamepadTriggerButton) {
             GamePadIndex = gamepadIndex;

@@ -1,7 +1,7 @@
 ﻿namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
         public class Track {
-            private event System.Action _onEnd = delegate { }, 
+            private event System.Action _onEnd = delegate { },
                                         _onChangeFrame = delegate { };
 
             private int _currentFrameIndex;

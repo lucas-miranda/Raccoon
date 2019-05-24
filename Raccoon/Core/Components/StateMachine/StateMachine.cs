@@ -68,7 +68,7 @@ namespace Raccoon.Components {
                 UpdateState();
                 return;
             }
-            
+
             foreach (Transition<T> transition in CurrentState.Transitions) {
                 foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
                     if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
@@ -114,7 +114,7 @@ namespace Raccoon.Components {
             }
 
             NextState = nextState;
-            CurrentCoroutine.Stop(); // avoid running current state update 
+            CurrentCoroutine.Stop(); // avoid running current state update
         }
 
         public void AddState(T label) {
@@ -124,8 +124,8 @@ namespace Raccoon.Components {
 
             // searches for OnEnterState, OnUpdateState and OnLeaveState on Entity's methods
             System.Reflection.MethodInfo onEnterStateMethodInfo = null, onUpdateStateMethodInfo = null, onLeaveStateMethodInfo = null;
-            string onEnterStateMethodName = OnEnterStateName + label.ToString(), 
-                   onUpdateStateMethodName = OnUpdateStateName + label.ToString(), 
+            string onEnterStateMethodName = OnEnterStateName + label.ToString(),
+                   onUpdateStateMethodName = OnUpdateStateName + label.ToString(),
                    onLeaveStateMethodName = OnLeaveStateName + label.ToString();
 
             foreach (System.Reflection.MethodInfo methodInfo in Entity.GetType().GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)) {

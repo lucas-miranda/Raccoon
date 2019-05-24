@@ -245,14 +245,14 @@ namespace Raccoon {
             }
 
             Game.Instance.DebugRenderer.DrawString(
-                Game.Instance.StdFont, 
-                message, 
-                zoom * (-cameraPos + position), 
-                0, 
-                scale, 
-                ImageFlip.None, 
-                color ?? Color.White, 
-                Vector2.Zero, 
+                Game.Instance.StdFont,
+                message,
+                zoom * (-cameraPos + position),
+                0,
+                scale,
+                ImageFlip.None,
+                color ?? Color.White,
+                Vector2.Zero,
                 Vector2.One
             );
         }

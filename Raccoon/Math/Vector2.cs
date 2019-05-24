@@ -49,7 +49,7 @@ namespace Raccoon {
         #endregion Constructors
 
         #region Public Static Methods
-        
+
         public static float Dot(Vector2 a, Vector2 b) {
             return a.X * b.X + a.Y * b.Y;
         }
@@ -229,7 +229,7 @@ namespace Raccoon {
         }
 
         public static bool operator !=(Vector2 l, Vector2 r) {
-            return !EqualsEstimate(l, r); 
+            return !EqualsEstimate(l, r);
         }
 
         public static Vector2 operator -(Vector2 v) {

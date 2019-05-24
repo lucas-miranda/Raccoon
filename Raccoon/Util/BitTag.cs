@@ -94,7 +94,7 @@ namespace Raccoon.Util {
         }
 
         public bool Equals(BitTag other) {
-            return LiteralValue == other.LiteralValue; 
+            return LiteralValue == other.LiteralValue;
         }
 
         public override int GetHashCode() {

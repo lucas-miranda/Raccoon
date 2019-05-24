@@ -36,7 +36,7 @@
 
         public int Columns { get; private set; }
         public int Rows { get; private set; }
-        public Size FrameSize { get; private set; } 
+        public Size FrameSize { get; private set; }
         public int FrameCount { get; private set; }
 
         public int CurrentFrame {
