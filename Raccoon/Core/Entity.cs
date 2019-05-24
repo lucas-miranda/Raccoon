@@ -341,7 +341,11 @@ namespace Raccoon {
 
         public Graphic AddGraphic(Graphic graphic) {
             if (graphic == null) {
-                throw new System.ArgumentNullException("graphic");
+                throw new System.ArgumentNullException(nameof(graphic));
+            }
+
+            if (!GraphicAdded(graphic)) {
+                return null;
             }
 
             Graphics.Add(graphic);
@@ -365,6 +369,10 @@ namespace Raccoon {
 
         public Component AddComponent(Component component) {
             if (component == null) {
+                throw new System.ArgumentNullException(nameof(component));
+            }
+
+            if (!ComponentAdded(component)) {
                 return null;
             }
 
@@ -382,11 +390,18 @@ namespace Raccoon {
                 return false;
             }
 
-            return Graphics.Remove(graphic);
+            if (Graphics.Remove(graphic)) {
+                GraphicRemoved(graphic);
+                return true;
+            }
+
+            return false;
         }
 
         public void RemoveGraphics(IEnumerable<Graphic> graphics) {
-            Graphics.RemoveRange(graphics);
+            foreach (Graphic g in graphics) {
+                RemoveGraphic(g);
+            }
         }
 
         public void RemoveGraphics(params Graphic[] graphics) {
@@ -394,9 +409,12 @@ namespace Raccoon {
         }
 
         public void RemoveComponent(Component component) {
-            if (Components.Remove(component)) {
-                component.OnRemoved();
+            if (!Components.Remove(component)) {
+                return;
             }
+
+            ComponentRemoved(component);
+            component.OnRemoved();
         }
 
         public T GetComponent<T>() where T : Component {
@@ -423,27 +441,35 @@ namespace Raccoon {
         public void RemoveComponents<T>() {
             foreach (Component c in Components) {
                 if (c is T && Components.Remove(c)) {
+                    ComponentRemoved(c);
                     c.OnRemoved();
                 }
             }
         }
 
         public void ClearGraphics() {
+            foreach (Graphic g in Graphics) {
+                GraphicRemoved(g);
+            }
+
             Graphics.Clear();
         }
 
         public void ClearComponents() {
             if (Components.IsLocked) {
                 foreach (Component c in Components.ToAdd) {
+                    ComponentRemoved(c);
                     c.OnRemoved();
                 }
 
                 foreach (Component c in Components.ToRemove) {
+                    ComponentRemoved(c);
                     c.OnRemoved();
                 }
             }
 
             foreach (Component c in Components.Items) {
+                ComponentRemoved(c);
                 c.OnRemoved();
             }
 
@@ -452,7 +478,7 @@ namespace Raccoon {
 
         public void RemoveSelf() {
             if (Scene == null) {
-                return;
+                throw new System.NullReferenceException("Can't remove from a null Scene.");
             }
 
             Scene.RemoveEntity(this);
@@ -464,8 +490,22 @@ namespace Raccoon {
 
         #endregion Public Methods
 
-        #region Private Methods
+        #region Protected Methods
 
-        #endregion Private Methods
+        protected virtual bool GraphicAdded(Graphic graphic) {
+            return true;
+        }
+
+        protected virtual void GraphicRemoved(Graphic graphic) {
+        }
+
+        protected virtual bool ComponentAdded(Component component) {
+            return true;
+        }
+
+        protected virtual void ComponentRemoved(Component component) {
+        }
+
+        #endregion Protected Methods
     }
 }
