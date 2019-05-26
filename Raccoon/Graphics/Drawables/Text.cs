@@ -1,5 +1,5 @@
 ﻿namespace Raccoon.Graphics {
-    public class Text : Graphic, System.IDisposable {
+    public partial class Text : Graphic, System.IDisposable {
         #region Private Members
 
         private Font _font;
@@ -16,7 +16,7 @@
             }
 
             Font = font;
-            Value = value;
+            Value = value ?? throw new System.ArgumentNullException(nameof(value));
             Color = color;
         }
 
@@ -48,7 +48,7 @@
                 _font = value;
 
                 if (!string.IsNullOrEmpty(_value)) {
-                    _unscaledSize = new Size(_font.MeasureText(_value));
+                    Data = _font.RenderMap.PrepareText(_value, out _unscaledSize);
                     Size = _unscaledSize * Scale;
                 }
             }
@@ -65,7 +65,7 @@
                 }
 
                 _value = value;
-                _unscaledSize = new Size(_font.MeasureText(_value));
+                Data = _font.RenderMap.PrepareText(_value, out _unscaledSize);
                 Size = _unscaledSize * Scale;
             }
         }
@@ -83,6 +83,12 @@
 
         #endregion Public Properties
 
+        #region Internal Properties
+
+        internal RenderData Data { get; private set; }
+
+        #endregion Internal Properties
+
         #region Public Methods
 
         public override void Dispose() {
@@ -91,7 +97,7 @@
             }
 
             _font = null;
-
+            Data = null;
             IsDisposed = true;
         }
 
@@ -100,10 +106,14 @@
         #region Protected Methods
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+            if (string.IsNullOrEmpty(Value)) {
+                return;
+            }
+
             Renderer.DrawString(
                 Font,
-                Value,
-                Position + position,
+                Data,
+                new Rectangle(Position + position, _unscaledSize),
                 Rotation + rotation,
                 Scale * scale,
                 Flipped ^ flip,

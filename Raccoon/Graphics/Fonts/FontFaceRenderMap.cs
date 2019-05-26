@@ -36,8 +36,8 @@ namespace Raccoon.Fonts {
             return glyph;
         }
 
-        public List<(Vector2 Position, Rectangle SourceArea)> PrepareText(string text, out Size textSize) {
-            List<(Vector2 Position, Rectangle SourceArea)> preparedText = new List<(Vector2, Rectangle)>();
+        public Text.RenderData PrepareText(string text, out Size textSize) {
+            Text.RenderData textRenderData = new Text.RenderData(text.Length);
 
             textSize = Size.Empty;
 
@@ -51,7 +51,7 @@ namespace Raccoon.Fonts {
 
             int renderTimes;
 
-            // TODO: add support to unicode characters
+            // TODO: add support to unicode characters?
             for (int i = 0; i < text.Length; i++) {
                 char charCode = text[i];
 
@@ -85,7 +85,7 @@ namespace Raccoon.Fonts {
 
                     #endregion Underrun
 
-                    preparedText.Add((penPosition + new Vector2(glyph.HorizontalBearingX, ascent - glyph.HorizontalBearingY), glyph.SourceArea));
+                    textRenderData.AppendGlyph(penPosition + new Vector2(glyph.HorizontalBearingX, ascent - glyph.HorizontalBearingY), glyph.SourceArea);
 
                     #region Overrun
 
@@ -153,7 +153,7 @@ namespace Raccoon.Fonts {
             }
 
             textSize.Height = penPosition.Y + lineHeight;
-            return preparedText;
+            return textRenderData;
         }
 
         public Size MeasureString(string text) {

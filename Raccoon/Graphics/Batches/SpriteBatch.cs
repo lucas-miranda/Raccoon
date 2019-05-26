@@ -130,58 +130,8 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            if (!IsBatching) {
-                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
-            }
-
-            List<(Vector2, Rectangle)> glyphs = font.RenderMap.PrepareText(text, out Size textSize);
-
-            float cos = 0f,
-                  sin = 0f;
-
-            if (rotation != 0f) {
-                cos = Util.Math.Cos(rotation);
-                sin = Util.Math.Sin(rotation);
-            }
-
-            foreach ((Vector2 GlyphPosition, Rectangle SourceArea) in glyphs) {
-                ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
-
-                Vector2 pos = GlyphPosition;
-
-                if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
-                    pos.X = textSize.Width - pos.X - SourceArea.Width;
-                }
-
-                if ((flip & ImageFlip.Vertical) != ImageFlip.None) {
-                    pos.Y = textSize.Height - pos.Y - SourceArea.Height;
-                }
-
-                pos = pos * scale - origin;
-
-                if (rotation != 0f) {
-                    pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
-                }
-
-                batchItem.Set(
-                    font.RenderMap.Texture,
-                    position + pos,
-                    SourceArea,
-                    rotation,
-                    scale,
-                    flip,
-                    color,
-                    Vector2.Zero,
-                    scroll,
-                    shader,
-                    shaderParameters,
-                    layerDepth
-                );
-            }
-
-            if (BatchMode == BatchMode.Immediate) {
-                Flush();
-            }
+            Text.RenderData glyphs = font.RenderMap.PrepareText(text, out Size textSize);
+            DrawString(font, glyphs, new Rectangle(position, textSize), rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
@@ -404,6 +354,64 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
 #if DEBUG
+
+        internal void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
+            }
+
+            bool applyRotation = false,
+                 needsTransparency = AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue;
+
+            float cos = 0f,
+                  sin = 0f;
+
+            if (!Util.Math.EqualsEstimate(rotation, 0f)) {
+                applyRotation = true;
+                cos = Util.Math.Cos(rotation);
+                sin = Util.Math.Sin(rotation);
+            }
+
+            Size textSize = destinationRectangle.Size;
+
+            foreach (Text.RenderData.Glyph glyph in glyphs) {
+                Vector2 pos = glyph.Position;
+
+                if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
+                    pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
+                }
+
+                if ((flip & ImageFlip.Vertical) != ImageFlip.None) {
+                    pos.Y = textSize.Height - pos.Y - glyph.SourceArea.Height;
+                }
+
+                pos = pos * scale - origin;
+
+                if (applyRotation) {
+                    pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
+                }
+
+                ref SpriteBatchItem batchItem = ref GetBatchItem(needsTransparency);
+                batchItem.Set(
+                    font.RenderMap.Texture,
+                    destinationRectangle.Position + pos,
+                    glyph.SourceArea,
+                    rotation,
+                    scale,
+                    flip,
+                    color,
+                    Vector2.Zero,
+                    scroll,
+                    shader,
+                    shaderParameters,
+                    layerDepth
+                );
+            }
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
 
         internal static void ResetMetrics() {
             TotalDrawCalls = SpriteCount = 0;

@@ -347,5 +347,20 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Private Methods
+
+        #region Internal Methods
+
+        internal void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                SpriteBatch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            SpriteBatch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Internal Methods
     }
 }
