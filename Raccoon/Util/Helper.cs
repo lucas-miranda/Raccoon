@@ -70,9 +70,8 @@ namespace Raccoon.Util {
         #region TileMap
 
         public static Vector2 ConvertPositionToCell(Vector2 position, TileMap tilemap) {
-            Rectangle tilemapBounds = new Rectangle(tilemap.Position - tilemap.Origin, tilemap.Size);
-            position = Math.Clamp(position, tilemapBounds);
-            return Math.Floor(position / tilemap.TileSize);
+            Vector2 tilemapPos = tilemap.Position - tilemap.Origin;
+            return tilemapPos + Math.Floor((position - tilemapPos) / tilemap.TileSize);
         }
 
         public static Vector2 ConvertCellToPosition(Vector2 cell, TileMap tilemap) {
