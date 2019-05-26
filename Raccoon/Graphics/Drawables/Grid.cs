@@ -171,7 +171,7 @@ namespace Raccoon.Graphics {
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             if (Columns == 0 || Rows == 0 || TileSize.Area == 0) {
                 return;
             }
@@ -196,6 +196,8 @@ namespace Raccoon.Graphics {
             // texture
             bs.TextureEnabled = false;
 
+            shaderParameters?.ApplyParameters(shader);
+
             // we need to manually update every GraphicsDevice states here
             device.BlendState = Renderer.SpriteBatch.BlendState;
             device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
@@ -213,6 +215,8 @@ namespace Raccoon.Graphics {
             if (_useBorderColor) {
                 bs.DiffuseColor = color * BorderColor;
             }
+
+            shaderParameters?.ApplyParameters(shader);
 
             // we need to manually update every GraphicsDevice states here
             device.BlendState = Renderer.SpriteBatch.BlendState;

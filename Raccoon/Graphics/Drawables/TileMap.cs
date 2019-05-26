@@ -446,7 +446,7 @@ namespace Raccoon.Graphics {
             _tileSetRows = Texture.Height / (int) TileSize.Height;
         }
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             if (_vertexBuffer == null || _vertexBuffer.VertexCount == 0 || Texture == null) {
                 return;
             }
@@ -485,6 +485,8 @@ namespace Raccoon.Graphics {
             // texture
             bs.TextureEnabled = true;
             bs.Texture = Texture;
+
+            shaderParameters?.ApplyParameters(shader);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
 

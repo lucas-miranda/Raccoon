@@ -215,7 +215,7 @@ namespace Raccoon.Graphics {
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             if (Sections == 0) {
                 return;
             }
@@ -234,6 +234,8 @@ namespace Raccoon.Graphics {
             // texture
             bs.TextureEnabled = true;
             bs.Texture = Texture;
+
+            shaderParameters?.ApplyParameters(shader);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
             foreach (object pass in bs) {

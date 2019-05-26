@@ -198,13 +198,38 @@
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             if (DestinationRegion.IsEmpty) {
-                Renderer.Draw(Texture, Position + position, SourceRegion.Position + ClippingRegion, Rotation + rotation, Scale * scale, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
+                Renderer.Draw(
+                    Texture,
+                    Position + position,
+                    SourceRegion.Position + ClippingRegion,
+                    Rotation + rotation,
+                    Scale * scale,
+                    Flipped ^ flip,
+                    (color * Color) * Opacity,
+                    Origin,
+                    Scroll + scroll,
+                    shader,
+                    shaderParameters,
+                    layerDepth
+                );
                 return;
             }
 
-            Renderer.Draw(Texture, new Rectangle(Position + position, DestinationRegion.Size * Scale * scale), SourceRegion.Position + ClippingRegion, Rotation + rotation, Flipped ^ flip, (color * Color) * Opacity, Origin, Scroll + scroll, shader, layerDepth);
+            Renderer.Draw(
+                Texture,
+                new Rectangle(Position + position, DestinationRegion.Size * Scale * scale),
+                SourceRegion.Position + ClippingRegion,
+                Rotation + rotation,
+                Flipped ^ flip,
+                (color * Color) * Opacity,
+                Origin,
+                Scroll + scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
         }
 
         #endregion Protected Methods

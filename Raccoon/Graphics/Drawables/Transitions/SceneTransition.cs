@@ -84,7 +84,7 @@
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             EndGraphic.Render(position, rotation, scale, flip, color, scroll, shader, ConvertLayerDepthToLayer(layerDepth));
         }
 

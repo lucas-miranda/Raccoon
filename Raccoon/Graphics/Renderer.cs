@@ -136,163 +136,163 @@ namespace Raccoon.Graphics {
 
         #region Draw Texture on Destination Rectangle
 
-        public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Shader shader = null, float layerDepth = 1f) {
-            Draw(texture, destinationRectangle, color, Vector2.One, shader, layerDepth);
+        public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            Draw(texture, destinationRectangle, color, Vector2.One, shader, shaderParameters, layerDepth);
         }
 
         #endregion Draw Texture on Destination Rectangle
 
         #region Draw Texture with Position
 
-        public void Draw(Canvas canvas, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Canvas canvas, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+            SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void Draw(Texture texture, Vector2 position, Color color, Shader shader = null, float layerDepth = 1f) {
-            Draw(texture, position, color, Vector2.One, shader, layerDepth);
+        public void Draw(Texture texture, Vector2 position, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            Draw(texture, position, color, Vector2.One, shader, shaderParameters, layerDepth);
         }
 
         #endregion Draw Texture with Position
 
         #region Draw Text from String
 
-        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+                SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, layerDepth);
+            SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, layerDepth);
+            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
-        public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null, float layerDepth = 1f) {
+        public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (SpriteBatch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, layerDepth);
+                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, layerDepth);
+            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
         }
 
         #endregion Draw Text from String

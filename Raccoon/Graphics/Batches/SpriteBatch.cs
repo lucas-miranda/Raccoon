@@ -99,33 +99,37 @@ namespace Raccoon.Graphics {
             IsBatching = false;
         }
 
+        public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (!IsBatching) {
+                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
+            }
+
+            ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+            batchItem.Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
+
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, null, layerDepth);
+        }
+
+        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
             if (!IsBatching) {
                 throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
             }
 
             ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
-            batchItem.Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            batchItem.Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
 
             if (BatchMode == BatchMode.Immediate) {
                 Flush();
             }
         }
 
-        public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            if (!IsBatching) {
-                throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
-            }
-
-            ref SpriteBatchItem batchItem = ref GetBatchItem(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
-            batchItem.Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
-
-            if (BatchMode == BatchMode.Immediate) {
-                Flush();
-            }
-        }
-
-        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
             if (!IsBatching) {
                 throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
             }
@@ -170,6 +174,7 @@ namespace Raccoon.Graphics {
                     Vector2.Zero,
                     scroll,
                     shader,
+                    shaderParameters,
                     layerDepth
                 );
             }
@@ -177,6 +182,10 @@ namespace Raccoon.Graphics {
             if (BatchMode == BatchMode.Immediate) {
                 Flush();
             }
+        }
+
+        public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
         }
 
         /// <summary>
@@ -317,37 +326,40 @@ namespace Raccoon.Graphics {
                     throw new System.NotImplementedException($"SpriteBatch doesn't implements BatchMode '{BatchMode}'.");
             }
 
-            GraphicsDevice.BlendState = BlendState;
-            GraphicsDevice.SamplerStates[0] = SamplerState;
-            GraphicsDevice.DepthStencilState = depthStencilState;
-            GraphicsDevice.RasterizerState = RasterizerState;
-
-            Texture texture = batchItems[0].Texture;
-            Shader shader = batchItems[0].Shader ?? Shader;
+            SpriteBatchItem batchItem = batchItems[0];
+            Texture texture = batchItem.Texture;
+            Shader shader = batchItem.Shader ?? Shader;
+            IShaderParameters parameters = batchItem.ShaderParameters;
 
             int startIndex = 0,
                 endIndex = 0;
 
             for (int i = 0; i < itemsCount; i++) {
-                SpriteBatchItem batchItem = batchItems[i];
+                batchItem = batchItems[i];
 
-                if (batchItem.Texture != texture || (batchItem.Shader != shader && (batchItem.Shader != null || shader != Shader))) {
-                    DrawQuads(startIndex, endIndex - 1, texture, shader);
+                if (batchItem.Texture != texture
+                  || (batchItem.Shader != shader && (batchItem.Shader != null || shader != Shader))
+                  || (batchItem.ShaderParameters == null && parameters != null) || (batchItem.ShaderParameters != null && !batchItem.ShaderParameters.Equals(parameters))) {
+                    DrawQuads(startIndex, endIndex - 1, texture, shader, parameters, depthStencilState);
+
                     texture = batchItem.Texture;
                     shader = batchItem.Shader ?? Shader;
+                    parameters = batchItem.ShaderParameters;
                     startIndex = endIndex;
                 }
 
                 batchItem.Texture = null;
                 batchItem.Shader = null;
+                batchItem.ShaderParameters = null;
+
                 batchItem.VertexData.CopyTo(_vertexBuffer, endIndex * 4);
                 endIndex++;
             }
 
-            DrawQuads(startIndex, endIndex - 1, texture, shader);
+            DrawQuads(startIndex, endIndex - 1, texture, shader, parameters, depthStencilState);
         }
 
-        private void DrawQuads(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader) {
+        private void DrawQuads(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState) {
             int batchCount = endBatchIndex - startBatchIndex + 1;
 
             if (shader is IShaderTexture currentShaderText) {
@@ -360,6 +372,14 @@ namespace Raccoon.Graphics {
                 currentShaderTrans.View = defaultShader.View;
                 currentShaderTrans.Projection = defaultShader.Projection;
             }
+
+            parameters?.ApplyParameters(shader);
+
+            // prepare device
+            GraphicsDevice.BlendState = BlendState;
+            GraphicsDevice.SamplerStates[0] = SamplerState;
+            GraphicsDevice.DepthStencilState = depthStencilState;
+            GraphicsDevice.RasterizerState = RasterizerState;
 
             foreach (object pass in shader) {
                 GraphicsDevice.DrawUserIndexedPrimitives(

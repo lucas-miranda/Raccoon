@@ -139,7 +139,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertexBuffer.SetData(_vertices);
         }
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
@@ -153,7 +153,16 @@ namespace Raccoon.Graphics.Primitives {
             bs.DiffuseColor = color * Color;
             bs.Alpha = Opacity;
 
+            shaderParameters?.ApplyParameters(shader);
+
             GraphicsDevice device = Game.Instance.GraphicsDevice;
+
+            // we need to manually update every GraphicsDevice states here
+            device.BlendState = Renderer.SpriteBatch.BlendState;
+            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
+            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
+            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;
                 device.SetVertexBuffer(_vertexBuffer);

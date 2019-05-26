@@ -57,6 +57,7 @@ namespace Raccoon.Graphics {
         public Renderer Renderer { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;
         public Shader Shader { get; set; }
+        public IShaderParameters ShaderParameters { get; set; }
         public ImageFlip Flipped { get; set; }
         public Color Color { get; set; } = Color.White;
         public float Opacity { get { return _opacity; } set { _opacity = Math.Clamp(value, 0f, 1f); } }
@@ -165,7 +166,7 @@ namespace Raccoon.Graphics {
 #endif
 
             BeforeDraw();
-            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ConvertLayerToLayerDepth(Layer + layer));
+            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ShaderParameters, ConvertLayerToLayerDepth(Layer + layer));
             AfterDraw();
         }
 
@@ -189,7 +190,7 @@ namespace Raccoon.Graphics {
         protected virtual void BeforeDraw() {
         }
 
-        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f);
+        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth);
 
         protected virtual void AfterDraw() {
         }

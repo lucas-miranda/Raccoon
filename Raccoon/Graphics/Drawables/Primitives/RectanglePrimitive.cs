@@ -126,7 +126,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertexBuffer.SetData(_vertices);
         }
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
             // only update vertices layer depth if parameter value is differente from last applied value (to avoid redundancy calls)
             if (layerDepth != _lastAppliedLayerDepth) {
                 UpdateVerticesLayerDepth(layerDepth);
@@ -149,6 +149,8 @@ namespace Raccoon.Graphics.Primitives {
             bs.DiffuseColor = color * Color;
             bs.Alpha = Opacity;
             bs.TextureEnabled = false;
+
+            shaderParameters?.ApplyParameters(shader);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
 

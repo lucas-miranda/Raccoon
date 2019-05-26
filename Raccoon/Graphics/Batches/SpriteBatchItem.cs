@@ -9,15 +9,17 @@ namespace Raccoon.Graphics {
 
         public Texture Texture { get; set; }
         public Shader Shader { get; set; }
+        public IShaderParameters ShaderParameters { get; set; }
         public VertexPositionColorTexture[] VertexData { get; private set; } = new VertexPositionColorTexture[4];
 
         #endregion Public Properties
 
         #region Public Methods
 
-        public void Set(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Set(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
             Texture = texture;
             Shader = shader;
+            ShaderParameters = shaderParameters;
 
             if (!sourceRectangle.HasValue) {
                 sourceRectangle = new Rectangle(texture.Size);
@@ -83,13 +85,21 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+        public void Set(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+        }
+
+        public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
             if (!sourceRectangle.HasValue) {
                 sourceRectangle = new Rectangle(texture.Size);
             }
 
             Rectangle destinationRectagle = new Rectangle(position, sourceRectangle.Value.Size);
-            Set(texture, destinationRectagle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, layerDepth);
+            Set(texture, destinationRectagle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
+            Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
         }
 
         #endregion Public Methods
