@@ -36,8 +36,8 @@ namespace Raccoon.Graphics {
         public string FamilyName { get { return Face.FamilyName; } }
         public SharpFont.Face Face { get; private set; }
         public Texture Texture { get { return RenderMap?.Texture; } }
-        public float LineSpacing { get { return Face.Size.Metrics.NominalHeight; } }
-        public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face, Face.BBox.Right - Face.BBox.Left); } }
+        public float LineSpacing { get { return RenderMap.NominalHeight; } }
+        public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face.BBox.Right - Face.BBox.Left, RenderMap.NominalWidth, Face.UnitsPerEM); } }
         public bool IsDisposed { get; private set; }
 
         public float Size {

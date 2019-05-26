@@ -24,7 +24,6 @@ SOFTWARE.*/
 
 #define TIGHT_PACK_FACE_RENDER_MAP
 
-using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -33,7 +32,7 @@ using SharpFont;
 using Raccoon.Fonts;
 
 namespace Raccoon {
-	internal class FontService : IDisposable {
+	internal class FontService : System.IDisposable {
         #region Private Members
 
 		private bool _disposedValue; // To detect redundant calls
@@ -73,8 +72,8 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public static float ConvertEMToPx(Face face, int em) {
-            return em / (float) face.UnitsPerEM * face.Size.Metrics.NominalWidth;
+        public static float ConvertEMToPx(int em, ushort nominalWidth, ushort unitsPerEM) {
+            return em / (float) unitsPerEM * nominalWidth;
         }
 
 		public IEnumerable<FileInfo> GetFontFiles(DirectoryInfo folder, bool recurse) {
@@ -126,15 +125,19 @@ namespace Raccoon {
 
         public static FontFaceRenderMap CreateFaceRenderMap(Face face) {
 #if TIGHT_PACK_FACE_RENDER_MAP
-            Size glyphSlotSize = new Size(ConvertEMToPx(face, face.BBox.Right - face.BBox.Left), face.Size.Metrics.NominalHeight);
+            FTSize fontSize = face.Size;
+            SizeMetrics fontSizeMetrics = fontSize.Metrics;
+            ushort nominalWidth = fontSizeMetrics.NominalWidth,
+                   nominalHeight = fontSizeMetrics.NominalHeight;
+            Size glyphSlotSize = new Size(ConvertEMToPx(face.BBox.Right - face.BBox.Left, nominalWidth, face.UnitsPerEM), nominalHeight);
 #else
             Size glyphSlotSize = new Size(face.Size.Metrics.NominalWidth, face.Size.Metrics.NominalHeight);
 #endif
 
-            FontFaceRenderMap renderMap = new FontFaceRenderMap(face, glyphSlotSize);
+            FontFaceRenderMap renderMap = new FontFaceRenderMap(face, glyphSlotSize, nominalWidth, nominalHeight);
 
             // prepare texture
-            int sideSize = (int) (Math.Ceiling(System.Math.Sqrt(face.GlyphCount)) * glyphSlotSize.Width);
+            int sideSize = (int) (Util.Math.Ceiling(System.Math.Sqrt(face.GlyphCount)) * glyphSlotSize.Width);
             int textureSideSize = Util.Math.CeilingPowerOfTwo(sideSize);
 
             Graphics.Texture texture = new Graphics.Texture(textureSideSize, textureSideSize);
@@ -154,7 +157,7 @@ namespace Raccoon {
 
                 if (ftBitmap != null && ftBitmap.Width > 0 && ftBitmap.Rows > 0) {
                     if (ftBitmap.PixelMode != PixelMode.Gray) {
-                        throw new NotImplementedException("Supported PixelMode formats are: Gray");
+                        throw new System.NotImplementedException("Supported PixelMode formats are: Gray");
                     }
 
                     // tests if glyph bitmap actually fits on current row
@@ -209,7 +212,7 @@ namespace Raccoon {
                 byte[] buffer = ftBitmap.BufferData;
                 int dataOffset,
                     bufferOffset,
-                    pitch = Math.Abs(ftBitmap.Pitch);
+                    pitch = Util.Math.Abs(ftBitmap.Pitch);
 
                 for (int row = 0; row < ftBitmap.Rows; row++) {
                     dataOffset = (int) ((destinationTopleft.Y + row) * dataRowSize + destinationTopleft.X);

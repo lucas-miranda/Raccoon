@@ -7,9 +7,11 @@ namespace Raccoon.Fonts {
     internal class FontFaceRenderMap : System.IDisposable {
         #region Constructors
 
-        public FontFaceRenderMap(SharpFont.Face face, Size glyphSlotSize) {
+        public FontFaceRenderMap(SharpFont.Face face, Size glyphSlotSize, ushort nominalWidth, ushort nominalHeight) {
             Face = face;
             GlyphSlotSize = glyphSlotSize;
+            NominalWidth = nominalWidth;
+            NominalHeight = nominalHeight;
         }
 
         #endregion Constructors
@@ -17,6 +19,8 @@ namespace Raccoon.Fonts {
         #region Public Properties
 
         public SharpFont.Face Face { get; private set; }
+        public ushort NominalWidth { get; }
+        public ushort NominalHeight { get; }
         public Texture Texture { get; set; }
         public Size GlyphSlotSize { get; }
         public Dictionary<uint, Glyph> Glyphs { get; private set; } = new Dictionary<uint, Glyph>();
@@ -37,10 +41,10 @@ namespace Raccoon.Fonts {
 
             textSize = Size.Empty;
 
-            float ascent = FontService.ConvertEMToPx(Face, Face.BBox.Top),
+            float ascent = FontService.ConvertEMToPx(Face.BBox.Top, NominalWidth, Face.UnitsPerEM),
                   overrun = 0,
                   kern,
-                  lineHeight = Face.Size.Metrics.NominalHeight;
+                  lineHeight = NominalHeight;
 
             Vector2 penPosition = Vector2.Zero;
             bool isEndOfLine = false;
@@ -167,7 +171,7 @@ namespace Raccoon.Fonts {
                 Texture = null;
             }
 
-            Face = null;
+            Face = null; // Font owns SharpFont.Face
             Glyphs = null;
 
             IsDisposed = true;
