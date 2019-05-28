@@ -175,7 +175,7 @@ namespace Raccoon.Graphics {
             float min = Math.Min(Math.Min(r, g), b);
 
             float h, s, l;
-            h = s = l = (max + min) / 2f;
+            l = (max + min) / 2f;
 
             if (max == min) {
                 h = s = 0f;
@@ -199,7 +199,6 @@ namespace Raccoon.Graphics {
 
         public static Color FromHSL(float h, float s, float l) {
             float r, g, b;
-            r = g = b = 0f;
 
             if (s == 0f) {
                 r = g = b = l;

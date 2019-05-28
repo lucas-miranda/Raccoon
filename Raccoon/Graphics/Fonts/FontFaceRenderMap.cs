@@ -37,7 +37,8 @@ namespace Raccoon.Fonts {
         }
 
         public Text.RenderData PrepareText(string text, out Size textSize) {
-            Text.RenderData textRenderData = new Text.RenderData(text.Length);
+            int extraSpace = text.Count("\t") * Math.Max(0, FontService.TabulationWhitespacesSize - 1);
+            Text.RenderData textRenderData = new Text.RenderData(text.Length + extraSpace);
 
             textSize = Size.Empty;
 
