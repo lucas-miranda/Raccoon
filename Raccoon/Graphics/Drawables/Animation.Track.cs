@@ -108,6 +108,14 @@
                 }
             }
 
+            public void FirstFrame() {
+                CurrentFrameIndex = 0;
+            }
+
+            public void LastFrame() {
+                CurrentFrameIndex = FramesRegions.Length - 1;
+            }
+
             public Track Repeat(int times = -1) {
                 RepeatTimes = times;
                 return this;

@@ -144,6 +144,11 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void Prepare(KeyType key, bool forceReset = true) {
+            Play(key, forceReset);
+            Pause();
+        }
+
         public void Resume() {
             Play(false);
         }
