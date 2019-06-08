@@ -20,7 +20,8 @@
             Load();
         }
 
-        public FrameSet(string filename, Size frameSize) : this(frameSize, -1) { }
+        public FrameSet(string filename, Size frameSize) : this(frameSize, -1) {
+        }
 
         public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = subTexture.Texture;
@@ -28,7 +29,8 @@
             Load();
         }
 
-        public FrameSet(AtlasSubTexture subTexture, Size frameSize) : this(frameSize, -1) { }
+        public FrameSet(AtlasSubTexture subTexture, Size frameSize) : this(frameSize, -1) {
+        }
 
         #endregion Contructors
 

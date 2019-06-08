@@ -44,15 +44,17 @@ namespace Raccoon.Graphics {
             foreach (KeyValuePair<string, List<AtlasAnimationFrame>> anim in animTexture) {
                 Rectangle[] framesRegions = new Rectangle[anim.Value.Count];
                 int[] durations = new int[framesRegions.Length];
+                Rectangle[] destinationFrames = new Rectangle[anim.Value.Count];
 
                 int i = 0;
                 foreach (AtlasAnimationFrame frame in anim.Value) {
                     framesRegions[i] = frame.ClippingRegion;
                     durations[i] = frame.Duration;
+                    destinationFrames[i] = new Rectangle(frame.OriginalFrame.Position, frame.ClippingRegion.Size);
                     i++;
                 }
 
-                Add((KeyType) (object) anim.Key, framesRegions, durations);
+                Add((KeyType) (object) anim.Key, framesRegions, destinationFrames, durations);
             }
         }
 
@@ -187,6 +189,20 @@ namespace Raccoon.Graphics {
             return track;
         }
 
+        public virtual Track Add(KeyType key, Rectangle[] framesRegions, Rectangle[] framesDestinations, ICollection<int> durations) {
+            ValidateArraySize(framesRegions, "framesRegions");
+            ValidateArraySize(framesDestinations, "framesDestinations");
+            ValidateArraySize((ICollection) durations, "durations");
+
+            int[] durationList = new int[durations.Count];
+            durations.CopyTo(durationList, 0);
+
+            Track track = new Track(framesRegions, framesDestinations, durationList);
+            Add(key, track);
+
+            return track;
+        }
+
         public virtual Track Add(KeyType key, Rectangle[] framesRegions, ICollection<int> durations) {
             ValidateArraySize(framesRegions, "framesRegions");
             ValidateArraySize((ICollection) durations, "durations");
@@ -278,9 +294,9 @@ namespace Raccoon.Graphics {
             return targetTrack;
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, Rectangle[] replaceFrameRegions, bool reverse = false) {
+        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, Rectangle[] replaceFrameRegions, Rectangle[] replaceFrameDestinations, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
-            Track targetTrack = new Track(originalTrack, replaceFrameRegions);
+            Track targetTrack = new Track(originalTrack, replaceFrameRegions, replaceFrameDestinations, replaceDurations: null);
             Add(targetKey, targetTrack);
 
             if (reverse) {
@@ -292,7 +308,7 @@ namespace Raccoon.Graphics {
 
         public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, int[] replaceDurations, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
-            Track targetTrack = new Track(originalTrack, null, replaceDurations);
+            Track targetTrack = new Track(originalTrack, replaceFrameRegions: null, replaceFrameDestinations: null, replaceDurations);
             Add(targetKey, targetTrack);
 
             if (reverse) {
@@ -308,6 +324,36 @@ namespace Raccoon.Graphics {
 
         #endregion Public Methods
 
+        #region Protected Methods
+
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+            if (CurrentTrack != null && CurrentTrack.FramesDestinations != null) {
+                // frame destination works like a guide to where render at local space
+                // 'position' should be interpreted as 'origin'
+                ref Rectangle frameDestination = ref CurrentTrack.CurrentFrameDestination;
+                if (frameDestination.Position != Vector2.Zero) {
+                    position -= frameDestination.Position;
+                }
+
+                // maybe we should make a careful check before modifying DestinationRegion here
+                // user could modify value globally to Animation and we'll be interfering
+                // making a change frame based here
+
+                /*
+                // there we give the power to frame regions deform animations
+                // I don't know if it will be usefull anywhere, but we can do this
+                ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+                if (frameDestination.Size != frameRegion.Size) {
+                    DestinationRegion = new Rectangle(frameDestination.Size);
+                }
+                */
+            }
+
+            base.Draw(position, rotation, scale, flip, color, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Protected Methods
+
         #region Private Methods
 
         private void UpdateClippingRegion() {
@@ -318,7 +364,7 @@ namespace Raccoon.Graphics {
             Rectangle[] framesRegions = new Rectangle[frames.Length];
 
             int columns = (int) (SourceRegion.Width / ClippingRegion.Width);
-            int rows = (int) (SourceRegion.Height / ClippingRegion.Height);
+            //int rows = (int) (SourceRegion.Height / ClippingRegion.Height);
 
             for (int i = 0; i < frames.Length; i++) {
                 int frameId = frames[i];
@@ -329,6 +375,8 @@ namespace Raccoon.Graphics {
                     ClippingRegion.Width,
                     ClippingRegion.Height
                 );
+
+                framesRegions[i] = frameRegion;
             }
 
             return framesRegions;
@@ -478,6 +526,10 @@ namespace Raccoon.Graphics {
             return base.Add(key.ToLowerInvariant(), framesRegions, duration);
         }
 
+        public override Track Add(string key, Rectangle[] framesRegions, Rectangle[] framesDestinations, ICollection<int> durations) {
+            return base.Add(key.ToLowerInvariant(), framesRegions, framesDestinations, durations);
+        }
+
         public override Track Add(string key, Rectangle[] framesRegions, ICollection<int> durations) {
             return base.Add(key.ToLowerInvariant(), framesRegions, durations);
         }
@@ -506,8 +558,8 @@ namespace Raccoon.Graphics {
             return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey.ToLowerInvariant(), reverse);
         }
 
-        public override Track CloneAdd(string targetKey, string originalKey, Rectangle[] replaceFrameRegions, bool reverse = false) {
-            return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey, replaceFrameRegions);
+        public override Track CloneAdd(string targetKey, string originalKey, Rectangle[] replaceFrameRegions, Rectangle[] replaceFrameDestinations, bool reverse = false) {
+            return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey, replaceFrameRegions, replaceFrameDestinations);
         }
 
         public override Track CloneAdd(string targetKey, string originalKey, int[] replaceDurations, bool reverse = false) {

@@ -11,10 +11,13 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
-        public AtlasAnimation(Texture texture, Rectangle region) : base(texture, region) {
+        public AtlasAnimation(Texture texture, Rectangle sourceRegion) : base(texture, sourceRegion, new Rectangle(Vector2.Zero, sourceRegion.Size)) {
             _tracks = new Dictionary<string, List<AtlasAnimationFrame>> {
                 { "all", new List<AtlasAnimationFrame>() }
             };
+        }
+
+        public AtlasAnimation(Texture texture) : this(texture, texture.Bounds) {
         }
 
         #endregion Constructors
@@ -31,12 +34,20 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
-        public void Add(Rectangle clippingRegion, int duration, string tag) {
-            if (!_tracks.ContainsKey(tag)) {
-                _tracks.Add(tag, new List<AtlasAnimationFrame>());
+        public void AddFrame(Rectangle clippingRegion, int duration, Rectangle originalFrame, string targetTag) {
+            if (!_tracks.ContainsKey(targetTag)) {
+                _tracks.Add(targetTag, new List<AtlasAnimationFrame>());
             }
 
-            _tracks[tag].Add(new AtlasAnimationFrame(duration, clippingRegion));
+            _tracks[targetTag].Add(new AtlasAnimationFrame(duration, clippingRegion, originalFrame));
+        }
+
+        public void AddFrame(Rectangle clippingRegion, int duration, string targetTag) {
+            if (!_tracks.ContainsKey(targetTag)) {
+                _tracks.Add(targetTag, new List<AtlasAnimationFrame>());
+            }
+
+            _tracks[targetTag].Add(new AtlasAnimationFrame(duration, clippingRegion));
         }
 
         public IEnumerator GetEnumerator() {

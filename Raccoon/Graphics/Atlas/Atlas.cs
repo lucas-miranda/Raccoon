@@ -1,109 +1,51 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 using Newtonsoft.Json.Linq;
 
-using System.IO;
-using System.Text.RegularExpressions;
+using Raccoon.Graphics.AtlasProcessors;
 
 namespace Raccoon.Graphics {
     public class Atlas {
-        #region Private Static Members
-
-        private static readonly Regex FrameNameRegex = new Regex(@"(.+?) (\d+)? (.*)");
-
-        private static Dictionary<string, Atlas> _bank = new Dictionary<string, Atlas>();
-
-        #endregion Private Static Members
-
         #region Private Members
 
-        private Dictionary<string, AtlasSubTexture> _subTextures;
+        private static readonly IAtlasProcessor[] _processors;
+
+        private Dictionary<string, AtlasSubTexture> _subTextures = new Dictionary<string, AtlasSubTexture>();
 
         #endregion Private Members
 
         #region Constructors
 
-        public Atlas(string imageFilename, string jsonFilename) {
-            _subTextures = new Dictionary<string, AtlasSubTexture>();
+        static Atlas() {
+            _processors = new IAtlasProcessor[] {
+                new AsepriteAtlasProcessor(),
+                new RavenAtlasProcessor()
+            };
+        }
+
+        public Atlas(string imageFilename, string dataFilename) {
             Texture = new Texture(imageFilename);
 
+            string dataFileText = File.ReadAllText(dataFilename);
+            JObject json = JObject.Parse(dataFileText);
 
-            // all frames organized as sprite/tag/frame
-            Dictionary<string, Dictionary<string, List<JObject>>> animationsData = new Dictionary<string, Dictionary<string, List<JObject>>>();
-            JObject json = JObject.Parse(File.ReadAllText(jsonFilename));
+            JToken metaToken = json.SelectToken("meta", errorWhenNoMatch: true);
+            IAtlasProcessor dataProcessor = null;
 
-            JToken sizeToken = json.SelectToken("meta.size");
-
-            Rectangle sourceRegion = new Rectangle(
-                                         sizeToken.Value<int>("w"),
-                                         sizeToken.Value<int>("h")
-                                     );
-
-            foreach (JProperty prop in json.SelectToken("frames").Children<JProperty>()) {
-                Match m = FrameNameRegex.Match(prop.Name);
-                if (!m.Success) {
-                    continue;
-                }
-
-                string spriteName = m.Groups[1].Value,
-                       tag = m.Groups[3].Length == 0 ? "none" : m.Groups[3].Value;
-
-                int frameId = m.Groups[2].Length == 0 ? 0 : int.Parse(m.Groups[2].Value);
-
-                if (!animationsData.ContainsKey(spriteName)) {
-                    animationsData.Add(spriteName, new Dictionary<string, List<JObject>>());
-                    animationsData[spriteName].Add("all", new List<JObject>());
-                }
-
-                Dictionary<string, List<JObject>> animData = animationsData[spriteName];
-                if (!animData.ContainsKey(tag)) {
-                    animData.Add(tag, new List<JObject>());
-                }
-
-                JObject frameObj = prop.Value.ToObject<JObject>();
-                frameObj.Add("frameId", new JValue(frameId));
-                animData[tag].Add(frameObj);
-
-                if (tag != "all") {
-                    animData["all"].Add(frameObj);
+            foreach (IAtlasProcessor processor in _processors) {
+                // choose first processor which accepts meta
+                if (processor.VerifyJsonMeta(metaToken)) {
+                    dataProcessor = processor;
+                    break;
                 }
             }
 
-            // create AtlasSubTextures
-            foreach (KeyValuePair<string, Dictionary<string, List<JObject>>> animationData in animationsData) {
-                string key = animationData.Key.ToLowerInvariant();
-
-                if (animationData.Value["all"].Count == 1) {
-                    JToken frameRegion = animationData.Value["all"][0]["frame"];
-
-                    Rectangle clippingRegion = new Rectangle(
-                                                   frameRegion.Value<int>("x"),
-                                                   frameRegion.Value<int>("y"),
-                                                   frameRegion.Value<int>("w"),
-                                                   frameRegion.Value<int>("h")
-                                               );
-
-                    _subTextures.Add(key, new AtlasSubTexture(Texture, sourceRegion) { ClippingRegion = clippingRegion });
-                } else {
-                    AtlasAnimation animation = new AtlasAnimation(Texture, sourceRegion);
-
-                    foreach (KeyValuePair<string, List<JObject>> track in animationData.Value) {
-                        foreach (JObject frameData in track.Value) {
-                            JToken frameRegion = frameData["frame"];
-                            Rectangle clippingRegion = new Rectangle(
-                                                           frameRegion.Value<int>("x"),
-                                                           frameRegion.Value<int>("y"),
-                                                           frameRegion.Value<int>("w"),
-                                                           frameRegion.Value<int>("h")
-                                                       );
-
-                            animation.Add(clippingRegion, frameData["duration"].ToObject<int>(), track.Key);
-                        }
-                    }
-
-                    _subTextures.Add(key, animation);
-                }
+            if (dataProcessor == null) {
+                throw new System.InvalidOperationException($"Could not find a valid atlas data processor (to file: '{dataFilename}').");
             }
+
+            dataProcessor.ProcessJson(json, Texture, ref _subTextures);
         }
 
         #endregion Constructors
@@ -121,36 +63,32 @@ namespace Raccoon.Graphics {
 
         public AtlasSubTexture this[int x, int y, int width, int height] {
             get {
-                return new AtlasSubTexture(Texture, new Rectangle(x, y, width, height));
+                return new AtlasSubTexture(Texture, Texture.Bounds, new Rectangle(x, y, width, height));
             }
         }
 
         public AtlasSubTexture this[Rectangle region] {
             get {
-                return new AtlasSubTexture(Texture, region);
+                return new AtlasSubTexture(Texture, Texture.Bounds, region);
             }
         }
 
         #endregion Public Properties
 
-        #region Public Static Methods
+        #region Public Methods
 
-        public static void Register(string name, string imageFilename, string jsonFilename) {
-            _bank.Add(name, new Atlas(imageFilename, jsonFilename));
+        public AtlasSubTexture RetrieveSubTexture(string name) {
+            return _subTextures[name.ToLowerInvariant()];
         }
 
-        public static Atlas Retrieve(string name) {
-            return _bank[name];
+        public AtlasAnimation RetrieveAnimation(string name) {
+            if (!(_subTextures[name.ToLowerInvariant()] is AtlasAnimation animation)) {
+                return null;
+            }
+
+            return animation;
         }
 
-        public static AtlasSubTexture Retrieve(string name, string subName) {
-            return _bank[name][subName.ToLowerInvariant()];
-        }
-
-        public static AtlasAnimation RetrieveAnimation(string name, string subName) {
-            return _bank[name][subName.ToLowerInvariant()] as AtlasAnimation;
-        }
-
-        #endregion Public Static Methods
+        #endregion Public Methods
     }
 }

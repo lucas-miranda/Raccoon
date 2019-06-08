@@ -6,9 +6,17 @@
 
             private int _currentFrameIndex;
 
-            public Track(Rectangle[] framesRegions, int[] durations) {
+            public Track(Rectangle[] framesRegions, Rectangle[] framesDestinations, int[] durations) {
                 FramesRegions = framesRegions;
                 Durations = durations;
+
+                if (framesDestinations != null) {
+                    if (framesDestinations.Length != framesRegions.Length) {
+                        throw new System.ArgumentException($"Inconsistent arrays size, {nameof(framesRegions)} contains {framesRegions.Length}, but {nameof(framesDestinations)} contains {framesDestinations.Length}. They must be the same length.");
+                    }
+
+                    FramesDestinations = framesDestinations;
+                }
 
                 if (durations.Length < framesRegions.Length) {
                     // clone last element until reach same size
@@ -30,12 +38,23 @@
                 }
             }
 
-            public Track(Track track, Rectangle[] replaceFrameRegions = null, int[] replaceDurations = null) {
+            public Track(Rectangle[] framesRegions, int[] durations) : this(framesRegions, null, durations) {
+            }
+
+            public Track(Track track, Rectangle[] replaceFrameRegions = null, Rectangle[] replaceFrameDestinations = null, int[] replaceDurations = null) {
                 if (replaceFrameRegions != null) {
                     FramesRegions = replaceFrameRegions;
                 } else {
                     FramesRegions = new Rectangle[track.FramesRegions.Length];
                     track.FramesRegions.CopyTo(FramesRegions, 0);
+                }
+
+                if (replaceFrameDestinations != null) {
+                    FramesDestinations = replaceFrameDestinations;
+                } else if (track.FramesDestinations != null) {
+                    int length = replaceFrameRegions == null ? track.FramesDestinations.Length : Util.Math.Min(replaceFrameRegions.Length, track.FramesDestinations.Length);
+                    FramesDestinations = new Rectangle[length];
+                    track.FramesDestinations.CopyTo(FramesDestinations, 0);
                 }
 
                 if (replaceDurations != null) {
@@ -54,10 +73,12 @@
             }
 
             public Rectangle[] FramesRegions { get; private set; }
+            public Rectangle[] FramesDestinations { get; private set; }
             public int[] Durations { get; private set; }
             public int CurrentFrameIndex { get { return _currentFrameIndex; } set { _currentFrameIndex = Util.Math.Clamp(value, 0, FramesRegions.Length - 1); } }
             public int CurrentFrameDuration { get { return Durations[CurrentFrameIndex]; } }
             public ref Rectangle CurrentFrameRegion { get { return ref FramesRegions[CurrentFrameIndex]; } }
+            public ref Rectangle CurrentFrameDestination { get { return ref FramesDestinations[CurrentFrameIndex]; } }
             public int RepeatTimes { get; set; }
             public int TimesPlayed { get; private set; }
             public bool HasEnded { get; private set; }
