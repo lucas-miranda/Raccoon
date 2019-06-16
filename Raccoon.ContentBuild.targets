@@ -1,0 +1,60 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="ContentBuild">
+        <!-- Checking -->
+        <Error Text="'ContentSourceFolderPath' property not defined." Condition="'$(ContentSourceFolderPath)' == ''"/>
+
+        <!-- Folders -->
+        <PropertyGroup>
+            <GraphicsFolderName Condition="'$(GraphicsFolderName)' == ''">graphics</GraphicsFolderName>
+            <FontsFolderName Condition="'$(FontsFolderName)' == ''">fonts</FontsFolderName>
+            <EffectsFolderName Condition="'$(EffectsFolderName)' == ''">fx</EffectsFolderName>
+            <ContentOutputFolderPath Condition="'$(ContentOutputFolderPath)' == ''">Content</ContentOutputFolderPath>
+        </PropertyGroup>
+
+        <CombinePath BasePath="$(ContentSourceFolderPath)" Paths="$(GraphicsFolderName)">
+            <Output TaskParameter="CombinedPaths" PropertyName="GraphicsFolderFullpath"/>
+        </CombinePath>
+
+        <CombinePath BasePath="$(ContentSourceFolderPath)" Paths="$(FontsFolderName)">
+            <Output TaskParameter="CombinedPaths" PropertyName="FontsFolderFullpath"/>
+        </CombinePath>
+
+        <CombinePath BasePath="$(ContentSourceFolderPath)" Paths="$(EffectsFolderName)">
+            <Output TaskParameter="CombinedPaths" PropertyName="EffectsFolderFullpath"/>
+        </CombinePath>
+
+        <!-- Content Files -->
+        <ItemGroup>
+            <FontFiles Include="$(FontsFolderFullpath)\**\*.*"/>
+            <GraphicFiles Include="$(GraphicsFolderFullpath)\**\*.png"/>
+            <GraphicFiles Include="$(GraphicsFolderFullpath)\**\*.json"/>
+            <EffectFiles Include="$(EffectsFolderFullpath)\**\*.fx"/>
+        </ItemGroup>
+
+        <!-- Build Files -->
+        <Message importance="high" Text="Building Effects files"/>
+        <Exec Condition="'@(EffectFiles -> Count())' > 0" Command='fxc /nologo /T fx_2_0 "%(EffectFiles.FullPath)" /Fo "%(EffectFiles.FullPath)c"'/>
+
+        <ItemGroup>
+            <EffectCompiledFiles Include="$(EffectsFolderFullpath)\**\*.fxc"/>
+        </ItemGroup>
+
+        <!-- Copy Files -->
+        <CombinePath BasePath="$(OutputPath)" Paths="$(ContentOutputFolderPath)\$(GraphicsFolderName)\">
+            <Output TaskParameter="CombinedPaths" PropertyName="GraphicsOutputFullpath"/>
+        </CombinePath>
+
+        <CombinePath BasePath="$(OutputPath)" Paths="$(ContentOutputFolderPath)\$(FontsFolderName)\">
+            <Output TaskParameter="CombinedPaths" PropertyName="FontsOutputFullpath"/>
+        </CombinePath>
+
+        <CombinePath BasePath="$(OutputPath)" Paths="$(ContentOutputFolderPath)\$(EffectsFolderName)\">
+            <Output TaskParameter="CombinedPaths" PropertyName="EffectsOutputFullpath"/>
+        </CombinePath>
+
+        <Message importance="high" Text="Copying Content files"/>
+        <Copy SourceFiles="@(GraphicFiles)" DestinationFiles="@(GraphicFiles -> '$(GraphicsOutputFullpath)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+        <Copy SourceFiles="@(FontFiles)" DestinationFiles="@(FontFiles -> '$(FontsOutputFullpath)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+        <Copy SourceFiles="@(EffectCompiledFiles)" DestinationFiles="@(EffectCompiledFiles -> '$(EffectsOutputFullpath)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
+    </Target>
+</Project>
