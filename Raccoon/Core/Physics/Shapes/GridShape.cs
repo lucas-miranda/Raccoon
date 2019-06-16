@@ -148,7 +148,7 @@ namespace Raccoon {
 
             // extra processing
             switch (originalTileShape) {
-                case BoxTileShape boxTileShape:
+                case BoxTileShape _:
                     gridTile = _collisionShapes[id];
                     break;
 
@@ -169,7 +169,7 @@ namespace Raccoon {
                             break;
 
                         case Tiled.TiledTile.FlippedDiagonallyFlag:
-                            polygon.RotateAround(270, TileSize.ToVector2() / 2f);
+                            polygon.RotateAround(90, TileSize.ToVector2() / 2f);
                             polygon.ReflectHorizontal(TileSize.Width / 2f);
                             break;
 
