@@ -81,7 +81,7 @@ namespace Raccoon.Graphics {
         public bool IsPlaying { get; private set; }
         public KeyType CurrentKey { get; private set; }
         public Track CurrentTrack { get; private set; }
-        public int ElapsedTime { get; private set; }
+        public int ElapsedTime { get; set; }
         public float PlaybackSpeed { get; set; } = 1f;
 
         public virtual Track this[KeyType key] {
@@ -318,21 +318,52 @@ namespace Raccoon.Graphics {
             return targetTrack;
         }
 
+        public virtual Track CreateTrackFromTracks(KeyType newKey, KeyType[] keys) {
+            if (keys == null) {
+                throw new System.ArgumentNullException(nameof(keys));
+            }
+
+            if (keys.Length == 0) {
+                throw new System.ArgumentException("Expected KeyType[] with length > 0, but none was suplied.", nameof(keys));
+            }
+
+            List<Rectangle> framesRegions = new List<Rectangle>();
+            List<int> durations = new List<int>();
+            List<Rectangle> destinationRegions = new List<Rectangle>();
+
+            for (int i = 0; i < keys.Length; i++) {
+                Track track = Tracks[keys[i]];
+
+                framesRegions.AddRange(track.FramesRegions);
+                durations.AddRange(track.Durations);
+                destinationRegions.AddRange(track.FramesDestinations);
+
+            }
+
+            return Add(newKey, framesRegions.ToArray(), destinationRegions.ToArray(), durations);
+        }
+
         public virtual bool ContainsTrack(KeyType key) {
             return Tracks.ContainsKey(key);
+        }
+
+        public void Refresh() {
+            if (CurrentTrack != null) {
+                UpdateClippingRegion();
+            }
         }
 
         #endregion Public Methods
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
             if (CurrentTrack != null && CurrentTrack.FramesDestinations != null) {
                 // frame destination works like a guide to where render at local space
-                // 'position' should be interpreted as 'origin'
+                // 'frameDestination.position' should be interpreted as 'origin'
                 ref Rectangle frameDestination = ref CurrentTrack.CurrentFrameDestination;
                 if (frameDestination.Position != Vector2.Zero) {
-                    position -= frameDestination.Position;
+                    origin += frameDestination.Position;
                 }
 
                 // maybe we should make a careful check before modifying DestinationRegion here
@@ -349,7 +380,7 @@ namespace Raccoon.Graphics {
                 */
             }
 
-            base.Draw(position, rotation, scale, flip, color, scroll, shader, shaderParameters, layerDepth);
+            base.Draw(position, rotation, scale, flip, color, scroll, shader, shaderParameters, origin, layerDepth);
         }
 
         #endregion Protected Methods
@@ -564,6 +595,10 @@ namespace Raccoon.Graphics {
 
         public override Track CloneAdd(string targetKey, string originalKey, int[] replaceDurations, bool reverse = false) {
             return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey, replaceDurations, reverse);
+        }
+
+        public override Track CreateTrackFromTracks(string newKey, string[] keys) {
+            return base.CreateTrackFromTracks(newKey.ToLowerInvariant(), keys);
         }
 
         public override bool ContainsTrack(string key) {

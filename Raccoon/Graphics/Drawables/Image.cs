@@ -198,7 +198,7 @@
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
             if (DestinationRegion.IsEmpty) {
                 Renderer.Draw(
                     Texture,
@@ -208,7 +208,7 @@
                     Scale * scale,
                     Flipped ^ flip,
                     (color * Color) * Opacity,
-                    Origin,
+                    Origin + origin,
                     Scroll + scroll,
                     shader,
                     shaderParameters,
@@ -224,7 +224,7 @@
                 Rotation + rotation,
                 Flipped ^ flip,
                 (color * Color) * Opacity,
-                Origin,
+                Origin + origin,
                 Scroll + scroll,
                 shader,
                 shaderParameters,

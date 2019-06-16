@@ -105,7 +105,7 @@
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
             Renderer.DrawString(
                 Font,
                 Data,
@@ -118,6 +118,7 @@
                 Scroll + scroll,
                 shader,
                 shaderParameters,
+                //origin,
                 layerDepth
             );
         }

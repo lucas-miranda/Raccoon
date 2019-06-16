@@ -40,7 +40,9 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth) {
+        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
+            origin = Origin + origin;
+
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
@@ -65,8 +67,8 @@ namespace Raccoon.Graphics.Primitives {
             foreach (object pass in bs) {
                 device.DrawUserPrimitives(PrimitiveType.LineList,
                     new VertexPositionColor[2] {
-                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X, Position.Y + position.Y - Origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White),
-                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - Origin.X + _to.X, Position.Y + position.Y - Origin.Y + _to.Y, layerDepth), Microsoft.Xna.Framework.Color.White)
+                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - origin.X, Position.Y + position.Y - origin.Y, layerDepth), Microsoft.Xna.Framework.Color.White),
+                        new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(Position.X + position.X - origin.X + _to.X, Position.Y + position.Y - origin.Y + _to.Y, layerDepth), Microsoft.Xna.Framework.Color.White)
                     }, 0, 1);
             }
 

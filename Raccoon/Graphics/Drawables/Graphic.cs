@@ -166,7 +166,7 @@ namespace Raccoon.Graphics {
 #endif
 
             BeforeDraw();
-            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ShaderParameters, ConvertLayerToLayerDepth(Layer + layer));
+            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ShaderParameters, origin: Vector2.Zero, ConvertLayerToLayerDepth(Layer + layer));
             AfterDraw();
         }
 
@@ -190,7 +190,7 @@ namespace Raccoon.Graphics {
         protected virtual void BeforeDraw() {
         }
 
-        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth);
+        protected abstract void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth);
 
         protected virtual void AfterDraw() {
         }
