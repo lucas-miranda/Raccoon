@@ -42,5 +42,9 @@ namespace Raccoon {
         IEnumerator IEnumerable.GetEnumerator() {
             return _entries.GetEnumerator();
         }
+
+        public override string ToString() {
+            return $"[{string.Join(", ", _entries)}]";
+        }
     }
 }

@@ -49,7 +49,7 @@
         }
 
         public override string ToString() {
-            return $"[Pos: {Position}, Normal: {Normal}, PenDepth: {PenetrationDepth}]";
+            return $"({Position}, {Normal}, {PenetrationDepth})";
         }
     }
 }

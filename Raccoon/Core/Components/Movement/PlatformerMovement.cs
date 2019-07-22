@@ -5,8 +5,8 @@ namespace Raccoon.Components {
         #region Public Members
 
         public static Vector2 GravityForce;
-        public static int LedgeJumpMaxTime = 200; // in miliseconds
-        public static uint JumpInputBufferTime = 200; // milliseconds
+        public static int LedgeJumpMaxTime = 200;       // milliseconds
+        public static uint JumpInputBufferTime = 200;   // milliseconds
 
         public event System.Action OnJumpBegin = delegate { },
                                    OnTouchGround = delegate { },
@@ -60,7 +60,10 @@ Fall Through
 ";
 
         // jump
-        private bool _canJump = true, _canKeepCurrentJump = true, _requestedJump;
+        private bool _canJump = true, 
+                     _canKeepCurrentJump = true, 
+                     _requestedJump;
+
         private int _jumpMaxY, _ledgeJumpTime;
         private uint _lastTimeFirstRequestToJump;
 
@@ -179,6 +182,11 @@ Fall Through
         /// </summary>
         public bool CanFallThrough { get; private set; }
 
+        /// <summary>
+        /// Can gravity act.
+        /// </summary>
+        public bool GravityEnabled { get; set; } = true;
+
         #endregion Public Properties
 
         #region Protected Properties
@@ -252,9 +260,11 @@ Fall Through
 
             if (OnGround && !_isWalkingOnRamp && !IsJumping) {
                 // checks if it's touching the ground
-                if (!Physics.Instance.QueryMultipleCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> collisions)
-                  || !collisions.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f)))) {
-                    Fall();
+                if (GravityEnabled) {
+                    if (!Physics.Instance.QueryMultipleCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> collisions)
+                      || !collisions.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f)))) {
+                        Fall();
+                    }
                 }
             }
 
@@ -436,7 +446,7 @@ Fall Through
             // Vertical Velocity //
             ///////////////////////
 
-            _isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
+            //_isWalkingOnRamp = CheckRamps(displacement.X, ref displacement);
 
             if (!_isWalkingOnRamp) {
                 if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
@@ -444,7 +454,7 @@ Fall Through
                     velocity.Y += ImpulsePerSec.Y * dt;
                 }
 
-                if (!OnGround) {
+                if (!OnGround && GravityEnabled) {
                     // apply gravity force
                     velocity.Y += GravityScale * GravityForce.Y * dt;
                 }
@@ -492,6 +502,12 @@ Fall Through
             _isWalkingOnRamp = false;
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
+
+            Debug.WriteLine("Jump!!!");
+            Debug.WriteLine("Jump!!!");
+            Debug.WriteLine("Jump!!!");
+            Debug.WriteLine("Jump!!!");
+            Debug.WriteLine("Jump!!!");
         }
 
         public void FallThrough() {
@@ -601,7 +617,7 @@ Fall Through
             displacement = rampMoveDisplacement;
 
             Body.MoveBufferX = 0;
-            Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
+            //Debug.WriteLine($"Contacts: {contact}, displacement.x = {displacement.X}, rampslope: {Vector2.Dot(contact.Normal, Vector2.Down)}");
             /*Debug.WriteLine($"  perp: {contactNormalPerp}, l: {displacementProjection}, displacement: {rampMoveDisplacement}"); //, -penVec: {-contact.PenetrationVector}");*/
 
             return true;

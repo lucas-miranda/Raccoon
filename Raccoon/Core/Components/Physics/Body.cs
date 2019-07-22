@@ -25,7 +25,14 @@ namespace Raccoon.Components {
         private BitTag _tags = BitTag.None;
         private bool _isPhysicsActive;
 
+        /// <summary>
+        /// Keeps a list of bodies colliding with this Body.
+        /// </summary>
         private List<Body> _collisionList = new List<Body>();
+
+        /// <summary>
+        /// A list used to verify if a collision no longer happens
+        /// </summary>
         private HashSet<Body> _currentUpdateCollisionList = new HashSet<Body>();
 
         #endregion Private Members
@@ -231,6 +238,10 @@ namespace Raccoon.Components {
         }
 
         public void CollidedWith(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            if (_currentUpdateCollisionList.Contains(otherBody)) {
+                return;
+            }
+
             _currentUpdateCollisionList.Add(otherBody);
 
             if (!_collisionList.Contains(otherBody)) {

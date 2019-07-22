@@ -85,6 +85,7 @@
     <Compile Include="Core\Physics\CollisionList.cs" />
     <Compile Include="Core\Physics\Contact.cs" />
     <Compile Include="Core\Physics\ContactList.cs" />
+    <Compile Include="Core\Physics\InternalCollisionInfo.cs" />
     <Compile Include="Core\Physics\Shapes\GridShape.cs" />
     <Compile Include="Core\Physics\Shapes\PolygonShape.cs" />
     <Compile Include="Core\Physics\Shapes\BoxShape.cs" />

@@ -109,7 +109,7 @@ namespace Raccoon {
         }
 
         public bool Intersects(Line line) {
-            return IntersectionPoint(line, out Vector2 intersectionPoint);
+            return IntersectionPoint(line, out _);
         }
 
         public bool IntersectionPoint(Rectangle rectangle, out Vector2 intersectionPoint) {
@@ -132,7 +132,7 @@ namespace Raccoon {
             for (int i = 0; i < 4; i++) {
                 if (p[i] == 0) {
                     if (q[i] < 0) {
-                        intersectionPoint = default(Vector2);
+                        intersectionPoint = default;
                         return false;
                     }
                 } else {
@@ -146,7 +146,7 @@ namespace Raccoon {
             }
 
             if (u1 > u2 || u1 > 1 || u1 < 0) {
-                intersectionPoint = default(Vector2);
+                intersectionPoint = default;
                 return false;
             }
 
@@ -155,7 +155,7 @@ namespace Raccoon {
         }
 
         public bool Intersects(Rectangle rectangle) {
-            return IntersectionPoint(rectangle, out Vector2 intersectionPoint);
+            return IntersectionPoint(rectangle, out _);
         }
 
         public Vector2 ClosestPoint(Vector2 point) {

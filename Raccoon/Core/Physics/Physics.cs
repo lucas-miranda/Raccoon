@@ -688,11 +688,13 @@ namespace Raccoon {
 
             // Narrow Phase
             // solve constraints
+            /*
             for (int k = 0; k < ConstraintSolverAccuracy; k++) {
                 foreach (Body body in _narrowPhaseBodies) {
                     body.SolveConstraints();
                 }
             }
+            */
 
             // movement with collision detection
             for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
@@ -703,6 +705,13 @@ namespace Raccoon {
                 }
 
                 body.PhysicsUpdate(dt);
+
+                // check if Body is static
+                if (body.Movement == null) {
+                    // early exit, static Body, well.. should remain static
+                    body.PhysicsLateUpdate();
+                    continue;
+                }
 
                 // swap bodies for fast collision check
                 _narrowPhaseBodies[j] = _narrowPhaseBodies[0];
@@ -720,13 +729,6 @@ namespace Raccoon {
 
                 double diffX = (nextPosition.X + body.MoveBufferX) - currentX,
                        diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
-
-                // early exit if next and current positions are the same
-                /*if (Math.EqualsEstimate(Math.DistanceSquared(diffX, diffY, diffX, diffY), 0.0)) {
-                    body.MoveBufferX = body.MoveBufferY = 0.0;
-                    body.PhysicsLateUpdate();
-                    continue;
-                }*/
 
                 // signed distance in pixels
                 int distanceX = Math.Sign(diffX) * (int) Math.Truncate(Math.Abs(diffX)),
@@ -762,6 +764,16 @@ namespace Raccoon {
                 if (singleCheck) {
                     movementX = Math.Sign(movementXBuffer);
                     movementY = Math.Sign(movementYBuffer);
+
+                    // last case, when no movement will occur this frame
+                    // but we still need to check for collision and stuff
+                    if (movementX == 0) {
+                        movementX = Math.Sign(body.Velocity.X);
+                    }
+
+                    if (movementY == 0) {
+                        movementY = Math.Sign(body.Velocity.Y);
+                    }
                 }
 
                 do {
@@ -824,7 +836,7 @@ namespace Raccoon {
                                     if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, contactsH))) {
                                         canMoveH = false;
                                         distanceX = 0;
-                                        directionY = Math.Sign(directionY);
+                                        //directionY = Math.Sign(directionY);
                                         moveVerticalPos.X = currentX;
                                     }
                                 }
@@ -840,16 +852,14 @@ namespace Raccoon {
                                 collidedV = true;
                                 if (contactsV.Contains(c => c.PenetrationDepth > 0f)) {
                                     if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(canMoveH ? movementX : 0, movementY), new CollisionInfo<Body>(otherBody, contactsV))) {
-                                    //if (isMovementCollidable) {
                                         canMoveV = false;
                                         distanceY = 0;
-                                        directionX = Math.Sign(directionX);
+                                        //directionX = Math.Sign(directionX);
                                     }
                                 }
                             }
 
                             if (collidedH || collidedV) {
-                                // stop moving
                                 Vector2 collisionAxes = Vector2.Zero;
 
                                 if (singleCheck) {
@@ -875,9 +885,6 @@ namespace Raccoon {
                                         collisionAxes.Y == 0 ? null : new CollisionInfo<Body>(otherBody, contactsV)
                                     );
                                 }
-
-
-                                //otherBody.CollidedWith(body, -collisionAxes);
 
 #if DEBUG
                                 body.Color = /*otherBody.Color =*/ Graphics.Color.Red;

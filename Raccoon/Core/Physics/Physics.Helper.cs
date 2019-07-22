@@ -10,13 +10,15 @@ namespace Raccoon {
             };
 
             foreach (Vector2 axis in axes) {
-                Range projectionA = A.Projection(axis), projectionB = B.Projection(axis);
+                Range projectionA = A.Projection(axis), 
+                      projectionB = B.Projection(axis);
+
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
                     return false;
                 }
 
-                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
@@ -27,10 +29,10 @@ namespace Raccoon {
         }
 
         private bool TestSAT(Polygon A, Polygon B, out Contact? contact) {
-            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length /*+ 1*/];
+            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length + 1];
 
-            //axes[0] = (B.Center - A.Center).Normalized();
-            int i = 0; //1;
+            axes[0] = (B.Center - A.Center).Normalized();
+            int i = 1;
 
             // polygon A axes
             foreach (Vector2 normal in A.Normals) {
@@ -64,7 +66,7 @@ namespace Raccoon {
                     return false;
                 }
 
-                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { 
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
@@ -92,7 +94,7 @@ namespace Raccoon {
                     return false;
                 }
 
-                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
@@ -119,7 +121,7 @@ namespace Raccoon {
                     return false;
                 }
 
-                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { //BiasGreaterThan(leastPenetrationContact.PenetrationDepth, penetrationDepth)) {
+                if (penetrationDepth < leastPenetrationContact.PenetrationDepth) {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
@@ -165,10 +167,6 @@ namespace Raccoon {
 
             contact = leastPenetrationContact;
             return true;
-        }
-
-        private bool BiasGreaterThan(float a, float b) {
-          return a >= (b * .95f + a * .01f);
         }
     }
 }

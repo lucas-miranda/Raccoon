@@ -10,5 +10,9 @@
 
         public T Subject { get; private set; }
         public ContactList Contacts { get; private set; }
+
+        public override string ToString() {
+            return $"({Subject.ToString()}, {Contacts})";
+        }
     }
 }
