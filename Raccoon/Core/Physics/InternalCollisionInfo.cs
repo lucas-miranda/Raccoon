@@ -4,7 +4,7 @@ using Raccoon.Components;
 
 namespace Raccoon {
     internal class InternalCollisionInfo {
-        public InternalCollisionInfo(Body bodyA, Body bodyB, Vector2 movement, Contact[] horizontalContacts, Contact[] verticalContacts) {
+        public InternalCollisionInfo(Body bodyA, Body bodyB, Vector2 movement, List<Contact> horizontalContacts, List<Contact> verticalContacts) {
             BodyA = bodyA;
             BodyB = bodyB;
             Movement = movement;
@@ -15,7 +15,7 @@ namespace Raccoon {
         public Body BodyA { get; }
         public Body BodyB { get; }
         public Vector2 Movement { get; }
-        public Contact[] HorizontalContacts { get; }
-        public Contact[] VerticalContacts { get; }
+        public List<Contact> HorizontalContacts { get; }
+        public List<Contact> VerticalContacts { get; }
     }
 }

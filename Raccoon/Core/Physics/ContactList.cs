@@ -33,6 +33,10 @@ namespace Raccoon {
             return System.Array.FindIndex(_entries, predicate);
         }
 
+        public void CopyTo(Contact[] contacts, int index) {
+            _entries.CopyTo(contacts, index);
+        }
+
         public IEnumerator<Contact> GetEnumerator() {
             foreach (Contact c in _entries) {
                 yield return c;

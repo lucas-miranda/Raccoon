@@ -1,4 +1,5 @@
-﻿using Raccoon.Util;
+﻿using System.Collections.ObjectModel;
+using Raccoon.Util;
 
 namespace Raccoon.Components {
     public class PlatformerMovement : Movement {
@@ -251,81 +252,127 @@ Fall Through
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
         }
 
+        private bool _touchedBottom, _touchedTop;
+
         public override void PhysicsUpdate(float dt) {
             base.PhysicsUpdate(dt);
+            _touchedTop = _touchedBottom = false;
 
             if (Body.Shape == null) {
                 return;
             }
 
-            if (OnGround && !_isWalkingOnRamp && !IsJumping) {
-                // checks if it's touching the ground
-                if (GravityEnabled) {
-                    if (!Physics.Instance.QueryMultipleCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> collisions)
-                      || !collisions.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Down.Projection(c.Normal), .3f, 1f)))) {
-                        Fall();
-                    }
+            /*
+            if (GravityEnabled) {
+                // check if is still on ground
+                if (OnGround && !IsJumping
+                  && (!Physics.Instance.QueryMultipleCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> collisions)
+                  || !collisions.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f))))) {
+                    Fall();
+                }
+            }
+            */
+
+            //_isTryingToFallThrough = true;
+            //_applyFall = _isAboveSomething = false;
+        }
+
+        public override void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
+            base.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
+
+            /*
+            if (!otherBody.Tags.HasAny(CollisionTags)) {
+                return;
+            }
+
+            Debug.Info($"\nPlatformerMovement - PhysicsCollisionSubmit");
+            Debug.WriteLine($"movement: {movement}");
+            Debug.WriteLine($"horizontalContacts: [{string.Join(", ", horizontalContacts)}]");
+            Debug.WriteLine($"verticalContacts: [{string.Join(", ", verticalContacts)}]");
+
+            foreach (Contact contact in verticalContacts) {
+                if (!_touchedTop && Vector2.Dot(contact.Normal, Vector2.Up) > .6f) {
+                    _touchedTop = true;
+                } else if (!_touchedBottom && Vector2.Dot(contact.Normal, Vector2.Down) > .6f) {
+                    _touchedBottom = true;
                 }
             }
 
-            _isTryingToFallThrough = true;
-            _applyFall = _isAboveSomething = false;
+            Debug.WriteLine($"touched (top: {_touchedTop}, bottom: {_touchedBottom})");
+            */
         }
 
         public override void PhysicsLateUpdate() {
-            Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> topCollisionList);
-            Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> bottomCollisionList);
+            base.PhysicsLateUpdate();
 
-            bool touchedBottom = false,
-                 touchedTop = false;
+            bool isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> contactsBelow);
+            bool isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
 
-            if (topCollisionList != null) {
-                touchedBottom = bottomCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Down), .3f, 1f)));
+            /*
+            Debug.Info($"\nPlatformerMovement - PhysicsLateUpdate");
+            Debug.WriteLine($"c below: {contactsBelow}");
+            Debug.WriteLine($"c above: {contactsAbove}");
+            */
+
+            if (isAboveSomething && contactsBelow.FindIndex(ci => ci.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Down) > .6f && Math.EqualsEstimate(c.PenetrationDepth, 1f))) >= 0) {
+                _touchedBottom = true;
             }
 
-            if (bottomCollisionList != null) {
-                touchedTop = topCollisionList.Contains(ci => ci.Contacts.Contains(c => c.PenetrationDepth > 0f && Helper.InRange(Vector2.Dot(c.Normal, Vector2.Up), .3f, 1f)));
+            if (isBelowSomething && contactsAbove.FindIndex(ci => ci.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Up) > .6f && Math.EqualsEstimate(c.PenetrationDepth, 1f))) >= 0) {
+                _touchedTop = true;
             }
 
+            //Debug.WriteLine($"touched bottom: {_touchedBottom}, top: {_touchedTop}");
+
+            /*
             if (_isTryingToFallThrough && _applyFall) {
                 Fall();
             }
+            */
 
-            if (touchedBottom) {
-                if (!_isTryingToFallThrough) {
-                    // falling and reached the ground
-                    if (!OnGround) {
-                        OnGround = true;
-                        IsStillJumping = IsJumping = IsFalling = false;
-                        Jumps = MaxJumps;
-
-                        if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
-                            _canKeepCurrentJump = true;
-                        }
-
-                        OnTouchGround();
-                    }
-
-                    Velocity = new Vector2(Velocity.X, 0f);
-                }
-            } else if (touchedTop) {
+            if (_touchedTop) {
                 // moving up and reached a ceiling
-                if (Velocity.Y < 0 && !_isTryingToFallThrough) {
+                if (Velocity.Y < 0f) { // && !_isTryingToFallThrough) {
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
+                    //Debug.WriteLine($"PhysicsLateUpdate - moving up and reached a ceiling, Velocity.Y = 0 and begin falling");
 
-                    if (!Physics.Instance.QueryCollision(Body.Shape, Body.Position + Vector2.Down, CollisionTags, out ContactList contacts)
-                      || contacts.Contains(c => c.PenetrationDepth < 1f && Helper.InRangeLeftExclusive(Vector2.Dot(c.Normal, Vector2.Down), 0f, 1f))) {
-                        IsFalling = true;
-                        OnFallingBegin();
-                    }
+                    IsFalling = true;
+                    OnFallingBegin();
                 }
             }
 
-            base.PhysicsLateUpdate();
+            if (_touchedBottom) {
+                //if (!_isTryingToFallThrough) {
+                // falling and reached the ground
+                if (IsFalling) {
+                    OnGround = true;
+                    IsStillJumping = IsJumping = IsFalling = false;
+                    Jumps = MaxJumps;
+
+                    if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                        _canKeepCurrentJump = true;
+                    }
+
+                    OnTouchGround();
+                }
+                //}
+
+                if (OnGround || IsFalling) {
+                    Velocity = new Vector2(Velocity.X, 0f);
+                    //Debug.WriteLine($"PhysicsLateUpdate - touchedBottom and (OnGround or IsFalling) => Velocity.Y = 0");
+                }
+            }
+
+            // Check if still is on ground
+            if (OnGround && !_touchedBottom) {
+                //Debug.WriteLine($"PhysicsLateUpdate - Not in ground anymore, falling");
+                Fall();
+            }
         }
 
         public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            /*
             if (!collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
                 return true;
             }
@@ -338,6 +385,7 @@ Fall Through
             } else {
                 return false;
             }
+            */
 
             return true;
         }
@@ -345,6 +393,7 @@ Fall Through
         public override void BodyCollided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             base.BodyCollided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
 
+            /*
             if (!_isTryingToFallThrough) {
                 return;
             }
@@ -382,6 +431,7 @@ Fall Through
                 }
             } else {
             }
+            */
         }
 
         public override void Collided(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
@@ -454,7 +504,8 @@ Fall Through
                     velocity.Y += ImpulsePerSec.Y * dt;
                 }
 
-                if (!OnGround && GravityEnabled) {
+                //if (!OnGround && GravityEnabled) {
+                if (GravityEnabled) {
                     // apply gravity force
                     velocity.Y += GravityScale * GravityForce.Y * dt;
                 }
@@ -498,16 +549,16 @@ Fall Through
                 return;
             }
 
+            /*
+            Debug.WriteLine("JUMP!!!");
+            Debug.WriteLine("JUMP!!!");
+            Debug.WriteLine("JUMP!!!");
+            */
+
             IsStillJumping = true;
             _isWalkingOnRamp = false;
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
-
-            Debug.WriteLine("Jump!!!");
-            Debug.WriteLine("Jump!!!");
-            Debug.WriteLine("Jump!!!");
-            Debug.WriteLine("Jump!!!");
-            Debug.WriteLine("Jump!!!");
         }
 
         public void FallThrough() {
@@ -525,7 +576,8 @@ Fall Through
         protected override void OnMoving(Vector2 distance) {
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
-                if (IsJumping && !IsFalling && !_isWalkingOnRamp) {
+                if (IsJumping && !IsFalling) { // && !_isWalkingOnRamp) {
+                    //Debug.WriteLine($"OnMoving with distance.Y > 0 - if it's moving down, then it's falling");
                     Fall();
                 }
             } else if (distance.Y < 0f) {

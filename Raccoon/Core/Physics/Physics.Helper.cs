@@ -29,10 +29,14 @@ namespace Raccoon {
         }
 
         private bool TestSAT(Polygon A, Polygon B, out Contact? contact) {
-            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length + 1];
+            Vector2[] axes = new Vector2[A.Normals.Length + B.Normals.Length/* + 1*/];
 
+            /*
             axes[0] = (B.Center - A.Center).Normalized();
             int i = 1;
+            */
+
+            int i = 0;
 
             // polygon A axes
             foreach (Vector2 normal in A.Normals) {
@@ -55,11 +59,13 @@ namespace Raccoon {
                 PenetrationDepth = float.PositiveInfinity
             };
 
+            /*
             Vector2[] a = new Vector2[axes.Count + 1];
             a[0] = (posB - posA).Normalized();
             axes.CopyTo(a, 1);
+            */
 
-            foreach (Vector2 axis in a) {
+            foreach (Vector2 axis in axes) {
                 Range projectionA = shapeA.Projection(posA, axis), projectionB = shapeB.Projection(posB, axis);
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
@@ -82,10 +88,12 @@ namespace Raccoon {
                 PenetrationDepth = float.PositiveInfinity
             };
 
-            Vector2[] a = new Vector2[polygon.Normals.Length + axes.Count + 1];
+            Vector2[] a = new Vector2[polygon.Normals.Length + axes.Count/* + 1*/];
+            /*
             a[0] = (shapePos - polygon.Center).Normalized();
-            polygon.Normals.CopyTo(a, 1);
-            axes.CopyTo(a, polygon.Normals.Length + 1);
+            */
+            polygon.Normals.CopyTo(a, 0); // 1
+            axes.CopyTo(a, polygon.Normals.Length); // + 1
 
             foreach (Vector2 axis in a) {
                 Range projectionA = shape.Projection(shapePos, axis), projectionB = polygon.Projection(axis);

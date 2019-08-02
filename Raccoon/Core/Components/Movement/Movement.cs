@@ -1,4 +1,5 @@
-﻿using Raccoon.Util;
+﻿using System.Collections.ObjectModel;
+using Raccoon.Util;
 
 namespace Raccoon.Components {
     public abstract class Movement {
@@ -159,17 +160,24 @@ namespace Raccoon.Components {
             //ResetTouch();
         }
 
+        public virtual void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
+        }
+
         public virtual void PhysicsLateUpdate() {
-            if (Body.LastPosition != Body.Position) {
-                Vector2 posDiff = Body.Position - Body.LastPosition;
-                if (posDiff.LengthSquared() > 0f) {
-                    OnMoving(posDiff);
-                }
+            Vector2 posDiff = Body.Position - Body.LastPosition;
+            if (posDiff.LengthSquared() > 0f) {
+                OnMoving(posDiff);
             }
         }
 
         public virtual bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
             return true;
+        }
+
+        public virtual void BeforeBodySolveCollisions() {
+        }
+
+        public virtual void AfterBodySolveCollisions() {
         }
 
         public virtual void BeginBodyCollision(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {

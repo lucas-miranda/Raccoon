@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Text;
+using System.Collections.Generic;
 
 namespace Raccoon {
     public class CollisionList<T> : List<CollisionInfo<T>>  {
@@ -26,6 +27,16 @@ namespace Raccoon {
             foreach (CollisionInfo<T> collisionInfo in this) {
                 yield return collisionInfo.Subject;
             }
+        }
+
+        public override string ToString() {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (CollisionInfo<T> collisionInfo in this) {
+                stringBuilder.Append(collisionInfo.ToString());
+            }
+
+            return $"[{stringBuilder}]";
         }
     }
 }

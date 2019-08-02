@@ -30,6 +30,8 @@ namespace Raccoon {
         private Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>> _collisionFunctions = new Dictionary<System.Type, Dictionary<System.Type, CollisionCheckDelegate>>();
         private int _leftOverDeltaTime;
         private List<Body> _narrowPhaseBodies = new List<Body>();
+        private List<InternalCollisionInfo> _internalCollisionInfo = new List<InternalCollisionInfo>();
+        private HashSet<Body> _collidedOnThisFrame = new HashSet<Body>();
 
         #endregion Private Members
 
@@ -818,77 +820,70 @@ namespace Raccoon {
                                 continue;
                             }
 
-                            bool collidedH = false,
-                                 collidedV = false;
+                            List<Contact> horizontalContacts = new List<Contact>(),
+                                          verticalContacts = new List<Contact>();
 
-                            ContactList contactsH = new ContactList(),
-                                        contactsV = new ContactList();
-
-                            // test for horizontal collision (if it's moving horizontally)
-                            if ((singleCheck || movementX != 0)
-                              && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out contactsH)) {
-                                if (singleCheck) {
-                                    collidedH = true;
+                            // horizontal collision check
+                            if (canMoveH && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out ContactList contactsH)) {
+                                foreach (Contact c in contactsH) {
+                                    horizontalContacts.Add(c);
                                 }
 
-                                collidedH = true;
-                                if (contactsH.Contains(c => c.PenetrationDepth > 0f)) {
-                                    if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, contactsH))) {
-                                        canMoveH = false;
-                                        distanceX = 0;
-                                        //directionY = Math.Sign(directionY);
-                                        moveVerticalPos.X = currentX;
-                                    }
+                                if (isMovementCollidable
+                                  && contactsH.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f && c.PenetrationDepth > 0f) >= 0
+                                  && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
+                                    canMoveH = false;
+                                    distanceX = 0;
+                                    moveVerticalPos.X = currentX;
+                                    directionY = Math.Sign(directionY);
                                 }
                             }
 
-                            // test for vertical collision (if it's moving vertically)
-                            if ((singleCheck || movementY != 0)
-                              && CheckCollision(body.Shape, moveVerticalPos, otherBody, out contactsV)) {
-                                if (singleCheck) {
-                                    collidedV = true;
+                            // vertical collision check
+                            if (canMoveV && CheckCollision(body.Shape, moveVerticalPos, otherBody, out ContactList contactsV)) {
+                                foreach (Contact c in contactsV) {
+                                    verticalContacts.Add(c);
                                 }
 
-                                collidedV = true;
-                                if (contactsV.Contains(c => c.PenetrationDepth > 0f)) {
-                                    if (isMovementCollidable && body.Movement.CanCollideWith(new Vector2(canMoveH ? movementX : 0, movementY), new CollisionInfo<Body>(otherBody, contactsV))) {
-                                        canMoveV = false;
-                                        distanceY = 0;
-                                        //directionX = Math.Sign(directionX);
-                                    }
+                                if (isMovementCollidable 
+                                  && contactsV.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0f) >= 0
+                                  && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))) {
+                                    canMoveV = false;
+                                    distanceY = 0;
+                                    directionX = Math.Sign(directionX);
                                 }
                             }
 
-                            if (collidedH || collidedV) {
-                                Vector2 collisionAxes = Vector2.Zero;
+                            // submiting to resolution
+                            if (horizontalContacts.Count > 0 || verticalContacts.Count > 0) {
+                                // body.PhysicsCollisionCheck();
+                                
+                                /*
+                                Debug.WriteLine($"\nBody.Entity: {body.Entity}, otherBody.Entity: {otherBody.Entity}\ncheckCollision: (h: {checkCollisionH}, v: {checkCollisionV})");
+                                Debug.WriteLine($"Collided? (h: {collidedH}, v: {collidedV}), movement: ({movementX}, {movementY})");
+                                Debug.WriteLine($"hContacts: [{string.Join(", ", horizontalContacts)}]");
+                                Debug.WriteLine($"vContacts: [{string.Join(", ", verticalContacts)}]");
+                                Debug.WriteLine($"- CanMove: (h: {canMoveH}, v: {canMoveV})");
+                                */
 
-                                if (singleCheck) {
-                                    collisionAxes.X = !canMoveH ? movementX : 0;
-                                    collisionAxes.Y = !canMoveV ? movementY : 0;
+                                //Debug.WriteLine($"- CanMove: (h: {canMoveH}, v: {canMoveV})");
+
+                                int collisionInfoIndex = _internalCollisionInfo.FindIndex(ci => Helper.EqualsPermutation(body, otherBody, ci.BodyA, ci.BodyB));
+
+                                if (collisionInfoIndex < 0) {
+                                    _internalCollisionInfo.Add(new InternalCollisionInfo(body, otherBody, new Vector2(movementX, movementY), horizontalContacts, verticalContacts));
                                 } else {
-                                    collisionAxes.X = collidedH ? movementX : 0;
-                                    collisionAxes.Y = collidedV ? movementY : 0;
+                                    InternalCollisionInfo previousCollisionInfo = _internalCollisionInfo[collisionInfoIndex];
+
+                                    previousCollisionInfo.HorizontalContacts.AddRange(horizontalContacts);
+                                    previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
                                 }
 
-                                if (collisionAxes.X == 0f && collisionAxes.Y == 0f) {
-                                    body.CollidedWith(
-                                        otherBody,
-                                        collisionAxes,
-                                        new CollisionInfo<Body>(otherBody, contactsH),
-                                        new CollisionInfo<Body>(otherBody, contactsV)
-                                    );
-                                } else {
-                                    body.CollidedWith(
-                                        otherBody,
-                                        collisionAxes,
-                                        collisionAxes.X == 0 ? null : new CollisionInfo<Body>(otherBody, contactsH),
-                                        collisionAxes.Y == 0 ? null : new CollisionInfo<Body>(otherBody, contactsV)
-                                    );
-                                }
+                                body.PhysicsCollisionSubmit(otherBody, new Vector2(movementX, movementY), horizontalContacts.AsReadOnly(), verticalContacts.AsReadOnly());
+                                //otherBody.PhysicsCollisionSubmit(body, new Vector2(- movementX, - movementY), hContacts, vContacts);
 
-#if DEBUG
-                                body.Color = /*otherBody.Color =*/ Graphics.Color.Red;
-#endif
+                                _collidedOnThisFrame.Add(body);
+                                _collidedOnThisFrame.Add(otherBody);
                             }
                         }
                     }
@@ -937,6 +932,49 @@ namespace Raccoon {
                 body.Position = new Vector2(currentX, currentY);
                 body.PhysicsLateUpdate();
             }
+
+            foreach (Body body in _collidedOnThisFrame) {
+                body.BeforeSolveCollisions();
+            }
+
+            // solve collisions
+            foreach (InternalCollisionInfo collInfo in _internalCollisionInfo) {
+                Contact[] horizontalContacts = collInfo.HorizontalContacts.ToArray(),
+                          verticalContacts = collInfo.VerticalContacts.ToArray();
+
+                collInfo.BodyA.CollidedWith(
+                    collInfo.BodyB, 
+                    collInfo.Movement, 
+                    new CollisionInfo<Body>(collInfo.BodyB, horizontalContacts), 
+                    new CollisionInfo<Body>(collInfo.BodyB, verticalContacts)
+                );
+
+                Contact[] invertedHContacts = new Contact[horizontalContacts.Length],
+                          invertedVContacts = new Contact[verticalContacts.Length];
+
+                for (int i = 0; i < invertedHContacts.Length; i++) {
+                    invertedHContacts[i] = Contact.Invert(horizontalContacts[i]);
+                }
+
+                for (int i = 0; i < invertedVContacts.Length; i++) {
+                    invertedVContacts[i] = Contact.Invert(verticalContacts[i]);
+                }
+
+                collInfo.BodyB.CollidedWith(
+                    collInfo.BodyA, 
+                    -collInfo.Movement, 
+                    new CollisionInfo<Body>(collInfo.BodyA, invertedHContacts), 
+                    new CollisionInfo<Body>(collInfo.BodyA, invertedVContacts)
+                );
+            }
+
+            _internalCollisionInfo.Clear();
+
+            foreach (Body body in _collidedOnThisFrame) {
+                body.AfterSolveCollisions();
+            }
+
+            _collidedOnThisFrame.Clear();
 
 #if DEBUG
             CollisionDetectionNarrowPhaseExecutionTime = Time.EndStopwatch();
