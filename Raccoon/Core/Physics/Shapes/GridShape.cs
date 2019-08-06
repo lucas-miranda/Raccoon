@@ -291,6 +291,12 @@ namespace Raccoon {
                 return polygons;
             }
 
+            public Polygon CreateCollisionPolygon(GridShape grid, Vector2 gridPos, int column, int row) {
+                Polygon polygon = new Polygon(Polygon);
+                polygon.Translate(grid.ConvertTilePosition(gridPos, column, row));
+                return polygon;
+            }
+
             public override string ToString() {
                 return $"[PolygonTileShape | Gid: {Gid}, Id: {Id}, Polygon: {Polygon}]";
             }

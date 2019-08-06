@@ -1,6 +1,11 @@
-﻿//#define DISBALE_RAMPS
+﻿//#define DISABLE_RAMPS
+//#define DISABLE_ASCENDING_RAMP
+#define DISABLE_DESCENDING_RAMP
+
+#if DISABLE_RAMPS
 #define DISABLE_ASCENDING_RAMP
-//#define DISABLE_DESCENDING_RAMP
+#define DISABLE_DESCENDING_RAMP
+#endif
 
 using System.Collections.ObjectModel;
 using Raccoon.Util;
@@ -267,6 +272,31 @@ Fall Through
             );
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
+
+#if !DISABLE_RAMPS
+            Rectangle boundingBox = Body.Shape.BoundingBox;
+            int direction = LastAxis.X == 0 ? 1 : Math.Sign(LastAxis.X);
+
+#if !DISABLE_ASCENDING_RAMP
+            Vector2 ascendingRampPositionCheck = Body.Position + new Vector2(direction * boundingBox.Width / 2f, boundingBox.Height / 2f - 1f);
+
+            if (direction < 0) {
+                ascendingRampPositionCheck.X -= 1f;
+            }
+
+            Debug.DrawRectangle(new Rectangle(ascendingRampPositionCheck, Size.Unit), Graphics.Color.Magenta);
+#endif
+
+#if !DISABLE_DESCENDING_RAMP
+            Vector2 descendingRampPositionCheck = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + 1f), boundingBox.Height / 2f + 1f);
+
+            if (direction < 0) {
+                descendingRampPositionCheck.X -= 1f;
+            }
+
+            Debug.DrawRectangle(new Rectangle(descendingRampPositionCheck, Size.Unit), Graphics.Color.Orange);
+#endif
+#endif
         }
 
         public override void PhysicsUpdate(float dt) {
@@ -388,7 +418,7 @@ Fall Through
                 _touchedTop = contactsAbove.FindIndex(ci => ci.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Up) > .6f && Helper.InRange(c.PenetrationDepth, 0f, 1f))) >= 0;
             }
 
-            Debug.WriteLine($"touched bottom: {_touchedBottom}, top: {_touchedTop}");
+            //Debug.WriteLine($"touched bottom: {_touchedBottom}, top: {_touchedTop}");
 
             /*
             if (_isTryingToFallThrough && _applyFall) {
@@ -401,7 +431,7 @@ Fall Through
                 if (Velocity.Y < 0f) { // && !_isTryingToFallThrough) {
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
-                    Debug.WriteLine($"PhysicsLateUpdate - moving up and reached a ceiling, Velocity.Y = 0 and begin falling");
+                    //Debug.WriteLine($"PhysicsLateUpdate - moving up and reached a ceiling, Velocity.Y = 0 and begin falling");
 
                     IsFalling = true;
                     OnFallingBegin();
@@ -426,13 +456,13 @@ Fall Through
 
                 if (OnGround || IsFalling) {
                     Velocity = new Vector2(Velocity.X, 0f);
-                    Debug.WriteLine($"PhysicsLateUpdate - touchedBottom and (OnGround or IsFalling) => Velocity.Y = 0");
+                    //Debug.WriteLine($"PhysicsLateUpdate - touchedBottom and (OnGround or IsFalling) => Velocity.Y = 0");
                 }
             }
 
             // Check if still is on ground
             if (OnGround && !_touchedBottom) {
-                Debug.WriteLine($"PhysicsLateUpdate - Not in ground anymore, falling");
+                //Debug.WriteLine($"PhysicsLateUpdate - Not in ground anymore, falling");
                 Fall();
             }
         }
@@ -654,7 +684,7 @@ Fall Through
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
                 if (IsJumping && !IsFalling) { // && !_isWalkingOnRamp) {
-                    Debug.WriteLine($"OnMoving with distance.Y > 0 - if it's moving down, then it's falling");
+                    //Debug.WriteLine($"OnMoving with distance.Y > 0 - if it's moving down, then it's falling");
                     Fall();
                 }
             } else if (distance.Y < 0f) {
@@ -701,6 +731,7 @@ Fall Through
             CollisionList<Body> ascdCollisionList = null;
 #else
             bool collidesAscendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(dX, 0f), CollisionTags, out CollisionList<Body> ascdCollisionList);
+            Debug.WriteLine($"collides ascd? {collidesAscendingRamp}");
 #endif
 
             /*
@@ -708,15 +739,7 @@ Fall Through
             Debug.WriteLine($"collision list: {collisionList}");
             */
 
-#if DISABLE_DESCENDING_RAMP
-            bool collidesDescendingRamp = false;
-            CollisionList<Body> descdCollisionList = null;
-#else
-            bool collidesDescendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1f), CollisionTags, out CollisionList<Body> descdCollisionList);
-#endif
-
-            Debug.WriteLine($"collides ascd? {collidesAscendingRamp}, descd? {collidesDescendingRamp}");
-            Debug.WriteLine($"_rampFindTries: {_rampFindTries}");
+            //Debug.WriteLine($"_rampFindTries: {_rampFindTries}");
 
             if (collidesAscendingRamp) {
                 Debug.WriteLine("trying ascending ramp");
@@ -727,6 +750,15 @@ Fall Through
                     return true;
                 }
             }
+
+#if DISABLE_DESCENDING_RAMP
+            bool collidesDescendingRamp = false;
+            CollisionList<Body> descdCollisionList = null;
+#else
+            bool collidesDescendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1f), CollisionTags, out CollisionList<Body> descdCollisionList);
+            Debug.WriteLine($"collides descd? {collidesDescendingRamp}");
+#endif
+
 
             if (collidesDescendingRamp) {
                 Debug.WriteLine("trying descending ramp");
@@ -745,6 +777,11 @@ Fall Through
         }
 
         private bool HandleAscendingRamp(float dX, CollisionList<Body> collisionList, out Vector2 rampDisplacement) {
+            int direction = Math.Sign(dX);
+
+            Rectangle boundingBox = Body.Shape.BoundingBox;
+            Vector2 rampPositionCheck = Body.Position + new Vector2(direction * boundingBox.Width / 2f + 1f, boundingBox.Height / 2f - 1f);
+            
             // elevations
             //   nearest to 90f => wall; 
             //   close to 0f => straight floor;
@@ -757,6 +794,104 @@ Fall Through
             bool refreshRampState = false;
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
+                bool rampFound = false;
+                Vector2 rampNormal = Vector2.Zero;
+
+                switch (collInfo.Subject.Shape) {
+                    case BoxShape boxShape:
+                        // not implemented yet
+                        break;
+
+                    case CircleShape circleShape:
+                        // not implemented yet
+                        break;
+
+                    case PolygonShape polygonShape:
+                        // not implemented yet
+                        break;
+
+                    case GridShape gridShape:
+                        Debug.WriteLine("Grid shape found");
+
+                        (int gridColumn, int gridRow) = gridShape.ConvertPosition(collInfo.Subject.Position, rampPositionCheck);
+                        ref GridShape.TileShape tileShape = ref gridShape.GetTileInfo(gridColumn, gridRow);
+
+                        switch (tileShape) {
+                            case GridShape.BoxTileShape boxTileShape:
+                                Debug.WriteLine("  Box shape");
+                                //boxTileShape.CreateCollisionPolygon(gridShape, collInfo.Subject.Position, gridColumn, gridRow);
+                                // BoxTileShape will always be a straight wall or ground
+                                // in this case it'll be 90 degree wall
+                                continue; // continue foreach
+
+                            case GridShape.PolygonTileShape polygonTileShape:
+                                Debug.WriteLine("  Polygon shape");
+                                Polygon tilePolygon = polygonTileShape.CreateCollisionPolygon(gridShape, collInfo.Subject.Position, gridColumn, gridRow);
+
+                                // find closest edge
+                                (Line? Edge, float Distance, Vector2 Normal, float SlopeFactor) closestEdge = (null, float.PositiveInfinity, Vector2.Zero, 0f);
+
+                                int edgeIndex = 0;
+                                foreach (Line edge in tilePolygon.Edges()) {
+                                    Vector2 edgeNormal = tilePolygon.Normals[edgeIndex];
+                                    float slopeFactor = edgeNormal.Projection(Vector2.Up);
+
+                                    Debug.WriteLine($"    Edge normal: {edgeNormal}, slopeFactor: {slopeFactor}");
+
+                                    // ignore some edges by slope factor
+                                    if (!Helper.InRange(slopeFactor, minSlopeFactor, maxSlopeFactor)) {
+                                        edgeIndex += 1;
+                                        continue;
+                                    }
+
+                                    float distanceToEdge = edge.DistanceSquared(rampPositionCheck);
+
+                                    Debug.WriteLine($"    Distance to edge: {distanceToEdge}");
+
+                                    if (distanceToEdge < closestEdge.Distance
+                                      || (distanceToEdge == closestEdge.Distance && slopeFactor > closestEdge.SlopeFactor)) { // always prefer an edge who owns a normal closer to Vector2.Up
+                                        closestEdge = (edge, distanceToEdge, edgeNormal, slopeFactor);
+                                    }
+
+                                    edgeIndex += 1;
+                                }
+
+                                Debug.WriteLine($"  Values | Edge: {closestEdge.Edge}, Distance: {closestEdge.Distance}, Normal: {closestEdge.Normal}, SlopeFactor: {closestEdge.SlopeFactor}");
+
+                                // tile doesn't contains a valid ramp
+                                if (closestEdge.Edge == null) {
+                                    Debug.WriteLine("  Tile isn't a ramp");
+                                    continue; // continue foreach
+                                }
+
+                                Debug.WriteLine("  Ramp from edges found!");
+
+                                rampFound = true;
+                                rampNormal = closestEdge.Normal;
+                                break;
+
+                            case null:
+                            default:
+                                break;
+                        }
+
+                        break;
+
+                    case null:
+                    default:
+                        continue;
+                }
+
+                if (rampFound) {
+                    Debug.WriteLine($"slope in [{minSlopeFactor}, {maxSlopeFactor}] found!");
+                    refreshRampState = true;
+                    _onRamp = true;
+                    _rampNormal = rampNormal;
+                    _internal_isGravityEnabled = false;
+                    break;
+                }
+
+                /*
                 foreach (Contact c in collInfo.Contacts) {
                     if (Math.EqualsEstimate(Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)), 1f)
                       || Math.EqualsEstimate(Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)), 1f)) {
@@ -782,6 +917,7 @@ Fall Through
                         }
                     }
                 }
+                */
             }
 
             if (!refreshRampState) {
