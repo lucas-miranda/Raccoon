@@ -42,6 +42,22 @@ namespace Raccoon.Util {
 
         #region Public Methods
 
+        /// <summary>
+        /// Create a valid Range from two arbitrary numbers.
+        /// </summary>
+        /// <param name="valueA">Any valid float number.</param>
+        /// <param name="valueB">Any valid float number.</param>
+        /// <returns>
+        /// A valid Range where min it's the minimum value between arguments
+        /// and max will be the maximum value.
+        /// </returns>
+        public static Range From(float valueA, float valueB) {
+            return new Range(
+                Math.Min(valueA, valueB),
+                Math.Max(valueA, valueB)
+            );
+        }
+
         public static Range Union(Range rangeA, Range rangeB) {
             return new Range(Math.Min(rangeA.Min, rangeB.Min), Math.Max(rangeA.Max, rangeB.Max));
         }
