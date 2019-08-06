@@ -741,16 +741,9 @@ Fall Through
             Debug.WriteLine($"collides ascd? {collidesAscendingRamp}");
 #endif
 
-            /*
-            Debug.WriteLine($"\nHandleRamps");
-            Debug.WriteLine($"collision list: {collisionList}");
-            */
-
-            //Debug.WriteLine($"_rampFindTries: {_rampFindTries}");
-
             if (collidesAscendingRamp) {
                 Debug.WriteLine("trying ascending ramp");
-                bool foundAscending = HandleAscendingRamp(dX, ascdCollisionList, out rampDisplacement);
+                bool foundAscending = HandleRamp(dX, new Vector2(1, -1), ascdCollisionList, out rampDisplacement);
 
                 if (foundAscending) {
                     return true;
@@ -761,14 +754,14 @@ Fall Through
             bool collidesDescendingRamp = false;
             CollisionList<Body> descdCollisionList = null;
 #else
-            bool collidesDescendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1f), CollisionTags, out CollisionList<Body> descdCollisionList);
+            bool collidesDescendingRamp = Body.CollidesMultiple(Body.Position + Math.Rotate(new Vector2(dX, 0), Math.Sign(dX) * 45), CollisionTags, out CollisionList<Body> descdCollisionList);
             Debug.WriteLine($"collides descd? {collidesDescendingRamp}");
 #endif
 
 
             if (collidesDescendingRamp) {
                 Debug.WriteLine("trying descending ramp");
-                bool foundDescending = HandleDescendingRamp(dX, descdCollisionList, out rampDisplacement);
+                bool foundDescending = HandleRamp(dX, new Vector2(-2, 2), descdCollisionList, out rampDisplacement);
 
                 if (foundDescending) {
                     return true;
@@ -780,10 +773,10 @@ Fall Through
             return false;
         }
 
-        private bool HandleAscendingRamp(float dX, CollisionList<Body> collisionList, out Vector2 rampDisplacement) {
+        private bool HandleRamp(float dX, Vector2 rampCheck, CollisionList<Body> collisionList, out Vector2 rampDisplacement) {
             int direction = Math.Sign(dX);
             Rectangle boundingBox = Body.Shape.BoundingBox;
-            Vector2 rampPositionCheck = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + 1), boundingBox.Height / 2f - 1);
+            Vector2 rampPositionCheck = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + rampCheck.X), boundingBox.Height / 2f + rampCheck.Y);
 
             if (direction < 0) {
                 rampPositionCheck.X -= 1;
@@ -793,7 +786,7 @@ Fall Through
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
                 if (LookForRamp(collInfo, rampPositionCheck, out Vector2 rampNormal)) {
-                    Debug.WriteLine($"[Ascending] slope in [{AllowedSlopeFactorRange.Min}, {AllowedSlopeFactorRange.Max}] found!");
+                    Debug.WriteLine($"- slope in [{AllowedSlopeFactorRange.Min}, {AllowedSlopeFactorRange.Max}] found!");
                     refreshRampState = true;
                     _onRamp = true;
                     _rampNormal = rampNormal;
@@ -803,7 +796,7 @@ Fall Through
             }
 
             if (!refreshRampState) {
-                Debug.WriteLine($"[Ascending] slope don't found");
+                Debug.WriteLine($"- slope don't found");
                 _onRamp = false;
                 _rampNormal = Vector2.Zero;
                 _internal_isGravityEnabled = true;
@@ -814,50 +807,6 @@ Fall Through
             Vector2 rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
             float rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
             rampDisplacement = rampMoveNormal * rampDisplacementDistance;
-            Body.MoveBufferX = 0;
-            return true;
-        }
-
-        private bool HandleDescendingRamp(float dX, CollisionList<Body> collisionList, out Vector2 rampDisplacement) {
-            int direction = Math.Sign(dX);
-            Rectangle boundingBox = Body.Shape.BoundingBox;
-            Vector2 rampPositionCheck = Body.Position + new Vector2(direction * (boundingBox.Width / 2f - 2), boundingBox.Height / 2f + 2);
-
-            if (direction < 0) {
-                rampPositionCheck.X -= 1;
-            }
-
-            bool refreshRampState = false;
-
-            foreach (CollisionInfo<Body> collInfo in collisionList) {
-                if (LookForRamp(collInfo, rampPositionCheck, out Vector2 rampNormal)) {
-                    Debug.WriteLine($"[Descending] slope in [{AllowedSlopeFactorRange.Min}, {AllowedSlopeFactorRange.Max}] found!");
-                    refreshRampState = true;
-                    _onRamp = true;
-                    _rampNormal = rampNormal;
-                    _internal_isGravityEnabled = false;
-                    break;
-                }
-            }
-
-            if (!refreshRampState) {
-                Debug.WriteLine($"[Descending] slope don't found");
-                _onRamp = false;
-                _rampNormal = Vector2.Zero;
-                _internal_isGravityEnabled = true;
-                rampDisplacement = Vector2.Zero;
-                return false;
-            }
-
-            Vector2 rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
-            float rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
-            rampDisplacement = rampMoveNormal * rampDisplacementDistance;
-
-            /*
-            Debug.WriteLine($"displacement: {rampDisplacement}, penVec.Y: {contact.Value.PenetrationVector.Y}");
-            rampDisplacement.Y += 1f - contact.Value.PenetrationVector.Y;
-            */
-
             Body.MoveBufferX = 0;
             return true;
         }
