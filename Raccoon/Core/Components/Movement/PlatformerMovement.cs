@@ -1,4 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿//#define DISBALE_RAMPS
+#define DISABLE_ASCENDING_RAMP
+//#define DISABLE_DESCENDING_RAMP
+
+using System.Collections.ObjectModel;
 using Raccoon.Util;
 
 namespace Raccoon.Components {
@@ -560,10 +564,15 @@ Fall Through
             // Vertical Velocity //
             ///////////////////////
 
+#if DISABLE_RAMPS
+            bool isWalkingOnRamp = false;
+#else
             bool isWalkingOnRamp = HandleRamps(displacement, out Vector2 rampDisplacement);
+
             if (isWalkingOnRamp) {
                 displacement = rampDisplacement;
             }
+#endif
 
             if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
                 // handling impulse
@@ -687,14 +696,24 @@ Fall Through
             // true horizontal displacement value
             float dX = displacement.X + (float) Body.MoveBufferX;
 
+#if DISABLE_ASCENDING_RAMP
+            bool collidesAscendingRamp = false;
+            CollisionList<Body> ascdCollisionList = null;
+#else
             bool collidesAscendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(dX, 0f), CollisionTags, out CollisionList<Body> ascdCollisionList);
+#endif
 
             /*
             Debug.WriteLine($"\nHandleRamps");
             Debug.WriteLine($"collision list: {collisionList}");
             */
 
+#if DISABLE_DESCENDING_RAMP
+            bool collidesDescendingRamp = false;
+            CollisionList<Body> descdCollisionList = null;
+#else
             bool collidesDescendingRamp = Body.CollidesMultiple(Body.Position + new Vector2(Math.Clamp(dX, -1f, 1f), 1f), CollisionTags, out CollisionList<Body> descdCollisionList);
+#endif
 
             Debug.WriteLine($"collides ascd? {collidesAscendingRamp}, descd? {collidesDescendingRamp}");
             Debug.WriteLine($"_rampFindTries: {_rampFindTries}");
