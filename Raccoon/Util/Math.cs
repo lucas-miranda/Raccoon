@@ -245,7 +245,7 @@
         }
 
         public static float Map(float value, float min, float max, float targetMin, float targetMax) {
-            return targetMin + (value / (max - min)) * (targetMax - targetMin);
+            return targetMin + ((value - min) / (Math.Abs(max) + Math.Abs(min))) * (targetMax - targetMin);
         }
 
         public static float Map(float value, Range range, Range targetRange) {
