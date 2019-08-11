@@ -32,6 +32,10 @@ namespace Raccoon {
         private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
         private Locker<Alarm> _alarms = new Locker<Alarm>();
 
+        // compose message
+        private static StringBuilder _composeMessage = new StringBuilder();
+        private static bool _isComposingMessage;
+
         #endregion Private Members
 
         #region Constructors
@@ -157,6 +161,53 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public static void WriteLine(object obj, int level = 0) {
             WriteLine(obj.ToString(), null, level);
+        }
+
+        [Conditional("DEBUG")]
+        public static void ComposeMessage(string message, int level = 0) {
+            if (IndentLevel != level) {
+                IndentLevel = level;
+            }
+
+            _composeMessage.Append($"{IndentText}{message}");
+        }
+
+        [Conditional("DEBUG")]
+        public static void ComposeMessage(object obj, int level = 0) {
+            ComposeMessage(obj.ToString());
+        }
+
+        [Conditional("DEBUG")]
+        public static void ComposeMessageLine(string message, int level = 0) {
+            if (IndentLevel != level) {
+                IndentLevel = level;
+            }
+
+            _composeMessage.Append($"{IndentText}{message}\n");
+        }
+
+        [Conditional("DEBUG")]
+        public static void ComposeMessageLine(object obj) {
+            ComposeMessageLine(obj.ToString());
+        }
+
+        [Conditional("DEBUG")]
+        public static void WriteComposedMessage(string context = null) {
+            WriteLine(_composeMessage.ToString(), context);
+            _composeMessage.Clear();
+        }
+
+        [Conditional("DEBUG")]
+        public static void ClearComposedMessage() {
+            _composeMessage.Clear();
+        }
+
+        public static string RetrieveComposedMessage() {
+            return _composeMessage.ToString();
+        }
+
+        public static string RetrieveComposedMessage(int startIndex, int length) {
+            return _composeMessage.ToString(startIndex, length);
         }
 
         [Conditional("DEBUG")]
