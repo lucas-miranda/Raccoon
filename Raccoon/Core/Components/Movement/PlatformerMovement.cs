@@ -724,6 +724,12 @@ Fall Through
 
         #region Private Methods
 
+        /// <summary>
+        /// Checks if Body is actually on a ramp and the displacement in it.
+        /// </summary>
+        /// <param name="displacement">Movement displacement.</param>
+        /// <param name="rampDisplacement">Calculated ramp displacement.</param>
+        /// <returns>True, if it's on a ramp, False otherwise.</returns>
         private bool HandleRamps(Vector2 displacement, out Vector2 rampDisplacement) {
             if (!OnGround || Math.EqualsEstimate(displacement.X, 0f)) {
                 rampDisplacement = Vector2.Zero;
@@ -743,7 +749,7 @@ Fall Through
 
             if (collidesAscendingRamp) {
                 Debug.WriteLine("trying ascending ramp");
-                bool foundAscending = HandleRamp(dX, new Vector2(1, -1), ascdCollisionList, out rampDisplacement);
+                bool foundAscending = HandleRamp(dX, new Vector2(1, -1), ascdCollisionList, directionSameAsNormal: false, out rampDisplacement);
 
                 if (foundAscending) {
                     return true;
@@ -761,7 +767,7 @@ Fall Through
 
             if (collidesDescendingRamp) {
                 Debug.WriteLine("trying descending ramp");
-                bool foundDescending = HandleRamp(dX, new Vector2(-2, 2), descdCollisionList, out rampDisplacement);
+                bool foundDescending = HandleRamp(dX, new Vector2(-2, 2), descdCollisionList, directionSameAsNormal: true, out rampDisplacement);
 
                 if (foundDescending) {
                     return true;
@@ -773,7 +779,16 @@ Fall Through
             return false;
         }
 
-        private bool HandleRamp(float dX, Vector2 rampCheck, CollisionList<Body> collisionList, out Vector2 rampDisplacement) {
+        /// <summary>
+        /// Handle any kind of ramp check and gives a ramp displacement Vector2 given a horizontal displacement.
+        /// </summary>
+        /// <param name="dX">Movement horizontal displacement (in pixels).</param>
+        /// <param name="rampCheck">Position to check for a ramp, relative to Body.Shape, if it it were to the right. (To the left is the same, but mirrored)</param>
+        /// <param name="collisionList">Collision list to find for a ramp.</param>
+        /// <param name="directionSameAsNormal">If displacement direction should be the same as ramp normal face, for validation.</param>
+        /// <param name="rampDisplacement">Calculated ramp displacement, it should be used to move Body on ramp.</param>
+        /// <returns>True, if found a valid ramp, and False otherwise.</returns>
+        private bool HandleRamp(float dX, Vector2 rampCheck, CollisionList<Body> collisionList, bool directionSameAsNormal, out Vector2 rampDisplacement) {
             int direction = Math.Sign(dX);
             Rectangle boundingBox = Body.Shape.BoundingBox;
             Vector2 rampPositionCheck = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + rampCheck.X), boundingBox.Height / 2f + rampCheck.Y);
@@ -785,7 +800,38 @@ Fall Through
             bool refreshRampState = false;
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
-                if (LookForRamp(collInfo, rampPositionCheck, out Vector2 rampNormal)) {
+                bool isValidRamp = false,
+                     hasFindRamp = LookForRamp(collInfo, rampPositionCheck, out Vector2 rampNormal);
+
+                if (hasFindRamp) {
+                    /*
+                        Ascending Ramp
+
+                        Displacement Direction  Ramp Normal
+                                  ->               x < 0
+                                  <-               x > 0
+
+                        ----
+
+                        Descending Ramp
+
+                        Displacement Direction  Ramp Normal
+                                  ->               x > 0
+                                  <-               x < 0
+                     */
+
+                    if (directionSameAsNormal) {
+                        if (Math.Sign(rampNormal.X) == direction) {
+                            isValidRamp = true;
+                        }
+                    } else {
+                        if (Math.Sign(rampNormal.X) != direction) {
+                            isValidRamp = true;
+                        }
+                    }
+                }
+
+                if (isValidRamp) {
                     Debug.WriteLine($"- slope in [{AllowedSlopeFactorRange.Min}, {AllowedSlopeFactorRange.Max}] found!");
                     refreshRampState = true;
                     _onRamp = true;
@@ -811,6 +857,13 @@ Fall Through
             return true;
         }
 
+        /// <summary>
+        /// Try to find a ramp in a given CollisionInfo data and position.
+        /// </summary>
+        /// <param name="collisionInfo">Collision data to look for a ramp.</param>
+        /// <param name="rampPositionCheck">World position to check for a ramp.</param>
+        /// <param name="rampNormal">Ramp normal, if a ramp was found.</param>
+        /// <returns>True, if a ramp was found, False otherwise.</returns>
         private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2 rampPositionCheck, out Vector2 rampNormal) {
             switch (collisionInfo.Subject.Shape) {
                 case BoxShape boxShape:
@@ -875,11 +928,11 @@ Fall Through
 
                             // tile doesn't contains a valid ramp
                             if (closestEdge.Edge == null) {
-                                Debug.WriteLine("  Tile isn't a ramp");
+                                Debug.WriteLine("  Tile isn't a valid ramp");
                                 break;
                             }
 
-                            Debug.WriteLine("  Ramp from edges found!");
+                            Debug.WriteLine($"  Ramp from edges found!");
 
                             rampNormal = closestEdge.Normal;
                             return true;
