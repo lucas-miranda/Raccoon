@@ -11,20 +11,18 @@ using Raccoon.Util;
 
 namespace Raccoon {
     public sealed class Debug {
-        #region Public Static Members
+        #region Public Members
 
         public static readonly string LogFileName = "report.log";
 
-        #endregion Public Static Members
+        #endregion Public Members
 
-        #region Private Static Members
+        #region Private Members
 
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
-        #endregion Private Static Members
-
-        #region Private Members
+        private static string IndentText = "";
 
         private bool _useLogToFile;
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
@@ -53,8 +51,28 @@ namespace Raccoon {
         #region Public Static Properties
 
         public static Debug Instance { get; private set; }
-        public static int IndentLevel { get { return Trace.IndentLevel; } set { Trace.IndentLevel = value; } }
-        public static int IndentSize { get { return Trace.IndentSize; } set { Trace.IndentSize = value; } }
+
+        public static int IndentSize { 
+            get { 
+                return Trace.IndentSize; 
+            } 
+
+            set { 
+                Trace.IndentSize = value; 
+                PrepareIndentText();
+            } 
+        }
+
+        public static int IndentLevel { 
+            get { 
+                return Trace.IndentLevel; 
+            } 
+
+            set { 
+                Trace.IndentLevel = value; 
+                PrepareIndentText();
+            } 
+        }
 
 #if DEBUG
         public static bool ShowPerformanceDiagnostics { get; set; }
@@ -90,51 +108,43 @@ namespace Raccoon {
         #region Messages
 
         [Conditional("DEBUG")]
+        public static void Write(string message, string context) {
+            Trace.Write($"{IndentText}{message}", context);
+        }
+
+        [Conditional("DEBUG")]
+        public static void Write(object obj, string context) {
+            Write(obj.ToString(), context);
+        }
+
+        [Conditional("DEBUG")]
         public static void Write(string message) {
-            Trace.Write(message);
+            Write(message, null);
         }
 
         [Conditional("DEBUG")]
         public static void Write(object obj) {
-            Write(obj.ToString());
+            Write(obj.ToString(), null);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(string message, string category) {
-#if DEBUG
-            Trace.Write(message, category);
-#else
-            Trace.Write($"{DateTime.Now.ToString()}  [{category}]  {new string(' ', IndentSize * IndentLevel)}{message}", category);
-#endif
+        public static void WriteLine(string message, string context) {
+            Trace.WriteLine($"{IndentText}{message}", context);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(object obj, string category) {
-            Write(obj.ToString(), category);
+        public static void WriteLine(object obj, string context) {
+            WriteLine(obj.ToString(), context);
         }
 
         [Conditional("DEBUG")]
         public static void WriteLine(string message) {
-            Trace.WriteLine(message);
+            WriteLine(message, null);
         }
 
         [Conditional("DEBUG")]
         public static void WriteLine(object obj) {
-            WriteLine(obj.ToString());
-        }
-
-        [Conditional("DEBUG")]
-        public static void WriteLine(string message, string category) {
-#if DEBUG
-            Trace.WriteLine(message, category);
-#else
-            Trace.WriteLine($"{DateTime.Now.ToString()}  [{category}]  {new string(' ', IndentSize * IndentLevel)}{message}", category);
-#endif
-        }
-
-        [Conditional("DEBUG")]
-        public static void WriteLine(object obj, string category) {
-            WriteLine(obj.ToString(), category);
+            WriteLine(obj.ToString(), null);
         }
 
         [Conditional("DEBUG")]
@@ -836,6 +846,14 @@ namespace Raccoon {
         #endregion Others
 
         #endregion Public Methods
+
+        #region Private Methods
+
+        private static void PrepareIndentText() {
+            IndentText = new string(' ', IndentSize * IndentLevel);
+        }
+
+        #endregion Private Methods
 
         #region Internal Methods
 
