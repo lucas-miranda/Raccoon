@@ -798,7 +798,11 @@ namespace Raccoon {
                     }
 
                     // check collision with current movement
-                    Vector2 moveHorizontalPos = new Vector2(currentX + movementX, currentY),
+                    Vector2 moveHorizontalPos = new Vector2(
+                                                    currentX + movementX, 
+                                                    canMoveV ? (currentY + movementY) : currentY
+                                                    //currentY
+                                                ),
                             moveVerticalPos   = new Vector2(
                                                     canMoveH ? (currentX + movementX) : currentX,
                                                     currentY + movementY
@@ -823,22 +827,6 @@ namespace Raccoon {
                             List<Contact> horizontalContacts = new List<Contact>(),
                                           verticalContacts = new List<Contact>();
 
-                            // horizontal collision check
-                            if (canMoveH && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out ContactList contactsH)) {
-                                foreach (Contact c in contactsH) {
-                                    horizontalContacts.Add(c);
-                                }
-
-                                if (isMovementCollidable
-                                  && contactsH.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f && c.PenetrationDepth > 0f) >= 0
-                                  && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
-                                    canMoveH = false;
-                                    distanceX = 0;
-                                    moveVerticalPos.X = currentX;
-                                    directionY = Math.Sign(directionY);
-                                }
-                            }
-
                             // vertical collision check
                             if (canMoveV && CheckCollision(body.Shape, moveVerticalPos, otherBody, out ContactList contactsV)) {
                                 foreach (Contact c in contactsV) {
@@ -851,6 +839,23 @@ namespace Raccoon {
                                     canMoveV = false;
                                     distanceY = 0;
                                     directionX = Math.Sign(directionX);
+                                    moveHorizontalPos.Y = currentY;
+                                }
+                            }
+
+                            // horizontal collision check
+                            if (canMoveH && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out ContactList contactsH)) {
+                                foreach (Contact c in contactsH) {
+                                    horizontalContacts.Add(c);
+                                }
+
+                                if (isMovementCollidable
+                                  && contactsH.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f && c.PenetrationDepth > 0f) >= 0
+                                  && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
+                                    canMoveH = false;
+                                    distanceX = 0;
+                                    directionY = Math.Sign(directionY);
+                                    moveVerticalPos.X = currentX;
                                 }
                             }
 
