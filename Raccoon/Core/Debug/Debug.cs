@@ -22,6 +22,8 @@ namespace Raccoon {
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
+        private static int _indentSize = 4,
+                           _indentLevel = 0;
         private static string IndentText = "";
 
         private bool _useLogToFile;
@@ -54,22 +56,24 @@ namespace Raccoon {
 
         public static int IndentSize { 
             get { 
-                return Trace.IndentSize; 
+                return _indentSize; 
             } 
 
             set { 
-                Trace.IndentSize = value; 
+                //Trace.IndentSize = value; 
+                _indentSize = value;
                 PrepareIndentText();
             } 
         }
 
         public static int IndentLevel { 
             get { 
-                return Trace.IndentLevel; 
+                return _indentLevel; 
             } 
 
             set { 
-                Trace.IndentLevel = value; 
+                //Trace.IndentLevel = value; 
+                _indentLevel = value;
                 PrepareIndentText();
             } 
         }
@@ -108,84 +112,92 @@ namespace Raccoon {
         #region Messages
 
         [Conditional("DEBUG")]
-        public static void Write(string message, string context) {
+        public static void Write(string message, string context, int level = 0) {
+            if (IndentLevel != level) {
+                IndentLevel = level;
+            }
+
             Trace.Write($"{IndentText}{message}", context);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(object obj, string context) {
-            Write(obj.ToString(), context);
+        public static void Write(object obj, string context, int level = 0) {
+            Write(obj.ToString(), context, level);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(string message) {
-            Write(message, null);
+        public static void Write(string message, int level = 0) {
+            Write(message, null, level);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(object obj) {
-            Write(obj.ToString(), null);
+        public static void Write(object obj, int level = 0) {
+            Write(obj.ToString(), null, level);
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(string message, string context) {
+        public static void WriteLine(string message, string context, int level = 0) {
+            if (IndentLevel != level) {
+                IndentLevel = level;
+            }
+
             Trace.WriteLine($"{IndentText}{message}", context);
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(object obj, string context) {
-            WriteLine(obj.ToString(), context);
+        public static void WriteLine(object obj, string context, int level = 0) {
+            WriteLine(obj.ToString(), context, level);
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(string message) {
-            WriteLine(message, null);
+        public static void WriteLine(string message, int level = 0) {
+            WriteLine(message, null, level);
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(object obj) {
-            WriteLine(obj.ToString(), null);
+        public static void WriteLine(object obj, int level = 0) {
+            WriteLine(obj.ToString(), null, level);
         }
 
         [Conditional("DEBUG")]
-        public static void Critical(string message) {
+        public static void Critical(string message, int level = 0) {
             if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
-            WriteLine(message, "Critical");
+            WriteLine(message, "Critical", level);
         }
 
         [Conditional("DEBUG")]
-        public static void Warning(string message) {
+        public static void Warning(string message, int level = 0) {
             if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
-            WriteLine(message, "Warning");
+            WriteLine(message, "Warning", level);
         }
 
         [Conditional("DEBUG")]
-        public static void Error(string message) {
+        public static void Error(string message, int level = 0) {
             if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
-            WriteLine(message, "Error");
+            WriteLine(message, "Error", level);
         }
 
         [Conditional("DEBUG")]
-        public static void Error(string message, string detailMessage) {
+        public static void Error(string message, string detailMessage, int level = 0) {
             if (AutoRaiseConsole && !Console.Visible) {
                 Console.Show();
             }
 
-            WriteLine($"{message}\n{detailMessage}", "Error");
+            WriteLine($"{message}\n{detailMessage}", "Error", level);
         }
 
         [Conditional("DEBUG")]
-        public static void Info(string message) {
-            WriteLine(message, "Info");
+        public static void Info(string message, int level = 0) {
+            WriteLine(message, "Info", level);
         }
 
         [Conditional("DEBUG")]
@@ -905,6 +917,8 @@ namespace Raccoon {
             if (Console.Visible) {
                 Console.Render();
             }
+
+            IndentLevel = 0;
         }
 
         #endregion Internal Static Methods

@@ -95,31 +95,32 @@ namespace Raccoon {
         }
 
         public override void Write(string message, string category) {
-            if (string.IsNullOrWhiteSpace(message)) {
+            if (message == null) {
                 return;
             }
 
-            bool messageAlreadyExists = false;
+            bool isMessageConsumed = false;
 
             if (_messages.Count > 0) {
                 Message lastMessage = _messages[0];
 
-                if (IsSameCategory(lastMessage, category)) {
-                    if (lastMessage.Text.Equals(message) && lastMessage.IsClosed) {
-                        lastMessage.Repeat();
-                    } else {
+                if (!lastMessage.IsClosed) {
+                    if (IsSameCategory(lastMessage, category)) {
                         int newLines = lastMessage.Append(message);
 
                         if (newLines > 0) {
                             Lines += newLines;
                         }
+
+                        isMessageConsumed = true;
                     }
 
-                    messageAlreadyExists = true;
+                    lastMessage.Append("c");
+                    lastMessage.Close();
                 }
             }
 
-            if (!messageAlreadyExists) {
+            if (!isMessageConsumed) {
                 InsertMessage(message, category, ended: false);
             }
 
@@ -140,27 +141,38 @@ namespace Raccoon {
         }
 
         public override void WriteLine(string message, string category) {
-            if (string.IsNullOrWhiteSpace(message)) {
+            if (message == null) {
                 return;
             }
 
-            bool isEqualsPreviousMessage = false;
+            bool isMessageConsumed = false;
 
             if (_messages.Count > 0) {
                 Message lastMessage = _messages[0];
 
                 // close previous opened messages
                 if (!lastMessage.IsClosed) {
+                    if (IsSameCategory(lastMessage, category)) {
+                        int newLines = lastMessage.Append(message);
+
+                        if (newLines > 0) {
+                            Lines += newLines;
+                        }
+
+                        isMessageConsumed = true;
+                    }
+
+                    lastMessage.Append("c");
                     lastMessage.Close();
                 }
 
-                if (MergeIdenticalMessages && IsSameMessage(lastMessage, message, category)) {
-                    isEqualsPreviousMessage = true;
+                if (MergeIdenticalMessages && !isMessageConsumed && IsSameMessage(lastMessage, message, category)) {
+                    isMessageConsumed = true;
                     lastMessage.Repeat();
                 }
             }
 
-            if (!isEqualsPreviousMessage) {
+            if (!isMessageConsumed) {
                 InsertMessage(message, category, ended: true);
             }
 
@@ -423,11 +435,19 @@ namespace Raccoon {
             public bool IsClosed { get; private set; }
 
             public void Repeat() {
+                if (!IsClosed) {
+                    return;
+                }
+
                 Count++;
                 Timestamp = System.DateTime.Now;
             }
 
             public int Append(string text) {
+                if (IsClosed) {
+                    return 0;
+                }
+
                 int newLines = text.Count("\n");
                 Lines += newLines;
                 Text += text;
