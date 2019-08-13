@@ -115,7 +115,6 @@ namespace Raccoon {
                         isMessageConsumed = true;
                     }
 
-                    lastMessage.Append("c");
                     lastMessage.Close();
                 }
             }
@@ -162,7 +161,6 @@ namespace Raccoon {
                         isMessageConsumed = true;
                     }
 
-                    lastMessage.Append("c");
                     lastMessage.Close();
                 }
 
@@ -398,7 +396,7 @@ namespace Raccoon {
         }
 
         private bool IsSameMessage(Message message, string text, string category) {
-            return IsSameCategory(message, category) && message.Text.Equals(message);
+            return IsSameCategory(message, category) && message.Text.Equals(text);
         }
 
         private bool IsSameCategory(Message message, string category) {

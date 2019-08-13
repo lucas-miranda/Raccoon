@@ -801,7 +801,6 @@ namespace Raccoon {
                     Vector2 moveHorizontalPos = new Vector2(
                                                     currentX + movementX, 
                                                     canMoveV ? (currentY + movementY) : currentY
-                                                    //currentY
                                                 ),
                             moveVerticalPos   = new Vector2(
                                                     canMoveH ? (currentX + movementX) : currentX,
