@@ -92,7 +92,12 @@ Scene:
                 System.Exception e = (System.Exception) args.ExceptionObject;
 
                 using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
-                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n\n\n");
+                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
+
+                    while (e.InnerException != null) {
+                        e = e.InnerException;
+                        logWriter.WriteLine($"{System.DateTime.Now.ToString()}  InnerException: {e.Message}\n{e.StackTrace}\n");
+                    }
                 }
 
 #if WINDOWS
