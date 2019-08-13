@@ -29,6 +29,9 @@ namespace Raccoon.Components {
                                    OnTouchGround = delegate { },
                                    OnFallingBegin = delegate { };
 
+        public delegate void RampEvent(int climbDirection);
+        public event RampEvent OnTouchRamp, OnLeaveRamp;
+
         #endregion Public Members
 
         #region Private Members
@@ -70,13 +73,14 @@ Jump
 
 Ramps
   On Ramp? {22}
-  internal isGravityEnabled {23}
+  Ascd? {23} Descd? {24}
+  internal isGravityEnabled {25}
 
 Fall Through
-  Can Fall Through? {24}
+  Can Fall Through? {26}
 
-  is trying to fall through? {25}
-  apply fall? {26}
+  is trying to fall through? {27}
+  apply fall? {28}
 ";
 
         // general
@@ -108,7 +112,6 @@ Fall Through
             new Vector2(-4f, 0f)
         };
 
-        private bool _onRamp, _collidedThisFrame;
         private Vector2 _rampNormal;
 
         // fall through
@@ -211,6 +214,26 @@ Fall Through
         public float AirDragForce { get; set; }
 
         /// <summary>
+        /// This modifier will be applied to ramp displacement (in px).
+        /// </summary>
+        public float RampSpeedModifier { get; set; } = 1f;
+
+        /// <summary>
+        /// Is Body on a ramp.
+        /// </summary>
+        public bool IsOnRamp { get; private set; }
+
+        /// <summary>
+        /// Is Body on an ascending ramp.
+        /// </summary>
+        public bool IsOnAscendingRamp { get; private set; }
+
+        /// <summary>
+        /// Is Body on a descending ramp.
+        /// </summary>
+        public bool IsOnDescendingRamp { get; private set; }
+
+        /// <summary>
         /// Tags to check using fall through platform logic.
         /// </summary>
         public BitTag FallThroughTags { get; set; }
@@ -281,7 +304,7 @@ Fall Through
                 Enabled, CanMove,
                 OnGround, IsFalling,
                 Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
-                _onRamp, _internal_isGravityEnabled,
+                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled,
                 CanFallThrough, _isTryingToFallThrough, _applyFall
             );
 
@@ -313,7 +336,6 @@ Fall Through
         public override void PhysicsUpdate(float dt) {
             base.PhysicsUpdate(dt);
             _touchedTop = _touchedBottom = false;
-            _collidedThisFrame = false;
         }
 
         public override void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
@@ -334,7 +356,7 @@ Fall Through
                             continue;
                         }
 
-                        if (_onRamp) {
+                        if (IsOnRamp) {
                             if (Helper.InRange(contact.PenetrationDepth, 0f, 1f)) {
                                 _touchedBottom = true;
                                 break;
@@ -551,11 +573,11 @@ Fall Through
             } else if (distance.Y < 0f) {
                 if (IsStillJumping) {
                     if (!IsJumping) {
-                        ClearRampState();
                         IsJumping = JustJumped = true;
                         OnGround = IsFalling = false;
                         Jumps--;
                         OnJumpBegin();
+                        ClearRampState();
                     } else if (JustJumped) {
                         JustJumped = false;
                     }
@@ -586,8 +608,12 @@ Fall Through
         /// <param name="rampDisplacement">Calculated ramp displacement.</param>
         /// <returns>True, if it's on a ramp, False otherwise.</returns>
         private bool HandleRamps(Vector2 displacement, out Vector2 rampDisplacement) {
+            bool wasOnAscendingRamp = IsOnAscendingRamp,
+                 wasOnDescendingRamp = IsOnDescendingRamp;
+
             if (!OnGround || Math.EqualsEstimate(displacement.X, 0f)) {
                 rampDisplacement = Vector2.Zero;
+                ClearRampState();
                 return false;
             }
 
@@ -598,6 +624,17 @@ Fall Through
 #if !DISABLE_ASCENDING_RAMP
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX), 0f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
                 if (HandleRamp(dX, AscendingRampChecks, ascdCollisionList, directionSameAsNormal: false, out rampDisplacement)) {
+                    IsOnAscendingRamp = true;
+                    IsOnDescendingRamp = false;
+
+                    if (wasOnDescendingRamp) {
+                        OnLeaveRamp?.Invoke(1);
+                    }
+
+                    if (!wasOnAscendingRamp) {
+                        OnTouchRamp?.Invoke(-1);
+                    }
+
                     return true;
                 }
             }
@@ -606,6 +643,17 @@ Fall Through
 #if !DISABLE_DESCENDING_RAMP
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX) * .5f, 2f), CollisionTags, out CollisionList<Body> descdCollisionList)) {
                 if (HandleRamp(dX, DescendingRampChecks, descdCollisionList, directionSameAsNormal: true, out rampDisplacement)) {
+                    IsOnAscendingRamp = false;
+                    IsOnDescendingRamp = true;
+
+                    if (wasOnAscendingRamp) {
+                        OnLeaveRamp?.Invoke(-1);
+                    }
+
+                    if (!wasOnDescendingRamp) {
+                        OnTouchRamp?.Invoke(1);
+                    }
+
                     return true;
                 }
             }
@@ -673,7 +721,7 @@ Fall Through
 
                 if (isValidRamp) {
                     refreshRampState = true;
-                    _onRamp = true;
+                    IsOnRamp = true;
                     _rampNormal = rampNormal;
                     _internal_isGravityEnabled = false;
                     break;
@@ -687,7 +735,7 @@ Fall Through
 
             Vector2 rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
             float rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
-            rampDisplacement = rampMoveNormal * rampDisplacementDistance;
+            rampDisplacement = rampMoveNormal * rampDisplacementDistance * RampSpeedModifier;
             Body.MoveBufferX = 0;
             return true;
         }
@@ -786,13 +834,15 @@ Fall Through
         }
 
         private void ClearRampState() {
-            if (!_onRamp) {
+            if (!IsOnRamp) {
                 return;
             }
 
-            _onRamp = false;
+            IsOnRamp = false;
             _rampNormal = Vector2.Zero;
             _internal_isGravityEnabled = true;
+            OnLeaveRamp?.Invoke(IsOnDescendingRamp ? 1 : -1);
+            IsOnDescendingRamp = IsOnAscendingRamp = false;
         }
 
         #endregion Private Methods
