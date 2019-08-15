@@ -562,14 +562,29 @@ namespace Raccoon {
         }
 
         private void CalculateNormals() {
+            if (Vertices.Count < 3) {
+                if (Normals.Length > 0) {
+                    Normals = new Vector2[0];
+                }
+
+                return;
+            }
+
             if (Normals.Length != VertexCount) {
                 Normals = new Vector2[VertexCount];
             }
 
             int i = 0;
-            foreach (Line line in Edges()) {
-                Normals[i] = line.ToVector2().PerpendicularCCW().Normalized();
-                i++;
+            if (Math.IsLeft(Vertices[0], Vertices[1], Vertices[2])) {
+                foreach (Line line in Edges()) {
+                    Normals[i] = line.ToVector2().PerpendicularCCW().Normalized();
+                    i++;
+                }
+            } else {
+                foreach (Line line in Edges()) {
+                    Normals[i] = line.ToVector2().PerpendicularCW().Normalized();
+                    i++;
+                }
             }
         }
 
