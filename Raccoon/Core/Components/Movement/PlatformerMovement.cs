@@ -348,7 +348,6 @@ Fall Through
             bool isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> contactsBelow);
             bool isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
 
-
             if (isAboveSomething) {
                 foreach (CollisionInfo<Body> collisionInfo in contactsBelow) {
                     foreach (Contact contact in collisionInfo.Contacts) {
@@ -376,16 +375,25 @@ Fall Through
             }
 
             if (isBelowSomething) {
-                _touchedTop = contactsAbove.FindIndex(ci => ci.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Up) > .6f && Helper.InRange(c.PenetrationDepth, 0f, 1f))) >= 0;
+                foreach (CollisionInfo<Body> collisionInfo in contactsAbove) {
+                    foreach (Contact contact in collisionInfo.Contacts) {
+                        if (Vector2.Dot(contact.Normal, Vector2.Up) <= .6f) {
+                            continue;
+                        }
+
+                        if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)) {
+                            _touchedTop = true;
+                            break;
+                        }
+                    }
+                }
             }
 
             if (_touchedTop) {
                 // moving up and reached a ceiling
-                if (Velocity.Y < 0f) { // && !_isTryingToFallThrough) {
+                if (Velocity.Y < 0f) {
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
-                    //Debug.WriteLine($"PhysicsLateUpdate - moving up and reached a ceiling, Velocity.Y = 0 and begin falling");
-
                     IsFalling = true;
                     _ledgeJumpTime = 0;
                     OnFallingBegin();
@@ -395,26 +403,36 @@ Fall Through
             if (_touchedBottom) {
                 // falling and reached the ground
                 if (IsFalling || IsJumping) {
-                    OnGround = true;
-                    IsStillJumping = IsJumping = IsFalling = false;
-                    Jumps = MaxJumps;
+                    bool isNotJumpingAnymore = false;
 
-                    if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                    if (!IsFalling) {
+                        if (Velocity.Y >= 0) {
+                            _canKeepCurrentJump = false;
+                            isNotJumpingAnymore = true;
+                        }
+                    } else if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
                         _canKeepCurrentJump = true;
+                        isNotJumpingAnymore = true;
+                    } else {
+                        isNotJumpingAnymore = true;
                     }
 
-                    OnTouchGround();
+                    if (isNotJumpingAnymore) {
+                        OnGround = true;
+                        IsStillJumping = IsJumping = IsFalling = false;
+                        Jumps = MaxJumps;
+
+                        OnTouchGround();
+                    }
                 }
 
                 if (OnGround || IsFalling) {
                     Velocity = new Vector2(Velocity.X, 0f);
-                    //Debug.WriteLine($"PhysicsLateUpdate - touchedBottom and (OnGround or IsFalling) => Velocity.Y = 0");
                 }
             }
 
             // Check if still is on ground
             if (OnGround && !_touchedBottom) {
-                //Debug.WriteLine($"PhysicsLateUpdate - Not in ground anymore, falling");
                 Fall();
             }
         }
@@ -567,7 +585,7 @@ Fall Through
         protected override void OnMoving(Vector2 distance) {
             if (distance.Y > 0f) {
                 // if it's moving down then it's falling
-                if (IsJumping && !IsFalling) { // && !_isWalkingOnRamp) {
+                if (IsJumping && !IsFalling) {
                     Fall();
                 }
             } else if (distance.Y < 0f) {
