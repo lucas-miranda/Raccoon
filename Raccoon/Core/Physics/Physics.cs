@@ -723,7 +723,7 @@ namespace Raccoon {
 
                 // prepare collidable tags
                 BitTag bodyCollidableTags = GetCollidableTags(body.Tags),
-                       movementCollidableTags = body.Movement == null ? BitTag.None : body.Movement.CollisionTags;
+                       movementCollidableTags = body.Movement == null ? BitTag.None : body.Movement.Tags;
 
                 // initial body vars
                 int currentX = (int) body.Position.X,

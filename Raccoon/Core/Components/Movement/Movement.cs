@@ -54,6 +54,7 @@ namespace Raccoon.Components {
         #region Public Properties
 
         public Body Body { get; private set; }
+        public BitTag Tags { get { return CollisionTags | ExtraCollisionTags; } }
         public BitTag CollisionTags { get; set; } = BitTag.None;
         public Vector2 Axis { get; set; }
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
@@ -128,6 +129,7 @@ namespace Raccoon.Components {
         protected Vector2 ImpulsePerSec { get; set; }
         protected float ImpulseTime { get; set; }
         protected bool JustReceiveImpulse { get; set; }
+        protected BitTag ExtraCollisionTags { get; set; } = BitTag.None;
 
         #endregion Protected Properties
 

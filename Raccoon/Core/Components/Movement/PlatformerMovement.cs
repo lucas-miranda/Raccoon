@@ -80,7 +80,6 @@ Fall Through
   Can Fall Through? {26}
 
   is trying to fall through? {27}
-  apply fall? {28}
 ";
 
         // general
@@ -115,7 +114,8 @@ Fall Through
         private Vector2 _rampNormal;
 
         // fall through
-        private bool _isTryingToFallThrough, _applyFall, _isAboveSomething;
+        private BitTag _fallthroughTags;
+        private bool _isTryingToFallThrough;
 
         #endregion Private Members
 
@@ -236,7 +236,23 @@ Fall Through
         /// <summary>
         /// Tags to check using fall through platform logic.
         /// </summary>
-        public BitTag FallThroughTags { get; set; }
+        public BitTag FallThroughTags {
+            get {
+                return _fallthroughTags;
+            }
+
+            set {
+                if (value == _fallthroughTags) {
+                    return;
+                }
+
+                BitTag TagsToRemove = _fallthroughTags & ~value;
+                ExtraCollisionTags -= TagsToRemove;
+                BitTag TagsToAdd = ~TagsToRemove & value;
+                ExtraCollisionTags += TagsToAdd;
+                _fallthroughTags = value;
+            }
+        }
 
         /// <summary>
         /// It's on fall through state.
@@ -305,7 +321,7 @@ Fall Through
                 OnGround, IsFalling,
                 Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
                 IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled,
-                CanFallThrough, _isTryingToFallThrough, _applyFall
+                CanFallThrough, _isTryingToFallThrough
             );
 
             Debug.DrawString(null, new Vector2(10f, 10f), info);
@@ -381,7 +397,8 @@ Fall Through
                             continue;
                         }
 
-                        if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)) {
+                        if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)
+                          && !collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
                             _touchedTop = true;
                             break;
                         }
@@ -421,6 +438,7 @@ Fall Through
                         OnGround = true;
                         IsStillJumping = IsJumping = IsFalling = false;
                         Jumps = MaxJumps;
+                        _isTryingToFallThrough = false;
 
                         OnTouchGround();
                     }
@@ -438,6 +456,28 @@ Fall Through
         }
 
         public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            if (collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
+                if ((CanFallThrough || _isTryingToFallThrough) && collisionAxes.Y > 0f) {
+                    // falling through the other body
+                    if (!_isTryingToFallThrough) {
+                        _isTryingToFallThrough = true;
+                    }
+
+                    return false;
+                } else if (collisionAxes.Y < 0f || collisionAxes.X != 0f) {
+                    // pass through from below to above
+                    
+                    return false;
+                } else if (!collisionInfo.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Down) >= .6f && Math.EqualsEstimate(c.PenetrationDepth, 1f))) {
+                    // body can pass through the other body, if isn't directly above
+                    if (_isTryingToFallThrough) {
+                        _isTryingToFallThrough = false;
+                    }
+
+                    return false;
+                }
+            }
+
             return base.CanCollideWith(collisionAxes, collisionInfo);
         }
 
