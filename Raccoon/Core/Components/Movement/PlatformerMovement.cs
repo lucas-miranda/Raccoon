@@ -333,6 +333,7 @@ Fall Through
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
 
+            /*
             int direction = Math.Sign(LastAxis.X);
             Vector2 realign = direction < 0 ? new Vector2(-1f, 0f) : Vector2.Zero;
             Rectangle boundingBox = Body.Shape.BoundingBox;
@@ -346,7 +347,7 @@ Fall Through
                 Vector2 pos = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + currentRampCheck.X), boundingBox.Height / 2f + currentRampCheck.Y) + realign;
                 Debug.DrawRectangle(new Rectangle(pos, Size.Unit), Graphics.Color.Blue);
             }
-
+            */
         }
 
         public override void PhysicsUpdate(float dt) {
