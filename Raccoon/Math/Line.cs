@@ -72,6 +72,13 @@ namespace Raccoon {
             return PointA + t * ToVector2();
         }
 
+        public Vector2 GetProjectionPoint(Vector2 p) {
+            Vector2 lineVec = ToVector2(),
+                    normal = lineVec.Normalized();
+
+            return PointA + normal * normal.Projection(p - PointA);
+        }
+
         public bool IntersectionPoint(Line line, out Vector2 intersectionPoint) {
             // reference:  https://gamedev.stackexchange.com/a/12246
             float a1 = SignedTriangleArea(PointA, PointB, line.PointB),
@@ -187,6 +194,10 @@ namespace Raccoon {
 
         public Range Projection(params Vector2[] points) {
             return Projection(points as ICollection<Vector2>);
+        }
+
+        public float Projection(Vector2 point) {
+            return ToVector2().Projection(point);
         }
 
         public Vector2 ToVector2() {
