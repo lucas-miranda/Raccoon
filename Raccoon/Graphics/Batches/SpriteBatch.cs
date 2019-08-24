@@ -186,7 +186,7 @@ namespace Raccoon.Graphics {
         private ref SpriteBatchItem GetBatchItem(bool needsTransparency) {
             if (needsTransparency) {
                 if (_nextItemWithTransparencyIndex >= _transparencyBatchItems.Length) {
-                    SetTransparencyBuffersCapacity(_batchItems.Length / 2);
+                    SetTransparencyBuffersCapacity(_batchItems.Length * 2);
                 }
 
                 ref SpriteBatchItem transparencyBatchItem = ref _transparencyBatchItems[_nextItemWithTransparencyIndex];
