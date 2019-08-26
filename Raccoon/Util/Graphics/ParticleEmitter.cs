@@ -2,10 +2,12 @@
 using Raccoon.Graphics;
 
 namespace Raccoon.Util.Graphics {
-    public class ParticleEmitter {
+    public class ParticleEmitter : System.IDisposable {
         #region Private Members
 
         private Dictionary<string, (Particle, EmissionOptions)> _particleModels = new Dictionary<string, (Particle, EmissionOptions)>();
+
+        private List<Particle> _aliveParticles = new List<Particle>();
 
         #endregion Private Members
 
@@ -24,6 +26,7 @@ namespace Raccoon.Util.Graphics {
         #region Public Properties
 
         public Scene Scene { get; set; }
+        public bool IsDisposed { get; private set; }
 
         #endregion Public Properties
 
@@ -44,6 +47,21 @@ namespace Raccoon.Util.Graphics {
             foreach (Particle particle in particles) {
                 particle.Transform.Parent = entity.Transform;
             }
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (Scene != null) {
+                Scene.RemoveEntities(_aliveParticles);
+                Scene = null;
+            }
+
+            _particleModels = null;
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods
@@ -70,6 +88,10 @@ namespace Raccoon.Util.Graphics {
                     }
                 };
 
+                particle.OnSceneRemoved += () => {
+                    _aliveParticles.Remove(particle);
+                };
+
                 Vector2 displacement = emissionOptions.DisplacementMin;
 
                 if (emissionOptions.DisplacementMin != emissionOptions.DisplacementMax) {
@@ -90,6 +112,8 @@ namespace Raccoon.Util.Graphics {
                 Scene.Add(particle);
                 particles.Add(particle);
             }
+
+            _aliveParticles.AddRange(particles);
         }
 
         #endregion Private Methods
