@@ -33,8 +33,6 @@
 
         #region Public Properties
 
-        public bool IsDisposed { get; private set; }
-
         public Font Font {
             get {
                 return _font;
@@ -98,7 +96,8 @@
 
             _font = null;
             Data = null;
-            IsDisposed = true;
+
+            base.Dispose();
         }
 
         #endregion Public Methods

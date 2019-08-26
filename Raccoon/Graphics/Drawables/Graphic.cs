@@ -1,7 +1,7 @@
 ﻿using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public abstract class Graphic : IUpdatable, IRenderable {
+    public abstract class Graphic : IUpdatable, IRenderable, System.IDisposable {
         #region Public Members
 
         public static int LayersCount = 16777214; // Since we're using 24 bits depth-buffer, max layers count could be: 16777215
@@ -40,6 +40,7 @@ namespace Raccoon.Graphics {
         public bool Active { get; set; } = true;
         public bool Visible { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
+        public bool IsDisposed { get; private set; }
         public Vector2 Position { get; set; }
         public Vector2 Center { get { return Position + Size / 2f; } set { Position = value - Size / 2f; } }
         public Vector2 Origin { get; set; }
@@ -183,7 +184,13 @@ namespace Raccoon.Graphics {
         public virtual void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
         }
 
-        public abstract void Dispose();
+        public virtual void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            IsDisposed = true;
+        }
 
         #endregion Public Methods
 

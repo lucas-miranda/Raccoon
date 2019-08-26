@@ -35,7 +35,6 @@ namespace Raccoon.Graphics {
         public int Columns { get; private set; }
         public int Rows { get; private set; }
         public Size TileSize { get; private set; }
-        public bool IsDisposed { get; private set; }
 
         public Color BorderColor {
             get {
@@ -164,7 +163,7 @@ namespace Raccoon.Graphics {
             _vertexBuffer = null;
             _indexBuffer = null;
 
-            IsDisposed = true;
+            base.Dispose();
         }
 
         #endregion Public Methods

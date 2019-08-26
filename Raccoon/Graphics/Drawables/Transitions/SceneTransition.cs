@@ -75,9 +75,15 @@
         }
 
         public override void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
             if (EndGraphic != null) {
                 EndGraphic.Dispose();
             }
+
+            base.Dispose();
         }
 
         #endregion Public Methods

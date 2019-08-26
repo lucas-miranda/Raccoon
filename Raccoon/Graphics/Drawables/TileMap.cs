@@ -47,7 +47,6 @@ namespace Raccoon.Graphics {
         public int Rows { get; private set; }
         public uint[] Data { get; private set; } = new uint[0];
         public Rectangle TileBounds { get { return new Rectangle(0, 0, Columns, Rows); } }
-        public bool IsDisposed { get; private set; }
 
         public Texture Texture {
             get {
@@ -422,7 +421,7 @@ namespace Raccoon.Graphics {
                 _indexBuffer = null;
             }
 
-            IsDisposed = true;
+            base.Dispose();
         }
 
         #endregion Public Methods

@@ -41,8 +41,6 @@
 
         #region Public Properties
 
-        public bool IsDisposed { get; private set; }
-
         public Texture Texture {
             get {
                 return _texture;
@@ -184,7 +182,7 @@
 
             _texture = null;
 
-            IsDisposed = true;
+            base.Dispose();
         }
 
         public override string ToString() {
