@@ -81,6 +81,10 @@ namespace Raccoon {
             }
 
             set {
+                if (_camera != null) {
+                    _camera.Dispose();
+                }
+
                 _camera = value;
                 if (HasStarted) {
                     _camera.Start();

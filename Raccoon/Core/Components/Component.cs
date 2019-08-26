@@ -2,9 +2,9 @@
 
 namespace Raccoon.Components {
 #if DEBUG
-    public abstract class Component : IExtendedUpdatable, IRenderable, IDebugRenderable {
+    public abstract class Component : IExtendedUpdatable, IRenderable, IDebugRenderable, System.IDisposable {
 #else
-    public abstract class Component : IExtendedUpdatable, IRenderable {
+    public abstract class Component : IExtendedUpdatable, IRenderable, System.IDisposable {
 #endif
         #region Private Members
 
@@ -18,6 +18,7 @@ namespace Raccoon.Components {
         public bool Visible { get; set; } = true;
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public bool IgnoreDebugRender { get; set; }
+        public bool IsDisposed { get; private set; }
         public int Order { get; set; }
         public int Layer { get; set; }
         public Renderer Renderer { get; set; }
@@ -79,6 +80,20 @@ namespace Raccoon.Components {
 #if DEBUG
         public abstract void DebugRender();
 #endif
+
+        public virtual void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (Entity != null) {
+                Entity.RemoveComponent(this);
+            }
+
+            Renderer = null;
+
+            IsDisposed = true;
+        }
 
         #endregion Public Methods
 

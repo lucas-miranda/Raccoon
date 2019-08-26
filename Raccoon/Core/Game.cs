@@ -44,7 +44,7 @@ Scene:
   Renderables: {12}
   Objects: {13}";
 
-        private readonly string WindowTitleDetailed = "{0} | {1} FPS {2:0.00} MB";
+        private readonly string WindowTitleDetailed = "{0} | {1} FPS  {2:0.00} MB  GC: {3:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
         private const int FramerateMonitorDataSpacing = 4;
 
@@ -192,7 +192,8 @@ Scene:
             set {
                 _title = value;
 #if DEBUG
-                XNAGameWrapper.Window.Title = string.Format(WindowTitleDetailed, _title, _fps, System.GC.GetTotalMemory(false) / 1048576f);
+                System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                XNAGameWrapper.Window.Title = string.Format(WindowTitleDetailed, _title, _fps, currentProcess.PrivateMemorySize64 / 1048576.0, System.GC.GetTotalMemory(false) / 1048576.0);
 #else
                 Core.Window.Title = _title;
 #endif

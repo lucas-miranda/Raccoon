@@ -1,9 +1,13 @@
-﻿using System.Collections;
+﻿using System.Reflection;
 using System.Collections.Generic;
 
 namespace Raccoon.Components.StateMachine {
+    //public delegate void StateEnterDelegate();
+    //public delegate IEnumerator StateUpdateDelegate();
+    //public delegate void StateLeaveDelegate();
+
     public class State<T> {
-        public State(T label, System.Action onEnter, System.Func<IEnumerator> onUpdate, System.Action onLeave) {
+        public State(T label, MethodInfo onEnter, MethodInfo onUpdate, MethodInfo onLeave) {
             Label = label;
             OnEnter = onEnter;
             OnUpdate = onUpdate;
@@ -11,9 +15,9 @@ namespace Raccoon.Components.StateMachine {
         }
 
         public T Label { get; private set; }
-        public System.Action OnEnter { get; private set; }
-        public System.Func<IEnumerator> OnUpdate { get; private set; }
-        public System.Action OnLeave { get; private set; }
+        public MethodInfo OnEnter { get; private set; }
+        public MethodInfo OnUpdate { get; private set; }
+        public MethodInfo OnLeave { get; private set; }
 
         public List<Transition<T>> Transitions { get; } = new List<Transition<T>>();
     }

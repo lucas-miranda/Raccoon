@@ -405,26 +405,22 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            if (Texture != null && !Texture.IsDisposed) {
-                Texture.Dispose();
-            }
+            _texture = null;
 
-            if (Grid != null && !Grid.IsDisposed) {
+            if (Grid != null) {
                 Grid.Dispose();
+                Grid = null;
             }
 
-            if (_vertexBuffer != null && !_vertexBuffer.IsDisposed) {
+            if (_vertexBuffer != null) {
                 _vertexBuffer.Dispose();
+                _vertexBuffer = null;
             }
 
-            if (_indexBuffer != null && !_indexBuffer.IsDisposed) {
+            if (_indexBuffer != null) {
                 _indexBuffer.Dispose();
+                _indexBuffer = null;
             }
-
-            _vertexBuffer = null;
-            _indexBuffer = null;
-            Data = null;
-            Grid = null;
 
             IsDisposed = true;
         }

@@ -4,14 +4,14 @@ using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
-    public class GridShape : IShape {
+    public class GridShape : IShape, System.IDisposable {
 #if DEBUG
         public static readonly Color BackgroundGridColor = new Color(0x9B999AFF);
         public static bool DebugRenderDetailed = true;
 #endif
 
         private Dictionary<uint, TileShape> _collisionShapes = new Dictionary<uint, TileShape>();
-        private readonly TileShape[,] _tilesData;
+        private TileShape[,] _tilesData;
 
         private Vector2 _origin;
 
@@ -35,6 +35,7 @@ namespace Raccoon {
         public Rectangle BoundingBox { get; private set; }
         public Rectangle TileBounds { get; private set; }
         public Polygon BoxTilePolygon { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         public Vector2 Origin {
             get {
@@ -233,6 +234,18 @@ namespace Raccoon {
 
         public IEnumerable<(int column, int row, TileShape shape)> Tiles() {
             return Tiles(0, 0, Columns - 1, Rows - 1);
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            _tilesData = null;
+            _collisionShapes = null;
+            BoxTilePolygon = null;
+
+            IsDisposed = true;
         }
 
         #region TileShape Class

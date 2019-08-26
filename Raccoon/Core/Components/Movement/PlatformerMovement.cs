@@ -25,9 +25,10 @@ namespace Raccoon.Components {
         /// </summary>
         public static Range AllowedRampElevation = new Range(0, 60); // in degrees (preferred to stay 
 
-        public event System.Action OnJumpBegin = delegate { },
-                                   OnTouchGround = delegate { },
-                                   OnFallingBegin = delegate { };
+        public delegate void PlatformerMovementAction();
+        public event PlatformerMovementAction OnJumpBegin = delegate { },
+                                              OnTouchGround = delegate { },
+                                              OnFallingBegin = delegate { };
 
         public delegate void RampEvent(int climbDirection);
         public event RampEvent OnTouchRamp, OnLeaveRamp;
@@ -617,6 +618,17 @@ Fall Through
             if (OnGround) {
                 Velocity = new Vector2(Velocity.X, Acceleration.Y * JumpExplosionRate);
             }
+        }
+
+        public override void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            OnJumpBegin = OnTouchGround = OnFallingBegin = null;
+            OnTouchRamp = OnLeaveRamp = null;
+
+            base.Dispose();
         }
 
         #endregion Public Methods

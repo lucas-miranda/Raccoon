@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 
 using Raccoon.Components.StateMachine;
@@ -93,14 +94,16 @@ namespace Raccoon.Components {
             }
 
             PreviousState = CurrentState = StartState = _states[label];
-            CurrentState.OnEnter();
-            CurrentCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
+            ProcessStateEnter(CurrentState.OnEnter);
+            CurrentCoroutine = Coroutines.Instance.Start(ProcessStateUpdate(CurrentState.OnUpdate));
         }
 
         public void Stop() {
             NextState = PreviousState = CurrentState = StartState = null;
+
             if (CurrentCoroutine != null) {
                 CurrentCoroutine.Stop();
+                CurrentCoroutine = null;
             }
 
             ClearTriggers();
@@ -146,12 +149,18 @@ namespace Raccoon.Components {
                 throw new System.InvalidOperationException($"'{Entity.GetType().Name}' doesn't contains a definition of onLeave method '{onLeaveStateMethodName}'.");
             }
 
+            /*
+                                (StateEnterDelegate) onEnterStateMethodInfo.CreateDelegate(typeof(StateEnterDelegate), Entity),
+                                (StateUpdateDelegate) onUpdateStateMethodInfo.CreateDelegate(typeof(StateUpdateDelegate), Entity),
+                                (StateLeaveDelegate) onLeaveStateMethodInfo.CreateDelegate(typeof(StateLeaveDelegate), Entity)
+            */
+
             State<T> state = new State<T>(
-                                label,
-                                (System.Action) onEnterStateMethodInfo.CreateDelegate(typeof(System.Action), Entity),
-                                (System.Func<IEnumerator>) onUpdateStateMethodInfo.CreateDelegate(typeof(System.Func<IEnumerator>), Entity),
-                                (System.Action) onLeaveStateMethodInfo.CreateDelegate(typeof(System.Action), Entity)
-                              );
+                label,
+                onEnterStateMethodInfo,
+                onUpdateStateMethodInfo,
+                onLeaveStateMethodInfo
+            );
 
             _states.Add(label, state);
         }
@@ -209,7 +218,8 @@ namespace Raccoon.Components {
         #region Private Methods
 
         private void UpdateState() {
-            CurrentState.OnLeave();
+            ProcessStateLeave(CurrentState.OnLeave);
+
             CurrentCoroutine.Stop();
 
             if (!KeepTriggerValuesBetweenStates) {
@@ -224,8 +234,30 @@ namespace Raccoon.Components {
                 return;
             }
 
-            CurrentState.OnEnter();
-            CurrentCoroutine = Coroutines.Instance.Start(CurrentState.OnUpdate);
+            ProcessStateEnter(CurrentState.OnEnter);
+            CurrentCoroutine = Coroutines.Instance.Start(ProcessStateUpdate(CurrentState.OnUpdate));
+        }
+
+        private void ProcessStateEnter(MethodInfo onEnter) {
+            onEnter.Invoke(Entity, parameters: null);
+        }
+
+        private IEnumerator ProcessStateUpdate(MethodInfo onUpdate) {
+            IEnumerator currentState = (IEnumerator) onUpdate.Invoke(Entity, parameters: null);
+
+            while (currentState.MoveNext() && currentState != null && Entity != null) {
+                // intercept Update() yield values
+                if (currentState.Current is T stateLabel) {
+                    ChangeState(stateLabel);
+                    continue;
+                }
+
+                yield return currentState.Current;
+            }
+        }
+
+        private void ProcessStateLeave(MethodInfo onLeave) {
+            onLeave.Invoke(Entity, parameters: null);
         }
 
         #endregion Private Methods

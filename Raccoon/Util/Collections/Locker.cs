@@ -16,10 +16,17 @@ namespace Raccoon.Util.Collections {
 
         #region Constructors
 
-        public Locker() { }
+        public Locker() { 
+        }
 
         public Locker(System.Comparison<T> comparer) {
             _sortComparer = comparer;
+        }
+
+        ~Locker() {
+            _toAdd = null;
+            _toRemove = null;
+            _items = null;
         }
 
         #endregion Constructors
@@ -182,9 +189,11 @@ namespace Raccoon.Util.Collections {
         public IEnumerator<T> GetEnumerator() {
             Lock();
 
-            using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
-                while (enumerator.MoveNext()) {
-                    yield return enumerator.Current;
+            if (_items != null) {
+                using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
+                    while (enumerator.MoveNext()) {
+                        yield return enumerator.Current;
+                    }
                 }
             }
 
@@ -228,7 +237,7 @@ namespace Raccoon.Util.Collections {
         private void Upkeep() {
             bool modified = false;
 
-            if (_toAdd.Count > 0) {
+            if (_toAdd != null && _toAdd.Count > 0) {
                 modified = true;
                 foreach (T item in _toAdd) {
                     AddItem(item);
@@ -237,7 +246,7 @@ namespace Raccoon.Util.Collections {
                 _toAdd.Clear();
             }
 
-            if (_toRemove.Count > 0) {
+            if (_toRemove != null && _toRemove.Count > 0) {
                 modified = true;
                 foreach (T item in _toRemove) {
                     RemoveItem(item);

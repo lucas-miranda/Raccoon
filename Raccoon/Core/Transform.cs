@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace Raccoon {
-    public sealed class Transform : IEnumerable<Transform>, IEnumerable {
+    public sealed class Transform : IEnumerable<Transform>, IEnumerable, System.IDisposable {
         #region Private Members
 
         private List<Transform> _children = new List<Transform>();
@@ -16,11 +16,15 @@ namespace Raccoon {
             Entity = entity;
         }
 
+        ~Transform() {
+            Dispose();
+        }
+
         #endregion Constructors
 
         #region Public Properties
 
-        public Entity Entity { get; }
+        public Entity Entity { get; private set; }
         public Vector2 LocalPosition { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
@@ -28,6 +32,7 @@ namespace Raccoon {
         public float Rotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
         public bool IsHandledByParent { get; private set; }
+        public bool IsDisposed { get; private set; }
 
         public Transform Parent {
             get {
@@ -86,6 +91,18 @@ namespace Raccoon {
             foreach (Transform child in _children) {
                 yield return child;
             }
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            _children = null;
+            _parent = null;
+            Entity = null;
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods

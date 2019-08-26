@@ -7,14 +7,15 @@ namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
         #region Private Readonly
 
-        private readonly Regex FrameRegex = new Regex(@"(\d+)-(\d+)|(\d+)");
-        private readonly Regex DurationRegex = new Regex(@"(\d+)");
+        private static readonly Regex FrameRegex = new Regex(@"(\d+)-(\d+)|(\d+)");
+        private static readonly Regex DurationRegex = new Regex(@"(\d+)");
 
         #endregion Private Readonly
 
         #region Constructors
 
-        public Animation() { }
+        public Animation() { 
+        }
 
         public Animation(Texture texture, Size frameSize) {
             Texture = texture;
@@ -72,6 +73,10 @@ namespace Raccoon.Graphics {
             }
 
             Origin = animation.Origin;
+        }
+
+        ~Animation() {
+            Dispose();
         }
 
         #endregion Constructors
@@ -351,6 +356,20 @@ namespace Raccoon.Graphics {
             if (CurrentTrack != null) {
                 UpdateClippingRegion();
             }
+        }
+
+        public override void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            foreach (Track t in Tracks.Values) {
+                t.Dispose();
+            }
+
+            Tracks = null;
+
+            base.Dispose();
         }
 
         #endregion Public Methods

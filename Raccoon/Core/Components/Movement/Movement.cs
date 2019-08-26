@@ -2,13 +2,14 @@
 using Raccoon.Util;
 
 namespace Raccoon.Components {
-    public abstract class Movement {
+    public abstract class Movement : System.IDisposable {
         #region Public Members
 
         public static readonly float UnitVelocity = Math.Ceiling(1f / Physics.FixedDeltaTimeSeconds);
         public const float MaxImpulsePerSecond = 60f * 5f;
 
-        public System.Action OnMove = delegate { };
+        public delegate void MovementAction();
+        public MovementAction OnMove = delegate { };
 
         #endregion Public Members
 
@@ -49,6 +50,10 @@ namespace Raccoon.Components {
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
         }
 
+        ~Movement() {
+            Dispose();
+        }
+
         #endregion Constructors
 
         #region Public Properties
@@ -68,6 +73,7 @@ namespace Raccoon.Components {
         public float DragForce { get; set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
+        public bool IsDisposed { get; private set; }
         /*public bool TouchedTop { get; private set; }
         public bool TouchedRight { get; private set; }
         public bool TouchedBottom { get; private set; }
@@ -240,6 +246,17 @@ namespace Raccoon.Components {
 
         public void ApplyCustomImpulse(Vector2 normal, float distance, float duration) {
             ApplyCustomImpulse(normal * distance, duration);
+        }
+
+        public virtual void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            Body = null;
+            OnMove = null;
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods

@@ -182,10 +182,7 @@
                 return;
             }
 
-            if (Texture != null && !Texture.IsDisposed) {
-                Texture.Dispose();
-                Texture = null;
-            }
+            _texture = null;
 
             IsDisposed = true;
         }

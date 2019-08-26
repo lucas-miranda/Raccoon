@@ -66,7 +66,7 @@ namespace Raccoon.Components {
         public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Bottom : Position.Y; } }
         public float Left { get { return Shape != null ? Position.X + Shape.BoundingBox.Left : Position.X; } }
         public Rectangle Bounds { get { return Shape.BoundingBox + Position; } }
-        public ReadOnlyCollection<Body> CollisionList { get; }
+        public ReadOnlyCollection<Body> CollisionList { get; private set; }
 
 #if DEBUG
         public Color Color { get; set; } = Color.White;
@@ -156,6 +156,7 @@ namespace Raccoon.Components {
             }
 
             Physics.Instance.RemoveCollider(this);
+
             _isPhysicsActive = false;
         }
 
@@ -322,17 +323,60 @@ namespace Raccoon.Components {
             return $"[Body | Shape: {Shape}, Movement: {Movement}]";
         }
 
+        public override void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+        
+            if (Shape != null) {
+                if (Shape is GridShape gridShape) {
+                    gridShape.Dispose();
+                }
+
+                Shape = null;
+            }
+
+            Material = null;
+
+            if (Movement != null) {
+                Movement.Dispose();
+                Movement = null;
+            }
+
+            _constraints = null;
+            _collisionList = null;
+            _currentUpdateCollisionList = null;
+            CollisionList = null;
+
+            base.Dispose();
+        }
+
         #region Collides [Single Output]
 
         public bool Collides(Vector2 position, BitTag tags, out ContactList contacts) {
+            if (Entity == null || Shape == null) {
+                contacts = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, tags, out contacts);
         }
 
         public bool Collides(BitTag tags, out ContactList contacts) {
+            if (Entity == null || Shape == null) {
+                contacts = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, Position, tags, out contacts);
         }
 
         public bool Collides(Vector2 position, out ContactList contacts) {
+            if (Entity == null || Shape == null) {
+                contacts = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out contacts);
         }
 
@@ -341,14 +385,29 @@ namespace Raccoon.Components {
         }
 
         public bool Collides(Vector2 position, BitTag tags, out CollisionInfo<Body> collisionInfo) {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, tags, out collisionInfo);
         }
 
         public bool Collides(BitTag tags, out CollisionInfo<Body> collisionInfo) {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, Position, tags, out collisionInfo);
         }
 
         public bool Collides(Vector2 position, out CollisionInfo<Body> collisionInfo) {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionInfo);
         }
 
@@ -357,14 +416,29 @@ namespace Raccoon.Components {
         }
 
         public bool Collides<T>(Vector2 position, BitTag tags, out CollisionInfo<T> collisionInfo) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, tags, out collisionInfo);
         }
 
         public bool Collides<T>(BitTag tags, out CollisionInfo<T> collisionInfo) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, Position, tags, out collisionInfo);
         }
 
         public bool Collides<T>(Vector2 position, out CollisionInfo<T> collisionInfo) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionInfo = null;
+                return false;
+            }
+
             return Physics.Instance.QueryCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionInfo);
         }
 
@@ -377,14 +451,29 @@ namespace Raccoon.Components {
         #region Collides [Multiple Output]
 
         public bool CollidesMultiple(Vector2 position, BitTag tags, out CollisionList<Body> collisionList) {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collisionList);
         }
 
         public bool CollidesMultiple(BitTag tags, out CollisionList<Body> collisionList) {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collisionList);
         }
 
         public bool CollidesMultiple(Vector2 position, out CollisionList<Body> collisionList) {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionList);
         }
 
@@ -393,14 +482,29 @@ namespace Raccoon.Components {
         }
 
         public bool CollidesMultiple<T>(Vector2 position, BitTag tags, out CollisionList<T> collisionList) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, position, tags, out collisionList);
         }
 
         public bool CollidesMultiple<T>(BitTag tags, out CollisionList<T> collisionList) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, Position, tags, out collisionList);
         }
 
         public bool CollidesMultiple<T>(Vector2 position, out CollisionList<T> collisionList) where T : Entity {
+            if (Entity == null || Shape == null) {
+                collisionList = null;
+                return false;
+            }
+
             return Physics.Instance.QueryMultipleCollision(Shape, position, Physics.Instance.GetCollidableTags(Tags), out collisionList);
         }
 

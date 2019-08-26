@@ -1,6 +1,6 @@
 ﻿namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
-        public class Track {
+        public class Track : System.IDisposable {
             private event System.Action _onEnd = delegate { },
                                         _onChangeFrame = delegate { };
 
@@ -86,6 +86,7 @@
             public bool IsPingPong { get; set; }
             public bool IsReverse { get; set; }
             public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
+            public bool IsDisposed { get; private set; }
 
             public int TotalDuration {
                 get {
@@ -177,6 +178,18 @@
             public Track OnChangeFrame(System.Action onChangeFrame) {
                 _onChangeFrame += onChangeFrame;
                 return this;
+            }
+
+            public void Dispose() {
+                if (IsDisposed) {
+                    return;
+                }
+
+                _onEnd = _onChangeFrame = null;
+                FramesRegions = FramesDestinations = null;
+                Durations = null;
+
+                IsDisposed = true;
             }
         }
     }

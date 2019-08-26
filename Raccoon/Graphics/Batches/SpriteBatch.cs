@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
@@ -186,7 +184,7 @@ namespace Raccoon.Graphics {
         private ref SpriteBatchItem GetBatchItem(bool needsTransparency) {
             if (needsTransparency) {
                 if (_nextItemWithTransparencyIndex >= _transparencyBatchItems.Length) {
-                    SetTransparencyBuffersCapacity(_batchItems.Length * 2);
+                    SetTransparencyBuffersCapacity(_transparencyBatchItems.Length + _transparencyBatchItems.Length / 2);
                 }
 
                 ref SpriteBatchItem transparencyBatchItem = ref _transparencyBatchItems[_nextItemWithTransparencyIndex];
@@ -196,7 +194,7 @@ namespace Raccoon.Graphics {
             }
 
             if (_nextItemIndex >= _batchItems.Length) {
-                SetBuffersCapacity(_batchItems.Length * 2);
+                SetBuffersCapacity(_batchItems.Length + _batchItems.Length / 2);
             }
 
             ref SpriteBatchItem batchItem = ref _batchItems[_nextItemIndex];

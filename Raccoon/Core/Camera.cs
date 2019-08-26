@@ -3,7 +3,7 @@
 using Raccoon.Util;
 
 namespace Raccoon {
-    public class Camera {
+    public class Camera : System.IDisposable {
         #region Public Members
 
         public event System.Action OnUpdate;
@@ -41,6 +41,7 @@ namespace Raccoon {
         public float Bottom { get { return Y + Height; } }
         public bool UseBounds { get; set; }
         public bool ClampValues { get; set; }
+        public bool IsDisposed { get; private set; }
         public Rectangle Bounds { get; set; }
         public Vector2 Center { get { return Position + Game.Instance.Size / (2f * _zoom); } set { Position = value - Game.Instance.Size / (2f * _zoom); } }
 
@@ -96,7 +97,8 @@ namespace Raccoon {
             _needViewRefresh = true;
         }
 
-        public virtual void End() { }
+        public virtual void End() { 
+        }
 
         public virtual void Update(int delta) {
             OnUpdate?.Invoke();
@@ -109,7 +111,18 @@ namespace Raccoon {
             }
         }
 
-        public virtual void DebugRender() { }
+        public virtual void DebugRender() { 
+        }
+
+        public virtual void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            OnUpdate = null;
+
+            IsDisposed = true;
+        }
 
         #endregion Public Methods
 

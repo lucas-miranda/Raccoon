@@ -3,9 +3,31 @@ using Raccoon.Graphics;
 
 namespace Raccoon.Util.Graphics {
     public class ParticleEmitter {
-        public Dictionary<string, (Particle, EmissionOptions)> _particleModels = new Dictionary<string, (Particle, EmissionOptions)>();
+        #region Private Members
+
+        private Dictionary<string, (Particle, EmissionOptions)> _particleModels = new Dictionary<string, (Particle, EmissionOptions)>();
+
+        #endregion Private Members
+
+        #region Constructors
+
+        public ParticleEmitter() {
+        }
+
+        ~ParticleEmitter() {
+            _particleModels = null;
+            Scene = null;
+        }
+
+        #endregion Constructors
+
+        #region Public Properties
 
         public Scene Scene { get; set; }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         public Particle AddModel(string label, Particle particle, EmissionOptions emissionOptions) {
             _particleModels.Add(label, (particle, emissionOptions));
@@ -23,6 +45,10 @@ namespace Raccoon.Util.Graphics {
                 particle.Transform.Parent = entity.Transform;
             }
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
 
         private void InternalEmit(string label, Vector2 position, out List<Particle> particles) {
             (Particle particleModel, EmissionOptions emissionOptions) = _particleModels[label];
@@ -65,5 +91,7 @@ namespace Raccoon.Util.Graphics {
                 particles.Add(particle);
             }
         }
+
+        #endregion Private Methods
     }
 }

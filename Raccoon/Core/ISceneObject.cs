@@ -1,10 +1,13 @@
 ﻿namespace Raccoon {
+    public delegate void SceneObjectEvent();
+
 #if DEBUG
     public interface ISceneObject : IExtendedUpdatable, IRenderable, IDebugRenderable {
 #else
     public interface ISceneObject : IExtendedUpdatable, IRenderable {
 #endif
-        event System.Action OnSceneAdded, OnSceneRemoved, OnStart, OnSceneBegin, OnSceneEnd;
+
+        event SceneObjectEvent OnSceneAdded, OnSceneRemoved, OnStart, OnSceneBegin, OnSceneEnd;
 
         bool AutoUpdate { get; set; }
         bool AutoRender { get; set; }
