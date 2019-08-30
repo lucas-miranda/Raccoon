@@ -55,7 +55,12 @@ namespace Raccoon.Util.Graphics {
             }
 
             if (Scene != null) {
-                Scene.RemoveEntities(_aliveParticles);
+                for (int i = 0; i < _aliveParticles.Count; i++) {
+                    if (Scene.RemoveEntity(_aliveParticles[i])) {
+                        i--;
+                    }
+                }
+
                 Scene = null;
             }
 
