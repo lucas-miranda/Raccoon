@@ -249,7 +249,7 @@ namespace Raccoon.Components {
                 // intercept Update() yield values
                 if (currentState.Current is T stateLabel) {
                     ChangeState(stateLabel);
-                    continue;
+                    yield break;
                 }
 
                 yield return currentState.Current;
