@@ -149,7 +149,7 @@ namespace Raccoon {
             }
 
             Contact leastPenetrationContact = new Contact {
-                Position =  intersections[0],
+                Position = intersections[0],
                 PenetrationDepth = float.PositiveInfinity
             };
 

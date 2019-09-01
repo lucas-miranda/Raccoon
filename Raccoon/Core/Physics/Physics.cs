@@ -505,7 +505,8 @@ namespace Raccoon {
                             break;
                     }
 
-                    float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
+                    //float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
+                    float distToContact = Math.DistanceSquared(position, contact.Value.Position);
                     if (rayContact == null || distToContact < closerContactDist) {
                         rayContact = contact;
                         collidedCollider = otherCollider;
