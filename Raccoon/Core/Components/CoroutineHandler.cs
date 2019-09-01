@@ -25,6 +25,13 @@ namespace Raccoon.Components {
 
         #region Public Methods
 
+        public override void OnRemoved() {
+            base.OnRemoved();
+            foreach (Coroutine c in _coroutines) {
+                c.Stop();
+            }
+        }
+
         public override void Update(int delta) {
             foreach (Coroutine coroutine in _coroutines) {
                 if (coroutine.HasEnded) {
@@ -57,10 +64,15 @@ namespace Raccoon.Components {
         }
 
         public bool RemoveCoroutine(Coroutine coroutine) {
+            coroutine.Stop();
             return _coroutines.Remove(coroutine);
         }
 
         public void Clear() {
+            foreach (Coroutine c in _coroutines) {
+                c.Stop();
+            }
+
             _coroutines.Clear();
         }
 

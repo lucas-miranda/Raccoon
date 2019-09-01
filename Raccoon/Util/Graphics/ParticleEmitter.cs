@@ -18,7 +18,7 @@ namespace Raccoon.Util.Graphics {
 
         ~ParticleEmitter() {
             _particleModels = null;
-            Scene = null;
+            Dispose();
         }
 
         #endregion Constructors
