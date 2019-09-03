@@ -737,22 +737,8 @@ namespace Raccoon {
                 int distanceX = Math.Sign(diffX) * (int) Math.Truncate(Math.Abs(diffX)),
                     distanceY = Math.Sign(diffY) * (int) Math.Truncate(Math.Abs(diffY));
 
-                // I'm using the greatest distance axis to find a relation to move the body each loop by 1px at least
-                double directionX = 0,
-                       directionY = 0,
-                       dxAbs = Math.Abs(distanceX),
-                       dyAbs = Math.Abs(distanceY);
-
-                if (Math.EqualsEstimate(dxAbs, dyAbs)) {
-                    directionX = Math.Sign(distanceX);
-                    directionY = Math.Sign(distanceY);
-                } else if (dxAbs > dyAbs) {
-                    directionX = Math.Sign(distanceX);
-                    directionY = distanceY / dxAbs;
-                } else if (dxAbs < dyAbs) {
-                    directionX = distanceX / dyAbs;
-                    directionY = Math.Sign(distanceY);
-                }
+                double directionX = Math.Sign(distanceX),
+                       directionY = Math.Sign(distanceY);
 
                 int movementX = 0,
                     movementY = 0;

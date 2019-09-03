@@ -1,4 +1,4 @@
-﻿//#define DISABLE_RAMPS
+﻿#define DISABLE_RAMPS
 //#define DISABLE_ASCENDING_RAMP
 //#define DISABLE_DESCENDING_RAMP
 
@@ -549,9 +549,7 @@ Fall Through
             // Vertical Velocity //
             ///////////////////////
 
-#if DISABLE_RAMPS
-            bool isWalkingOnRamp = false;
-#else
+#if !DISABLE_RAMPS
             bool isWalkingOnRamp = HandleRamps(displacement, out Vector2 rampDisplacement);
 
             if (isWalkingOnRamp) {
@@ -690,11 +688,11 @@ Fall Through
 
             // true horizontal displacement value
             float dX = displacement.X + (float) Body.MoveBufferX;
-            Body.MoveBufferY = 0;
 
 #if !DISABLE_ASCENDING_RAMP
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX), 0f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
                 if (HandleRamp(dX, AscendingRampChecks, ascdCollisionList, directionSameAsNormal: false, out rampDisplacement)) {
+                    Body.MoveBufferY = 0;
                     IsOnAscendingRamp = true;
                     IsOnDescendingRamp = false;
 
@@ -714,6 +712,7 @@ Fall Through
 #if !DISABLE_DESCENDING_RAMP
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX) * .5f, 2f), CollisionTags, out CollisionList<Body> descdCollisionList)) {
                 if (HandleRamp(dX, DescendingRampChecks, descdCollisionList, directionSameAsNormal: true, out rampDisplacement)) {
+                    Body.MoveBufferY = 0;
                     IsOnAscendingRamp = false;
                     IsOnDescendingRamp = true;
 
