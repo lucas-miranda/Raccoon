@@ -1,4 +1,4 @@
-﻿#define DISABLE_RAMPS
+﻿//#define DISABLE_RAMPS
 //#define DISABLE_ASCENDING_RAMP
 //#define DISABLE_DESCENDING_RAMP
 
@@ -31,7 +31,7 @@ namespace Raccoon.Components {
                                               OnFallingBegin = delegate { };
 
         public delegate void RampEvent(int climbDirection);
-        public event RampEvent OnTouchRamp, OnLeaveRamp;
+        public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
 
         #endregion Public Members
 
@@ -49,38 +49,46 @@ Axes
 
 Velocity
   Current: {4}
-  Max: {5}   Target: {6}
-  Acceleration: {7}
+  Bonus: {5}
+  Extra: {6}
+  Max: {7}   Target: {8}
 
-Force: {8}
-Gravity Force: {9}
+  Acceleration
+    Current: {9}
+    Bonus: {10}
+    Extra: {11}
 
-Enabled? {10}
-Can Move? {11}
+Force: {12}
+Gravity Force: {13}
 
-OnGround? {12}
-IsFalling? {13}
+Enabled? {14}
+Can Move? {15}
+
+OnGround? {16}
+IsFalling? {17}
 
 Jump
-  Jumps: {14}
-  Can Jump? {15}
-  Is Jumping? {16}
-  Just Jumped? {17}
-  Is Still Jumping? {18}
-  Height: {19}
+  Jumps: {18}
+  Can Jump? {19}
+  Is Jumping? {20}
+  Just Jumped? {21}
+  Is Still Jumping? {22}
+  Height: {23}
 
-  can keep current jump? {20}
-  jump max y: {21}
+  can keep current jump? {24}
+  jump max y: {25}
 
 Ramps
-  On Ramp? {22}
-  Ascd? {23} Descd? {24}
-  internal isGravityEnabled {25}
+  On Ramp? {26}
+  Ascd? {27} Descd? {28}
+  internal isGravityEnabled {29}
+  isEnteringRamp? {30}, isLeavingRamp? {31}
+  smooth entering (a: {32}, d: {33})
+  smooth leaving (a: {34}, d: {35})
 
 Fall Through
-  Can Fall Through? {26}
-
-  is trying to fall through? {27}
+  Can Fall Through? {36}
+  is trying to fall through? {37}
 ";
 
         // general
@@ -113,6 +121,9 @@ Fall Through
         };
 
         private Vector2 _rampNormal;
+        private int _previousRampDirection;
+        private float _rampAccSmoothing = 1f;
+        private bool _isEnteringRamp, _justLeavedRamp;
 
         // fall through
         private BitTag _fallthroughTags;
@@ -229,10 +240,22 @@ Fall Through
         /// </summary>
         public bool IsOnAscendingRamp { get; private set; }
 
+        public float AscendingRampVelocityModifier { get; set; }
+
+        public float AscendingRampEnteringAccelerationSmoothing { get; set; } = 1f;
+        public float AscendingRampLeavingAccelerationSmoothing { get; set; } = 1f;
+
         /// <summary>
         /// Is Body on a descending ramp.
         /// </summary>
         public bool IsOnDescendingRamp { get; private set; }
+
+        public float DescendingRampVelocityModifier { get; set; }
+
+        public float DescendingRampEnteringAccelerationSmoothing { get; set; } = 1f;
+        public float DescendingRampLeavingAccelerationSmoothing { get; set; } = 1f;
+
+        public bool IsLeavingRamp { get; private set; }
 
         /// <summary>
         /// Tags to check using fall through platform logic.
@@ -316,12 +339,15 @@ Fall Through
             string info = string.Format(
                 DebugText,
                 Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
-                Velocity, MaxVelocity, TargetVelocity, Acceleration,
+                Velocity, BonusMaxVelocity, ExtraMaxVelocity, MaxVelocity, TargetVelocity, 
+                Acceleration, BonusAcceleration, ExtraAcceleration,
                 Body.Force, GravityForce * GravityScale,
                 Enabled, CanMove,
                 OnGround, IsFalling,
                 Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
-                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled,
+                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
+                AscendingRampEnteringAccelerationSmoothing, DescendingRampEnteringAccelerationSmoothing,
+                AscendingRampLeavingAccelerationSmoothing, DescendingRampLeavingAccelerationSmoothing,
                 CanFallThrough, _isTryingToFallThrough
             );
 
@@ -333,22 +359,6 @@ Fall Through
             );
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
-
-            /*
-            int direction = Math.Sign(LastAxis.X);
-            Vector2 realign = direction < 0 ? new Vector2(-1f, 0f) : Vector2.Zero;
-            Rectangle boundingBox = Body.Shape.BoundingBox;
-
-            foreach (Vector2 currentRampCheck in AscendingRampChecks) {
-                Vector2 pos = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + currentRampCheck.X), boundingBox.Height / 2f + currentRampCheck.Y) + realign;
-                Debug.DrawRectangle(new Rectangle(pos, Size.Unit), Graphics.Color.Red);
-            }
-
-            foreach (Vector2 currentRampCheck in DescendingRampChecks) {
-                Vector2 pos = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + currentRampCheck.X), boundingBox.Height / 2f + currentRampCheck.Y) + realign;
-                Debug.DrawRectangle(new Rectangle(pos, Size.Unit), Graphics.Color.Blue);
-            }
-            */
         }
 
         public override void PhysicsUpdate(float dt) {
@@ -373,7 +383,12 @@ Fall Through
                             continue;
                         }
 
-                        if (IsOnRamp) {
+                        if (IsOnRamp || _justLeavedRamp) {
+                            // HACK to adjust vertical position when leaving a descending ramp
+                            if (_justLeavedRamp && _previousRampDirection > 0 && contact.PenetrationDepth == 0f) {
+                                Body.Position += new Vector2(0, 1f);
+                            }
+
                             if (Helper.InRange(contact.PenetrationDepth, 0f, 1f)) {
                                 _touchedBottom = true;
                                 break;
@@ -406,6 +421,11 @@ Fall Through
                         }
                     }
                 }
+            }
+
+            // clear just leaved ramp
+            if (_justLeavedRamp) {
+                _justLeavedRamp = false;
             }
 
             if (_touchedTop) {
@@ -507,9 +527,23 @@ Fall Through
 
                 if (Math.EqualsEstimate(velocity.X, 0f)) {
                     velocity.X = 0f;
+
+                    // resetting ramp leaving values
+                    if (IsLeavingRamp) {
+                        ExtraAcceleration = Vector2.Zero;
+                        _rampAccSmoothing = 1f;
+                        IsLeavingRamp = false;
+                    } else if (_isEnteringRamp) {
+                        ExtraAcceleration = Vector2.Zero;
+                        _rampAccSmoothing = 1f;
+                        _isEnteringRamp = false;
+                    }
                 } else if (OnGround && !JustReceiveImpulse) {
                     // ground drag force
-                    velocity.X *= (1f - DragForce) * (1f - GroundDragForce);
+
+                    float factor = (1f - DragForce) * (1f - GroundDragForce);
+
+                    velocity.X *= factor;
                 } else {
                     // air drag force
                     float airDragForce = AirDragForce,
@@ -534,9 +568,45 @@ Fall Through
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
                 // snaps horizontal velocity to zero, if horizontal axis is on opposite direction
                 velocity.X = 0f;
+
+                // resetting ramp leaving values
+                if (IsLeavingRamp) {
+                    ExtraAcceleration = Vector2.Zero;
+                    _rampAccSmoothing = 1f;
+                    IsLeavingRamp = false;
+                } else if (_isEnteringRamp) {
+                    ExtraAcceleration = Vector2.Zero;
+                    _rampAccSmoothing = 1f;
+                    _isEnteringRamp = false;
+                }
             } else if (MaxVelocity.X > 0f) {
                 // velocity increasing until reach MaxVelocity.X limit
-                velocity.X = Math.Approach(velocity.X, TargetVelocity.X, Acceleration.X * dt);
+
+                float acceleration = Acceleration.X;
+
+                // smoothing when entering on a ramp
+                if (_isEnteringRamp) {
+                    if (Math.EqualsEstimate(velocity.X, TargetVelocity.X)) {
+                        // already reached max horizontal velocity at a ramp
+                        _isEnteringRamp = false;
+                    } else if (IsOnAscendingRamp) {
+                        OnEnteringRamp.Invoke(-1);
+                        acceleration *= AscendingRampEnteringAccelerationSmoothing;
+                    } else if (IsOnDescendingRamp) {
+                        OnEnteringRamp.Invoke(1);
+                        acceleration *= DescendingRampEnteringAccelerationSmoothing;
+                    }
+                } else if (IsLeavingRamp) {
+                    if (Math.EqualsEstimate(velocity.X, TargetVelocity.X)) {
+                        // already reached max horizontal velocity off a ramp
+                        IsLeavingRamp = false;
+                    } else {
+                        OnEnteringRamp.Invoke(_previousRampDirection);
+                        acceleration *= _rampAccSmoothing;
+                    }
+                }
+
+                velocity.X = Math.Approach(velocity.X, TargetVelocity.X, acceleration * dt);
             } else {
                 // velocity increasing without a limit
                 velocity.X += Math.Sign(Axis.X) * Acceleration.X * dt;
@@ -697,11 +767,19 @@ Fall Through
                     IsOnDescendingRamp = false;
 
                     if (wasOnDescendingRamp) {
+                        IsLeavingRamp = true;
+                        _previousRampDirection = 1;
                         OnLeaveRamp?.Invoke(1);
+                        _rampAccSmoothing = DescendingRampLeavingAccelerationSmoothing;
+                        ExtraMaxVelocity = Vector2.Zero;
                     }
 
                     if (!wasOnAscendingRamp) {
+                        IsLeavingRamp = false;
+                        _isEnteringRamp = true;
                         OnTouchRamp?.Invoke(-1);
+                        _rampAccSmoothing = AscendingRampEnteringAccelerationSmoothing;
+                        ExtraMaxVelocity = new Vector2(AscendingRampVelocityModifier, 0f);
                     }
 
                     return true;
@@ -717,11 +795,19 @@ Fall Through
                     IsOnDescendingRamp = true;
 
                     if (wasOnAscendingRamp) {
+                        IsLeavingRamp = true;
+                        _previousRampDirection = -1;
                         OnLeaveRamp?.Invoke(-1);
+                        _rampAccSmoothing = AscendingRampLeavingAccelerationSmoothing;
+                        ExtraMaxVelocity = Vector2.Zero;
                     }
 
                     if (!wasOnDescendingRamp) {
+                        IsLeavingRamp = false;
+                        _isEnteringRamp = true;
                         OnTouchRamp?.Invoke(1);
+                        _rampAccSmoothing = DescendingRampEnteringAccelerationSmoothing;
+                        ExtraMaxVelocity = new Vector2(DescendingRampVelocityModifier, 0f);
                     }
 
                     return true;
@@ -911,7 +997,20 @@ Fall Through
             IsOnRamp = false;
             _rampNormal = Vector2.Zero;
             _internal_isGravityEnabled = true;
-            OnLeaveRamp?.Invoke(IsOnDescendingRamp ? 1 : -1);
+
+            IsLeavingRamp = _justLeavedRamp = true;
+            if (IsOnDescendingRamp) {
+                _previousRampDirection = 1;
+                OnLeaveRamp?.Invoke(1);
+                _rampAccSmoothing = DescendingRampLeavingAccelerationSmoothing;
+                ExtraMaxVelocity = Vector2.Zero;
+            } else {
+                _previousRampDirection = -1;
+                OnLeaveRamp?.Invoke(-1);
+                _rampAccSmoothing = AscendingRampLeavingAccelerationSmoothing;
+                ExtraMaxVelocity = Vector2.Zero;
+            }
+
             IsOnDescendingRamp = IsOnAscendingRamp = false;
         }
 

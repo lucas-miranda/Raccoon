@@ -63,11 +63,15 @@ namespace Raccoon.Components {
         public BitTag CollisionTags { get; set; } = BitTag.None;
         public Vector2 Axis { get; set; }
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
-        public Vector2 MaxVelocity { get { return _maxVelocity + BonusMaxVelocity; } set { _maxVelocity = value; } }
+        public Vector2 MaxVelocity { get { return _maxVelocity + ExtraMaxVelocity + BonusMaxVelocity; } set { _maxVelocity = value; } }
+        public Vector2 BaseMaxVelocity { get { return _maxVelocity; } }
         public Vector2 BonusMaxVelocity { get; set; }
+        public Vector2 ExtraMaxVelocity { get; protected set; }
         public Vector2 TargetVelocity { get; protected set; }
-        public Vector2 Acceleration { get { return _acceleration + BonusAcceleration; } set { _acceleration = value; } }
+        public Vector2 Acceleration { get { return _acceleration + ExtraAcceleration + BonusAcceleration; } set { _acceleration = value; } }
+        public Vector2 BaseAcceleration { get { return _acceleration; } }
         public Vector2 BonusAcceleration { get; set; }
+        public Vector2 ExtraAcceleration { get; protected set; }
         public Vector2 LastAxis { get; protected set; }
         //public Vector2 Impulse { get; protected set; }
         public float DragForce { get; set; }
