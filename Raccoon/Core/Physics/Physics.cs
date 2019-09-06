@@ -836,7 +836,7 @@ namespace Raccoon {
                                 }
 
                                 if (isMovementCollidable
-                                  && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || (canMoveV && Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f)) && c.PenetrationDepth > 0f) >= 0
+                                  && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f) && c.PenetrationDepth > 0f) >= 0
                                   && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
                                     canMoveH = false;
                                     distanceX = 0;
