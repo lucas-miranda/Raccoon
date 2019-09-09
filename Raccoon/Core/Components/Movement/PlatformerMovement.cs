@@ -23,7 +23,7 @@ namespace Raccoon.Components {
         /// greater than max value it'll be a wall.
         /// Preferred to be values in [0, 90] range.
         /// </summary>
-        public static Range AllowedRampElevation = new Range(0, 60); // in degrees (preferred to stay 
+        public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
 
         public delegate void PlatformerMovementAction();
         public event PlatformerMovementAction OnJumpBegin = delegate { },
