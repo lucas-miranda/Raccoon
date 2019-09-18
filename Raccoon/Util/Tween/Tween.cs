@@ -191,7 +191,13 @@ namespace Raccoon.Util.Tween {
 
         public Tween PingPong() {
             IsPingPong = true;
-            RepeatTimes *= 2;
+
+            if (RepeatTimes == 0) {
+                RepeatTimes = 1;
+            } else {
+                RepeatTimes *= 2;
+            }
+
             return this;
         }
 
