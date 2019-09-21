@@ -49,7 +49,10 @@ namespace Raccoon {
                 }
 
                 if (_parent != null) {
-                    _parent._children.Remove(this);
+                    if (_parent._children != null) {
+                        _parent._children.Remove(this);
+                    }
+
                     OnParentRemoved();
                 }
 

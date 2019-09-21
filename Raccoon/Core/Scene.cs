@@ -391,7 +391,7 @@ namespace Raccoon {
                 }
             }
 
-            foreach (ISceneObject sceneObject in _sceneObjects.Items) {
+            foreach (ISceneObject sceneObject in _sceneObjects) {
                 sceneObject.SceneRemoved();
             }
 

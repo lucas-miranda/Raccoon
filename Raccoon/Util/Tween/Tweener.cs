@@ -52,6 +52,10 @@ namespace Raccoon.Util.Tween {
             tween.Play(forceReset);
         }
 
+        public static void Clear() {
+            Instance._tweens.Clear();
+        }
+
         #endregion Public Methods
 
         #region Internal Methods

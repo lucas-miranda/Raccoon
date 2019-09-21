@@ -1,157 +1,157 @@
 ﻿//#define DISABLE_RAMPS
-//#define DISABLE_ASCENDING_RAMP
-//#define DISABLE_DESCENDING_RAMP
+    //#define DISABLE_ASCENDING_RAMP
+    //#define DISABLE_DESCENDING_RAMP
 
-#if DISABLE_RAMPS
-#define DISABLE_ASCENDING_RAMP
-#define DISABLE_DESCENDING_RAMP
-#endif
+    #if DISABLE_RAMPS
+    #define DISABLE_ASCENDING_RAMP
+    #define DISABLE_DESCENDING_RAMP
+    #endif
 
-using System.Collections.ObjectModel;
-using Raccoon.Util;
+    using System.Collections.ObjectModel;
+    using Raccoon.Util;
 
-namespace Raccoon.Components {
-    public class PlatformerMovement : Movement {
-        #region Public Members
+    namespace Raccoon.Components {
+        public class PlatformerMovement : Movement {
+            #region Public Members
 
-        public static Vector2 GravityForce;
-        public static int LedgeJumpMaxTime = 200;       // milliseconds
-        public static uint JumpInputBufferTime = 200;   // milliseconds
+            public static Vector2 GravityForce;
+            public static int LedgeJumpMaxTime = 200;       // milliseconds
+            public static uint JumpInputBufferTime = 200;   // milliseconds
 
-        /// <summary>
-        /// Elevation range degrees where it's considered a ramp, and will be walkable,
-        /// greater than max value it'll be a wall.
-        /// Preferred to be values in [0, 90] range.
-        /// </summary>
-        public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
+            /// <summary>
+            /// Elevation range degrees where it's considered a ramp, and will be walkable,
+            /// greater than max value it'll be a wall.
+            /// Preferred to be values in [0, 90] range.
+            /// </summary>
+            public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
 
-        public delegate void PlatformerMovementAction();
-        public event PlatformerMovementAction OnJumpBegin = delegate { },
-                                              OnTouchGround = delegate { },
-                                              OnFallingBegin = delegate { };
+            public delegate void PlatformerMovementAction();
+            public event PlatformerMovementAction OnJumpBegin = delegate { },
+                                                  OnTouchGround = delegate { },
+                                                  OnFallingBegin = delegate { };
 
-        public delegate void RampEvent(int climbDirection);
-        public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
+            public delegate void RampEvent(int climbDirection);
+            public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
 
-        #endregion Public Members
+            #endregion Public Members
 
-        #region Private Members
+            #region Private Members
 
-        private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
+            private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
 
-        private static readonly Range AllowedSlopeFactorRange = Range.From(Math.Cos(AllowedRampElevation.Min), Math.Cos(AllowedRampElevation.Max));
+            private static readonly Range AllowedSlopeFactorRange = Range.From(Math.Cos(AllowedRampElevation.Min), Math.Cos(AllowedRampElevation.Max));
 
-        private static readonly string DebugText = @"
-Axes
-  Current: {0}
-  Last: {1}
-  Snap H: {2} V: {3}
+            private static readonly string DebugText = @"
+    Axes
+      Current: {0}
+      Last: {1}
+      Snap H: {2} V: {3}
 
-Velocity
-  Current: {4}
-  Bonus: {5}
-  Extra: {6}
-  Max: {7}   Target: {8}
+    Velocity
+      Current: {4}
+      Bonus: {5}
+      Extra: {6}
+      Max: {7}   Target: {8}
 
-  Acceleration
-    Current: {9}
-    Bonus: {10}
-    Extra: {11}
+      Acceleration
+        Current: {9}
+        Bonus: {10}
+        Extra: {11}
 
-Force: {12}
-Gravity Force: {13}
+    Force: {12}
+    Gravity Force: {13}
 
-Enabled? {14}
-Can Move? {15}
+    Enabled? {14}
+    Can Move? {15}
 
-OnGround? {16}
-IsFalling? {17}
+    OnGround? {16}
+    IsFalling? {17}
 
-Jump
-  Jumps: {18}
-  Can Jump? {19}
-  Is Jumping? {20}
-  Just Jumped? {21}
-  Is Still Jumping? {22}
-  Height: {23}
+    Jump
+      Jumps: {18}
+      Can Jump? {19}
+      Is Jumping? {20}
+      Just Jumped? {21}
+      Is Still Jumping? {22}
+      Height: {23}
 
-  can keep current jump? {24}
-  jump max y: {25}
+      can keep current jump? {24}
+      jump max y: {25}
 
-Ramps
-  On Ramp? {26}
-  Ascd? {27} Descd? {28}
-  internal isGravityEnabled {29}
-  isEnteringRamp? {30}, isLeavingRamp? {31}
-  smooth entering (a: {32}, d: {33})
-  smooth leaving (a: {34}, d: {35})
+    Ramps
+      On Ramp? {26}
+      Ascd? {27} Descd? {28}
+      internal isGravityEnabled {29}
+      isEnteringRamp? {30}, isLeavingRamp? {31}
+      smooth entering (a: {32}, d: {33})
+      smooth leaving (a: {34}, d: {35})
 
-Fall Through
-  Can Fall Through? {36}
-  is trying to fall through? {37}
-";
+    Fall Through
+      Can Fall Through? {36}
+      is trying to fall through? {37}
+    ";
 
-        // general
-        
-        /// <summary>
-        /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
-        /// </summary>
-        private bool _internal_isGravityEnabled = true;
+            // general
+            
+            /// <summary>
+            /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
+            /// </summary>
+            private bool _internal_isGravityEnabled = true;
 
-        private bool _touchedBottom, _touchedTop;
+            private bool _touchedBottom, _touchedTop;
 
-        // jump
-        private bool _canJump = true, 
-                     _canKeepCurrentJump = true, 
-                     _requestedJump;
+            // jump
+            private bool _canJump = true, 
+                         _canKeepCurrentJump = true, 
+                         _requestedJump;
 
-        private int _jumpMaxY, _ledgeJumpTime;
-        private uint _lastTimeFirstRequestToJump;
+            private int _jumpMaxY, _ledgeJumpTime;
+            private uint _lastTimeFirstRequestToJump;
 
-        // ramp movement
-        private static readonly Vector2[] AscendingRampChecks = new Vector2[] {
-            new Vector2(1f, -1f),
-            new Vector2(0f, -1f)
-        };
+            // ramp movement
+            private static readonly Vector2[] AscendingRampChecks = new Vector2[] {
+                new Vector2(1f, -1f),
+                new Vector2(0f, -1f)
+            };
 
-        private static readonly Vector2[] DescendingRampChecks = new Vector2[] {
-            new Vector2(-2f, 2f),
-            new Vector2(-3f, 1f),
-            new Vector2(-4f, 0f)
-        };
+            private static readonly Vector2[] DescendingRampChecks = new Vector2[] {
+                new Vector2(-2f, 2f),
+                new Vector2(-3f, 1f),
+                new Vector2(-4f, 0f)
+            };
 
-        private Vector2 _rampNormal;
-        private int _previousRampDirection;
-        private float _rampAccSmoothing = 1f;
-        private bool _isEnteringRamp, _justLeavedRamp;
+            private Vector2 _rampNormal;
+            private int _previousRampDirection;
+            private float _rampAccSmoothing = 1f;
+            private bool _isEnteringRamp, _justLeavedRamp;
 
-        // fall through
-        private BitTag _fallthroughTags;
-        private bool _isTryingToFallThrough;
+            // fall through
+            private BitTag _fallthroughTags;
+            private bool _isTryingToFallThrough;
 
-        #endregion Private Members
+            #endregion Private Members
 
-        #region Constructors
+            #region Constructors
 
-        /// <summary>
-        /// A component that handles platformer movement.
-        /// </summary>
-        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
-        /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
-        public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpHeight, float jumpAcceleration) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, jumpAcceleration)) {
-            SnapHorizontalAxis = true;
-            JumpHeight = jumpHeight;
-        }
+            /// <summary>
+            /// A component that handles platformer movement.
+            /// </summary>
+            /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+            /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
+            public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpHeight, float jumpAcceleration) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, jumpAcceleration)) {
+                SnapHorizontalAxis = true;
+                JumpHeight = jumpHeight;
+            }
 
-        /// <summary>
-        /// A component that handles platformer movement.
-        /// </summary>
-        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
-        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
-        public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpHeight, float jumpAcceleration) : this(maxHorizontalVelocity, maxHorizontalVelocity / (Time.MiliToSec * timeToAchieveMaxVelocity), jumpHeight, jumpAcceleration) {
-        }
+            /// <summary>
+            /// A component that handles platformer movement.
+            /// </summary>
+            /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+            /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
+            public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpHeight, float jumpAcceleration) : this(maxHorizontalVelocity, maxHorizontalVelocity / (Time.MiliToSec * timeToAchieveMaxVelocity), jumpHeight, jumpAcceleration) {
+            }
 
-        #endregion Constructors
+            #endregion Constructors
 
         #region Public Properties
 
@@ -300,6 +300,12 @@ Fall Through
         #endregion Protected Properties
 
         #region Public Methods
+
+        public override void OnRemoved() {
+            base.OnRemoved();
+            OnJumpBegin = OnTouchGround = OnFallingBegin = null;
+            OnTouchRamp = OnLeaveRamp = OnEnteringRamp = OnLeavingRamp = null;
+        }
 
         public override void BeforeUpdate() {
             base.BeforeUpdate();

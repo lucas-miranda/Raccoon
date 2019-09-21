@@ -151,6 +151,7 @@ namespace Raccoon.Components {
 
         public virtual void OnRemoved() {
             Body = null;
+            OnMove = null;
         }
 
         public virtual void BeforeUpdate() {

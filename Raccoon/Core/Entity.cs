@@ -40,9 +40,11 @@ namespace Raccoon {
         }
 
         ~Entity() {
-            if (Scene != null) {
-                Scene.RemoveEntity(this);
-                Scene = null;
+            if (Transform != null && Transform.IsHandledByParent && Transform.Parent != null && Transform.Parent.Entity != null && Transform.Parent.Entity.Scene != null) {
+                Transform.Parent.Entity.Scene.RemoveEntity(this);
+            } else if (_scene != null) {
+                _scene.RemoveEntity(this);
+                _scene = null;
             }
 
             OnSceneAdded = null;
@@ -77,6 +79,7 @@ namespace Raccoon {
         public bool IgnoreDebugRender { get; set; }
         public bool HasStarted { get; private set; }
         public bool IsDisposed { get; private set; }
+        public bool WipeOnRemoved { get; set; } = true;
         public int Order { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
@@ -178,32 +181,54 @@ namespace Raccoon {
         }
 
         public virtual void SceneRemoved() {
-            if (Scene == null) {
-                return;
+            _scene = null;
+
+            if (WipeOnRemoved) {
+                OnSceneAdded = null;
+                OnStart = null;
+                OnSceneBegin = null;
+                OnSceneEnd = null;
+                OnBeforeUpdate = null;
+                OnUpdate = null;
+                OnLateUpdate = null;
+                OnRender = null;
+#if DEBUG
+                OnDebugRender = null;
+#endif
+
+                _renderer = null;
             }
 
-            Scene = null;
-            foreach (Component c in Components) {
-                if (c.Entity == null) {
-                    continue;
+            if (Components != null) {
+                foreach (Component c in Components) {
+                    if (c.Entity == null) {
+                        continue;
+                    }
+
+                    c.OnSceneRemoved();
                 }
-
-                c.OnSceneRemoved();
             }
 
-            if (Transform.Parent != null) {
+            if (Transform != null && Transform.Parent != null) {
                 Transform.Parent = null;
             }
 
-            foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent) {
-                    continue;
-                }
+            if (Transform != null) {
+                foreach (Transform child in Transform) {
+                    if (!child.IsHandledByParent) {
+                        continue;
+                    }
 
-                child.Entity.SceneRemoved();
+                    child.Entity.SceneRemoved();
+                }
             }
 
-            OnSceneRemoved();
+            OnSceneRemoved?.Invoke();
+
+            if (WipeOnRemoved) {
+                OnSceneRemoved = null;
+                Dispose();
+            }
         }
 
         public virtual void Start() {
@@ -485,6 +510,10 @@ namespace Raccoon {
         }
 
         public void ClearGraphics() {
+            if (Graphics == null) {
+                return;
+            }
+
             foreach (Graphic g in Graphics) {
                 GraphicRemoved(g);
             }
@@ -493,6 +522,10 @@ namespace Raccoon {
         }
 
         public void ClearComponents() {
+            if (Components == null) {
+                return;
+            }
+
             if (Components.IsLocked) {
                 foreach (Component c in Components.ToAdd) {
                     ComponentRemoved(c);

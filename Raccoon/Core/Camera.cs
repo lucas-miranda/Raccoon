@@ -124,6 +124,10 @@ namespace Raccoon {
             IsDisposed = true;
         }
 
+        public void ClearEvents() {
+            OnUpdate = null;
+        }
+
         #endregion Public Methods
 
         #region Protected Methods

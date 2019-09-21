@@ -13,8 +13,12 @@ namespace Raccoon.Components {
 #endif
 
         public static IMaterial StandardMaterial = new StandardMaterial();
-        public event System.Action<Body, Vector2> OnBeginCollision, OnCollided;
-        public event System.Action<Body> OnEndCollision;
+
+        public delegate void CollisionDelegate(Body body, Vector2 collisionAxes);
+        public delegate void EndCollisionDelegate(Body body);
+
+        public event CollisionDelegate OnBeginCollision, OnCollided;
+        public event EndCollisionDelegate OnEndCollision;
 
         #endregion Public Members
 
@@ -133,8 +137,17 @@ namespace Raccoon.Components {
 
         public override void OnRemoved() {
             base.OnRemoved();
+            if (Movement != null) {
+                Movement.OnRemoved();
+                Movement = null;
+            }
 
-            Movement?.OnRemoved();
+            _collisionList.Clear();
+            _currentUpdateCollisionList.Clear();
+            _constraints.Clear();
+
+            OnBeginCollision = OnCollided = null;
+            OnEndCollision = null;
         }
 
         public override void OnSceneAdded() {
@@ -156,7 +169,8 @@ namespace Raccoon.Components {
             }
 
             Physics.Instance.RemoveCollider(this);
-
+            _collisionList.Clear();
+            _currentUpdateCollisionList.Clear();
             _isPhysicsActive = false;
         }
 
