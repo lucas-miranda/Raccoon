@@ -25,6 +25,7 @@ namespace Raccoon.Fonts {
         public Size GlyphSlotSize { get; }
         public Dictionary<uint, Glyph> Glyphs { get; private set; } = new Dictionary<uint, Glyph>();
         public bool IsDisposed { get; private set; }
+        public char DefaultErrorCharacter { get; set; } = '?';
 
         #endregion Public Properties
 
@@ -61,7 +62,7 @@ namespace Raccoon.Fonts {
                     continue;
                 } else if (charCode == '\r') { // carriage return
                     // do nothing, just ignore
-                    // TODO: maybe add an option to detect when carriage return handling is needed (MAC OS 9 or older)
+                    // TODO: maybe add an option to detect when carriage return handling is needed (MAC OS 9 or older, maybe?)
                     continue;
                 } else if (i + 1 == text.Length || text[i + 1] == '\n' || (i + 2 < text.Length && text[i + 1] == '\r' && text[i + 2] == '\n')) {
                     isEndOfLine = true;
@@ -75,7 +76,10 @@ namespace Raccoon.Fonts {
                     renderTimes = 1;
                 }
 
-                Glyph glyph = Glyphs[charCode];
+                if (!Glyphs.TryGetValue(charCode, out Glyph glyph)) {
+                    // glyph not found, just render default symbol
+                    glyph = Glyphs[DefaultErrorCharacter];
+                }
 
                 for (int j = 0; j < renderTimes; j++) {
                     #region Underrun

@@ -68,6 +68,10 @@ namespace Raccoon.Graphics {
             return RenderMap.MeasureString(text).ToVector2();
         }
 
+        public bool CanRenderCharacter(char c) {
+            return RenderMap.Glyphs.ContainsKey(c);
+        }
+
         public void Dispose() {
             if (Face == null || IsDisposed) {
                 return;
