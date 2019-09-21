@@ -607,7 +607,7 @@
                         // already reached max horizontal velocity off a ramp
                         IsLeavingRamp = false;
                     } else {
-                        OnEnteringRamp.Invoke(_previousRampDirection);
+                        OnLeavingRamp.Invoke(_previousRampDirection);
                         acceleration *= _rampAccSmoothing;
                     }
                 }
