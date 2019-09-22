@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace Raccoon {
-    public sealed class Transform : IEnumerable<Transform>, IEnumerable, System.IDisposable {
+    public sealed class Transform : IEnumerable<Transform>, IEnumerable {
         #region Private Members
 
         private List<Transform> _children = new List<Transform>();
@@ -14,10 +14,6 @@ namespace Raccoon {
 
         internal Transform(Entity entity) {
             Entity = entity;
-        }
-
-        ~Transform() {
-            Dispose();
         }
 
         #endregion Constructors
@@ -32,7 +28,7 @@ namespace Raccoon {
         public float Rotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
         public bool IsHandledByParent { get; private set; }
-        public bool IsDisposed { get; private set; }
+        public bool IsDetached { get; private set; }
 
         public Transform Parent {
             get {
@@ -49,10 +45,7 @@ namespace Raccoon {
                 }
 
                 if (_parent != null) {
-                    if (_parent._children != null) {
-                        _parent._children.Remove(this);
-                    }
-
+                    _parent.RemoveChild(this);
                     OnParentRemoved();
                 }
 
@@ -91,21 +84,10 @@ namespace Raccoon {
         }
 
         public IEnumerator<Transform> GetEnumerator() {
-            foreach (Transform child in _children) {
-                yield return child;
+            int count = _children.Count;
+            for (int i = 0; i < count; i++) {
+                yield return _children[i];
             }
-        }
-
-        public void Dispose() {
-            if (IsDisposed) {
-                return;
-            }
-
-            _children = null;
-            _parent = null;
-            Entity = null;
-
-            IsDisposed = true;
         }
 
         #endregion Public Methods
@@ -132,6 +114,42 @@ namespace Raccoon {
             return GetEnumerator();
         }
 
+        private void RemoveChild(Transform child) {
+            if (IsDetached) {
+                return;
+            }
+
+            _children.Remove(child);
+        }
+
         #endregion Private Methods
+
+        #region Internal Methods
+
+        internal void Detach() {
+            if (IsDetached) {
+                return;
+            }
+
+            _children = null;
+            _parent = null;
+            Entity = null;
+            IsDetached = true;
+        }
+
+        internal void EntitySceneRemoved() {
+            foreach (Transform child in _children) {
+                child._parent = null;
+
+                if (child.IsHandledByParent) {
+                    child.OnParentRemoved();
+                    child.Entity.SceneRemoved();
+                } else {
+                    child.OnParentRemoved();
+                }
+            }
+        }
+
+        #endregion Internal Methods
     }
 }

@@ -139,6 +139,10 @@ namespace Raccoon.Graphics {
         }
 
         public virtual void Play(KeyType key, bool forceReset = true) {
+            if (IsDisposed) {
+                return;
+            }
+
             IsPlaying = true;
             if (CurrentTrack == null || !CurrentKey.Equals(key)) {
                 CurrentKey = key;

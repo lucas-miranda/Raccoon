@@ -23,12 +23,6 @@ namespace Raccoon.Util.Collections {
             _sortComparer = comparer;
         }
 
-        ~Locker() {
-            _toAdd = null;
-            _toRemove = null;
-            _items = null;
-        }
-
         #endregion Constructors
 
         #region Public Properties

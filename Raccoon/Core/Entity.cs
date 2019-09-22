@@ -5,7 +5,7 @@ using Raccoon.Components;
 using Raccoon.Util.Collections;
 
 namespace Raccoon {
-    public class Entity : ISceneObject, System.IDisposable {
+    public class Entity : ISceneObject {
         #region Public Delegates
 
         public event SceneObjectEvent OnSceneAdded      = delegate { },
@@ -45,24 +45,9 @@ namespace Raccoon {
             } else if (_scene != null) {
                 _scene.RemoveEntity(this);
                 _scene = null;
+            } else if (WipeOnRemoved && !Transform.IsDetached) {
+                SceneRemoved();
             }
-
-            OnSceneAdded = null;
-            OnSceneRemoved = null;
-            OnStart = null;
-            OnSceneBegin = null;
-            OnSceneEnd = null;
-            OnBeforeUpdate = null;
-            OnUpdate = null;
-            OnLateUpdate = null;
-            OnRender = null;
-#if DEBUG
-            OnDebugRender = null;
-#endif
-
-            _renderer = null;
-
-            Dispose();
         }
 
         #endregion Constructors
@@ -78,7 +63,6 @@ namespace Raccoon {
         public bool AutoRender { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
         public bool HasStarted { get; private set; }
-        public bool IsDisposed { get; private set; }
         public bool WipeOnRemoved { get; set; } = true;
         public int Order { get; set; }
         public int Layer { get; set; }
@@ -199,35 +183,40 @@ namespace Raccoon {
                 _renderer = null;
             }
 
-            if (Components != null) {
-                foreach (Component c in Components) {
-                    if (c.Entity == null) {
-                        continue;
-                    }
-
-                    c.OnSceneRemoved();
+            foreach (Component c in Components) {
+                if (c.Entity == null) {
+                    continue;
                 }
+
+                c.OnSceneRemoved();
             }
 
-            if (Transform != null && Transform.Parent != null) {
+            if (Transform.Parent != null) {
                 Transform.Parent = null;
             }
 
-            if (Transform != null) {
-                foreach (Transform child in Transform) {
-                    if (!child.IsHandledByParent) {
-                        continue;
-                    }
-
-                    child.Entity.SceneRemoved();
-                }
-            }
+            Transform.EntitySceneRemoved();
 
             OnSceneRemoved?.Invoke();
 
             if (WipeOnRemoved) {
                 OnSceneRemoved = null;
-                Dispose();
+                Transform.Detach();
+
+                foreach (Graphic g in Graphics) {
+                    GraphicRemoved(g);
+                    g.Dispose();
+                }
+
+                Graphics.Clear();
+
+                foreach (Component c in Components) {
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.Dispose();
+                }
+
+                Components.Clear();
             }
         }
 
@@ -556,32 +545,6 @@ namespace Raccoon {
 
         public override string ToString() {
             return $"[Entity '{Name}' | {Transform} | Graphics: {Graphics.Count} Components: {Components.Count}]";
-        }
-
-        public virtual void Dispose() {
-            if (IsDisposed) {
-                return;
-            }
-
-            Transform.Dispose();
-            Transform = null;
-
-            foreach (Graphic g in Graphics) {
-                GraphicRemoved(g);
-                g.Dispose();
-            }
-
-            Graphics = null;
-
-            foreach (Component c in Components) {
-                ComponentRemoved(c);
-                c.OnRemoved();
-                c.Dispose();
-            }
-
-            Components = null;
-
-            IsDisposed = true;
         }
 
         #endregion Public Methods

@@ -76,7 +76,7 @@ namespace Raccoon.Components {
         #region Protected Methods
 
         protected override void OnMoving(Vector2 distance) {
-            OnMove();
+            OnMove?.Invoke();
         }
 
         #endregion Protected Methods

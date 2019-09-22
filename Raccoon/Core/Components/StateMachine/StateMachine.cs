@@ -117,7 +117,7 @@ namespace Raccoon.Components {
             }
 
             NextState = nextState;
-            CurrentCoroutine.Stop(); // avoid running current state update
+            CurrentCoroutine?.Stop(); // avoid running current state update
         }
 
         public void AddState(T label) {
