@@ -371,8 +371,7 @@ namespace Raccoon.Graphics {
                 t.Dispose();
             }
 
-            Tracks = null;
-
+            Tracks.Clear();
             base.Dispose();
         }
 

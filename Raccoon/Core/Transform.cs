@@ -139,13 +139,11 @@ namespace Raccoon {
 
         internal void EntitySceneRemoved() {
             foreach (Transform child in _children) {
+                child.OnParentRemoved();
                 child._parent = null;
 
                 if (child.IsHandledByParent) {
-                    child.OnParentRemoved();
                     child.Entity.SceneRemoved();
-                } else {
-                    child.OnParentRemoved();
                 }
             }
         }
