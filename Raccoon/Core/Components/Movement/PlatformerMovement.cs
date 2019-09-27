@@ -596,10 +596,10 @@
                         // already reached max horizontal velocity at a ramp
                         _isEnteringRamp = false;
                     } else if (IsOnAscendingRamp) {
-                        OnEnteringRamp.Invoke(-1);
+                        OnEnteringRamp?.Invoke(-1);
                         acceleration *= AscendingRampEnteringAccelerationSmoothing;
                     } else if (IsOnDescendingRamp) {
-                        OnEnteringRamp.Invoke(1);
+                        OnEnteringRamp?.Invoke(1);
                         acceleration *= DescendingRampEnteringAccelerationSmoothing;
                     }
                 } else if (IsLeavingRamp) {
@@ -607,7 +607,7 @@
                         // already reached max horizontal velocity off a ramp
                         IsLeavingRamp = false;
                     } else {
-                        OnLeavingRamp.Invoke(_previousRampDirection);
+                        OnLeavingRamp?.Invoke(_previousRampDirection);
                         acceleration *= _rampAccSmoothing;
                     }
                 }
