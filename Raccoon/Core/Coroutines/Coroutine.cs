@@ -73,6 +73,10 @@ namespace Raccoon {
         }
 
         private bool MoveNext(IEnumerator enumerator) {
+            if (enumerator == null) {
+                return false;
+            }
+
             // checks if need to run a nested coroutine
             if (enumerator.Current is IEnumerator && MoveNext(enumerator.Current as IEnumerator)) {
                 return true;
@@ -80,6 +84,9 @@ namespace Raccoon {
 
             // special Current values
             switch (enumerator.Current) {
+                case null:
+                    break;
+
                 case float seconds:
                     if (_waitingDelay) {
                         _waitingDelay = false;
