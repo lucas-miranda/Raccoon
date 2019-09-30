@@ -14,7 +14,7 @@ namespace Raccoon {
 
         private Vector2 _position;
         private float _zoom = 1f;
-        private bool _needViewRefresh;
+        private bool _needViewRefresh, _isZoomViewingOutOfBounds;
         private Vector3 _cameraUpVector = Vector3.Up;
 
         #endregion Private Members
@@ -32,7 +32,16 @@ namespace Raccoon {
 
         public float X { get { return Position.X; } set { Position = new Vector2(value, Position.Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
+
+        /// <summary>
+        /// Camera Size, in world space, value is always the same as Game size.
+        /// </summary>
         public Size Size { get { return Game.Instance.Size; } }
+
+        /// <summary>
+        /// Camera Size, in screen space, it's value is modified by zoom.
+        /// </summary>
+        public Size VirtualSize { get { return Size / Zoom; } }
         public float Width { get { return Game.Instance.Width; } }
         public float Height { get { return Game.Instance.Height; } }
         public float Left { get { return X; } }
@@ -43,7 +52,16 @@ namespace Raccoon {
         public bool ClampValues { get; set; }
         public bool IsDisposed { get; private set; }
         public Rectangle Bounds { get; set; }
-        public Vector2 Center { get { return Position + Game.Instance.Size / (2f * _zoom); } set { Position = value - Game.Instance.Size / (2f * _zoom); } }
+
+        public Vector2 Center { 
+            get { 
+                return Position + Game.Instance.Size / (2f * _zoom); 
+            } 
+
+            set { 
+                Position = value - Game.Instance.Size / (2f * _zoom); 
+            } 
+        }
 
         public Vector2 Position {
             get {
@@ -55,7 +73,7 @@ namespace Raccoon {
                     value = Math.Round(value);
                 }
 
-                _position = !UseBounds ? value : Math.Clamp(value, new Rectangle(Bounds.Position, Bounds.Size - Size));
+                _position = !UseBounds ? value : Math.Clamp(value, new Rectangle(Bounds.Position, Bounds.Size - VirtualSize));
                 _needViewRefresh = true;
             }
         }
@@ -133,6 +151,22 @@ namespace Raccoon {
         #region Protected Methods
 
         protected virtual void OnZoom(float previousZoom, float newZoom) {
+#if DEBUG
+            // camera can unlock position bounds by zooming reaaaally out
+            if (UseBounds || _isZoomViewingOutOfBounds) {
+                if (newZoom <= 1/2f) {
+                    if (UseBounds) {
+                        UseBounds = false;
+                        _isZoomViewingOutOfBounds = true;
+                    }
+                } else {
+                    if (_isZoomViewingOutOfBounds) {
+                        UseBounds = true;
+                        _isZoomViewingOutOfBounds = false;
+                    }
+                }
+            }
+#endif
         }
 
         #endregion Protected Methods
@@ -147,7 +181,7 @@ namespace Raccoon {
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
-            Game.Instance.MainRenderer.View = View = Matrix.CreateScale(Zoom, Zoom, 1f) * _view;
+            Game.Instance.MainRenderer.View = View = _view * Matrix.CreateScale(Zoom, Zoom, 1f);
         }
 
         #endregion Private Members
