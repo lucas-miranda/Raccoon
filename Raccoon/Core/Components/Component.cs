@@ -17,7 +17,7 @@ namespace Raccoon.Components {
         public Entity Entity { get; private set; }
         public bool Visible { get; set; } = true;
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
-        public bool IgnoreDebugRender { get; set; }
+        public bool IgnoreDebugRender { get; set; } = true;
         public bool IsDisposed { get; private set; }
         public int Order { get; set; }
         public int Layer { get; set; }

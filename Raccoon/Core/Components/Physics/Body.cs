@@ -44,6 +44,7 @@ namespace Raccoon.Components {
         #region Constructors
 
         public Body(IShape shape, IMaterial material = null) {
+            IgnoreDebugRender = false;
             Shape = shape;
             Material = material ?? StandardMaterial;
             Mass = Shape.ComputeMass(1f);
