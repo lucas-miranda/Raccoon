@@ -1,47 +1,47 @@
 ﻿//#define DISABLE_RAMPS
-    //#define DISABLE_ASCENDING_RAMP
-    //#define DISABLE_DESCENDING_RAMP
+//#define DISABLE_ASCENDING_RAMP
+//#define DISABLE_DESCENDING_RAMP
 
-    #if DISABLE_RAMPS
-    #define DISABLE_ASCENDING_RAMP
-    #define DISABLE_DESCENDING_RAMP
-    #endif
+#if DISABLE_RAMPS
+#define DISABLE_ASCENDING_RAMP
+#define DISABLE_DESCENDING_RAMP
+#endif
 
-    using System.Collections.ObjectModel;
-    using Raccoon.Util;
+using System.Collections.ObjectModel;
+using Raccoon.Util;
 
-    namespace Raccoon.Components {
-        public class PlatformerMovement : Movement {
-            #region Public Members
+namespace Raccoon.Components {
+    public class PlatformerMovement : Movement {
+        #region Public Members
 
-            public static Vector2 GravityForce;
-            public static int LedgeJumpMaxTime = 200;       // milliseconds
-            public static uint JumpInputBufferTime = 200;   // milliseconds
+        public static Vector2 GravityForce;
+        public static int LedgeJumpMaxTime = 200;       // milliseconds
+        public static uint JumpInputBufferTime = 200;   // milliseconds
 
-            /// <summary>
-            /// Elevation range degrees where it's considered a ramp, and will be walkable,
-            /// greater than max value it'll be a wall.
-            /// Preferred to be values in [0, 90] range.
-            /// </summary>
-            public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
+        /// <summary>
+        /// Elevation range degrees where it's considered a ramp, and will be walkable,
+        /// greater than max value it'll be a wall.
+        /// Preferred to be values in [0, 90] range.
+        /// </summary>
+        public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
 
-            public delegate void PlatformerMovementAction();
-            public event PlatformerMovementAction OnJumpBegin = delegate { },
-                                                  OnTouchGround = delegate { },
-                                                  OnFallingBegin = delegate { };
+        public delegate void PlatformerMovementAction();
+        public event PlatformerMovementAction OnJumpBegin = delegate { },
+                                              OnTouchGround = delegate { },
+                                              OnFallingBegin = delegate { };
 
-            public delegate void RampEvent(int climbDirection);
-            public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
+        public delegate void RampEvent(int climbDirection);
+        public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
 
-            #endregion Public Members
+        #endregion Public Members
 
-            #region Private Members
+        #region Private Members
 
-            private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
+        private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
 
-            private static readonly Range AllowedSlopeFactorRange = Range.From(Math.Cos(AllowedRampElevation.Min), Math.Cos(AllowedRampElevation.Max));
+        private static readonly Range AllowedSlopeFactorRange = Range.From(Math.Cos(AllowedRampElevation.Min), Math.Cos(AllowedRampElevation.Max));
 
-            private static readonly string DebugText = @"
+        private static readonly string DebugText = @"
     Axes
       Current: {0}
       Last: {1}
@@ -91,67 +91,67 @@
       is trying to fall through? {37}
     ";
 
-            // general
-            
-            /// <summary>
-            /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
-            /// </summary>
-            private bool _internal_isGravityEnabled = true;
+        // general
+        
+        /// <summary>
+        /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
+        /// </summary>
+        private bool _internal_isGravityEnabled = true;
 
-            private bool _touchedBottom, _touchedTop;
+        private bool _touchedBottom, _touchedTop;
 
-            // jump
-            private bool _canJump = true, 
-                         _canKeepCurrentJump = true, 
-                         _requestedJump;
+        // jump
+        private bool _canJump = true, 
+                     _canKeepCurrentJump = true, 
+                     _requestedJump;
 
-            private int _jumpMaxY, _ledgeJumpTime;
-            private uint _lastTimeFirstRequestToJump;
+        private int _jumpMaxY, _ledgeJumpTime;
+        private uint _lastTimeFirstRequestToJump;
 
-            // ramp movement
-            private static readonly Vector2[] AscendingRampChecks = new Vector2[] {
-                new Vector2(1f, -1f),
-                new Vector2(0f, -1f)
-            };
+        // ramp movement
+        private static readonly Vector2[] AscendingRampChecks = new Vector2[] {
+            new Vector2(1f, -1f),
+            new Vector2(0f, -1f)
+        };
 
-            private static readonly Vector2[] DescendingRampChecks = new Vector2[] {
-                new Vector2(-2f, 2f),
-                new Vector2(-3f, 1f),
-                new Vector2(-4f, 0f)
-            };
+        private static readonly Vector2[] DescendingRampChecks = new Vector2[] {
+            new Vector2(-2f, 2f),
+            new Vector2(-3f, 1f),
+            new Vector2(-4f, 0f)
+        };
 
-            private Vector2 _rampNormal;
-            private int _previousRampDirection;
-            private float _rampAccSmoothing = 1f;
-            private bool _isEnteringRamp, _justLeavedRamp;
+        private Vector2 _rampNormal;
+        private int _previousRampDirection;
+        private float _rampAccSmoothing = 1f;
+        private bool _isEnteringRamp, _justLeavedRamp;
 
-            // fall through
-            private BitTag _fallthroughTags;
-            private bool _isTryingToFallThrough;
+        // fall through
+        private BitTag _fallthroughTags;
+        private bool _isTryingToFallThrough;
 
-            #endregion Private Members
+        #endregion Private Members
 
-            #region Constructors
+        #region Constructors
 
-            /// <summary>
-            /// A component that handles platformer movement.
-            /// </summary>
-            /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
-            /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
-            public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpHeight, float jumpAcceleration) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, jumpAcceleration)) {
-                SnapHorizontalAxis = true;
-                JumpHeight = jumpHeight;
-            }
+        /// <summary>
+        /// A component that handles platformer movement.
+        /// </summary>
+        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+        /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
+        public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpHeight, float jumpAcceleration) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, jumpAcceleration)) {
+            SnapHorizontalAxis = true;
+            JumpHeight = jumpHeight;
+        }
 
-            /// <summary>
-            /// A component that handles platformer movement.
-            /// </summary>
-            /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
-            /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
-            public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpHeight, float jumpAcceleration) : this(maxHorizontalVelocity, maxHorizontalVelocity / (Time.MiliToSec * timeToAchieveMaxVelocity), jumpHeight, jumpAcceleration) {
-            }
+        /// <summary>
+        /// A component that handles platformer movement.
+        /// </summary>
+        /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
+        /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
+        public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpHeight, float jumpAcceleration) : this(maxHorizontalVelocity, maxHorizontalVelocity / (Time.MiliToSec * timeToAchieveMaxVelocity), jumpHeight, jumpAcceleration) {
+        }
 
-            #endregion Constructors
+        #endregion Constructors
 
         #region Public Properties
 
@@ -597,10 +597,22 @@
                         _isEnteringRamp = false;
                     } else if (IsOnAscendingRamp) {
                         OnEnteringRamp?.Invoke(-1);
-                        acceleration *= AscendingRampEnteringAccelerationSmoothing;
+
+                        // only apply custom smoothing if is atleast at full speed
+                        if (velocity.X < BaseMaxVelocity.X) {
+                            acceleration *= 2f - Vector2.Dot(_rampNormal, Vector2.Up);
+                        } else {
+                            acceleration *= AscendingRampEnteringAccelerationSmoothing;
+                        }
                     } else if (IsOnDescendingRamp) {
                         OnEnteringRamp?.Invoke(1);
-                        acceleration *= DescendingRampEnteringAccelerationSmoothing;
+
+                        // only apply custom smoothing if is atleast at full speed
+                        if (velocity.X < BaseMaxVelocity.X) {
+                            acceleration *= 2f - Vector2.Dot(_rampNormal, Vector2.Up);
+                        } else {
+                            acceleration *= DescendingRampEnteringAccelerationSmoothing;
+                        }
                     }
                 } else if (IsLeavingRamp) {
                     if (Math.EqualsEstimate(velocity.X, TargetVelocity.X)) {
@@ -848,10 +860,11 @@
             }
             
             bool refreshRampState = false;
+            float validRampHorizontalDist = 0f;
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
                 bool isValidRamp = false,
-                     hasFindRamp = LookForRamp(collInfo, rampPositionsToCheck, out Vector2 rampNormal);
+                     hasFindRamp = LookForRamp(collInfo, rampPositionsToCheck, out Vector2 rampNormal, out float horizontalDistance);
 
                 if (hasFindRamp) {
                     /*
@@ -886,6 +899,7 @@
                     IsOnRamp = true;
                     _rampNormal = rampNormal;
                     _internal_isGravityEnabled = false;
+                    validRampHorizontalDist = horizontalDistance;
                     break;
                 }
             }
@@ -895,8 +909,17 @@
                 return false;
             }
 
-            Vector2 rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
-            float rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
+            Vector2 rampMoveNormal;
+            float rampDisplacementDistance;
+
+            if (Math.EqualsEstimate(validRampHorizontalDist, 0f)) {
+                rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
+                rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
+            } else {
+                rampMoveNormal = new Vector2(Math.Sign(validRampHorizontalDist), 0f);
+                rampDisplacementDistance = Math.Round(validRampHorizontalDist);
+            }
+
             rampDisplacement = rampMoveNormal * rampDisplacementDistance * RampSpeedModifier;
             Body.MoveBufferX = 0;
             return true;
@@ -909,7 +932,7 @@
         /// <param name="positionsToCheck">World positions to check for a ramp.</param>
         /// <param name="rampNormal">Ramp normal, if a ramp was found.</param>
         /// <returns>True, if a ramp was found, False otherwise.</returns>
-        private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2[] positionsToCheck, out Vector2 rampNormal) {
+        private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2[] positionsToCheck, out Vector2 rampNormal, out float horizontalDistance) {
             switch (collisionInfo.Subject.Shape) {
                 case BoxShape boxShape:
                     // not implemented yet
@@ -968,6 +991,13 @@
                                 }
 
                                 rampNormal = closestEdge.Normal;
+
+                                // calculate horizontal distance
+                                Range tilePolygonProj = tilePolygon.Projection(Vector2.Right),
+                                      bodyProj = Body.Shape.Projection(Body.Position, Vector2.Right);
+                                
+                                horizontalDistance = bodyProj.Distance(tilePolygonProj);
+
                                 return true;
 
                             case null:
@@ -984,6 +1014,7 @@
             }
 
             rampNormal = Vector2.Zero;
+            horizontalDistance = 0f;
             return false;
         }
 
