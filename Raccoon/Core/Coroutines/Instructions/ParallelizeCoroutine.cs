@@ -16,7 +16,7 @@ namespace Raccoon {
         public bool[] IsRoutinesAlive { get; private set; }
         public override object Current { get { return null; } }
 
-        public override IEnumerator Retrieve() {
+        public override IEnumerator RetrieveRoutine() {
             for (_currentRoutineIndex = 0; _currentRoutineIndex < Routines.Length; _currentRoutineIndex++) {
                 if (!IsRoutinesAlive[_currentRoutineIndex]) {
                     continue;
@@ -38,7 +38,7 @@ namespace Raccoon {
             return false;
         }
 
-        public override void MoveNextResult(bool moveNextRet) {
+        public override void RoutineMoveNextCallback(bool moveNextRet) {
             if (!moveNextRet) {
                 IsRoutinesAlive[_currentRoutineIndex] = false;
             }

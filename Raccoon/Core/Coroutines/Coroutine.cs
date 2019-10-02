@@ -94,8 +94,13 @@ namespace Raccoon {
                         break;
                     }
 
-                    IEnumerator instructionEnumerator = instruction.Retrieve();
-                    bool isExecutingInstruction = true;
+                    IEnumerator instructionEnumerator = instruction.RetrieveRoutine();
+
+                    if (instructionEnumerator == null) {
+                        return true;
+                    }
+
+                    bool isRunningInstruction = true;
 
                     do {
                         instructionEnumerator.MoveNext();
@@ -103,19 +108,19 @@ namespace Raccoon {
                         switch (instructionEnumerator.Current) {
                             case CoroutineInstruction.Signal signal:
                                 if (signal == CoroutineInstruction.Signal.Continue) {
-                                    isExecutingInstruction = false;
+                                    isRunningInstruction = false;
                                 }
 
                                 break;
 
                             case IEnumerator instructionInternalEnumerator:
-                                instruction.MoveNextResult(MoveNext(instructionInternalEnumerator));
+                                instruction.RoutineMoveNextCallback(MoveNext(instructionInternalEnumerator));
                                 break;
 
                             default:
                                 break;
                         }
-                    } while (isExecutingInstruction);
+                    } while (isRunningInstruction);
                     
                     return true;
 
