@@ -76,6 +76,8 @@
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Components\CoroutineHandler.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
+    <Compile Include="Core\Coroutines\Instructions\CoroutineInstruction.cs" />
+    <Compile Include="Core\Coroutines\Instructions\ParallelizeCoroutine.cs" />
     <Compile Include="Core\Definitions\ResizeMode.cs" />
     <Compile Include="Core\IDebugRenderable.cs" />
     <Compile Include="Core\IExtendedRenderable.cs" />
@@ -272,6 +274,7 @@
       <Name>FNA</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

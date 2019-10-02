@@ -78,7 +78,9 @@ namespace Raccoon {
             }
 
             // checks if need to run a nested coroutine
-            if (enumerator.Current is IEnumerator && MoveNext(enumerator.Current as IEnumerator)) {
+            if (enumerator.Current is IEnumerator 
+              && !(enumerator.Current is CoroutineInstruction) 
+              && MoveNext(enumerator.Current as IEnumerator)) {
                 return true;
             }
 
@@ -86,6 +88,36 @@ namespace Raccoon {
             switch (enumerator.Current) {
                 case null:
                     break;
+
+                case CoroutineInstruction instruction:
+                    if (!instruction.MoveNext()) {
+                        break;
+                    }
+
+                    IEnumerator instructionEnumerator = instruction.Retrieve();
+                    bool isExecutingInstruction = true;
+
+                    do {
+                        instructionEnumerator.MoveNext();
+
+                        switch (instructionEnumerator.Current) {
+                            case CoroutineInstruction.Signal signal:
+                                if (signal == CoroutineInstruction.Signal.Continue) {
+                                    isExecutingInstruction = false;
+                                }
+
+                                break;
+
+                            case IEnumerator instructionInternalEnumerator:
+                                instruction.MoveNextResult(MoveNext(instructionInternalEnumerator));
+                                break;
+
+                            default:
+                                break;
+                        }
+                    } while (isExecutingInstruction);
+                    
+                    return true;
 
                 case float seconds:
                     if (_waitingDelay) {
@@ -119,6 +151,9 @@ namespace Raccoon {
             }
 
             return enumerator.MoveNext();
+        }
+
+        public class SpecialRoutine {
         }
     }
 }

@@ -56,26 +56,5 @@ namespace Raccoon.Util {
                 times--;
             }
         }
-
-        public static IEnumerator Parallelize(params IEnumerator[] routines) {
-            Coroutine[] coroutines = new Coroutine[routines.Length];
-
-            for (int i = 0; i < routines.Length; i++) {
-                coroutines[i] = Coroutines.Instance.Start(routines[i]);
-            }
-
-            bool hasEnded = false;
-            while (!hasEnded) {
-                yield return null;
-                hasEnded = true;
-
-                foreach (Coroutine coroutine in coroutines) {
-                    if (!coroutine.HasEnded) {
-                        hasEnded = false;
-                        break;
-                    }
-                }
-            }
-        }
     }
 }
