@@ -127,6 +127,7 @@
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\RectanglePrimitive.cs" />
+    <Compile Include="Graphics\Drawables\Quad.cs" />
     <Compile Include="Graphics\Drawables\Strip.cs" />
     <Compile Include="Graphics\Drawables\Text.RenderInfo.cs" />
     <Compile Include="Graphics\Fonts\FontFaceRenderMap.cs" />
