@@ -33,20 +33,20 @@ namespace Raccoon.Graphics {
     }
 
     internal static class BatchModeComparer {
-        internal class DepthAscending : IComparer<SpriteBatchItem> {
-            public int Compare(SpriteBatchItem itemA, SpriteBatchItem itemB) {
+        internal class DepthAscending : IComparer<IBatchItem> {
+            public int Compare(IBatchItem itemA, IBatchItem itemB) {
                 return itemA.VertexData[0].Position.Z.CompareTo(itemB.VertexData[0].Position.Z);
             }
         }
 
-        internal class DepthDescending : IComparer<SpriteBatchItem> {
-            public int Compare(SpriteBatchItem itemA, SpriteBatchItem itemB) {
+        internal class DepthDescending : IComparer<IBatchItem> {
+            public int Compare(IBatchItem itemA, IBatchItem itemB) {
                 return itemB.VertexData[0].Position.Z.CompareTo(itemA.VertexData[0].Position.Z);
             }
         }
 
-        internal class DepthBuffer : IComparer<SpriteBatchItem> {
-            public int Compare(SpriteBatchItem itemA, SpriteBatchItem itemB) {
+        internal class DepthBuffer : IComparer<IBatchItem> {
+            public int Compare(IBatchItem itemA, IBatchItem itemB) {
                 if (itemA.Shader == itemB.Shader) {
                     return itemA.VertexData[0].Position.Z.CompareTo(itemB.VertexData[0].Position.Z);
                 } else if (itemA.Shader == null) {

@@ -118,7 +118,9 @@
     <Compile Include="Graphics\Atlas\Processors\AsepriteAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\IAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\RavenAtlasProcessor.cs" />
+    <Compile Include="Graphics\Batches\IBatchItem.cs" />
     <Compile Include="Graphics\Batches\BatchMode.cs" />
+    <Compile Include="Graphics\Batches\MixedBatch.cs" />
     <Compile Include="Graphics\Batches\PrimitiveBatch.cs" />
     <Compile Include="Graphics\Batches\PrimitiveBatchItem.cs" />
     <Compile Include="Graphics\Batches\SpriteBatch.cs" />

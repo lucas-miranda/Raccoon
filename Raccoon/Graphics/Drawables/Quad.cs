@@ -1,15 +1,22 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Raccoon.Util;
+﻿using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class Quad : Graphic {
         #region Private Members
 
-        private VertexBuffer _vertexBuffer;
-        private IndexBuffer _indexBuffer;
+        private static readonly int[] FilledIndices = new int[] { 0, 1, 2,  2, 1, 3 },
+                                      HollowIndices = new int[] { 
+                                                          1, 3,
+                                                          3, 2,
+                                                          2, 0,
+                                                          0, 1
+                                                      };
 
-        private bool _filled = true, _needsSetup;
-        private float _lastAppliedLayerDepth;
+        private Vector2[] _vertices = new Vector2[4];
+        private int[] _indices;
+
+        private bool _filled = true, 
+                     _needsSetup;
 
         #endregion Private Members
 
@@ -90,76 +97,38 @@ namespace Raccoon.Graphics {
         protected override void Load() {
             base.Load();
 
-            if (_vertexBuffer == null || _needsSetup) {
+            if (_needsSetup) {
                 Setup();
             }
 
-            if (Filled) {
-                _indexBuffer.SetData(new int[] { 0, 1, 2,  2, 1, 3 });
-            } else {
-                _indexBuffer.SetData(new int[] { 
-                    1, 3,
-                    3, 2,
-                    2, 0,
-                    0, 1
-                });
-            }
+            _indices = Filled ? FilledIndices : HollowIndices;
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            // only update vertices layer depth if parameter value is differente from last applied value (to avoid redundancy calls)
-            if (layerDepth != _lastAppliedLayerDepth) {
-                UpdateVerticesLayerDepth(layerDepth);
-            }
-
-            // TODO: draw using a PrimitiveBatch to group some of them, every Renderer should provide a PrimitiveBatch interface
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-(Origin.X + origin.X), -(Origin.Y + origin.Y), 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f)
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.DiffuseColor = color * Color;
-            bs.Alpha = Opacity;
-            bs.TextureEnabled = false;
-
-            shaderParameters?.ApplyParameters(shader);
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-
-            // we need to manually update every GraphicsDevice states here
-            device.BlendState = Renderer.SpriteBatch.BlendState;
-            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
-            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
-            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
-
-            foreach (object pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-
-                if (Filled) {
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, 2);
-                } else {
-                    device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, _vertexBuffer.VertexCount, 0, 4);
-                }
-            }
-
-            bs.ResetParameters();
+            Renderer.DrawVertices(
+                _vertices,
+                minVertexIndex: 0,
+                _vertices.Length,
+                _indices,
+                minIndex: 0,
+                primitivesCount: Filled ? 2 : 4, // Filled ? triangles : lines
+                isHollow: !Filled,
+                Position + position,
+                Rotation + rotation,
+                Scale * scale,
+                (Color * color) * Opacity,
+                Origin + origin,
+                Scroll + scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
         }
 
         #endregion Protected Methods
 
         private void Setup() {
             // preparing vertices
-            VertexPositionColor[] vertices = new VertexPositionColor[4];
-
             //
             // Vertices layout:
             //
@@ -170,82 +139,18 @@ namespace Raccoon.Graphics {
             //
 
             // PointA
-            vertices[1] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointA.X, PointA.Y, _lastAppliedLayerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
+            _vertices[1] = new Vector2(PointA.X, PointA.Y);
 
             // PointB
-            vertices[3] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointB.X, PointB.Y, _lastAppliedLayerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
+            _vertices[3] = new Vector2(PointB.X, PointB.Y);
 
             // PointC
-            vertices[2] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointC.X, PointC.Y, _lastAppliedLayerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
+            _vertices[2] = new Vector2(PointC.X, PointC.Y);
 
             // PointD
-            vertices[0] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointD.X, PointD.Y, _lastAppliedLayerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
-
-            if (_vertexBuffer == null) {
-                _vertexBuffer = new VertexBuffer(
-                    Game.Instance.GraphicsDevice, 
-                    VertexPositionColor.VertexDeclaration, 
-                    vertices.Length, 
-                    BufferUsage.WriteOnly
-                );
-            }
-
-            _vertexBuffer.SetData(vertices);
-
-            if (_indexBuffer == null) {
-                _indexBuffer = new IndexBuffer(
-                    Game.Instance.GraphicsDevice, 
-                    IndexElementSize.ThirtyTwoBits, 
-                    8,
-                    BufferUsage.WriteOnly
-                );
-            }
+            _vertices[0] = new Vector2(PointD.X, PointD.Y);
 
             _needsSetup = false;
-        }
-
-        private void UpdateVerticesLayerDepth(float layerDepth) {
-            VertexPositionColor[] vertices = new VertexPositionColor[4];
-
-            // PointA
-            vertices[1] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointA.X, PointA.Y, layerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
-
-            // PointB
-            vertices[3] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointB.X, PointB.Y, layerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
-
-            // PointC
-            vertices[2] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointC.X, PointC.Y, layerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
-
-            // PointD
-            vertices[0] = new VertexPositionColor(
-                new Microsoft.Xna.Framework.Vector3(PointD.X, PointD.Y, layerDepth),
-                Microsoft.Xna.Framework.Color.White
-            );
-
-            _vertexBuffer.SetData(0, vertices, 0, vertices.Length, VertexPositionColor.VertexDeclaration.VertexStride);
-
-            _lastAppliedLayerDepth = layerDepth;
         }
     }
 }

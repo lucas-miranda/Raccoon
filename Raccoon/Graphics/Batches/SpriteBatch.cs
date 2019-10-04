@@ -296,11 +296,8 @@ namespace Raccoon.Graphics {
                     startIndex = endIndex;
                 }
 
-                batchItem.Texture = null;
-                batchItem.Shader = null;
-                batchItem.ShaderParameters = null;
-
                 batchItem.VertexData.CopyTo(_vertexBuffer, endIndex * 4);
+                batchItem.Clear();
                 endIndex++;
             }
 

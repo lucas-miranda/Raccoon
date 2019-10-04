@@ -198,10 +198,10 @@ namespace Raccoon.Graphics {
             shaderParameters?.ApplyParameters(shader);
 
             // we need to manually update every GraphicsDevice states here
-            device.BlendState = Renderer.SpriteBatch.BlendState;
-            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
-            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
-            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+            device.BlendState = Renderer.Batch.BlendState;
+            device.SamplerStates[0] = Renderer.Batch.SamplerState;
+            device.DepthStencilState = Renderer.Batch.DepthStencilState;
+            device.RasterizerState = Renderer.Batch.RasterizerState;
 
             // grid
             foreach (object pass in bs) {
@@ -218,10 +218,10 @@ namespace Raccoon.Graphics {
             shaderParameters?.ApplyParameters(shader);
 
             // we need to manually update every GraphicsDevice states here
-            device.BlendState = Renderer.SpriteBatch.BlendState;
-            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
-            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
-            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
+            device.BlendState = Renderer.Batch.BlendState;
+            device.SamplerStates[0] = Renderer.Batch.SamplerState;
+            device.DepthStencilState = Renderer.Batch.DepthStencilState;
+            device.RasterizerState = Renderer.Batch.RasterizerState;
 
             foreach (object pass in bs) {
                 device.Indices = _indexBuffer;

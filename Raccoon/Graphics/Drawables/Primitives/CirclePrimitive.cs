@@ -1,12 +1,11 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Raccoon.Util;
+﻿using Raccoon.Util;
 
 namespace Raccoon.Graphics.Primitives {
     public class CirclePrimitive : PrimitiveGraphic {
         #region Private Members
 
-        private VertexBuffer _vertexBuffer;
-        private IndexBuffer _indexBuffer;
+        private Vector2[] _vertices;
+        private int[] _indices;
 
         private int _segments;
         private float _radius;
@@ -89,17 +88,26 @@ namespace Raccoon.Graphics.Primitives {
         protected override void Load() {
             base.Load();
 
-            int segments = Segments;
-
-            int[] indices = null;
+            int segments = Segments,
+                indicesCount;
 
             if (Filled) {
-                indices = new int[(segments + 1) * 3];
+                indicesCount = (segments + 1) * 3;
             } else {
-                indices = new int[segments + 1];
+                indicesCount = (segments + 1) * 2;
             }
 
-            VertexPositionColor[] _vertices = new VertexPositionColor[segments + 1];
+            if (_indices == null) {
+                _indices = new int[indicesCount];
+            } else if (_indices.Length < indicesCount) {
+                System.Array.Resize(ref _indices, indicesCount);
+            }
+
+            if (_vertices == null) {
+                _vertices = new Vector2[segments + 1];
+            } else if (_vertices.Length < segments + 1) {
+                System.Array.Resize(ref _vertices, segments + 1);
+            }
 
             // update vertices
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
@@ -112,11 +120,11 @@ namespace Raccoon.Graphics.Primitives {
 
             // center
             int centerIndex = _vertices.Length - 1;
-            _vertices[centerIndex] = new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X, center.Y, 0f), Color.White);
+            _vertices[centerIndex] = center;
 
             int i;
             for (i = 0; i < _vertices.Length; i++) {
-                _vertices[i] = new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(center.X + x, center.Y + y, 0f), Color.White);
+                _vertices[i] = new Vector2(center.X + x, center.Y + y);
 
                 // apply the rotation matrix
                 t = x;
@@ -124,57 +132,35 @@ namespace Raccoon.Graphics.Primitives {
                 y = s * t + c * y;
 
                 if (Filled) {
-                    indices[i * 3] = centerIndex; // circle center
-                    indices[i * 3 + 1] = i; // current vertex
-                    indices[i * 3 + 2] = 1 + (i % _vertices.Length); // next vertex (cyclic)
+                    _indices[i * 3] = centerIndex; // circle center
+                    _indices[i * 3 + 1] = i; // current vertex
+                    _indices[i * 3 + 2] = 1 + (i % _vertices.Length); // next vertex (cyclic)
                 } else {
-                    indices[i] = i; // current vertex
+                    _indices[i * 2] = i; // current vertex
+                    _indices[i * 2 + 1] = (i + 1) % _vertices.Length; // current vertex
                 }
             }
-
-            _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
-            _indexBuffer.SetData(indices);
-
-            _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, _vertices.Length, BufferUsage.WriteOnly);
-            _vertexBuffer.SetData(_vertices);
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X - (Origin.X + origin.X), Position.Y + position.Y - (Origin.Y + origin.Y), 0f)
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.DiffuseColor = color * Color;
-            bs.Alpha = Opacity;
-
-            shaderParameters?.ApplyParameters(shader);
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-
-            // we need to manually update every GraphicsDevice states here
-            device.BlendState = Renderer.SpriteBatch.BlendState;
-            device.SamplerStates[0] = Renderer.SpriteBatch.SamplerState;
-            device.DepthStencilState = Renderer.SpriteBatch.DepthStencilState;
-            device.RasterizerState = Renderer.SpriteBatch.RasterizerState;
-
-            foreach (object pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-
-                if (Filled) {
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, Segments);
-                } else {
-                    device.DrawIndexedPrimitives(PrimitiveType.LineStrip, 0, 0, _vertexBuffer.VertexCount, 0, Segments);
-                }
-            }
-
-            bs.ResetParameters();
+            Renderer.DrawVertices(
+                _vertices,
+                minVertexIndex: 0,
+                _vertices.Length,
+                _indices,
+                minIndex: 0,
+                primitivesCount: Segments,
+                isHollow: !Filled,
+                Position + position,
+                Rotation + rotation,
+                Scale * scale,
+                (Color * color) * Opacity,
+                Origin + origin,
+                Scroll + scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
         }
 
         #endregion Protected Methods

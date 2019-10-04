@@ -77,13 +77,13 @@ namespace Raccoon.Graphics {
             TotalFilledDrawCalls = _batchFilledItems.Count;
             TotalHollowDrawCalls = _batchHollowItems.Count;
 
-            #endif
+#endif
 
             IsBatching = false;
         }
 
         public void DrawLines(IList<Vector2> points, Color color, float rotation, Vector2 scale, Vector2 origin, bool cyclic = true) {
-            VertexPositionColor[] vertexData = new VertexPositionColor[points.Count];
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[points.Count];
 
             int[] indexData;
             if (cyclic) {
@@ -96,7 +96,11 @@ namespace Raccoon.Graphics {
             if (rotation % 360 != 0) {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
-                    vertexData[i] = new VertexPositionColor(new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), color);
+                    vertexData[i] = new VertexPositionColorTexture(
+                        new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), 
+                        color,
+                        Microsoft.Xna.Framework.Vector2.Zero
+                    );
 
                     // only add index if isn't last point or is cyclic
                     if (j < points.Count - 1 || cyclic) {
@@ -109,7 +113,11 @@ namespace Raccoon.Graphics {
             } else {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
-                    vertexData[i] = new VertexPositionColor(new Vector3((point - origin) * scale, 0f), color);
+                    vertexData[i] = new VertexPositionColorTexture(
+                        new Vector3((point - origin) * scale, 0f), 
+                        color,
+                        Microsoft.Xna.Framework.Vector2.Zero
+                    );
 
                     if (j < points.Count - 1 || cyclic) {
                         indexData[2 * i] = i;
@@ -120,7 +128,16 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: true,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchHollowItems.Add(batchItem);
             _hollowVerticesCount += vertexData.Length;
             _hollowIndicesCount += indexData.Length;
@@ -134,11 +151,27 @@ namespace Raccoon.Graphics {
                     bottomRight = position + Math.Rotate((-origin + size) * scale, rotation),
                     bottomLeft = position + Math.Rotate((-origin + new Vector2(0f, size.Height)) * scale, rotation);
 
-            VertexPositionColor[] vertexData = new VertexPositionColor[] {
-                new VertexPositionColor(new Vector3(topLeft, 0f), color),
-                new VertexPositionColor(new Vector3(topRight, 0f), color),
-                new VertexPositionColor(new Vector3(bottomRight, 0f), color),
-                new VertexPositionColor(new Vector3(bottomLeft, 0f), color)
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
+                new VertexPositionColorTexture(
+                    new Vector3(topLeft, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(topRight, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(bottomRight, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(bottomLeft, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                )
             };
 
             int[] indexData = new int[] {
@@ -146,7 +179,16 @@ namespace Raccoon.Graphics {
                 2, 0, 1
             };
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: false,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchFilledItems.Add(batchItem);
             _filledVerticesCount += vertexData.Length;
             _filledIndicesCount += indexData.Length;
@@ -162,11 +204,27 @@ namespace Raccoon.Graphics {
                     bottomRight = position + Math.Rotate((-origin + size) * scale, rotation),
                     bottomLeft = position + Math.Rotate((-origin + new Vector2(0f, size.Height)) * scale, rotation);
 
-            VertexPositionColor[] vertexData = new VertexPositionColor[] {
-                new VertexPositionColor(new Vector3(topLeft, 0f), color),
-                new VertexPositionColor(new Vector3(topRight, 0f), color),
-                new VertexPositionColor(new Vector3(bottomRight, 0f), color),
-                new VertexPositionColor(new Vector3(bottomLeft, 0f), color)
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
+                new VertexPositionColorTexture(
+                    new Vector3(topLeft, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(topRight, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(bottomRight, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                ),
+                new VertexPositionColorTexture(
+                    new Vector3(bottomLeft, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                )
             };
 
             int[] indexData = new int[] {
@@ -176,7 +234,16 @@ namespace Raccoon.Graphics {
                 3, 0
             };
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: true,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchHollowItems.Add(batchItem);
             _hollowVerticesCount += vertexData.Length;
             _hollowIndicesCount += indexData.Length;
@@ -198,7 +265,7 @@ namespace Raccoon.Graphics {
                 segments = (int) (radius + radius);
             }
 
-            VertexPositionColor[] vertexData = new VertexPositionColor[segments + 1];
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[segments + 1];
             int[] indexData = new int[(segments + 1) * 3];
 
             // update vertices
@@ -211,11 +278,19 @@ namespace Raccoon.Graphics {
 
             // center
             int centerIndex = vertexData.Length - 1;
-            vertexData[centerIndex] = new VertexPositionColor(new Vector3(center.X, center.Y, 0f), color);
+            vertexData[centerIndex] = new VertexPositionColorTexture(
+                new Vector3(center.X, center.Y, 0f), 
+                color,
+                Microsoft.Xna.Framework.Vector2.Zero
+            );
 
             int i;
             for (i = 0; i < vertexData.Length; i++) {
-                vertexData[i] = new VertexPositionColor(new Vector3(center.X + x, center.Y + y, 0f), color);
+                vertexData[i] = new VertexPositionColorTexture(
+                    new Vector3(center.X + x, center.Y + y, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                );
 
                 // apply the rotation matrix
                 t = x;
@@ -227,7 +302,16 @@ namespace Raccoon.Graphics {
                 indexData[i * 3 + 2] = (i + 1) % vertexData.Length; // next vertex (cyclic)
             }
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: false,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchFilledItems.Add(batchItem);
             _filledVerticesCount += vertexData.Length;
             _filledIndicesCount += indexData.Length;
@@ -245,7 +329,7 @@ namespace Raccoon.Graphics {
                 segments = (int) (radius + radius);
             }
 
-            VertexPositionColor[] vertexData = new VertexPositionColor[segments];
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[segments];
             int[] indexData = new int[segments * 2];
 
             // update vertices
@@ -257,7 +341,11 @@ namespace Raccoon.Graphics {
                   y = radius * Math.Sin(0);
 
             for (int i = 0; i < vertexData.Length; i++) {
-                vertexData[i] = new VertexPositionColor(new Vector3(center.X + x, center.Y + y, 0f), color);
+                vertexData[i] = new VertexPositionColorTexture(
+                    new Vector3(center.X + x, center.Y + y, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                );
 
                 // apply the rotation matrix
                 t = x;
@@ -268,7 +356,16 @@ namespace Raccoon.Graphics {
                 indexData[2 * i + 1] = (i + 1) % vertexData.Length;
             }
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: true,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchHollowItems.Add(batchItem);
             _hollowVerticesCount += vertexData.Length;
             _hollowIndicesCount += indexData.Length;
@@ -283,17 +380,25 @@ namespace Raccoon.Graphics {
         #region Polygon
 
         public void DrawFilledPolygon(Polygon polygon, Color color, float rotation, Vector2 scale, Vector2 origin) {
-            VertexPositionColor[] vertexData = new VertexPositionColor[polygon.VertexCount + 1];
+            VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[polygon.VertexCount + 1];
             int centerVertexId = vertexData.Length - 1;
 
             int[] indexData = new int[polygon.VertexCount * 3];
 
             int i = 0;
             if (rotation % 360 != 0) {
-                vertexData[centerVertexId] = new VertexPositionColor(new Vector3(Math.Rotate((polygon.Center - origin) * scale, rotation), 0f), color);
+                vertexData[centerVertexId] = new VertexPositionColorTexture(
+                    new Vector3(Math.Rotate((polygon.Center - origin) * scale, rotation), 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                );
 
                 foreach (Vector2 point in polygon) {
-                    vertexData[i] = new VertexPositionColor(new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), color);
+                    vertexData[i] = new VertexPositionColorTexture(
+                        new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), 
+                        color,
+                        Microsoft.Xna.Framework.Vector2.Zero
+                    );
 
                     indexData[3 * i] = i;
                     indexData[3 * i + 1] = (i + 1) % polygon.VertexCount;
@@ -301,10 +406,18 @@ namespace Raccoon.Graphics {
                     i++;
                 }
             } else {
-                vertexData[centerVertexId] = new VertexPositionColor(new Vector3((polygon.Center - origin) * scale, 0f), color);
+                vertexData[centerVertexId] = new VertexPositionColorTexture(
+                    new Vector3((polygon.Center - origin) * scale, 0f), 
+                    color,
+                    Microsoft.Xna.Framework.Vector2.Zero
+                );
 
                 foreach (Vector2 point in polygon) {
-                    vertexData[i] = new VertexPositionColor(new Vector3((point - origin) * scale, 0f), color);
+                    vertexData[i] = new VertexPositionColorTexture(
+                        new Vector3((point - origin) * scale, 0f), 
+                        color,
+                        Microsoft.Xna.Framework.Vector2.Zero
+                    );
 
                     indexData[3 * i] = i;
                     indexData[3 * i + 1] = (i + 1) % polygon.VertexCount;
@@ -313,7 +426,16 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            PrimitiveBatchItem batchItem = new PrimitiveBatchItem(vertexData, indexData);
+            PrimitiveBatchItem batchItem = new PrimitiveBatchItem();
+            batchItem.Set(
+                vertexData,
+                indexData,
+                isHollow: false,
+                shader: null,
+                shaderParameters: null,
+                texture: null
+            );
+
             _batchFilledItems.Add(batchItem);
             _filledVerticesCount += vertexData.Length;
             _filledIndicesCount += indexData.Length;
@@ -339,7 +461,7 @@ namespace Raccoon.Graphics {
             }
 
             if (_vertexBuffer == null || _vertexBuffer.VertexCount < _filledVerticesCount) {
-                _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, VertexPositionColor.VertexDeclaration, _filledVerticesCount, BufferUsage.WriteOnly);
+                _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, VertexPositionColorTexture.VertexDeclaration, _filledVerticesCount, BufferUsage.WriteOnly);
             }
 
             if (_indexBuffer == null || _indexBuffer.IndexCount < _filledIndicesCount) {
@@ -350,7 +472,7 @@ namespace Raccoon.Graphics {
                 indexId = 0;
 
             int[] indices = new int[_filledIndicesCount];
-            VertexPositionColor[] vertices = new VertexPositionColor[_filledVerticesCount];
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[_filledVerticesCount];
 
             foreach (PrimitiveBatchItem batchItem in _batchFilledItems) {
                 System.Array.Copy(batchItem.VertexData, 0, vertices, vertexId, batchItem.VertexData.Length);
@@ -411,7 +533,7 @@ namespace Raccoon.Graphics {
             }
 
             if (_vertexBuffer == null || _vertexBuffer.VertexCount < _hollowVerticesCount) {
-                _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, VertexPositionColor.VertexDeclaration, _hollowVerticesCount, BufferUsage.WriteOnly);
+                _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, VertexPositionColorTexture.VertexDeclaration, _hollowVerticesCount, BufferUsage.WriteOnly);
             }
 
             if (_indexBuffer == null || _indexBuffer.IndexCount < _hollowIndicesCount) {
@@ -422,7 +544,7 @@ namespace Raccoon.Graphics {
                 indexId = 0;
 
             int[] indices = new int[_hollowIndicesCount];
-            VertexPositionColor[] vertices = new VertexPositionColor[_hollowVerticesCount];
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[_hollowVerticesCount];
 
             foreach (PrimitiveBatchItem batchItem in _batchHollowItems) {
                 System.Array.Copy(batchItem.VertexData, 0, vertices, vertexId, batchItem.VertexData.Length);

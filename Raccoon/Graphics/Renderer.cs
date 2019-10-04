@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    // TODO: Include a PrimitiveBatch and methods that suppports primitives drawing
-
     /// <summary>
     /// An all-in-one provider, containing means to draw anything that Raccoon.Graphics can offer.
     /// Also aims to centralize the rendering setups to make everything looks consistently.
@@ -35,7 +35,7 @@ namespace Raccoon.Graphics {
                 throw new NoSuitableGraphicsDeviceException("Renderer needs a valid graphics device. Maybe are you using before first Scene.Start() is called?");
             }
 
-            SpriteBatch = new SpriteBatch(Game.Instance.GraphicsDevice, autoHandleAlphaBlendedSprites);
+            Batch = new MixedBatch(Game.Instance.GraphicsDevice, autoHandleAlphaBlendedSprites);
             RecalculateProjection();
         }
 
@@ -43,8 +43,8 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
-        public bool IsBatching { get { return SpriteBatch.IsBatching; } }
-        public SpriteBatch SpriteBatch { get; private set; }
+        public bool IsBatching { get { return Batch.IsBatching; } }
+        public MixedBatch Batch { get; private set; }
         public BatchMode SpriteBatchMode { get; set; }
         public BlendState BlendState { get; set; }
         public SamplerState SamplerState { get; set; }
@@ -69,7 +69,7 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public void Begin(BatchMode? batchMode = null, BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, Matrix? transform = null) {
-            SpriteBatch.Begin(
+            Batch.Begin(
                 batchMode ?? SpriteBatchMode,
                 blendState ?? BlendState,
                 samplerState ?? SamplerState,
@@ -123,61 +123,68 @@ namespace Raccoon.Graphics {
         /// </summary>
         /// <param name="reinitializeBatches">True, if reinitilizing batchers after flushing is intended, False otherwise.</param>
         public void Flush(bool reinitializeBatches = true) {
-            if (!SpriteBatch.IsBatching) {
+            if (!Batch.IsBatching) {
                 return;
             }
 
             InternalFlush();
 
             if (reinitializeBatches) {
-                Begin(SpriteBatch.BatchMode, SpriteBatch.BlendState, SpriteBatch.SamplerState, SpriteBatch.DepthStencilState, SpriteBatch.RasterizerState, SpriteBatch.Transform);
+                Begin(
+                    Batch.BatchMode, 
+                    Batch.BlendState, 
+                    Batch.SamplerState, 
+                    Batch.DepthStencilState, 
+                    Batch.RasterizerState, 
+                    Batch.Transform
+                );
             }
         }
 
         #region Draw Texture on Destination Rectangle
 
         public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(canvas.Texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, destinationRectangle, sourceRectangle, rotation, Vector2.One, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, destinationRectangle, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, destinationRectangle, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Rectangle destinationRectangle, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
@@ -189,58 +196,58 @@ namespace Raccoon.Graphics {
         #region Draw Texture with Position
 
         public void Draw(Canvas canvas, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(canvas.Texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, position, sourceRectangle, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Rectangle? sourceRectangle, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, position, sourceRectangle, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+                Batch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+            Batch.Draw(texture, position, null, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void Draw(Texture texture, Vector2 position, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
@@ -252,50 +259,185 @@ namespace Raccoon.Graphics {
         #region Draw Text from String
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, float scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.DrawString(font, text, position, rotation, new Vector2(scale), flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+                Batch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
+            Batch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, Color color, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
+                Batch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
+            Batch.DrawString(font, text, position, 0f, Vector2.One, ImageFlip.None, color, Vector2.Zero, Vector2.One, shader, shaderParameters, layerDepth);
         }
 
         #endregion Draw Text from String
+
+        #region Line
+
+        public void DrawLines(IList<Vector2> points, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, bool cyclic = true, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic, layerDepth);
+        }
+
+        #endregion Line
+
+        #region Rectangle
+
+        public void DrawFilledRectangle(Vector2 position, Size size, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawFilledRectangle(position, size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawFilledRectangle(position, size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawFilledRectangle(Rectangle rectangle, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            DrawFilledRectangle(rectangle.Position, rectangle.Size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawHollowRectangle(Vector2 position, Size size, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawHollowRectangle(position, size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawHollowRectangle(position, size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawHollowRectangle(Rectangle rectangle, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            DrawHollowRectangle(rectangle.Position, rectangle.Size, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Rectangle
+
+        #region Circle
+
+        public void DrawFilledCircle(Vector2 center, float radius, Color color, float scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, int segments = 0, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawFilledCircle(center, radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawFilledCircle(center, radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+        }
+
+        public void DrawFilledCircle(Circle circle, Color color, float scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, int segments = 0, float layerDepth = 1f) {
+            DrawFilledCircle(circle.Center, circle.Radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+        }
+
+        public void DrawHollowCircle(Vector2 center, float radius, Color color, float scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, int segments = 0, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawHollowCircle(center, radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawHollowCircle(center, radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+        }
+
+        public void DrawHollowCircle(Circle circle, Color color, float scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, int segments = 0, float layerDepth = 1f) {
+            DrawHollowCircle(circle.Center, circle.Radius, color, scale, origin, scroll, shader, shaderParameters, segments, layerDepth);
+        }
+
+        #endregion Circle
+
+        #region Polygon
+
+        public void DrawFilledPolygon(Polygon polygon, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawFilledPolygon(polygon, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawFilledPolygon(polygon, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawHollowPolygon(IList<Vector2> points, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawHollowPolygon(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawHollowPolygon(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawHollowPolygon(Polygon polygon, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawHollowPolygon(polygon, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawHollowPolygon(polygon, position, color, rotation, scale, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Polygon
+
+        #region Others
+
+        public void DrawVertices(IList<Vector2> vertices, int minVertexIndex, int verticesLength, int[] indices, int minIndex, int primitivesCount, bool isHollow, Vector2 position, float rotation, Vector2 scale, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawVertices(vertices, minVertexIndex, verticesLength, indices, minIndex, primitivesCount, isHollow, position, rotation, scale, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawVertices(vertices, minVertexIndex, verticesLength, indices, minIndex, primitivesCount, isHollow, position, rotation, scale, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Others
 
         #endregion Public Methods
 
@@ -314,12 +456,12 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         public void InternalFlush() {
-            if (!SpriteBatch.IsBatching) {
+            if (!Batch.IsBatching) {
                 return;
             }
 
             PrepareBeforeRender();
-            SpriteBatch.End();
+            Batch.End();
             AfterRender();
         }
 
@@ -334,12 +476,12 @@ namespace Raccoon.Graphics {
 
             BeforeRender();
 
-            if (Shader != null && SpriteBatch.Shader != Shader) {
-                SpriteBatch.Shader = Shader;
+            if (Shader != null && Batch.Shader != Shader) {
+                Batch.Shader = Shader;
             }
 
             // pass along transfom matrices
-            if (SpriteBatch.Shader is IShaderTransform spriteBatch_Shader_Transform) {
+            if (Batch.Shader is IShaderTransform spriteBatch_Shader_Transform) {
                 spriteBatch_Shader_Transform.World = World;
                 spriteBatch_Shader_Transform.View = View;
                 spriteBatch_Shader_Transform.Projection = Projection;
@@ -351,14 +493,14 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
         internal void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (SpriteBatch.BatchMode == BatchMode.Immediate) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
-                SpriteBatch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
                 AfterRender();
                 return;
             }
 
-            SpriteBatch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         #endregion Internal Methods

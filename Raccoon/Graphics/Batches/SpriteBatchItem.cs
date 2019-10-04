@@ -4,13 +4,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public class SpriteBatchItem {
+    public class SpriteBatchItem : IBatchItem {
         #region Public Properties
 
-        public Texture Texture { get; set; }
-        public Shader Shader { get; set; }
-        public IShaderParameters ShaderParameters { get; set; }
+        public Texture Texture { get; private set; }
+        public Shader Shader { get; private set; }
+        public IShaderParameters ShaderParameters { get; private set; }
         public VertexPositionColorTexture[] VertexData { get; private set; } = new VertexPositionColorTexture[4];
+        public int[] IndexData { get; private set; } = new int[6] { 3, 0, 2, 2, 0, 1 };
 
         #endregion Public Properties
 
@@ -100,6 +101,13 @@ namespace Raccoon.Graphics {
 
         public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
             Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+        }
+
+        public void Clear() {
+            Texture = null;
+            Shader = null;
+            ShaderParameters = null;
+            //VertexData = null;
         }
 
         #endregion Public Methods

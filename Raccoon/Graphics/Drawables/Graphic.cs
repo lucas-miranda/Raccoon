@@ -126,7 +126,7 @@ namespace Raccoon.Graphics {
         }
 
         public static int ConvertLayerDepthToLayer(float layerDepth) {
-            return LayersCount / 2 - (int) (layerDepth * LayersCount);
+            return (int) (layerDepth * LayersCount) - LayersCount / 2;
         }
 
         public virtual void Update(int delta) {
