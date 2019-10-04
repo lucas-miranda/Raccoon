@@ -15,6 +15,8 @@ namespace Raccoon.Graphics {
 
         #region Private Members
 
+        private VertexPositionColorTexture[] _vertexPreBuffer;
+        private int[] _indexPreBuffer;
         private DynamicVertexBuffer _vertexBuffer;
         private DynamicIndexBuffer _indexBuffer;
         private int _vertexBufferBeginOffset, _vertexBufferEndOffset, _indexBufferBeginOffset, _indexBufferEndOffset;
@@ -53,6 +55,9 @@ namespace Raccoon.Graphics {
                 _batchItems.Length,
                 BufferUsage.WriteOnly
             );
+
+            _vertexPreBuffer = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
+            _indexPreBuffer = new int[_indexBuffer.IndexCount];
         }
 
         #region Public Properties
@@ -222,16 +227,25 @@ namespace Raccoon.Graphics {
                     bottomRight,
                     bottomLeft;
 
-            if (Math.EqualsEstimate(rotation, 0f)) {
+            if (rotation == 0f) {
                 topLeft = position - origin;
                 topRight = position - origin + new Vector2(size.Width, 0f) * scale;
                 bottomRight = position - origin + size * scale;
                 bottomLeft = position - origin + new Vector2(0f, size.Height) * scale;
             } else {
-                topLeft = position + Math.Rotate(-origin, rotation);
-                topRight = position + Math.Rotate(new Vector2(size.Width, 0f) * scale - origin, rotation);
-                bottomRight = position + Math.Rotate((size * scale).ToVector2() - origin, rotation);
-                bottomLeft = position + Math.Rotate(new Vector2(0f, size.Height) * scale - origin, rotation);
+                float cos = Math.Cos(rotation),
+                      sin = Math.Sin(rotation);
+
+                topLeft = position + new Vector2((-origin.X) * cos - (-origin.Y) * sin, (-origin.X) * sin + (-origin.Y) * cos);
+
+                topRight = new Vector2(size.Width, 0f) * scale - origin;
+                topRight = position + new Vector2(topRight.X * cos - topRight.Y * sin, topRight.X * sin + topRight.Y * cos);
+
+                bottomRight = (size * scale).ToVector2() - origin;
+                bottomRight = position + new Vector2(bottomRight.X * cos - bottomRight.Y * sin, bottomRight.X * sin + bottomRight.Y * cos);
+
+                bottomLeft = new Vector2(0f, size.Height) * scale - origin;
+                bottomLeft = position + new Vector2(bottomLeft.X * cos - bottomLeft.Y * sin, bottomLeft.X * sin + bottomLeft.Y * cos);
             }
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
@@ -291,10 +305,19 @@ namespace Raccoon.Graphics {
                 bottomRight = position - origin + size * scale;
                 bottomLeft = position - origin + new Vector2(0f, size.Height) * scale;
             } else {
-                topLeft = position + Math.Rotate(-origin, rotation);
-                topRight = position + Math.Rotate(new Vector2(size.Width, 0f) * scale - origin, rotation);
-                bottomRight = position + Math.Rotate((size * scale).ToVector2() - origin, rotation);
-                bottomLeft = position + Math.Rotate(new Vector2(0f, size.Height) * scale - origin, rotation);
+                float cos = Math.Cos(rotation),
+                      sin = Math.Sin(rotation);
+
+                topLeft = position + new Vector2((-origin.X) * cos - (-origin.Y) * sin, (-origin.X) * sin + (-origin.Y) * cos);
+
+                topRight = new Vector2(size.Width, 0f) * scale - origin;
+                topRight = position + new Vector2(topRight.X * cos - topRight.Y * sin, topRight.X * sin + topRight.Y * cos);
+
+                bottomRight = (size * scale).ToVector2() - origin;
+                bottomRight = position + new Vector2(bottomRight.X * cos - bottomRight.Y * sin, bottomRight.X * sin + bottomRight.Y * cos);
+
+                bottomLeft = new Vector2(0f, size.Height) * scale - origin;
+                bottomLeft = position + new Vector2(bottomLeft.X * cos - bottomLeft.Y * sin, bottomLeft.X * sin + bottomLeft.Y * cos);
             }
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
@@ -769,14 +792,6 @@ namespace Raccoon.Graphics {
                      needRecreateIndexBuffer = _indexBuffer.IndexCount < _indexBufferEndOffset + batchItem.IndexData.Length;
 
                 if (needRecreateVertexBuffer || needRecreateIndexBuffer) {
-                    Draw();
-
-                    batchItemType = batchItem.GetType();
-                    texture = batchItem.Texture;
-                    shader = batchItem.Shader ?? Shader;
-                    parameters = batchItem.ShaderParameters;
-                    startIndex = endIndex;
-
                     if (needRecreateIndexBuffer) {
                         int newIndexBufferSize = (int) Math.Ceiling((_indexBufferEndOffset + batchItem.IndexData.Length) * 1.5f);
                         _indexBuffer = new DynamicIndexBuffer(
@@ -785,6 +800,8 @@ namespace Raccoon.Graphics {
                             newIndexBufferSize,
                             BufferUsage.WriteOnly
                         );
+
+                        System.Array.Resize(ref _indexPreBuffer, _indexBuffer.IndexCount);
                     }
 
                     if (needRecreateVertexBuffer) {
@@ -795,34 +812,38 @@ namespace Raccoon.Graphics {
                             newVertexBufferSize,
                             BufferUsage.WriteOnly
                         );
-                    }
 
-                    _vertexBufferEndOffset = 0;
-                    _indexBufferEndOffset = 0;
+                        System.Array.Resize(ref _vertexPreBuffer, _vertexBuffer.VertexCount);
+                    }
                 }
 
                 // buffers 
 
+                batchItem.VertexData.CopyTo(_vertexPreBuffer, _vertexBufferEndOffset);
+
+                /*
                 _vertexBuffer.SetData(
                     _vertexBufferEndOffset * VertexPositionColorTexture.VertexDeclaration.VertexStride,
                     batchItem.VertexData,
                     startIndex: 0,
                     batchItem.VertexData.Length,
                     VertexPositionColorTexture.VertexDeclaration.VertexStride,
-                    SetDataOptions.None);
+                    SetDataOptions.None
+                );
+                */
 
-                int[] preparedIndexData = new int[batchItem.IndexData.Length];
-
-                for (int j = 0; j < preparedIndexData.Length; j++) {
-                    preparedIndexData[j] = _vertexBufferEndOffset + batchItem.IndexData[j];
+                for (int j = 0; j < batchItem.IndexData.Length; j++) {
+                    _indexPreBuffer[_indexBufferEndOffset + j] = _vertexBufferEndOffset + batchItem.IndexData[j];
                 }
 
+                /*
                 _indexBuffer.SetData(
                     _indexBufferEndOffset * sizeof(int),
                     preparedIndexData,
                     startIndex: 0,
                     batchItem.IndexData.Length
                 );
+                */
 
                 //
 
@@ -834,9 +855,27 @@ namespace Raccoon.Graphics {
             }
 
             Draw();
+            _vertexBufferEndOffset = 0;
+            _indexBufferEndOffset = 0;
             return;
 
             void Draw() {
+                _vertexBuffer.SetData(
+                    offsetInBytes: 0,
+                    _vertexPreBuffer,
+                    startIndex: 0,
+                    _vertexPreBuffer.Length,
+                    VertexPositionColorTexture.VertexDeclaration.VertexStride,
+                    SetDataOptions.None
+                );
+
+                _indexBuffer.SetData(
+                    offsetInBytes: 0,
+                    _indexPreBuffer,
+                    startIndex: 0,
+                    _indexPreBuffer.Length
+                );
+
                 if (batchItemType == typeof(PrimitiveBatchItem)) {
                     DrawPrimitiveBatchItem(
                         startIndex, 
