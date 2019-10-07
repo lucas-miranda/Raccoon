@@ -34,7 +34,7 @@ namespace Raccoon.Graphics {
 
             DepthReadState = new DepthStencilState() {
                 DepthBufferWriteEnable = false,
-                DepthBufferFunction = CompareFunction.GreaterEqual
+                DepthBufferFunction = CompareFunction.LessEqual
             };
 
             AutoHandleAlphaBlendedSprites = autoHandleAlphaBlendedSprites;
