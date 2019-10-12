@@ -131,7 +131,7 @@ namespace Raccoon {
                 return;
             }
 
-            _children = null;
+            ClearChildren();
             _parent = null;
             Entity = null;
             IsDetached = true;
