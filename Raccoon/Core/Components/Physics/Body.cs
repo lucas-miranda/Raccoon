@@ -162,8 +162,8 @@ namespace Raccoon.Components {
             _isPhysicsActive = true;
         }
 
-        public override void OnSceneRemoved() {
-            base.OnSceneRemoved();
+        public override void OnSceneRemoved(bool wipe) {
+            base.OnSceneRemoved(wipe);
 
             if (!_isPhysicsActive) {
                 return;

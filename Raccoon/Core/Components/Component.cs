@@ -62,7 +62,7 @@ namespace Raccoon.Components {
         public virtual void OnSceneAdded() {
         }
 
-        public virtual void OnSceneRemoved() {
+        public virtual void OnSceneRemoved(bool wipe) {
         }
 
         public virtual void BeforeUpdate() {

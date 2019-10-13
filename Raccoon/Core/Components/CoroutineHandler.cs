@@ -1,42 +1,46 @@
 ﻿using System.Collections;
 
-using Raccoon.Util.Collections;
-
 namespace Raccoon.Components {
     public class CoroutineHandler : Component {
-        #region Private Members
+        public Coroutine Coroutine { get; private set; }
+        public bool IsRunning {
+            get {
+                if (Coroutine == null) {
+                    return false;
+                }
 
-        public Locker<Coroutine> _coroutines = new Locker<Coroutine>();
-
-        #endregion Private Members
-
-        #region Constructors
-
-        public CoroutineHandler() {
+                return Coroutine.IsRunning;
+            }
         }
-
-        #endregion Constructors
-
-        #region Public Properties
-
-        public int CoroutinesCount { get { return _coroutines.Count; } }
-
-        #endregion Public Properties
-
-        #region Public Methods
 
         public override void OnRemoved() {
             base.OnRemoved();
-            foreach (Coroutine c in _coroutines) {
-                c.Stop();
+            Clear();
+        }
+
+        public override void OnSceneAdded() {
+            base.OnSceneAdded();
+            if (Coroutine != null) {
+                Coroutines.Instance.Start(Coroutine);
+            }
+        }
+
+        public override void OnSceneRemoved(bool wipe) {
+            base.OnSceneRemoved(wipe);
+            if (wipe) {
+                Clear();
+            } else {
+                Coroutines.Instance.Remove(Coroutine);
             }
         }
 
         public override void Update(int delta) {
-            foreach (Coroutine coroutine in _coroutines) {
-                if (coroutine.HasEnded) {
-                    _coroutines.Remove(coroutine);
-                }
+            if (Entity.Scene == null) {
+                return;
+            }
+
+            if (Coroutine != null && Coroutine.HasEnded) {
+                Coroutine = null;
             }
         }
 
@@ -58,36 +62,43 @@ namespace Raccoon.Components {
             return RegisterCoroutine(Coroutines.Instance.Start(coroutine));
         }
 
-        public Coroutine RegisterCoroutine(Coroutine coroutine) {
-            _coroutines.Add(coroutine);
-            return coroutine;
+        public void Stop() {
+            if (Coroutine == null) {
+                return;
+            }
+
+            Coroutine.Stop();
+            Coroutine = null;
         }
 
-        public bool RemoveCoroutine(Coroutine coroutine) {
-            coroutine.Stop();
-            return _coroutines.Remove(coroutine);
+        public void Pause() {
+            if (Coroutine == null) {
+                return;
+            }
+
+            Coroutine.Pause();
+        }
+
+        public void Resume() {
+            if (Coroutine == null) {
+                return;
+            }
+
+            Coroutine.Resume();
         }
 
         public void Clear() {
-            foreach (Coroutine c in _coroutines) {
-                c.Stop();
-            }
-
-            _coroutines.Clear();
+            Stop();
+            Coroutine = null;
         }
 
-        public void PauseAll() {
-            foreach (Coroutine coroutine in _coroutines) {
-                coroutine.Pause();
+        private Coroutine RegisterCoroutine(Coroutine coroutine) {
+            if (Coroutine != null) {
+                Coroutine.Stop();
             }
-        }
 
-        public void ResumeAll() {
-            foreach (Coroutine coroutine in _coroutines) {
-                coroutine.Resume();
-            }
+            Coroutine = coroutine;
+            return Coroutine;
         }
-
-        #endregion Public Methods
     }
 }
