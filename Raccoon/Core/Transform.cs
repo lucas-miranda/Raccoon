@@ -137,13 +137,15 @@ namespace Raccoon {
             IsDetached = true;
         }
 
-        internal void EntitySceneRemoved() {
+        internal void EntitySceneRemoved(bool wipe) {
             foreach (Transform child in _children) {
-                child.OnParentRemoved();
-                child._parent = null;
+                if (wipe) {
+                    child.OnParentRemoved();
+                    child._parent = null;
+                }
 
                 if (child.IsHandledByParent) {
-                    child.Entity.SceneRemoved();
+                    child.Entity.SceneRemoved(wipe);
                 }
             }
         }

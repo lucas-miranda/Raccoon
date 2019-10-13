@@ -84,6 +84,13 @@ namespace Raccoon {
             return coroutine;
         }
 
+        public bool Remove(Coroutine coroutine) {
+            bool removedFromRunning = _runningCoroutines.Remove(coroutine),
+                 removedFromPaused = _pausedCoroutines.Remove(coroutine);
+
+            return removedFromRunning || removedFromPaused;
+        }
+
         public void ClearAll() {
             foreach (Coroutine coroutine in _runningCoroutines) {
                 coroutine.Stop();

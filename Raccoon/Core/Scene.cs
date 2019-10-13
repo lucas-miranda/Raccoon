@@ -252,8 +252,9 @@ namespace Raccoon {
         /// </summary>
         /// <typeparam name="T">Class based on IUpdatable, IRenderable and/or ISceneObject.</typeparam>
         /// <param name="obj">Object to removed.</param>
+        /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
         /// <returns>True if removed, False otherwise.</returns>
-        public bool Remove<T>(T obj) {
+        public bool Remove<T>(T obj, bool wipe = true) {
             bool isValid = false,
                  removed = false;
 
@@ -270,7 +271,7 @@ namespace Raccoon {
             if (obj is ISceneObject sceneObject) {
                 isValid = true;
                 if (_sceneObjects.Remove(sceneObject)) {
-                    sceneObject.SceneRemoved();
+                    sceneObject.SceneRemoved(wipe);
                     removed = true;
                 }
             }
@@ -312,11 +313,12 @@ namespace Raccoon {
         /// Removes an Entity from Scene.
         /// </summary>
         /// <param name="entity">Entity to remove.</param>
-        public bool RemoveEntity(Entity entity) {
+        /// <param name="wipe">Allow Entity to be wiped after removed.</param>
+        public bool RemoveEntity(Entity entity, bool wipe = true) {
             _updatables.Remove(entity);
             _renderables.Remove(entity);
             if (_sceneObjects.Remove(entity)) {
-                entity.SceneRemoved();
+                entity.SceneRemoved(wipe);
                 return true;
             }
 
@@ -350,8 +352,9 @@ namespace Raccoon {
         /// If it's an ISceneObject, removes too.
         /// </summary>
         /// <param name="filter">Filter to find Entity.</param>
+        /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
         /// <returns>Removed Entity count.</returns>
-        public int RemoveWhere<T>(System.Predicate<T> filter) where T : IUpdatable, IRenderable {
+        public int RemoveWhere<T>(System.Predicate<T> filter, bool wipe = true) where T : IUpdatable, IRenderable {
             List<IUpdatable> removedUpdatable = _updatables.RemoveWhere((IUpdatable u) => filter((T) u));
             List<IRenderable> removedRenderable = _renderables.RemoveWhere((IRenderable r) => filter((T) r));
 
@@ -362,7 +365,7 @@ namespace Raccoon {
 
                 if (updatable is ISceneObject sceneObject) {
                     removedCount++;
-                    sceneObject.SceneRemoved();
+                    sceneObject.SceneRemoved(wipe);
                 }
             }
 
@@ -371,7 +374,7 @@ namespace Raccoon {
 
                 if (renderable is ISceneObject sceneObject && sceneObject.Scene == this) {
                     removedCount++;
-                    sceneObject.SceneRemoved();
+                    sceneObject.SceneRemoved(wipe);
                 }
             }
 
@@ -381,18 +384,19 @@ namespace Raccoon {
         /// <summary>
         /// Remove all IUpdatable, IRenderables and ISceneObject from Scene.
         /// </summary>
-        public void Clear() {
+        /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
+        public void Clear(bool wipe = true) {
             _updatables.Clear();
             _renderables.Clear();
 
             if (_sceneObjects.IsLocked) {
                 foreach (ISceneObject sceneObject in _sceneObjects.ToAdd) {
-                    sceneObject.SceneRemoved();
+                    sceneObject.SceneRemoved(wipe);
                 }
             }
 
             foreach (ISceneObject sceneObject in _sceneObjects) {
-                sceneObject.SceneRemoved();
+                sceneObject.SceneRemoved(wipe);
             }
 
             _sceneObjects.Clear();

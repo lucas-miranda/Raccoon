@@ -75,6 +75,7 @@
     <Compile Include="Audio\Music.cs" />
     <Compile Include="Audio\SoundEffect.cs" />
     <Compile Include="Core\Components\CoroutineHandler.cs" />
+    <Compile Include="Core\Components\CoroutinesHandler.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
     <Compile Include="Core\Coroutines\Instructions\CoroutineInstruction.cs" />
     <Compile Include="Core\Coroutines\Instructions\ParallelizeCoroutine.cs" />

@@ -16,7 +16,7 @@
         Scene Scene { get; }
 
         void SceneAdded(Scene scene);
-        void SceneRemoved();
+        void SceneRemoved(bool wipe);
 
         void Start();
 

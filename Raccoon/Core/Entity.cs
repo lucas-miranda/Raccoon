@@ -146,10 +146,6 @@ namespace Raccoon {
 
             Scene = scene;
             foreach (Component c in Components) {
-                if (c.Entity == this) {
-                    continue;
-                }
-
                 c.OnSceneAdded();
             }
 
@@ -164,10 +160,10 @@ namespace Raccoon {
             OnSceneAdded();
         }
 
-        public virtual void SceneRemoved() {
+        public virtual void SceneRemoved(bool allowWipe = true) {
             _scene = null;
 
-            if (WipeOnRemoved) {
+            if (WipeOnRemoved && allowWipe) {
                 OnSceneAdded = null;
                 OnStart = null;
                 OnSceneBegin = null;
@@ -188,18 +184,18 @@ namespace Raccoon {
                     continue;
                 }
 
-                c.OnSceneRemoved();
+                c.OnSceneRemoved(WipeOnRemoved && allowWipe);
             }
 
             if (Transform.Parent != null) {
                 Transform.Parent = null;
             }
 
-            Transform.EntitySceneRemoved();
+            Transform.EntitySceneRemoved(WipeOnRemoved && allowWipe);
 
             OnSceneRemoved?.Invoke();
 
-            if (WipeOnRemoved) {
+            if (WipeOnRemoved && allowWipe) {
                 OnSceneRemoved = null;
                 Transform.Detach();
 
