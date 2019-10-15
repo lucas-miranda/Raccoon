@@ -27,7 +27,7 @@ namespace Raccoon {
         public Vector2 Origin { get; set; }
         public float Rotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
-        public bool IsHandledByParent { get; private set; }
+        public bool IsHandledByParent { get; internal set; }
         public bool IsDetached { get; private set; }
 
         public Transform Parent {
@@ -46,7 +46,6 @@ namespace Raccoon {
 
                 if (_parent != null) {
                     _parent.RemoveChild(this);
-                    OnParentRemoved();
                 }
 
                 _parent = value;
@@ -73,10 +72,46 @@ namespace Raccoon {
 
         public void ClearChildren() {
             foreach (Transform child in _children) {
+                child.OnParentRemoved();
                 child._parent = null;
             }
 
             _children.Clear();
+        }
+
+        public void EntitySceneAdded(Scene scene) {
+            foreach (Transform child in _children) {
+                if (!child.IsHandledByParent) {
+                    continue;
+                }
+
+                child.Entity.SceneAdded(scene);
+            }
+        }
+
+        public void EntitySceneRemoved(bool wipe) {
+            if (Parent != null && !IsHandledByParent) {
+                if (wipe) {
+                    // detach from parent
+                    Parent = null;
+                } else {
+                    // return to parent
+                    IsHandledByParent = true;
+                }
+            }
+
+            foreach (Transform child in _children) {
+                if (wipe) {
+                    child.OnParentRemoved();
+                    child._parent = null;
+                }
+
+                if (child.IsHandledByParent) {
+                    child.Entity.SceneRemoved(wipe);
+                } else {
+                    child.Entity.Scene.RemoveEntity(child.Entity, wipe);
+                }
+            }
         }
 
         public override string ToString() {
@@ -95,19 +130,30 @@ namespace Raccoon {
         #region Private Methods
 
         private void OnParentAdded() {
+            LocalPosition -= Parent.Position;
+
             if (Entity.Scene == null) {
                 IsHandledByParent = true;
-            } else {
-                LocalPosition -= Parent.Position;
+
+                // virtually add transform to ancestor scene
+                Scene ancestorScene = FindFirstAncestorScene();
+                if (ancestorScene != null) {
+                    Entity.SceneAdded(ancestorScene);
+                }
             }
         }
 
         private void OnParentRemoved() {
-            if (!IsHandledByParent) {
-                LocalPosition += Parent.Position;
-            }
+            LocalPosition += Parent.Position;
 
-            IsHandledByParent = false;
+            if (IsHandledByParent) {
+                // virtually remove transform from ancestor scene
+                if (FindFirstAncestorScene() != null) {
+                    Entity.SceneRemoved(allowWipe: true);
+                }
+
+                IsHandledByParent = false;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
@@ -120,6 +166,21 @@ namespace Raccoon {
             }
 
             _children.Remove(child);
+            child.OnParentRemoved();
+        }
+
+        private Scene FindFirstAncestorScene() {
+            Transform ancestor = Parent;
+
+            while (ancestor != null && ancestor.Entity != null) {
+                if (ancestor.Entity.Scene != null) {
+                    return ancestor.Entity.Scene;
+                }
+
+                ancestor = ancestor.Parent;
+            }
+
+            return null;
         }
 
         #endregion Private Methods
@@ -135,19 +196,6 @@ namespace Raccoon {
             _parent = null;
             Entity = null;
             IsDetached = true;
-        }
-
-        internal void EntitySceneRemoved(bool wipe) {
-            foreach (Transform child in _children) {
-                if (wipe) {
-                    child.OnParentRemoved();
-                    child._parent = null;
-                }
-
-                if (child.IsHandledByParent) {
-                    child.Entity.SceneRemoved(wipe);
-                }
-            }
         }
 
         #endregion Internal Methods

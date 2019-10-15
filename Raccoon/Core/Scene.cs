@@ -177,8 +177,16 @@ namespace Raccoon {
         /// <param name="entity">Entity to add.</param>
         /// <returns>Reference to Entity.</returns>
         public Entity AddEntity(Entity entity) {
-            if (entity.Scene == this) {
+            if (entity.Scene == this && !entity.Transform.IsHandledByParent) {
                 return entity;
+            }
+
+            if (entity.Transform.IsHandledByParent) {
+                if (entity.Scene != this) {
+                    entity.SceneRemoved(allowWipe: false);
+                }
+
+                entity.Transform.IsHandledByParent = false;
             }
 
             _updatables.Add(entity);
@@ -186,6 +194,7 @@ namespace Raccoon {
             _sceneObjects.Add(entity);
 
             entity.SceneAdded(this);
+
             if (HasStarted && !entity.HasStarted) {
                 entity.Start();
             }

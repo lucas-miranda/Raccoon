@@ -40,13 +40,13 @@ namespace Raccoon {
         }
 
         ~Entity() {
-            if (Transform != null && Transform.IsHandledByParent && Transform.Parent != null && Transform.Parent.Entity != null && Transform.Parent.Entity.Scene != null) {
-                Transform.Parent.Entity.Scene.RemoveEntity(this);
+            if (Transform.IsHandledByParent) {
+                if (WipeOnRemoved && !Transform.IsDetached) {
+                    SceneRemoved();
+                }
             } else if (_scene != null) {
                 _scene.RemoveEntity(this);
                 _scene = null;
-            } else if (WipeOnRemoved && !Transform.IsDetached) {
-                SceneRemoved();
             }
         }
 
@@ -140,7 +140,7 @@ namespace Raccoon {
         }
 
         public virtual void SceneAdded(Scene scene) {
-            if (Scene != null) {
+            if (Scene != null && !Transform.IsHandledByParent) {
                 return;
             }
 
@@ -149,14 +149,7 @@ namespace Raccoon {
                 c.OnSceneAdded();
             }
 
-            foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent) {
-                    continue;
-                }
-
-                child.Entity.SceneAdded(Scene);
-            }
-
+            Transform.EntitySceneAdded(Scene);
             OnSceneAdded();
         }
 
@@ -187,12 +180,7 @@ namespace Raccoon {
                 c.OnSceneRemoved(WipeOnRemoved && allowWipe);
             }
 
-            if (Transform.Parent != null) {
-                Transform.Parent = null;
-            }
-
             Transform.EntitySceneRemoved(WipeOnRemoved && allowWipe);
-
             OnSceneRemoved?.Invoke();
 
             if (WipeOnRemoved && allowWipe) {
