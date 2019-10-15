@@ -45,7 +45,9 @@ namespace Raccoon {
                 }
 
                 if (_parent != null) {
-                    _parent.RemoveChild(this);
+                    if (_parent.RemoveChild(this)) {
+                        OnParentRemoved();
+                    }
                 }
 
                 _parent = value;
@@ -92,8 +94,11 @@ namespace Raccoon {
         public void EntitySceneRemoved(bool wipe) {
             if (Parent != null && !IsHandledByParent) {
                 if (wipe) {
-                    // detach from parent
-                    Parent = null;
+                    // manually detach from parent to avoid
+                    // another call to Entity.SceneRemoved
+                    _parent.RemoveChild(this);
+                    LocalPosition += _parent.Position;
+                    _parent = null;
                 } else {
                     // return to parent
                     IsHandledByParent = true;
@@ -160,13 +165,12 @@ namespace Raccoon {
             return GetEnumerator();
         }
 
-        private void RemoveChild(Transform child) {
+        private bool RemoveChild(Transform child) {
             if (IsDetached) {
-                return;
+                return false;
             }
 
-            _children.Remove(child);
-            child.OnParentRemoved();
+            return _children.Remove(child);
         }
 
         private Scene FindFirstAncestorScene() {
