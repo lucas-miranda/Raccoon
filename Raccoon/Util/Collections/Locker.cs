@@ -181,6 +181,7 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
+            Upkeep();
             Lock();
 
             if (_items != null) {
@@ -196,6 +197,7 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerable<T> ReverseIterator() {
+            Upkeep();
             Lock();
 
             for (int i = _items.Count - 1; i >= 0; i--) {
