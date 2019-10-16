@@ -147,7 +147,11 @@ namespace Raccoon.Graphics {
             if (CurrentTrack == null || !CurrentKey.Equals(key)) {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
-                CurrentTrack.Reset();
+                
+                if (forceReset) {
+                    CurrentTrack.Reset();
+                }
+
                 UpdateClippingRegion();
             } else if (forceReset) {
                 CurrentTrack.Reset();
@@ -155,8 +159,19 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void Play(KeyType key, int frameIndex) {
+            Tracks[key].CurrentFrameIndex = frameIndex;
+            Play(key, forceReset: false);
+        }
+
         public void Prepare(KeyType key, bool forceReset = true) {
             Play(key, forceReset);
+            Pause();
+        }
+
+        public void Prepare(KeyType key, int frameIndex) {
+            Tracks[key].CurrentFrameIndex = frameIndex;
+            Play(key, forceReset: false);
             Pause();
         }
 
