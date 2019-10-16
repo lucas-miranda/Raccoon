@@ -74,6 +74,10 @@ namespace Raccoon {
 
         public void ClearChildren() {
             foreach (Transform child in _children) {
+                if (child.IsDetached) {
+                    continue;
+                }
+
                 child.OnParentRemoved();
                 child._parent = null;
             }
@@ -107,6 +111,10 @@ namespace Raccoon {
 
             foreach (Transform child in _children) {
                 if (wipe) {
+                    if (child.IsDetached) {
+                        continue;
+                    }
+
                     child.OnParentRemoved();
                     child._parent = null;
                 }
@@ -197,7 +205,9 @@ namespace Raccoon {
             }
 
             ClearChildren();
+
             _parent = null;
+
             Entity = null;
             IsDetached = true;
         }
