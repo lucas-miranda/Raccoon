@@ -712,7 +712,6 @@ namespace Raccoon {
                 // check if Body is static
                 if (body.Movement == null) {
                     // early exit, static Body, well.. should remain static
-                    body.PhysicsLateUpdate();
                     continue;
                 }
 
@@ -911,7 +910,6 @@ namespace Raccoon {
                 body.MoveBufferX = remainderMovementXBuffer;
                 body.MoveBufferY = remainderMovementYBuffer;
                 body.Position = new Vector2(currentX, currentY);
-                body.PhysicsLateUpdate();
             }
 
             foreach (Body body in _collidedOnThisFrame) {
@@ -956,6 +954,11 @@ namespace Raccoon {
             }
 
             _collidedOnThisFrame.Clear();
+
+            for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
+                Body body = _narrowPhaseBodies[j];
+                body.PhysicsLateUpdate();
+            }
 
 #if DEBUG
             CollisionDetectionNarrowPhaseExecutionTime = Time.EndStopwatch();
