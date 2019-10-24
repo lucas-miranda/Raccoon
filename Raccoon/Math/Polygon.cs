@@ -47,6 +47,9 @@ namespace Raccoon {
         public Polygon(Triangle triangle) : this(triangle.A, triangle.B, triangle.C) {
         }
 
+        public Polygon(Rectangle rectangle) : this(rectangle.TopLeft, rectangle.TopRight, rectangle.BottomRight, rectangle.BottomLeft) {
+        }
+
         #endregion Constructors
 
         #region Public Properties
