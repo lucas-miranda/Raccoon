@@ -165,6 +165,7 @@ namespace Raccoon.Graphics {
         protected internal EffectParameter WorldViewProjectionParameter { get; set; }
         protected internal EffectParameter DiffuseColorParameter { get; set; }
         protected internal EffectParameter TextureParameter { get; set; }
+        protected Matrix WorldViewProjection { get; private set; }
 
         #endregion Internal Properties
 
@@ -190,6 +191,7 @@ namespace Raccoon.Graphics {
             if (_dirtyFlags.Has(DirtyFlags.WorldViewProjection)) {
                 Matrix.Multiply(ref _world, ref _view, out Matrix worldView);
                 Matrix.Multiply(ref worldView, ref _projection, out Matrix worldViewProjection);
+                WorldViewProjection = worldViewProjection;
                 WorldViewProjectionParameter.SetValue(worldViewProjection);
 
                 _dirtyFlags -= DirtyFlags.WorldViewProjection;

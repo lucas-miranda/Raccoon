@@ -461,7 +461,13 @@ namespace Raccoon.Graphics {
                to iterate through all tiles and pack them into SpriteBatchItem.
             */
 
-            BasicShader bs = Game.Instance.BasicShader;
+            BasicShader bs;
+
+            if (Shader != null && Shader is BasicShader) {
+                bs = (BasicShader) Shader;
+            } else {
+                bs = Game.Instance.BasicShader;
+            }
 
             // transformations
             bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
