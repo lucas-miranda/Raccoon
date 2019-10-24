@@ -226,6 +226,10 @@ namespace Raccoon.Components {
 #endif
 
         public void PhysicsUpdate(float dt) {
+            if (Entity == null) {
+                return;
+            }
+
             LastPosition = Position;
             _currentUpdateCollisionList.Clear();
 
@@ -241,6 +245,10 @@ namespace Raccoon.Components {
         }
 
         public void PhysicsLateUpdate() {
+            if (Entity == null) {
+                return;
+            }
+
             foreach (Body otherBody in _collisionList) {
                 if (_currentUpdateCollisionList.Contains(otherBody)) {
                     continue;
@@ -358,10 +366,9 @@ namespace Raccoon.Components {
                 Movement = null;
             }
 
-            _constraints = null;
-            _collisionList = null;
-            _currentUpdateCollisionList = null;
-            CollisionList = null;
+            _constraints.Clear();
+            _collisionList.Clear();
+            _currentUpdateCollisionList.Clear();
 
             base.Dispose();
         }
