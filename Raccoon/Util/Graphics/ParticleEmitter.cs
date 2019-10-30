@@ -37,6 +37,10 @@ namespace Raccoon.Util.Graphics {
             return particle;
         }
 
+        public void ClearModels() {
+            _particleModels.Clear();
+        }
+
         public void Emit(string label, Vector2 position, float rotation = 0f, ImageFlip flip = ImageFlip.None) {
             InternalEmit(label, position, rotation, flip, out List<Particle> particles);
         }
@@ -49,21 +53,25 @@ namespace Raccoon.Util.Graphics {
             }
         }
 
-        public void Dispose() {
-            if (IsDisposed) {
-                return;
-            }
-
+        public void ClearAllParticles() {
             if (Scene != null) {
                 for (int i = 0; i < _aliveParticles.Count; i++) {
                     if (Scene.RemoveEntity(_aliveParticles[i])) {
                         i--;
                     }
                 }
+            } else {
+                _aliveParticles.Clear();
+            }
+        }
 
-                Scene = null;
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
             }
 
+            ClearAllParticles();
+            Scene = null;
             _particleModels = null;
 
             IsDisposed = true;

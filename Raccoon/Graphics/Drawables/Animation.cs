@@ -75,10 +75,6 @@ namespace Raccoon.Graphics {
             Origin = animation.Origin;
         }
 
-        ~Animation() {
-            Dispose();
-        }
-
         #endregion Constructors
 
         #region Public Properties
