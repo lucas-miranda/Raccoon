@@ -37,12 +37,12 @@ namespace Raccoon.Util.Graphics {
             return particle;
         }
 
-        public void Emit(string label, Vector2 position) {
-            InternalEmit(label, position, out List<Particle> particles);
+        public void Emit(string label, Vector2 position, float rotation = 0f, ImageFlip flip = ImageFlip.None) {
+            InternalEmit(label, position, rotation, flip, out List<Particle> particles);
         }
 
-        public void Emit(string label, Entity entity) {
-            InternalEmit(label, entity.Transform.Position, out List<Particle> particles);
+        public void Emit(string label, Entity entity, float rotation = 0f, ImageFlip flip = ImageFlip.None) {
+            InternalEmit(label, entity.Transform.Position, rotation, flip, out List<Particle> particles);
 
             foreach (Particle particle in particles) {
                 particle.Transform.Parent = entity.Transform;
@@ -73,7 +73,7 @@ namespace Raccoon.Util.Graphics {
 
         #region Private Methods
 
-        private void InternalEmit(string label, Vector2 position, out List<Particle> particles) {
+        private void InternalEmit(string label, Vector2 position, float rotation, ImageFlip flip, out List<Particle> particles) {
             (Particle particleModel, EmissionOptions emissionOptions) = _particleModels[label];
 
             int count = emissionOptions.Count;
@@ -89,7 +89,9 @@ namespace Raccoon.Util.Graphics {
                 Particle particle = new Particle() {
                     Layer = particleModel.Layer,
                     Animation = new Animation(particleModel.Animation) {
-                        Position = particleModel.Animation.Position
+                        Position = particleModel.Animation.Position,
+                        Rotation = rotation,
+                        Flipped = flip
                     }
                 };
 
