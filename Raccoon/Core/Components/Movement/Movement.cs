@@ -85,6 +85,9 @@ namespace Raccoon.Components {
         public bool TouchedRight { get; private set; }
         public bool TouchedBottom { get; private set; }
         public bool TouchedLeft { get; private set; }*/
+        public Vector2 ImpulsePerSec { get; protected set; }
+        public float ImpulseTime { get; protected set; }
+        public bool JustReceiveImpulse { get; protected set; }
 
         public bool SnapHorizontalAxis {
             get {
@@ -139,9 +142,6 @@ namespace Raccoon.Components {
         #region Protected Properties
 
         protected Vector2 NextAxis { get; set; }
-        protected Vector2 ImpulsePerSec { get; set; }
-        protected float ImpulseTime { get; set; }
-        protected bool JustReceiveImpulse { get; set; }
         protected BitTag ExtraCollisionTags { get; set; } = BitTag.None;
 
         #endregion Protected Properties

@@ -665,6 +665,9 @@ namespace Raccoon.Components {
 
             if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
                 ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
+                if (Math.EqualsEstimate(ImpulseTime, 0f)) {
+                    ImpulsePerSec = Vector2.Zero;
+                }
             }
 
             Velocity = velocity;
