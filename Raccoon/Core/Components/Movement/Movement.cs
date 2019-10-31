@@ -11,6 +11,9 @@ namespace Raccoon.Components {
         public delegate void MovementAction();
         public MovementAction OnMove = delegate { };
 
+        public delegate void ImpulseMovementAction(Vector2 impulse);
+        public ImpulseMovementAction OnReceiveImpulse = delegate { };
+
         #endregion Public Members
 
         #region Private Members
@@ -152,6 +155,7 @@ namespace Raccoon.Components {
         public virtual void OnRemoved() {
             Body = null;
             OnMove = null;
+            OnReceiveImpulse = null;
         }
 
         public virtual void BeforeUpdate() {
@@ -247,6 +251,7 @@ namespace Raccoon.Components {
             ImpulsePerSec = (2f * distance) / (duration * duration); // acceleration
             ImpulseTime = duration;
             JustReceiveImpulse = true;
+            OnReceiveImpulse(ImpulsePerSec);
         }
 
         public void ApplyCustomImpulse(Vector2 normal, float distance, float duration) {
@@ -260,6 +265,7 @@ namespace Raccoon.Components {
 
             Body = null;
             OnMove = null;
+            OnReceiveImpulse = null;
 
             IsDisposed = true;
         }

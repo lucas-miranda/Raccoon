@@ -478,7 +478,7 @@ namespace Raccoon.Components {
             }
 
             // Check if still is on ground
-            if (OnGround && !_touchedBottom) {
+            if (OnGround && !_touchedBottom && Velocity.Y >= 0f) {
                 Fall();
             }
         }
@@ -728,7 +728,7 @@ namespace Raccoon.Components {
                     Fall();
                 }
             } else if (distance.Y < 0f) {
-                if (IsStillJumping) {
+                if (IsStillJumping || JustReceiveImpulse) {
                     if (!IsJumping) {
                         IsJumping = JustJumped = true;
                         OnGround = IsFalling = false;
