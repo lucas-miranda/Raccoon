@@ -386,6 +386,10 @@ namespace Raccoon.Graphics {
             base.Dispose();
         }
 
+        public override string ToString() {
+            return $"[Animation | Position: {Position}, Texture: {Texture}]";
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
