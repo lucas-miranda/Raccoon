@@ -43,7 +43,6 @@ namespace Raccoon {
             (int column, int row) start = grid.ConvertPosition(gridPos, otherBoundingBox.TopLeft - Vector2.One),
                                   end = grid.ConvertPosition(gridPos, otherBoundingBox.BottomRight + Vector2.One);
 
-            //List<Contact> contacts = new List<Contact>();
             List<Polygon> tilePolygons = new List<Polygon>();
 
             foreach ((int column, int row, GridShape.TileShape shape) in grid.Tiles(start, end)) {
@@ -72,8 +71,6 @@ namespace Raccoon {
                         continue;
                     }
 
-                    //Debug.Info($"Collision with tile shape: {shape}");
-                    //totalContact = totalContact == null ? contact : Contact.Sum(contact.Value, totalContact.Value);
                     contacts.Add(contact.Value);
                 }
             }
