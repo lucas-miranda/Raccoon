@@ -79,6 +79,12 @@
             }
         }
 
+        public Size UnscaledSize {
+            get {
+                return _unscaledSize;
+            }
+        }
+
         #endregion Public Properties
 
         #region Internal Properties
