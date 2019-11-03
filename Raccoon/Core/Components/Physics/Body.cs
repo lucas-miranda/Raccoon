@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿//#define RENDER_COLLISION_CONTACT_POINTS
+
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using Raccoon.Graphics;
@@ -38,6 +40,10 @@ namespace Raccoon.Components {
         /// A list used to verify if a collision no longer happens
         /// </summary>
         private HashSet<Body> _currentUpdateCollisionList = new HashSet<Body>();
+
+#if RENDER_COLLISION_CONTACT_POINTS
+        private List<Contact> _contactsToRender = new List<Contact>();
+#endif
 
         #endregion Private Members
 
@@ -193,17 +199,29 @@ namespace Raccoon.Components {
         }
 
 #if DEBUG
-        Contact[] contacts = null;
         public override void DebugRender() {
             Shape.DebugRender(Entity.Transform.Position, Color);
 
-            if (contacts != null) {
-                foreach (Contact contact in contacts) {
-                    Debug.DrawLine(contact.Position, contact.Position + contact.Normal * contact.PenetrationDepth, Color.Magenta);
+#if RENDER_COLLISION_CONTACT_POINTS
+            if (_contactsToRender.Count > 0) {
+                foreach (Contact contact in _contactsToRender) {
+                    Vector2 contactEndPos = contact.Position + contact.Normal * contact.PenetrationDepth;
+                    Debug.DrawLine(
+                        contact.Position, 
+                        contactEndPos, 
+                        Color.Magenta
+                    );
+
+                    Debug.DrawCircle(
+                        contactEndPos,
+                        radius: 1f,
+                        Color.Magenta
+                    );
                 }
 
-                contacts = null;
+                _contactsToRender.Clear();
             }
+#endif
 
             // Position and Velocity
             if (ShowDebugInfo) {
@@ -584,6 +602,11 @@ namespace Raccoon.Components {
                     Movement.Collided(collisionAxes, hCollisionInfo, vCollisionInfo);
                 }
             }
+
+#if RENDER_COLLISION_CONTACT_POINTS
+            _contactsToRender.AddRange(hCollisionInfo.Contacts);
+            _contactsToRender.AddRange(vCollisionInfo.Contacts);
+#endif
         }
 
         protected virtual void EndCollision(Body otherBody) {

@@ -55,5 +55,9 @@ namespace Raccoon {
         public Vector2[] CalculateAxes() {
             return new Vector2[] { Vector2.Right };
         }
+
+        public (Vector2 MaxProjectionVertex, Line Edge) FindBestClippingEdge(Vector2 shapePosition, Vector2 normal) {
+            return (Vector2.Zero, new Line(Vector2.Zero, Vector2.Zero));
+        }
     }
 }

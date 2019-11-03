@@ -24,6 +24,16 @@ namespace Raccoon {
                 }
             }
 
+            // contact points
+            (Vector2 MaxProjVertex, Line Edge) edgeA = FindBestEdge(A, leastPenetrationContact.Normal);
+            (Vector2 MaxProjVertex, Line Edge) edgeB = FindBestEdge(B, -leastPenetrationContact.Normal);
+
+            Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
+
+            if (contactPoints.Length > 0) {
+                leastPenetrationContact.Position = contactPoints[0];
+            }
+
             contact = leastPenetrationContact;
             return true;
         }
@@ -66,7 +76,9 @@ namespace Raccoon {
             */
 
             foreach (Vector2 axis in axes) {
-                Range projectionA = shapeA.Projection(posA, axis), projectionB = shapeB.Projection(posB, axis);
+                Range projectionA = shapeA.Projection(posA, axis), 
+                      projectionB = shapeB.Projection(posB, axis);
+
                 if (!projectionA.Overlaps(projectionB, out float penetrationDepth)) {
                     contact = null;
                     return false;
@@ -75,6 +87,18 @@ namespace Raccoon {
                 if (penetrationDepth < leastPenetrationContact.PenetrationDepth) { 
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
+                }
+            }
+
+            // contact points
+            (Vector2 MaxProjVertex, Line Edge) edgeA = shapeA.FindBestClippingEdge(posA, leastPenetrationContact.Normal);
+            (Vector2 MaxProjVertex, Line Edge) edgeB = shapeB.FindBestClippingEdge(posB, -leastPenetrationContact.Normal);
+
+            if (!(edgeA.Edge.PointA == edgeA.Edge.PointB || edgeB.Edge.PointA == edgeA.Edge.PointB)) {
+                Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
+
+                if (contactPoints.Length > 0) {
+                    leastPenetrationContact.Position = contactPoints[0];
                 }
             }
 
@@ -108,6 +132,18 @@ namespace Raccoon {
                 }
             }
 
+            // contact points
+            (Vector2 MaxProjVertex, Line Edge) edgeA = shape.FindBestClippingEdge(shapePos, leastPenetrationContact.Normal);
+            (Vector2 MaxProjVertex, Line Edge) edgeB = FindBestEdge(polygon, -leastPenetrationContact.Normal);
+
+            if (edgeA.Edge.PointA != edgeA.Edge.PointB) {
+                Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
+
+                if (contactPoints.Length > 0) {
+                    leastPenetrationContact.Position = contactPoints[0];
+                }
+            }
+
             contact = leastPenetrationContact;
             return true;
         }
@@ -132,6 +168,28 @@ namespace Raccoon {
                 if (penetrationDepth < leastPenetrationContact.PenetrationDepth) {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
+                }
+            }
+
+            // contact points
+            float startPointProjection = startPoint.Projection(leastPenetrationContact.Normal),
+                  endPointProjection = endPoint.Projection(leastPenetrationContact.Normal);
+
+            Vector2 maxProjVertex;
+            if (startPointProjection > endPointProjection) {
+                maxProjVertex = startPoint;
+            } else {
+                maxProjVertex = endPoint;
+            }
+
+            (Vector2 MaxProjVertex, Line Edge) edgeA = (maxProjVertex, new Line(startPoint, endPoint));
+            (Vector2 MaxProjVertex, Line Edge) edgeB = shape.FindBestClippingEdge(shapePos, -leastPenetrationContact.Normal);
+
+            if (edgeB.Edge.PointA != edgeB.Edge.PointB) {
+                Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
+
+                if (contactPoints.Length > 0) {
+                    leastPenetrationContact.Position = contactPoints[0];
                 }
             }
 
@@ -173,8 +231,135 @@ namespace Raccoon {
                 }
             }
 
+            // contact points
+            float startPointProjection = startPoint.Projection(leastPenetrationContact.Normal),
+                  endPointProjection = endPoint.Projection(leastPenetrationContact.Normal);
+
+            Vector2 maxProjVertex;
+            if (startPointProjection > endPointProjection) {
+                maxProjVertex = startPoint;
+            } else {
+                maxProjVertex = endPoint;
+            }
+
+            (Vector2 MaxProjVertex, Line Edge) edgeA = (maxProjVertex, new Line(startPoint, endPoint));
+            (Vector2 MaxProjVertex, Line Edge) edgeB = FindBestEdge(polygon, -leastPenetrationContact.Normal);
+
+            Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
+
+            if (contactPoints.Length > 0) {
+                leastPenetrationContact.Position = contactPoints[0];
+            }
+
             contact = leastPenetrationContact;
             return true;
         }
+
+        #region Contact Points by Clipping
+
+        internal static (Vector2 MaxProjVertex, Line Edge) FindBestEdge(Polygon polygon, Vector2 normal) {
+            float maxProjection = float.NegativeInfinity;
+            int index = -1;
+            for (int i = 0; i < polygon.VertexCount; i++) {
+                Vector2 v = polygon[i];
+                float projection = v.Projection(normal);
+                if (projection > maxProjection) {
+                    maxProjection = projection;
+                    index = i;
+                }
+            }
+
+            Vector2 vertex = polygon[index],
+                    nextVertex = polygon[(index + 1) % polygon.VertexCount],
+                    previousVertex = polygon[index - 1 < 0 ? polygon.VertexCount - 1 : index - 1];
+
+            Vector2 left = (vertex - nextVertex).Normalized(),
+                    right = (vertex - previousVertex).Normalized();
+
+            if (Vector2.Dot(right, normal) <= Vector2.Dot(left, normal)) {
+                return (vertex, new Line(previousVertex, vertex));
+            }
+
+            return (vertex, new Line(vertex, nextVertex));
+        }
+
+        private Vector2[] CalculateContactPoints((Vector2 MaxProjVertex, Line Edge) edgeA, (Vector2 MaxProjVertex, Line Edge) edgeB, Vector2 normal) {
+            (Vector2 MaxProjVertex, Line Edge) referenceEdge,
+                                               incidentEdge;
+
+            bool flip = false;
+
+            if (Math.Abs(Vector2.Dot(edgeA.Edge.ToVector2(), normal)) <= Math.Abs(Vector2.Dot(edgeB.Edge.ToVector2(), normal))) {
+                referenceEdge = edgeA;
+                incidentEdge = edgeB;
+            } else {
+                flip = true;
+                referenceEdge = edgeA;
+                incidentEdge = edgeB;
+            }
+
+            //
+
+            Vector2 refEdgeNormalized = referenceEdge.Edge.ToVector2().Normalized();
+
+            float offsetA = Vector2.Dot(refEdgeNormalized, referenceEdge.Edge.PointA);
+            List<Vector2> clippedPoints = Clip(incidentEdge.Edge.PointA, incidentEdge.Edge.PointB, refEdgeNormalized, offsetA);
+
+            if (clippedPoints.Count < 2) {
+                return new Vector2[0];
+            }
+
+            float offsetB = Vector2.Dot(refEdgeNormalized, referenceEdge.Edge.PointB);
+            clippedPoints = Clip(clippedPoints[0], clippedPoints[1], -refEdgeNormalized, -offsetB);
+
+            if (clippedPoints.Count < 2) {
+                return new Vector2[0];
+            }
+
+            Vector2 refNormal = Vector2.Cross(referenceEdge.Edge.ToVector2(), -1f);
+            if (flip) {
+                refNormal = -refNormal;
+            }
+
+            float max = Vector2.Dot(refNormal, referenceEdge.MaxProjVertex);
+
+            Vector2 clippedPointA = clippedPoints[0],
+                    clippedPointB = clippedPoints[1];
+
+            if (Vector2.Dot(refNormal, clippedPointA) - max < 0f) {
+                clippedPoints.Remove(clippedPointA);
+            }
+
+            if (Vector2.Dot(refNormal, clippedPointB) - max < 0f) {
+                clippedPoints.Remove(clippedPointB);
+            }
+
+            return clippedPoints.ToArray();
+        }
+
+        private List<Vector2> Clip(Vector2 pointA, Vector2 pointB, Vector2 normal, float offset) {
+            List<Vector2> clippedPoints = new List<Vector2>();
+
+            float dA = Vector2.Dot(normal, pointA) - offset,
+                  dB = Vector2.Dot(normal, pointB) - offset;
+
+            if (dA >= 0f) {
+                clippedPoints.Add(pointA);
+            }
+
+            if (dB >= 0f) {
+                clippedPoints.Add(pointB);
+            }
+
+            if (dA * dB < 0f) {
+                float u = dA / (dA - dB);
+                Vector2 edge = pointA + u * (pointB - pointA);
+                clippedPoints.Add(edge);
+            }
+
+            return clippedPoints;
+        }
+
+        #endregion Contact Points by Clipping
     }
 }

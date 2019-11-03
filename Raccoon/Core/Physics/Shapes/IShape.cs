@@ -1,5 +1,4 @@
-﻿using Raccoon.Components;
-using Raccoon.Graphics;
+﻿using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -14,5 +13,6 @@ namespace Raccoon {
         float ComputeMass(float density);
         Range Projection(Vector2 shapePosition, Vector2 axis);
         Vector2[] CalculateAxes();
+        (Vector2 MaxProjectionVertex, Line Edge) FindBestClippingEdge(Vector2 shapePosition, Vector2 normal);
     }
 }

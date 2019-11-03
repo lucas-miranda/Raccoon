@@ -137,15 +137,6 @@ namespace Raccoon {
             List<Contact> gridContacts = TestGrid(gridB, BPos, boxBoundingBox,
                 (Polygon tilePolygon) => {
                     TestSAT(polygonA, tilePolygon, out Contact? tileContact);
-
-                    if (tileContact != null) {
-                        return new Contact(
-                            tilePolygon.Center,
-                            tileContact.Value.Normal,
-                            tileContact.Value.PenetrationDepth
-                        );
-                    }
-
                     return tileContact;
                 }
             );

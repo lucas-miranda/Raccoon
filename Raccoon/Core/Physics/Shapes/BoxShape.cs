@@ -126,6 +126,12 @@ namespace Raccoon {
             return axes;
         }
 
+        public (Vector2 MaxProjectionVertex, Line Edge) FindBestClippingEdge(Vector2 shapePosition, Vector2 normal) {
+            Polygon polygon = new Polygon(Shape);
+            polygon.Translate(shapePosition);
+            return Physics.FindBestEdge(polygon, normal);
+        }
+
         public void Rotate(float degrees) {
             Shape.Rotate(degrees);
             for (int i = 0; i < Axes.Length; i++) {

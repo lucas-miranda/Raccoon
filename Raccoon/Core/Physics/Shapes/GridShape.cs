@@ -113,6 +113,10 @@ namespace Raccoon {
             return new Vector2[] { };
         }
 
+        public (Vector2 MaxProjectionVertex, Line Edge) FindBestClippingEdge(Vector2 shapePosition, Vector2 normal) {
+            return (Vector2.Zero, new Line(Vector2.Zero, Vector2.Zero));
+        }
+
         public ref TileShape GetTileInfo(int x, int y) {
             Debug.Assert(x >= 0 && x < Columns && y >= 0 && y <= Rows, $"[{x}, {y}] is out of grid bounds [{TileBounds}].");
             return ref _tilesData[y, x];
