@@ -1,5 +1,5 @@
 ﻿namespace Raccoon.Util {
-    public static class Math {
+    public static class Math { 
         public const float Epsilon = 0.0001f;
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
         public const double DoublePI = 2.0 * PI;
@@ -355,6 +355,26 @@
             angle = WrapAngle(angle);
             int sections = (int) (angle / angleSubdivision);
             return angleSubdivision * (sections + Round((angle % angleSubdivision) / angleSubdivision));
+        }
+
+        /// <summary>
+        /// Calculates difference between two angles and find the smallest angle difference at any cycles, using previous and next angle cycles.
+        /// </summary>
+        /// <param name="angleA">First angle.</param>
+        /// <param name="angleB">Second angle.</param>
+        /// <returns>Smallest difference between angleA and angleB at any cycles.</returns>
+        public static float AngleSmallestDifference(float angleA, float angleB) {
+            float diff = angleB - angleA;
+
+            if (Math.Abs((angleB - 360) - angleA) < Math.Abs(diff)) {
+                diff = (angleB - 360) - angleA;
+            }
+
+            if (Math.Abs((angleB + 360) - angleA) < Math.Abs(diff)) {
+                diff = (angleB + 360) - angleA;
+            }
+
+            return diff;
         }
 
         public static float Distance(float from, float to) {
