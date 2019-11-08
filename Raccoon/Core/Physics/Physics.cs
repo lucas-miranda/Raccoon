@@ -392,10 +392,17 @@ namespace Raccoon {
                 return false;
             }
 
+            HashSet<Body> verifiedBodies = new HashSet<Body>();
+
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
+                        continue;
+                    }
+
+                    // already verified
+                    if (!verifiedBodies.Add(otherCollider)) {
                         continue;
                     }
 
@@ -415,10 +422,17 @@ namespace Raccoon {
                 return false;
             }
 
+            HashSet<Body> verifiedBodies = new HashSet<Body>();
+
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == shape || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
+                        continue;
+                    }
+
+                    // already verified
+                    if (!verifiedBodies.Add(otherCollider)) {
                         continue;
                     }
 
@@ -565,12 +579,19 @@ namespace Raccoon {
                 direction.PerpendicularCW().Normalized()
             };
 
+            HashSet<Body> verifiedBodies = new HashSet<Body>();
             Vector2[] axes, shapeAxes;
+
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == null) {
+                        continue;
+                    }
+
+                    // already verified
+                    if (!verifiedBodies.Add(otherCollider)) {
                         continue;
                     }
 
@@ -607,12 +628,19 @@ namespace Raccoon {
                 direction.PerpendicularCW().Normalized()
             };
 
+            HashSet<Body> verifiedBodies = new HashSet<Body>();
             Vector2[] axes, shapeAxes;
+
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
                 foreach (Body otherCollider in _collidersByTag[tag]) {
                     if (otherCollider.Shape == null || !(otherCollider.Entity is T entity)) {
+                        continue;
+                    }
+
+                    // already verified
+                    if (!verifiedBodies.Add(otherCollider)) {
                         continue;
                     }
 
