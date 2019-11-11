@@ -41,12 +41,26 @@ namespace Raccoon.Util.Graphics {
             _particleModels.Clear();
         }
 
-        public void Emit(string label, Vector2 position, float rotation = 0f, ImageFlip flip = ImageFlip.None) {
-            InternalEmit(label, position, rotation, flip, out List<Particle> particles);
+        public void Emit(string label, Vector2 position, float rotation = 0f, ImageFlip flip = ImageFlip.None, Vector2? movementDirection = null) {
+            InternalEmit(
+                label, 
+                position, 
+                rotation, 
+                flip, 
+                movementDirection, 
+                out List<Particle> particles
+            );
         }
 
-        public void Emit(string label, Entity entity, float rotation = 0f, ImageFlip flip = ImageFlip.None) {
-            InternalEmit(label, entity.Transform.Position, rotation, flip, out List<Particle> particles);
+        public void Emit(string label, Entity entity, float rotation = 0f, ImageFlip flip = ImageFlip.None, Vector2? movementDirection = null) {
+            InternalEmit(
+                label, 
+                entity.Transform.Position, 
+                rotation, 
+                flip, 
+                movementDirection, 
+                out List<Particle> particles
+            );
 
             foreach (Particle particle in particles) {
                 particle.Transform.Parent = entity.Transform;
@@ -81,7 +95,7 @@ namespace Raccoon.Util.Graphics {
 
         #region Private Methods
 
-        private void InternalEmit(string label, Vector2 position, float rotation, ImageFlip flip, out List<Particle> particles) {
+        private void InternalEmit(string label, Vector2 position, float rotation, ImageFlip flip, Vector2? movementDirection, out List<Particle> particles) {
             (Particle particleModel, EmissionOptions emissionOptions) = _particleModels[label];
 
             int count = emissionOptions.Count;
@@ -123,6 +137,21 @@ namespace Raccoon.Util.Graphics {
 
                 particle.Prepare(duration, timeToStart, emissionOptions.AnimationKey);
                 timeToStart += emissionOptions.DelayBetweenEmissions;
+
+                // movement
+                if (movementDirection != null && movementDirection.HasValue) {
+                    particle.PrepareSimpleMovement(
+                        movementDirection.Value,
+                        emissionOptions.MaxVelocity,
+                        emissionOptions.Acceleration
+                    );
+                } else if (emissionOptions.MovementDirection != Vector2.Zero) {
+                    particle.PrepareSimpleMovement(
+                        emissionOptions.MovementDirection,
+                        emissionOptions.MaxVelocity,
+                        emissionOptions.Acceleration
+                    );
+                }
 
                 Scene.Add(particle);
                 particles.Add(particle);

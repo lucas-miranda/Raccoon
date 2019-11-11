@@ -9,7 +9,8 @@ namespace Raccoon.Components {
         public const float MaxImpulsePerSecond = 60f * 5f;
 
         public delegate void MovementAction();
-        public MovementAction OnMove = delegate { };
+        public MovementAction OnMove = delegate { },
+                              OnStopMove = delegate { };
 
         public delegate void ImpulseMovementAction(Vector2 impulse);
         public ImpulseMovementAction OnReceiveImpulse = delegate { };
@@ -80,6 +81,7 @@ namespace Raccoon.Components {
         public float DragForce { get; set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
+        public bool IsMoving { get; protected set; } = false;
         public bool IsDisposed { get; private set; }
         /*public bool TouchedTop { get; private set; }
         public bool TouchedRight { get; private set; }
@@ -154,7 +156,7 @@ namespace Raccoon.Components {
 
         public virtual void OnRemoved() {
             Body = null;
-            OnMove = null;
+            OnMove = OnStopMove = null;
             OnReceiveImpulse = null;
         }
 
@@ -183,7 +185,11 @@ namespace Raccoon.Components {
         public virtual void PhysicsLateUpdate() {
             Vector2 posDiff = Body.Position - Body.LastPosition;
             if (posDiff.LengthSquared() > 0f) {
+                IsMoving = true;
                 OnMoving(posDiff);
+            } else if (IsMoving) {
+                IsMoving = false;
+                OnStopMove();
             }
         }
 
@@ -264,7 +270,7 @@ namespace Raccoon.Components {
             }
 
             Body = null;
-            OnMove = null;
+            OnMove = OnStopMove = null;
             OnReceiveImpulse = null;
 
             IsDisposed = true;

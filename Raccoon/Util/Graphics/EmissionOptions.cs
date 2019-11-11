@@ -11,5 +11,10 @@
         public uint DurationMax { get; set; }
         public uint Duration { get { return DurationMax; } set { DurationMin = DurationMax = value; } }
         public uint DelayBetweenEmissions { get; set; }
+
+        // movement
+        public Vector2 MovementDirection { get; set; }
+        public float MaxVelocity { get; set; }
+        public float Acceleration { get; set; }
     }
 }
