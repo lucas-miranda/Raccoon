@@ -78,12 +78,18 @@ namespace Raccoon.Graphics {
         #region Public Methods
 
         public AtlasSubTexture RetrieveSubTexture(string name) {
-            return _subTextures[name.ToLowerInvariant()];
+            if (!_subTextures.TryGetValue(name.ToLowerInvariant(), out AtlasSubTexture subTexture)) {
+                throw new AtlasSubTextureNotFoundException(name);
+            }
+
+            return subTexture;
         }
 
         public AtlasAnimation RetrieveAnimation(string name) {
-            if (!(_subTextures[name.ToLowerInvariant()] is AtlasAnimation animation)) {
-                return null;
+            AtlasSubTexture subTexture = RetrieveSubTexture(name);
+
+            if (!(subTexture is AtlasAnimation animation)) {
+                throw new AtlasMismatchSubTextureTypeException(expectedType: typeof(AtlasAnimation), foundType: subTexture.GetType());
             }
 
             return animation;

@@ -116,6 +116,8 @@
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
+    <Compile Include="Graphics\Atlas\Exceptions\AtlasMismatchSubTextureTypeException.cs" />
+    <Compile Include="Graphics\Atlas\Exceptions\AtlasSubTextureNotFoundException.cs" />
     <Compile Include="Graphics\Atlas\Processors\AsepriteAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\IAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\RavenAtlasProcessor.cs" />
