@@ -301,12 +301,6 @@ namespace Raccoon.Components {
 
         #region Public Methods
 
-        public override void OnRemoved() {
-            base.OnRemoved();
-            OnJumpBegin = OnTouchGround = OnFallingBegin = null;
-            OnTouchRamp = OnLeaveRamp = OnEnteringRamp = OnLeavingRamp = null;
-        }
-
         public override void BeforeUpdate() {
             base.BeforeUpdate();
             if (!CanContinuousJump) {

@@ -106,8 +106,9 @@ namespace Raccoon.Components {
             }
 
             set {
-                if (_movement != null) {
+                if (_movement != null && _movement.Body == this) {
                     _movement.OnRemoved();
+                    _movement.Dispose();
                 }
 
                 _movement = value;
@@ -130,11 +131,6 @@ namespace Raccoon.Components {
         #region Public Methods
 
         public override void OnAdded(Entity entity) {
-            if (entity.Scene == null) {
-                Active = false;
-                return;
-            }
-
             base.OnAdded(entity);
 
             if (Movement != null && Movement.Body != this) {
@@ -146,6 +142,7 @@ namespace Raccoon.Components {
             base.OnRemoved();
             if (Movement != null) {
                 Movement.OnRemoved();
+                Movement.Dispose();
                 Movement = null;
             }
 
