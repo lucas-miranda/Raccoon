@@ -922,6 +922,10 @@ namespace Raccoon.Graphics {
                 currentShaderTrans.Projection = defaultShader.Projection;
             }
 
+            if (shader is IShaderDepthWrite currentShaderDepthWrite) {
+                currentShaderDepthWrite.DepthWriteEnabled = depthStencilState.DepthBufferWriteEnable;
+            }
+
             parameters?.ApplyParameters(shader);
 
             // prepare device

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
-    public class BasicShader : Shader, IShaderTransform, IShaderTexture, IShaderVertexColor {
+    public class BasicShader : Shader, IShaderTransform, IShaderTexture, IShaderVertexColor, IShaderDepthWrite {
         #region Public Members
 
         [System.Flags]
