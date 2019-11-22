@@ -28,6 +28,12 @@
             ClippingRegion = animTexture["all"][0].ClippingRegion;
         }
 
+        public Image(AtlasAnimation atlasAnimation, AtlasAnimationFrame animFrameSubTexture) : this(atlasAnimation.Texture) {
+            SourceRegion = atlasAnimation.SourceRegion;
+            ClippingRegion = animFrameSubTexture.ClippingRegion;
+            Origin = animFrameSubTexture.OriginalFrame.Position;
+        }
+
         public Image(Image image) : this(image.Texture) {
             SourceRegion = image.SourceRegion;
             ClippingRegion = image.ClippingRegion;

@@ -13,14 +13,15 @@
             FrameCount = System.Math.Max(-1, frameCount);
         }
 
-        private FrameSet(Size frameSize) : this(frameSize, -1) { }
+        private FrameSet(Size frameSize) : this(frameSize, -1) { 
+        }
 
         public FrameSet(string filename, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = new Texture(filename);
             Load();
         }
 
-        public FrameSet(string filename, Size frameSize) : this(frameSize, -1) {
+        public FrameSet(string filename, Size frameSize) : this(filename, frameSize, -1) {
         }
 
         public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
@@ -29,7 +30,10 @@
             Load();
         }
 
-        public FrameSet(AtlasSubTexture subTexture, Size frameSize) : this(frameSize, -1) {
+        public FrameSet(AtlasSubTexture subTexture, Size frameSize) : this(subTexture, frameSize, -1) {
+        }
+
+        public FrameSet(AtlasSubTexture subTexture) : this(subTexture, subTexture.ClippingRegion.Size, -1) {
         }
 
         #endregion Contructors

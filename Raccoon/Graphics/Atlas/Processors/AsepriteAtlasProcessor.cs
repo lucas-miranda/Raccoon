@@ -4,7 +4,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Raccoon.Graphics.AtlasProcessors {
     public class AsepriteAtlasProcessor : IAtlasProcessor {
-        public static readonly Regex FrameNameRegex = new Regex(@"(.+?) (\d+)? (.*)");
+        public static readonly Regex FrameNameRegex = new Regex(@"(.+?) (\d+)? (.*)"),
+                                     FrameNameWithoutTagsRegex = new Regex(@"(.+?) (\d+)\.ase");
 
         public bool VerifyJsonMeta(JToken metaToken) {
             JToken appToken = metaToken["app"];
@@ -29,15 +30,26 @@ namespace Raccoon.Graphics.AtlasProcessors {
                                      );
 
             foreach (JProperty prop in json.SelectToken("frames").Children<JProperty>()) {
+                string spriteName, tag;
+                int frameId;
+
                 Match m = FrameNameRegex.Match(prop.Name);
-                if (!m.Success) {
-                    continue;
+
+                if (m.Success) {
+                    spriteName = m.Groups[1].Value;
+                    tag = m.Groups[3].Length == 0 ? "none" : m.Groups[3].Value;
+                    frameId = m.Groups[2].Length == 0 ? 0 : int.Parse(m.Groups[2].Value);
+                } else {
+                    m = FrameNameWithoutTagsRegex.Match(prop.Name);
+
+                    if (m.Success) {
+                        spriteName = m.Groups[1].Value;
+                        tag = "none";
+                        frameId = int.Parse(m.Groups[2].Value);
+                    } else {
+                        continue;
+                    }
                 }
-
-                string spriteName = m.Groups[1].Value,
-                       tag = m.Groups[3].Length == 0 ? "none" : m.Groups[3].Value;
-
-                int frameId = m.Groups[2].Length == 0 ? 0 : int.Parse(m.Groups[2].Value);
 
                 if (!animationsData.ContainsKey(spriteName)) {
                     animationsData.Add(spriteName, new Dictionary<string, List<JObject>>());
