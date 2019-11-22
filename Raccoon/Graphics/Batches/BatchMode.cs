@@ -25,6 +25,7 @@ namespace Raccoon.Graphics {
         /// This mode is to be used in cooperation with a Canvas with enabled depth buffer.
         /// </summary>
         DepthBuffer,
+        DepthBufferDescending,
 
         /// <summary>
         /// Every SpriteBatch.Draw*() will result in an isolate draw call. No batching will be made, so be careful.
@@ -49,6 +50,20 @@ namespace Raccoon.Graphics {
             public int Compare(IBatchItem itemA, IBatchItem itemB) {
                 if (itemA.Shader == itemB.Shader) {
                     return itemA.VertexData[0].Position.Z.CompareTo(itemB.VertexData[0].Position.Z);
+                } else if (itemA.Shader == null) {
+                    return -1;
+                } else if (itemB.Shader == null) {
+                    return 1;
+                }
+
+                return itemA.Shader.Id.CompareTo(itemB.Shader.Id);
+            }
+        }
+
+        internal class DepthBufferDescending : IComparer<IBatchItem> {
+            public int Compare(IBatchItem itemA, IBatchItem itemB) {
+                if (itemA.Shader == itemB.Shader) {
+                    return itemB.VertexData[0].Position.Z.CompareTo(itemA.VertexData[0].Position.Z);
                 } else if (itemA.Shader == null) {
                     return -1;
                 } else if (itemB.Shader == null) {

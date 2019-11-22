@@ -31,11 +31,7 @@ namespace Raccoon.Graphics {
         public MixedBatch(GraphicsDevice graphicsDevice = null, bool autoHandleAlphaBlendedSprites = false) {
             GraphicsDevice = graphicsDevice ?? Game.Instance.GraphicsDevice;
             Shader = Game.Instance.BasicShader;
-
-            DepthReadState = new DepthStencilState() {
-                DepthBufferWriteEnable = false,
-                DepthBufferFunction = CompareFunction.LessEqual
-            };
+            DepthReadState = DepthStencilState.DepthRead;
 
             AutoHandleAlphaBlendedSprites = autoHandleAlphaBlendedSprites;
             if (AutoHandleAlphaBlendedSprites) {
@@ -742,6 +738,10 @@ namespace Raccoon.Graphics {
                     System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthBuffer());
                     break;
 
+                case BatchMode.DepthBufferDescending:
+                    System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthBufferDescending());
+                    break;
+
                 case BatchMode.DrawOrder:
                 case BatchMode.Immediate:
                     break;
@@ -923,7 +923,7 @@ namespace Raccoon.Graphics {
             }
 
             if (shader is IShaderDepthWrite currentShaderDepthWrite) {
-                currentShaderDepthWrite.DepthWriteEnabled = depthStencilState.DepthBufferWriteEnable;
+                currentShaderDepthWrite.DepthWriteEnabled = depthStencilState.DepthBufferEnable;
             }
 
             parameters?.ApplyParameters(shader);

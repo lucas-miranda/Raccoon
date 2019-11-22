@@ -89,12 +89,11 @@ PSOut PSVertexColorDepth(VSOutVertexColorDepth input) {
     PSOut psOut;
     psOut.Color = input.Diffuse;
     
-    if (psOut.Color.a < 1.0f) {
-        psOut.Depth = 1.0f;
-    } else {
-        psOut.Depth = input.Depth;
+    if (psOut.Color.a < .01f) {
+        discard;
     }
 
+    psOut.Depth = input.Depth;
     return psOut;
 }
 
@@ -123,12 +122,11 @@ PSOut PSVertexColorTextureDepth(VSOutVertexColorTextureDepth input) {
     PSOut psOut;
     psOut.Color = tex2D(Texture, input.TextureCoord) * input.Diffuse;
 
-    if (psOut.Color.a < 1.0f) {
-        psOut.Depth = 1.0f;
-    } else {
-        psOut.Depth = input.Depth;
+    if (psOut.Color.a < .01f) {
+        discard;
     }
 
+    psOut.Depth = input.Depth;
     return psOut;
 }
 
