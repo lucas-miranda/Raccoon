@@ -79,6 +79,17 @@
             }
         }
 
+        public new float ScaleXY {
+            get {
+                return base.ScaleXY;
+            }
+
+            set {
+                base.ScaleXY = value;
+                Size = _unscaledSize * value;
+            }
+        }
+
         public Size UnscaledSize {
             get {
                 return _unscaledSize;
