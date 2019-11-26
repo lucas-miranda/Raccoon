@@ -170,6 +170,11 @@ namespace Raccoon.Graphics {
             _lastScroll = scroll;
 #endif
 
+            if (NeedsReload) {
+                Load();
+                NeedsReload = false;
+            }
+
             BeforeDraw();
             Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ShaderParameters, origin: Vector2.Zero, ConvertLayerToLayerDepth(Layer + layer));
             AfterDraw();
