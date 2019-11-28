@@ -363,7 +363,7 @@ namespace Raccoon {
             // fading effect
             richMsg.RegisterTween(new Tween(richMsg, duration)
                 .From(new { Opacity = 1f })
-                .To(new { Opacity = .03f }, Ease.SineOut));
+                .To(new { Opacity = 0f }, Ease.QuartIn));
 
             Instance._messagesList.Insert(0, richMsg);
         }
