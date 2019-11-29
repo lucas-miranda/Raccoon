@@ -373,38 +373,44 @@ namespace Raccoon.Components {
         public override void PhysicsLateUpdate() {
             base.PhysicsLateUpdate();
 
-            bool isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> contactsBelow);
+            bool isAboveSomething;
             bool isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
 
-            if (isAboveSomething) {
-                foreach (CollisionInfo<Body> collisionInfo in contactsBelow) {
-                    foreach (Contact contact in collisionInfo.Contacts) {
-                        if (Vector2.Dot(contact.Normal, Vector2.Down) <= .6f) {
-                            continue;
+            if (GravityEnabled) {
+                isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> contactsBelow);
+
+                if (isAboveSomething) {
+                    foreach (CollisionInfo<Body> collisionInfo in contactsBelow) {
+                        foreach (Contact contact in collisionInfo.Contacts) {
+                            if (Vector2.Dot(contact.Normal, Vector2.Down) <= .6f) {
+                                continue;
+                            }
+
+                            if (IsOnRamp || _justLeavedRamp) {
+                                // HACK to adjust vertical position when leaving a descending ramp
+                                if (_justLeavedRamp && _previousRampDirection > 0 && contact.PenetrationDepth == 0f) {
+                                    Body.Position += new Vector2(0, 1f);
+                                }
+
+                                if (Helper.InRange(contact.PenetrationDepth, 0f, 1f)) {
+                                    _touchedBottom = true;
+                                    break;
+                                }
+                            } else {
+                                if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)) {
+                                    _touchedBottom = true;
+                                    break;
+                                }
+                            }
                         }
 
-                        if (IsOnRamp || _justLeavedRamp) {
-                            // HACK to adjust vertical position when leaving a descending ramp
-                            if (_justLeavedRamp && _previousRampDirection > 0 && contact.PenetrationDepth == 0f) {
-                                Body.Position += new Vector2(0, 1f);
-                            }
-
-                            if (Helper.InRange(contact.PenetrationDepth, 0f, 1f)) {
-                                _touchedBottom = true;
-                                break;
-                            }
-                        } else {
-                            if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)) {
-                                _touchedBottom = true;
-                                break;
-                            }
+                        if (_touchedBottom) {
+                            break;
                         }
-                    }
-
-                    if (_touchedBottom) {
-                        break;
                     }
                 }
+            } else {
+                _touchedBottom = true;
             }
 
             if (isBelowSomething) {
