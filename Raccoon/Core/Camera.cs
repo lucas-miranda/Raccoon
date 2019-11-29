@@ -73,7 +73,25 @@ namespace Raccoon {
                     value = Math.Round(value);
                 }
 
-                _position = !UseBounds ? value : Math.Clamp(value, new Rectangle(Bounds.Position, Bounds.Size - VirtualSize));
+                if (UseBounds) {
+                    float moveSpaceWidth = Bounds.Width - VirtualSize.Width,
+                          moveSpaceHeight = Bounds.Height - VirtualSize.Height;
+
+                    if (moveSpaceWidth > Math.Epsilon || moveSpaceHeight > Math.Epsilon) {
+                        _position = Math.Clamp(
+                            value, 
+                            new Rectangle(
+                                Bounds.Position, 
+                                new Size(Math.Max(0f, moveSpaceWidth), Math.Max(0f, moveSpaceHeight))
+                            )
+                        );
+                    } else {
+                        _position = Bounds.Position;
+                    }
+                } else {
+                    _position = value;
+                }
+
                 _needViewRefresh = true;
             }
         }
