@@ -7,6 +7,8 @@
         public const double HalfPI = PI / 2.0;
         public const double ThirdPI = PI / 3.0;
         public const double FourthPI = PI / 4.0;
+        public const double Tau = 2.0 * PI;
+        public const double HalfTau = PI;
         public static readonly double RadToDeg = 180.0 / PI;
         public static readonly double DegToRad = PI / 180.0;
 
