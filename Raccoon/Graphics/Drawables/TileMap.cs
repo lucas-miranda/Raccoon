@@ -487,6 +487,9 @@ namespace Raccoon.Graphics {
             bs.TextureEnabled = true;
             bs.Texture = Texture;
 
+            // depth write
+            bs.DepthWriteEnabled = true;
+
             shaderParameters?.ApplyParameters(shader);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
