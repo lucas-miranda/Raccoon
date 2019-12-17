@@ -104,6 +104,12 @@ namespace Raccoon {
         /// <param name="obj">Object to add.</param>
         /// <returns>Reference to the object.</returns>
         public T Add<T>(T obj) {
+            if (obj is Entity entity) {
+                return (T) (ISceneObject) AddEntity(entity);
+            } else if (obj is Graphic graphic) {
+                return (T) (IRenderable) AddGraphic(graphic);
+            }
+
             bool added = false;
 
             if (obj is IUpdatable updatable) {
@@ -177,23 +183,22 @@ namespace Raccoon {
         /// <param name="entity">Entity to add.</param>
         /// <returns>Reference to Entity.</returns>
         public Entity AddEntity(Entity entity) {
-            if (entity.Scene == this && !entity.Transform.IsHandledByParent) {
+            if (entity.Scene == this && !entity.IsSceneFromTransformAncestor) {
                 return entity;
-            }
-
-            if (entity.Transform.IsHandledByParent) {
-                if (entity.Scene != this) {
-                    entity.SceneRemoved(allowWipe: false);
-                }
-
-                entity.Transform.IsHandledByParent = false;
+            } else if (entity.Scene != null && entity.Scene != this) {
+                throw new System.InvalidOperationException($"Before adding entity to scene '{GetType().Name}', remove it from scene '{entity.Scene.GetType().Name}'.");
             }
 
             _updatables.Add(entity);
             _renderables.Add(entity);
             _sceneObjects.Add(entity);
 
-            entity.SceneAdded(this);
+            if (entity.IsSceneFromTransformAncestor) {
+                // don't need to retrigger entity.SceneAdded() for this instance
+                entity.IsSceneFromTransformAncestor = false;
+            } else {
+                entity.SceneAdded(this);
+            }
 
             if (HasStarted && !entity.HasStarted) {
                 entity.Start();
@@ -217,15 +222,8 @@ namespace Raccoon {
         /// </summary>
         /// <param name="entities">IEnumerable containing Entity.</param>
         public void AddEntities(IEnumerable<Entity> entities) {
-            _updatables.AddRange(entities);
-            _renderables.AddRange(entities);
-
             foreach (Entity e in entities) {
-                _sceneObjects.Add(e);
-                e.SceneAdded(this);
-                if (HasStarted && !e.HasStarted) {
-                    e.Start();
-                }
+                AddEntity(e);
             }
         }
 
@@ -264,6 +262,12 @@ namespace Raccoon {
         /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
         /// <returns>True if removed, False otherwise.</returns>
         public bool Remove<T>(T obj, bool wipe = true) {
+            if (obj is Entity entity) {
+                return RemoveEntity(entity, wipe);
+            } else if (obj is Graphic graphic) {
+                return RemoveGraphic(graphic);
+            }
+
             bool isValid = false,
                  removed = false;
 
@@ -274,7 +278,7 @@ namespace Raccoon {
 
             if (obj is IRenderable renderable) {
                 isValid = true;
-                removed = Remove(renderable);
+                removed = removed || Remove(renderable);
             }
 
             if (obj is ISceneObject sceneObject) {
@@ -320,14 +324,20 @@ namespace Raccoon {
 
         /// <summary>
         /// Removes an Entity from Scene.
+        /// Even if isn't directly add to it, ie. as a child of another Transform at this Scene, in that case it'll remove it from parent Transform.
         /// </summary>
         /// <param name="entity">Entity to remove.</param>
         /// <param name="wipe">Allow Entity to be wiped after removed.</param>
         public bool RemoveEntity(Entity entity, bool wipe = true) {
             _updatables.Remove(entity);
             _renderables.Remove(entity);
+
             if (_sceneObjects.Remove(entity)) {
                 entity.SceneRemoved(wipe);
+                entity.IsSceneFromTransformAncestor = false;
+                return true;
+            } else if (entity.Scene == this && entity.IsSceneFromTransformAncestor) {
+                entity.Transform.Parent = null;
                 return true;
             }
 
@@ -338,13 +348,9 @@ namespace Raccoon {
         /// Removes multiple Entity from Scene.
         /// </summary>
         /// <param name="entities">IEnumerable containing Entity.</param>
-        public void RemoveEntities(IEnumerable<Entity> entities) {
+        public void RemoveEntities(IEnumerable<Entity> entities, bool wipe = true) {
             foreach (Entity entity in entities) {
-                _updatables.Remove(entity);
-                _renderables.Remove(entity);
-                if (_sceneObjects.Remove(entity)) {
-                    entity.SceneRemoved();
-                }
+                RemoveEntity(entity, wipe);
             }
         }
 
@@ -352,13 +358,13 @@ namespace Raccoon {
         /// Removes multiple Entity from the Scene.
         /// </summary>
         /// <param name="entities">Multiple Entity as array or variable parameters.</param>
-        public void RemoveEntities(params Entity[] entities) {
-            RemoveEntities((IEnumerable<Entity>) entities);
+        public void RemoveEntities(bool wipe, params Entity[] entities) {
+            RemoveEntities((IEnumerable<Entity>) entities, wipe);
         }
 
         /// <summary>
         /// Removes multiple IUpdatables and IRenderables from Scene using a filter.
-        /// If it's an ISceneObject, removes too.
+        /// If it's an ISceneObject, remove it too.
         /// </summary>
         /// <param name="filter">Filter to find Entity.</param>
         /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
@@ -372,7 +378,7 @@ namespace Raccoon {
             foreach (IUpdatable updatable in removedUpdatable) {
                 Remove(updatable);
 
-                if (updatable is ISceneObject sceneObject) {
+                if (updatable is ISceneObject sceneObject && sceneObject.Scene == this) {
                     removedCount++;
                     sceneObject.SceneRemoved(wipe);
                 }
@@ -492,15 +498,9 @@ namespace Raccoon {
             }
 
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active) {
-                    continue;
-                }
-
-                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
-                    continue;
-                }
-
-                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
                     continue;
                 }
 
@@ -521,15 +521,9 @@ namespace Raccoon {
             Timer += (uint) delta;
 
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active) {
-                    continue;
-                }
-
-                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
-                    continue;
-                }
-
-                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
                     continue;
                 }
 
@@ -547,15 +541,9 @@ namespace Raccoon {
             }
 
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active) {
-                    continue;
-                }
-
-                if (!(updatable is IExtendedUpdatable extendedUpdatable)) {
-                    continue;
-                }
-
-                if (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
                     continue;
                 }
 
@@ -572,17 +560,16 @@ namespace Raccoon {
             Camera.PrepareRender();
 
             foreach (IRenderable renderable in _renderables) {
-                if (!renderable.Visible) {
-                    continue;
-                }
-
-                if (renderable is ISceneObject sceneObject && !sceneObject.AutoRender) {
+                if (!renderable.Visible
+                  || (renderable is ISceneObject sceneObject && !sceneObject.AutoRender)) {
                     continue;
                 }
 
                 renderable.Render();
             }
         }
+
+#if DEBUG
 
         /// <summary>
         /// Used to render debug informations. Collision bounds, info text, for example.
@@ -591,11 +578,8 @@ namespace Raccoon {
         /// </summary>
         public virtual void DebugRender() {
             foreach (IRenderable renderable in _renderables) {
-                if (!renderable.Visible) {
-                    continue;
-                }
-
-                if (!(renderable is IDebugRenderable debugRenderable)) {
+                if (!renderable.Visible
+                  || !(renderable is IDebugRenderable debugRenderable)) {
                     continue;
                 }
 
@@ -604,6 +588,8 @@ namespace Raccoon {
 
             Camera.DebugRender();
         }
+
+#endif
 
         #endregion
     }

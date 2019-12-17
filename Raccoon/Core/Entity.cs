@@ -27,7 +27,6 @@ namespace Raccoon {
         #region Private Members
 
         private Renderer _renderer;
-        private Scene _scene;
 
         #endregion Private Members
 
@@ -37,17 +36,6 @@ namespace Raccoon {
             Name = "Entity";
             Renderer = Game.Instance.MainRenderer;
             Transform = new Transform(this);
-        }
-
-        ~Entity() {
-            if (Transform.IsHandledByParent) {
-                if (WipeOnRemoved && !Transform.IsDetached) {
-                    SceneRemoved();
-                }
-            } else if (_scene != null) {
-                _scene.RemoveEntity(this);
-                _scene = null;
-            }
         }
 
         #endregion Constructors
@@ -64,33 +52,14 @@ namespace Raccoon {
         public bool IgnoreDebugRender { get; set; }
         public bool HasStarted { get; private set; }
         public bool WipeOnRemoved { get; set; } = true;
+        public bool IsWiped { get; private set; }
         public int Order { get; set; }
         public int Layer { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(Graphic.LayerComparer);
         public Locker<Component> Components { get; private set; } = new Locker<Component>();
-
-        public Scene Scene {
-            get {
-                if (Transform == null) {
-                    return null;
-                }
-
-                if (Transform.IsHandledByParent) {
-                    return Transform.Parent.Entity.Scene;
-                }
-
-                return _scene;
-            }
-
-            private set {
-                if (Transform.IsHandledByParent) {
-                    return;
-                }
-
-                _scene = value;
-            }
-        }
+        public Scene Scene { get; private set; }
+        public bool IsSceneFromTransformAncestor { get; internal set; }
 
         public Graphic Graphic {
             get {
@@ -140,7 +109,7 @@ namespace Raccoon {
         }
 
         public virtual void SceneAdded(Scene scene) {
-            if (Scene != null && !Transform.IsHandledByParent) {
+            if (Scene != null) {
                 return;
             }
 
@@ -154,9 +123,15 @@ namespace Raccoon {
         }
 
         public virtual void SceneRemoved(bool allowWipe = true) {
-            _scene = null;
+            if (IsWiped) {
+                // avoid more than one wipe call
+                return;
+            }
+
+            Scene = null;
 
             if (WipeOnRemoved && allowWipe) {
+                IsWiped = true;
                 OnSceneAdded = null;
                 OnStart = null;
                 OnSceneBegin = null;
@@ -205,6 +180,10 @@ namespace Raccoon {
         }
 
         public virtual void Start() {
+            if (HasStarted) {
+                return;
+            }
+
             HasStarted = true;
 
             foreach (Transform child in Transform) {
@@ -220,7 +199,7 @@ namespace Raccoon {
 
         public virtual void SceneBegin() {
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
                     continue;
                 }
 
@@ -232,7 +211,7 @@ namespace Raccoon {
 
         public virtual void SceneEnd() {
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
                     continue;
                 }
 
@@ -252,7 +231,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent || !child.Entity.Active) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
                 }
 
@@ -282,7 +261,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent || !child.Entity.Active) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
                 }
 
@@ -302,7 +281,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent || !child.Entity.Active) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
                 }
 
@@ -330,7 +309,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent || !child.Entity.Visible) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
                     continue;
                 }
 
@@ -359,7 +338,7 @@ namespace Raccoon {
             }
 
             foreach (Transform child in Transform) {
-                if (!child.IsHandledByParent || !child.Entity.Visible) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
                     continue;
                 }
 
