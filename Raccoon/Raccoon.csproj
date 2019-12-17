@@ -128,6 +128,7 @@
     <Compile Include="Graphics\Batches\PrimitiveBatchItem.cs" />
     <Compile Include="Graphics\Batches\SpriteBatch.cs" />
     <Compile Include="Graphics\Batches\SpriteBatchItem.cs" />
+    <Compile Include="Graphics\Colors.cs" />
     <Compile Include="Graphics\Drawables\Animation.Track.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
