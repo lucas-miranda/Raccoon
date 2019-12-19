@@ -34,6 +34,9 @@
             Origin = animFrameSubTexture.OriginalFrame.Position;
         }
 
+        public Image(AtlasAnimation atlasAnimation, string tag, int frameIndex) : this(atlasAnimation, atlasAnimation[tag][frameIndex]) {
+        }
+
         public Image(Image image) : this(image.Texture) {
             SourceRegion = image.SourceRegion;
             ClippingRegion = image.ClippingRegion;
