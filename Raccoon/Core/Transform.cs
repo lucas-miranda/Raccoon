@@ -167,6 +167,9 @@ namespace Raccoon {
                 return false;
             }
 
+            transform.OnParentRemoved();
+            transform._parent = null;
+
             if (dropFromScene) {
                 if (transform.Entity.IsSceneFromTransformAncestor) {
                     // transform.Scene should be equals Scene (indirectly)
@@ -194,9 +197,6 @@ namespace Raccoon {
                 }
             }
 
-            transform.OnParentRemoved();
-            transform._parent = null;
-
             OnChildRemoved(transform);
             return true;
         }
@@ -211,12 +211,12 @@ namespace Raccoon {
                     continue;
                 }
 
+                child.OnParentRemoved();
+                child._parent = null;
+
                 if (child.Entity.IsSceneFromTransformAncestor && child.Scene != null) {
                     child.Entity.SceneRemoved(wipe);
                 }
-
-                child.OnParentRemoved();
-                child._parent = null;
 
                 OnChildRemoved(child);
             }
@@ -235,10 +235,10 @@ namespace Raccoon {
                 } else if (!child.Entity.IsSceneFromTransformAncestor) {
                     child.DropIndependentChildren(propagate);
 
-                    _children.Remove(child);
-
                     child.OnParentRemoved();
                     child._parent = null;
+
+                    _children.Remove(child);
 
                     OnChildRemoved(child);
                 }
@@ -315,14 +315,14 @@ namespace Raccoon {
                         continue;
                     }
 
+                    child.OnParentRemoved();
+                    child._parent = null;
+
                     if (child.Entity.IsSceneFromTransformAncestor) {
                         child.Entity.SceneRemoved(allowWipe: true);
                     } else {
                         child.Scene.RemoveEntity(child.Entity, wipe: true);
                     }
-
-                    child.OnParentRemoved();
-                    child._parent = null;
 
                     OnChildRemoved(child);
                 }
