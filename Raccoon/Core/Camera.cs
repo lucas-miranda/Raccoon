@@ -164,6 +164,10 @@ namespace Raccoon {
             OnUpdate = null;
         }
 
+        public virtual void Reset() {
+            Position = Bounds.TopLeft;
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
