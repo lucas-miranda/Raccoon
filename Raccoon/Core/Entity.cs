@@ -132,6 +132,7 @@ namespace Raccoon {
 
             if (WipeOnRemoved && allowWipe) {
                 IsWiped = true;
+                Enabled = false;
                 OnSceneAdded = null;
                 OnStart = null;
                 OnSceneBegin = null;
