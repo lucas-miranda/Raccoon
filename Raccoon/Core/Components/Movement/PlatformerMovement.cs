@@ -103,7 +103,8 @@ namespace Raccoon.Components {
         // jump
         private bool _canJump = true, 
                      _canKeepCurrentJump = true, 
-                     _requestedJump;
+                     _requestedJump,
+                     _canPerformEarlyJumpInput = true;
 
         private int _jumpMaxY, _ledgeJumpTime;
         private uint _lastTimeFirstRequestToJump;
@@ -304,12 +305,22 @@ namespace Raccoon.Components {
         public override void BeforeUpdate() {
             base.BeforeUpdate();
             if (!CanContinuousJump) {
-                if (!_canKeepCurrentJump && !_requestedJump) {
-                    _lastTimeFirstRequestToJump = 0;
+                if (!_requestedJump) {
+                    // reset permission to perform early jump input
+                    // since jump button was released
+                    if (!_canPerformEarlyJumpInput) {
+                        _lastTimeFirstRequestToJump = 0;
+                        _canPerformEarlyJumpInput = true;
+                    }
 
-                    // continuous jump lock (must release and press jump button to jump again)
-                    if (Jumps > 0 || OnGround) {
-                        _canKeepCurrentJump = true;
+                    if (!_canKeepCurrentJump) {
+                        _lastTimeFirstRequestToJump = 0;
+                        _canPerformEarlyJumpInput = true;
+
+                        // continuous jump lock (must release and press jump button to jump again)
+                        if (Jumps > 0 || OnGround) {
+                            _canKeepCurrentJump = true;
+                        }
                     }
                 }
 
@@ -455,7 +466,7 @@ namespace Raccoon.Components {
                             _canKeepCurrentJump = false;
                             isNotJumpingAnymore = true;
                         }
-                    } else if (!CanContinuousJump && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                    } else if (!CanContinuousJump && _canPerformEarlyJumpInput && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
                         _canKeepCurrentJump = true;
                         isNotJumpingAnymore = true;
                     } else {
@@ -677,8 +688,13 @@ namespace Raccoon.Components {
         public void Jump() {
             // continuous jump lock (must release and press jump button to jump again)
             _requestedJump = true;
-            if (_lastTimeFirstRequestToJump == 0) {
-                _lastTimeFirstRequestToJump = Body.Entity.Timer;
+            if (_canPerformEarlyJumpInput && _lastTimeFirstRequestToJump == 0) {
+                if (!IsFalling) {
+                    // block early jump input until release and press button again
+                    _canPerformEarlyJumpInput = false;
+                } else {
+                    _lastTimeFirstRequestToJump = Body.Entity.Timer;
+                }
             }
 
             if (!_canKeepCurrentJump) {
