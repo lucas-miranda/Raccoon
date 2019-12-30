@@ -96,11 +96,17 @@ namespace Raccoon.Util.Graphics {
         #region Private Methods
 
         private void InternalEmit(string label, Vector2 position, float rotation, ImageFlip flip, Vector2? movementDirection, out List<Particle> particles) {
-            (Particle particleModel, EmissionOptions emissionOptions) = _particleModels[label];
+            if (Scene == null) {
+                throw new System.InvalidOperationException($"Can't emit, ParticleEmitter.Scene is null.\nMaybe you forgot to set ParticleEmitter.Scene to current Scene?");
+            }
 
-            int count = emissionOptions.Count;
-            if (emissionOptions.MinCount != emissionOptions.MaxCount) {
-                count = Random.Integer(emissionOptions.MinCount, emissionOptions.MaxCount);
+            if (!_particleModels.TryGetValue(label, out (Particle model, EmissionOptions emissionOptions) particle)) {
+                throw new System.ArgumentException($"Could not find particle model with label '{label}'.");
+            }
+
+            int count = particle.emissionOptions.Count;
+            if (particle.emissionOptions.MinCount != particle.emissionOptions.MaxCount) {
+                count = Random.Integer(particle.emissionOptions.MinCount, particle.emissionOptions.MaxCount);
             }
 
             count = Math.Max(1, count);
@@ -108,53 +114,53 @@ namespace Raccoon.Util.Graphics {
 
             uint timeToStart = 0;
             for (int i = 0; i < count; i++) {
-                Particle particle = new Particle() {
-                    Layer = particleModel.Layer,
-                    Animation = new Animation(particleModel.Animation) {
-                        Position = particleModel.Animation.Position,
+                Particle p = new Particle() {
+                    Layer = particle.model.Layer,
+                    Animation = new Animation(particle.model.Animation) {
+                        Position = particle.model.Animation.Position,
                         Rotation = rotation,
                         Flipped = flip
                     }
                 };
 
-                particle.OnSceneRemoved += () => {
-                    _aliveParticles.Remove(particle);
+                p.OnSceneRemoved += () => {
+                    _aliveParticles.Remove(p);
                 };
 
-                Vector2 displacement = emissionOptions.DisplacementMin;
+                Vector2 displacement = particle.emissionOptions.DisplacementMin;
 
-                if (emissionOptions.DisplacementMin != emissionOptions.DisplacementMax) {
-                    displacement = Random.Vector2(emissionOptions.DisplacementMin, emissionOptions.DisplacementMax);
+                if (particle.emissionOptions.DisplacementMin != particle.emissionOptions.DisplacementMax) {
+                    displacement = Random.Vector2(particle.emissionOptions.DisplacementMin, particle.emissionOptions.DisplacementMax);
                 }
 
-                particle.Transform.Position = position + displacement;
+                p.Transform.Position = position + displacement;
 
-                uint duration = emissionOptions.DurationMin;
+                uint duration = particle.emissionOptions.DurationMin;
 
-                if (emissionOptions.DurationMin != emissionOptions.DurationMax) {
-                    duration = (uint) Random.Integer((int) emissionOptions.DurationMin, (int) emissionOptions.DurationMax);
+                if (particle.emissionOptions.DurationMin != particle.emissionOptions.DurationMax) {
+                    duration = (uint) Random.Integer((int) particle.emissionOptions.DurationMin, (int) particle.emissionOptions.DurationMax);
                 }
 
-                particle.Prepare(duration, timeToStart, emissionOptions.AnimationKey);
-                timeToStart += emissionOptions.DelayBetweenEmissions;
+                p.Prepare(duration, timeToStart, particle.emissionOptions.AnimationKey);
+                timeToStart += particle.emissionOptions.DelayBetweenEmissions;
 
                 // movement
                 if (movementDirection != null && movementDirection.HasValue) {
-                    particle.PrepareSimpleMovement(
+                    p.PrepareSimpleMovement(
                         movementDirection.Value,
-                        emissionOptions.MaxVelocity,
-                        emissionOptions.Acceleration
+                        particle.emissionOptions.MaxVelocity,
+                        particle.emissionOptions.Acceleration
                     );
-                } else if (emissionOptions.MovementDirection != Vector2.Zero) {
-                    particle.PrepareSimpleMovement(
-                        emissionOptions.MovementDirection,
-                        emissionOptions.MaxVelocity,
-                        emissionOptions.Acceleration
+                } else if (particle.emissionOptions.MovementDirection != Vector2.Zero) {
+                    p.PrepareSimpleMovement(
+                        particle.emissionOptions.MovementDirection,
+                        particle.emissionOptions.MaxVelocity,
+                        particle.emissionOptions.Acceleration
                     );
                 }
 
-                Scene.Add(particle);
-                particles.Add(particle);
+                Scene.Add(p);
+                particles.Add(p);
             }
 
             _aliveParticles.AddRange(particles);
