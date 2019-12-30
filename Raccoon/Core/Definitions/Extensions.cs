@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Text;
+using System.Collections.Generic;
 using System.Reflection;
 
 using Raccoon.Util;
@@ -52,6 +53,36 @@ public static class Extensions {
         }
 
         return count;
+    }
+
+    public static string Capitalize(this string str, bool capitalizeSingleLetters = false) {
+        string[] splitted = str.Split(new char[] { ' ' });
+        StringBuilder resultBuilder = new StringBuilder();
+
+        for (int i = 0; i < splitted.Length; i++) {
+            string part = splitted[i];
+
+            if (part.Length == 0) {
+                continue;
+            } else if (part.Length == 1) {
+                if (capitalizeSingleLetters) {
+                    resultBuilder.Append(char.ToUpperInvariant(part[0]));
+                } else {
+                    resultBuilder.Append(part[0]);
+                }
+
+                continue;
+            } 
+
+            resultBuilder.Append(char.ToUpperInvariant(part[0]));
+            resultBuilder.Append(part.Substring(startIndex: 1));
+
+            if (i < splitted.Length - 1) {
+                resultBuilder.Append(' ');
+            }
+        }
+
+        return resultBuilder.ToString();
     }
 
     #endregion String
