@@ -743,11 +743,6 @@ Scene:
                 DepthWriteEnabled = true
             };
 
-            // window and resolution
-            if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
-                ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
-            }
-
             ScreenRenderer = new Renderer();
             DebugRenderer = new Renderer();
 
@@ -780,6 +775,11 @@ Scene:
 #endif
 
             DebugPrimitiveBatch = new PrimitiveBatch();
+
+            if (XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
+                // adjust window size to be the display size
+                ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
+            }
 
             Initialize();
         }
