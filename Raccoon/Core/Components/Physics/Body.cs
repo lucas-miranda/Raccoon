@@ -180,16 +180,24 @@ namespace Raccoon.Components {
 
         public override void BeforeUpdate() {
             base.BeforeUpdate();
-            Movement?.BeforeUpdate();
+
+            if (Active && Entity != null && Entity.Active) {
+                Movement?.BeforeUpdate();
+            }
         }
 
         public override void Update(int delta) {
-            Movement?.Update(delta);
+            if (Active && Entity != null && Entity.Active) {
+                Movement?.Update(delta);
+            }
         }
 
         public override void LateUpdate() {
             base.LateUpdate();
-            Movement?.LateUpdate();
+
+            if (Active && Entity != null && Entity.Active) {
+                Movement?.LateUpdate();
+            }
         }
 
         public override void Render() {
@@ -241,7 +249,7 @@ namespace Raccoon.Components {
 #endif
 
         public void PhysicsUpdate(float dt) {
-            if (Entity == null) {
+            if (!Active || Entity == null || !Entity.Active) {
                 return;
             }
 
@@ -254,13 +262,17 @@ namespace Raccoon.Components {
         }
 
         public void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
+            if (!Active || Entity == null || !Entity.Active) {
+                return;
+            }
+
             if (Movement != null) {
                 Movement.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
             }
         }
 
         public void PhysicsLateUpdate() {
-            if (Entity == null) {
+            if (!Active || Entity == null || !Entity.Active) {
                 return;
             }
 
@@ -283,12 +295,20 @@ namespace Raccoon.Components {
         }
 
         public void BeforeSolveCollisions() {
+            if (!Active || Entity == null || !Entity.Active) {
+                return;
+            }
+
             if (Movement != null) {
                 Movement.BeforeBodySolveCollisions();
             }
         }
 
         public void CollidedWith(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            if (!Active || Entity == null || !Entity.Active) {
+                return;
+            }
+
             if (_currentUpdateCollisionList.Contains(otherBody)) {
                 return;
             }
@@ -304,12 +324,20 @@ namespace Raccoon.Components {
         }
 
         public void AfterSolveCollisions() {
+            if (!Active || Entity == null || !Entity.Active) {
+                return;
+            }
+
             if (Movement != null) {
                 Movement.AfterBodySolveCollisions();
             }
         }
 
         public Vector2 Integrate(float dt) {
+            if (!Active || Entity == null || !Entity.Active) {
+                return Position;
+            }
+
             Vector2 velocity = Velocity;
 
             // velocity X correction
