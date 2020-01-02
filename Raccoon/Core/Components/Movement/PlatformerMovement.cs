@@ -641,8 +641,7 @@ namespace Raccoon.Components {
                 velocity.X += Math.Sign(Axis.X) * Acceleration.X * dt;
             }
 
-            velocity.X += Body.Force.X * dt;
-            displacement.X = velocity.X * dt;
+            displacement.X = (velocity.X + Body.Force.X) * dt;
 
             ///////////////////////
             // Vertical Velocity //
@@ -671,8 +670,7 @@ namespace Raccoon.Components {
                 velocity.Y -= Acceleration.Y * dt;
             }
 
-            velocity.Y += Body.Force.Y * dt;
-            displacement.Y += velocity.Y * dt;
+            displacement.Y += (velocity.Y + Body.Force.Y) * dt;
 
             if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
                 ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
@@ -770,7 +768,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            OnMove();
+            OnMove(new Vector2(distance.X, 0f));
         }
 
         #endregion Protected Methods

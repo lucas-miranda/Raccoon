@@ -356,9 +356,7 @@ namespace Raccoon.Components {
                 return Position + Movement.Integrate(dt);
             }
 
-            Velocity += Force * dt;
-
-            return Position + Velocity * dt;
+            return Position + (Velocity + Force) * dt;
         }
 
         public void SolveConstraints() {
@@ -375,9 +373,13 @@ namespace Raccoon.Components {
             _constraints.Remove(constraint);
         }
 
-        /*public void ApplyForce(Vector2 force) {
-            Force += Movement?.HandleForce(force) ?? force;
-        }*/
+        public void ApplyConstantForce(Vector2 force) {
+            Force += force;
+        }
+
+        public void ClearConstantForces() {
+            Force = Vector2.Zero;
+        }
 
         public void SetStaticPosition(Vector2 staticPosition) {
             staticPosition = Util.Math.Floor(staticPosition);

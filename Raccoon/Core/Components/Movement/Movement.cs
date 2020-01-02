@@ -8,9 +8,17 @@ namespace Raccoon.Components {
         public static readonly float UnitVelocity = Math.Ceiling(1f / Physics.FixedDeltaTimeSeconds);
         public const float MaxImpulsePerSecond = 60f * 5f;
 
-        public delegate void MovementAction();
-        public MovementAction OnMove = delegate { },
-                              OnStopMove = delegate { };
+        public delegate void MovementAction(Vector2 distance);
+        public MovementAction OnMove = delegate { };
+
+        public delegate void StopMovementAction();
+        public StopMovementAction OnStopMove = delegate { };
+        
+        public delegate void PhysicsAction();
+        public PhysicsAction OnPhysicsLateUpdate = delegate { };
+
+        public delegate void PhysicsUpdateAction(float dt);
+        public PhysicsUpdateAction OnPhysicsUpdate = delegate { };
 
         public delegate void ImpulseMovementAction(Vector2 impulse);
         public ImpulseMovementAction OnReceiveImpulse = delegate { };
@@ -175,12 +183,15 @@ namespace Raccoon.Components {
 
         public virtual void PhysicsUpdate(float dt) {
             //ResetTouch();
+            OnPhysicsUpdate(dt);
         }
 
         public virtual void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
         }
 
         public virtual void PhysicsLateUpdate() {
+            OnPhysicsLateUpdate();
+
             Vector2 posDiff = Body.Position - Body.LastPosition;
             if (posDiff.LengthSquared() > 0f) {
                 IsMoving = true;
@@ -268,7 +279,10 @@ namespace Raccoon.Components {
             }
 
             Body = null;
-            OnMove = OnStopMove = null;
+            OnMove = null;
+            OnStopMove = null;
+            OnPhysicsUpdate = null;
+            OnPhysicsLateUpdate = null;
             OnReceiveImpulse = null;
 
             IsDisposed = true;

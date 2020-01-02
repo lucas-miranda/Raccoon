@@ -60,9 +60,9 @@ namespace Raccoon.Components {
                 verticalVelocity += System.Math.Sign(Axis.Y) * Acceleration.Y * dt;
             }
 
-            Velocity = Body.Force * dt + new Vector2(horizontalVelocity, verticalVelocity);
+            Velocity = new Vector2(horizontalVelocity, verticalVelocity);
 
-            return Velocity * dt;
+            return (Velocity + Body.Force) * dt;
         }
 
         public override void DebugRender() {
@@ -76,7 +76,7 @@ namespace Raccoon.Components {
         #region Protected Methods
 
         protected override void OnMoving(Vector2 distance) {
-            OnMove?.Invoke();
+            OnMove(distance);
         }
 
         #endregion Protected Methods
