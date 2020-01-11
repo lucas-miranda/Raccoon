@@ -3,6 +3,7 @@
 namespace Raccoon.Components {
     public class CoroutineHandler : Component {
         public Coroutine Coroutine { get; private set; }
+
         public bool IsRunning {
             get {
                 if (Coroutine == null) {
@@ -35,10 +36,6 @@ namespace Raccoon.Components {
         }
 
         public override void Update(int delta) {
-            if (Entity.Scene == null) {
-                return;
-            }
-
             if (Coroutine != null && Coroutine.HasEnded) {
                 Coroutine = null;
             }
