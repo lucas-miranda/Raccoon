@@ -25,9 +25,7 @@ namespace Raccoon.Util.Tween {
         #region Public Methods
 
         public static Tween Create<T>(T subject, int duration, bool additional = false) where T : class {
-            Tween tween = Add(new Tween(subject, duration, additional: additional));
-
-            return tween;
+            return Add(new Tween(subject, duration, additional: additional));
         }
 
         public static Tween Add(Tween tween) {
