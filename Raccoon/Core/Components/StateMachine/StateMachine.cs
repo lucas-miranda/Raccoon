@@ -36,6 +36,8 @@ namespace Raccoon.Components {
         public State<T> NextState { get; private set; } = null;
         public bool KeepTriggerValuesBetweenStates { get; set; } = false;
         public Coroutine CurrentCoroutine { get; private set; }
+        public bool IsRunning { get; private set; }
+        public bool HasStarted { get; private set; }
 
         #endregion Public Properties
 
@@ -57,8 +59,22 @@ namespace Raccoon.Components {
             Stop();
         }
 
+        public override void OnSceneAdded() {
+            base.OnSceneAdded();
+            if (HasStarted) {
+                Resume();
+            }
+        }
+
+        public override void OnSceneRemoved(bool wipe) {
+            base.OnSceneRemoved(wipe);
+            if (HasStarted) {
+                Pause();
+            }
+        }
+
         public override void Update(int delta) {
-            if (CurrentState == null) {
+            if (!IsRunning) {
                 return;
             }
 
@@ -85,20 +101,57 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            Debug.DrawString(Entity.Transform.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0), $"State:\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
+            Debug.DrawString(Entity.Transform.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0), $"State ({(IsRunning ? "R" : (CurrentState == null ? "S" : "P"))}):\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
         }
 
         public void Start(T label) {
-            if (CurrentState != null) {
+            if (HasStarted) {
                 return;
             }
 
             PreviousState = CurrentState = StartState = _states[label];
             ProcessStateEnter(CurrentState.OnEnter);
             CurrentCoroutine = Coroutines.Instance.Start(ProcessStateUpdate(CurrentState.OnUpdate));
+            HasStarted = IsRunning = true;
+        }
+
+        public void Pause() {
+            if (!HasStarted) {
+                throw new System.InvalidOperationException("Can't pause an uninitiated State Machine, call Start() first.");
+            }
+
+            if (!IsRunning) {
+                return;
+            }
+
+            if (CurrentCoroutine != null) {
+                CurrentCoroutine.Pause();
+            }
+
+            IsRunning = false;
+        }
+
+        public void Resume() {
+            if (!HasStarted) {
+                throw new System.InvalidOperationException("Can't resume an uninitiated State Machine, call Start() first.");
+            }
+
+            if (IsRunning) {
+                return;
+            }
+
+            if (CurrentCoroutine != null) {
+                CurrentCoroutine.Resume();
+            }
+
+            IsRunning = true;
         }
 
         public void Stop() {
+            if (!HasStarted) {
+                return;
+            }
+
             NextState = PreviousState = CurrentState = StartState = null;
 
             if (CurrentCoroutine != null) {
@@ -107,6 +160,7 @@ namespace Raccoon.Components {
             }
 
             ClearTriggers();
+            HasStarted = IsRunning = false;
         }
 
         public void ChangeState(T label) {
