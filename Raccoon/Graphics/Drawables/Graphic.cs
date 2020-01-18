@@ -189,6 +189,10 @@ namespace Raccoon.Graphics {
         public virtual void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
         }
 
+        public void CentralizeOrigin() {
+            Origin = new Vector2(Size.Width / 2f, Size.Height / 2f);
+        }
+
         public virtual void Dispose() {
             if (IsDisposed) {
                 return;
