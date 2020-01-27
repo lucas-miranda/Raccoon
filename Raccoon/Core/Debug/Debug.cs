@@ -41,14 +41,25 @@ namespace Raccoon {
         #region Constructors
 
         private Debug() {
-            //Trace.Listeners.Add(new ConsoleTraceListener());
-
-#if DEBUG
-            Trace.Listeners.Add(Console);
-#else
             _useLogToFile = true;
             Trace.Listeners.Add(_textWriterTraceListener);
             Trace.AutoFlush = true;
+
+            using (StreamWriter logWriter = new StreamWriter(LogFileName, append: false)) {
+                logWriter.WriteLine($"{System.DateTime.Now.ToString()}\n");
+            }
+
+#if DEBUG
+            Trace.Listeners.Add(Console);
+
+            switch (System.Environment.OSVersion.Platform) {
+                case System.PlatformID.Unix:
+                    Trace.Listeners.Add(new ConsoleTraceListener());
+                    break;
+
+                default:
+                    break;
+            }
 #endif
         }
 

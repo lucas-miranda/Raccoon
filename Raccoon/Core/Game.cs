@@ -100,9 +100,18 @@ Scene:
                     }
                 }
 
-#if WINDOWS
-                System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
-#endif
+                switch (System.Environment.OSVersion.Platform) {
+                    case System.PlatformID.Win32NT:
+                        System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
+                        break;
+
+                    case System.PlatformID.Unix:
+                        Debug.WriteLine(File.ReadAllText("crash-report.log", System.Text.Encoding.UTF8));
+                        break;
+
+                    default:
+                        break;
+                }
             };
 
             // fps

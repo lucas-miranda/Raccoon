@@ -194,11 +194,11 @@ namespace Raccoon.Util {
         }
 
         public static BitTag operator |(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType);
+            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType ?? r.EnumType);
         }
 
         public static BitTag operator +(BitTag l, BitTag r) {
-            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType);
+            return new BitTag(l.LiteralValue | r.LiteralValue, l.EnumType ?? r.EnumType);
         }
 
         public static BitTag operator -(BitTag l, BitTag r) {

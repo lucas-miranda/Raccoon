@@ -276,6 +276,10 @@ namespace Raccoon {
             }
 
             foreach (BitTag tag in collider.Tags) {
+                if (!HasTag(tag)) {
+                    throw new System.InvalidOperationException($"Tag '{tag}' (from Body Tags '{collider.Tags}', Enum Type: {collider.Tags.EnumType}) isn't registered.\nAccepted values are: {string.Join(", ", _collidersByTag.Keys)}");
+                }
+
                 AddCollider(collider, tag);
             }
         }
@@ -995,7 +999,9 @@ namespace Raccoon {
 
         private void AddCollider(Body collider, BitTag tags) {
             foreach (BitTag tag in tags) {
-                List<Body> collidersByTag = _collidersByTag[tag];
+                if (!_collidersByTag.TryGetValue(tag, out List<Body> collidersByTag)) {
+                    throw new System.InvalidOperationException($"Tag '{tag}' (from Tags '{tags}') isn't registered.\nAccepted values are: {string.Join(", ", _collidersByTag.Keys)}");
+                }
 
                 if (collidersByTag.Contains(collider)) {
                     continue;
