@@ -42,25 +42,29 @@ namespace Raccoon {
 
         private Debug() {
             _useLogToFile = true;
-            Trace.Listeners.Add(_textWriterTraceListener);
-            Trace.AutoFlush = true;
-
-            using (StreamWriter logWriter = new StreamWriter(LogFileName, append: false)) {
-                logWriter.WriteLine($"{System.DateTime.Now.ToString()}\n");
-            }
-
 #if DEBUG
-            Trace.Listeners.Add(Console);
+            System.Diagnostics.Debug.Listeners.Add(_textWriterTraceListener);
+            System.Diagnostics.Debug.AutoFlush = true;
+
+            System.Diagnostics.Debug.Listeners.Add(Console);
 
             switch (System.Environment.OSVersion.Platform) {
                 case System.PlatformID.Unix:
-                    Trace.Listeners.Add(new ConsoleTraceListener());
+                    ConsoleTraceListener consoleListener = new ConsoleTraceListener();
+                    System.Diagnostics.Debug.Listeners.Add(consoleListener);
                     break;
 
                 default:
                     break;
             }
+#elif TRACE
+            Trace.Listeners.Add(_textWriterTraceListener);
+            Trace.AutoFlush = true;
 #endif
+
+            using (StreamWriter logWriter = new StreamWriter(LogFileName, append: false)) {
+                logWriter.WriteLine($"{System.DateTime.Now.ToString()}\n");
+            }
         }
 
         #endregion Constructors
@@ -156,7 +160,11 @@ namespace Raccoon {
                 IndentLevel = level;
             }
 
-            Trace.WriteLine($"{IndentText}{message}", context);
+            if (string.IsNullOrWhiteSpace(context)) {
+                Trace.WriteLine($"{IndentText}{message}");
+            } else {
+                Trace.WriteLine($"{IndentText}{message}", context);
+            }
         }
 
         [Conditional("DEBUG")]
