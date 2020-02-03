@@ -7,8 +7,8 @@ namespace Raccoon {
     public sealed partial class Physics {
         #region Public Members
 
-        public static float FixedDeltaTimeSeconds = 1f / 60f;
-        public static int FixedDeltaTime = (int) (FixedDeltaTimeSeconds * 1000f);
+        public static int FixedDeltaTime = 1000 / 60;
+        public static float FixedDeltaTimeSeconds = FixedDeltaTime / 1000f;
         public static int ConstraintSolverAccuracy = 3;
 
         #endregion Public Members
@@ -851,7 +851,7 @@ namespace Raccoon {
                                 }
 
                                 if (isMovementCollidable 
-                                  && contactsV.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0f) >= 0
+                                  && contactsV.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f) >= 0
                                   && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))) {
                                     canMoveV = false;
                                     distanceY = 0;
@@ -867,7 +867,7 @@ namespace Raccoon {
                                 }
 
                                 if (isMovementCollidable
-                                  && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f) && c.PenetrationDepth > 0f) >= 0
+                                  && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f) && c.PenetrationDepth > 0.5f) >= 0
                                   && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
                                     canMoveH = false;
                                     distanceX = 0;

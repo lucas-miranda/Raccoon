@@ -33,10 +33,10 @@ namespace Raccoon {
             StringBuilder stringBuilder = new StringBuilder();
 
             foreach (CollisionInfo<T> collisionInfo in this) {
-                stringBuilder.Append(collisionInfo.ToString());
+                stringBuilder.AppendLine(collisionInfo.ToString());
             }
 
-            return $"[{stringBuilder}]";
+            return $"[\n{stringBuilder}]";
         }
     }
 }

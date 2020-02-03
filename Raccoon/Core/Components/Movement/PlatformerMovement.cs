@@ -21,9 +21,9 @@ namespace Raccoon.Components {
         /// <summary>
         /// Elevation range degrees where it's considered a ramp, and will be walkable,
         /// greater than max value it'll be a wall.
-        /// Preferred to be values in [0, 90] range.
+        /// Preferred to be values in ]0, 90[ range.
         /// </summary>
-        public static Range AllowedRampElevation = new Range(1, 60); // in degrees (preferred to stay 
+        public static Range AllowedRampElevation = new Range(1, 60); // in degrees
 
         public delegate void PlatformerMovementAction();
         public event PlatformerMovementAction OnJumpBegin = delegate { },
@@ -36,8 +36,6 @@ namespace Raccoon.Components {
         #endregion Public Members
 
         #region Private Members
-
-        private static readonly Vector2 AscendingRampCollisionCheckCorrection = new Vector2(0f, -.25f);
 
         private static readonly Range AllowedSlopeFactorRange = Range.From(Math.Cos(AllowedRampElevation.Min), Math.Cos(AllowedRampElevation.Max));
 
@@ -110,16 +108,19 @@ namespace Raccoon.Components {
         private uint _lastTimeFirstRequestToJump;
 
         // ramp movement
+        /*
         private static readonly Vector2[] AscendingRampChecks = new Vector2[] {
-            new Vector2(1f, -1f),
-            new Vector2(0f, -1f)
+            new Vector2(0f, -1f),
+            new Vector2(1f, -1f)
         };
 
         private static readonly Vector2[] DescendingRampChecks = new Vector2[] {
             new Vector2(-2f, 2f),
             new Vector2(-3f, 1f),
-            new Vector2(-4f, 0f)
+            new Vector2(-4f, 0f),
+            new Vector2(-9f, 0f)
         };
+        */
 
         private Vector2 _rampNormal;
         private int _previousRampDirection;
@@ -347,22 +348,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            string info = string.Format(
-                DebugText,
-                Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
-                Velocity, BonusMaxVelocity, ExtraMaxVelocity, MaxVelocity, TargetVelocity, 
-                Acceleration, BonusAcceleration, ExtraAcceleration,
-                Body.Force, GravityForce * GravityScale,
-                Enabled, CanMove,
-                OnGround, IsFalling,
-                Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
-                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
-                AscendingRampEnteringAccelerationSmoothing, DescendingRampEnteringAccelerationSmoothing,
-                AscendingRampLeavingAccelerationSmoothing, DescendingRampLeavingAccelerationSmoothing,
-                CanFallThrough, _isTryingToFallThrough
-            );
-
-            Debug.DrawString(null, new Vector2(10f, 10f), info);
+            Debug.DrawString(null, new Vector2(10f, 10f), ToStringDetailed());
             Debug.DrawLine(
                 new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
                 new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
@@ -384,11 +370,17 @@ namespace Raccoon.Components {
         public override void PhysicsLateUpdate() {
             base.PhysicsLateUpdate();
 
-            bool isAboveSomething;
-            bool isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
+            bool isAboveSomething = false,
+                 isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
 
             if (GravityEnabled) {
-                isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out CollisionList<Body> contactsBelow);
+                CollisionList<Body> contactsBelow;
+
+                if (IsOnRamp) {
+                    isAboveSomething = Body.CollidesMultiple(Body.Position + new Vector2(0f, 1.5f), CollisionTags, out contactsBelow);
+                } else {
+                    isAboveSomething = Body.CollidesMultiple(Body.Position + Vector2.Down, CollisionTags, out contactsBelow);
+                }
 
                 if (isAboveSomething) {
                     foreach (CollisionInfo<Body> collisionInfo in contactsBelow) {
@@ -397,21 +389,9 @@ namespace Raccoon.Components {
                                 continue;
                             }
 
-                            if (IsOnRamp || _justLeavedRamp) {
-                                // HACK to adjust vertical position when leaving a descending ramp
-                                if (_justLeavedRamp && _previousRampDirection > 0 && contact.PenetrationDepth == 0f) {
-                                    Body.Position += new Vector2(0, 1f);
-                                }
-
-                                if (Helper.InRange(contact.PenetrationDepth, 0f, 1f)) {
-                                    _touchedBottom = true;
-                                    break;
-                                }
-                            } else {
-                                if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)) {
-                                    _touchedBottom = true;
-                                    break;
-                                }
+                            if (contact.PenetrationDepth > 0f) {
+                                _touchedBottom = true;
+                                break;
                             }
                         }
 
@@ -680,6 +660,7 @@ namespace Raccoon.Components {
             }
 
             Velocity = velocity;
+            //Debug.WriteLine($"d: {displacement}");
             return displacement;
         }
 
@@ -723,6 +704,23 @@ namespace Raccoon.Components {
             }
         }
 
+        public string ToStringDetailed() {
+            return string.Format(
+                DebugText,
+                Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
+                Velocity, BonusMaxVelocity, ExtraMaxVelocity, MaxVelocity, TargetVelocity, 
+                Acceleration, BonusAcceleration, ExtraAcceleration,
+                Body.Force, GravityForce * GravityScale,
+                Enabled, CanMove,
+                OnGround, IsFalling,
+                Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
+                AscendingRampEnteringAccelerationSmoothing, DescendingRampEnteringAccelerationSmoothing,
+                AscendingRampLeavingAccelerationSmoothing, DescendingRampLeavingAccelerationSmoothing,
+                CanFallThrough, _isTryingToFallThrough
+            );
+        }
+
         public override void Dispose() {
             if (IsDisposed) {
                 return;
@@ -751,6 +749,7 @@ namespace Raccoon.Components {
                         OnGround = IsFalling = false;
                         Jumps--;
                         OnJumpBegin();
+                        //Debug.WriteLine("By jump begin");
                         ClearRampState();
                     } else if (JustJumped) {
                         JustJumped = false;
@@ -785,18 +784,35 @@ namespace Raccoon.Components {
             bool wasOnAscendingRamp = IsOnAscendingRamp,
                  wasOnDescendingRamp = IsOnDescendingRamp;
 
-            if (!OnGround || Math.EqualsEstimate(displacement.X, 0f)) {
+            if (!OnGround) {
                 rampDisplacement = Vector2.Zero;
+                //Debug.WriteLine("By not on ground");
                 ClearRampState();
                 return false;
             }
+
+            if (Math.EqualsEstimate(displacement.X, 0f)) {
+                rampDisplacement = Vector2.Zero;
+                return false;
+            }
+
+            //Debug.WriteLine($"\nDisplacement: {displacement}");
 
             // true horizontal displacement value
             float dX = displacement.X + (float) Body.MoveBufferX;
 
 #if !DISABLE_ASCENDING_RAMP
-            if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX), 0f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
-                if (HandleRamp(dX, AscendingRampChecks, ascdCollisionList, directionSameAsNormal: false, out rampDisplacement)) {
+            //Debug.WriteLine("> Verifying Asc ramp...");
+            if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX) + .5f, 0f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
+                //Debug.WriteLine("Maybe found it");
+
+                Vector2[] ascRampChecks = new Vector2[] {
+                    new Vector2(0f, -1f),
+                    new Vector2(1f, -1f)
+                };
+
+                if (HandleRamp(dX, ascRampChecks, ascdCollisionList, directionSameAsNormal: false, out rampDisplacement)) {
+                    //Debug.WriteLine("Confirmed");
                     Body.MoveBufferY = 0;
                     IsOnAscendingRamp = true;
                     IsOnDescendingRamp = false;
@@ -817,14 +833,31 @@ namespace Raccoon.Components {
                         ExtraMaxVelocity = new Vector2(AscendingRampVelocityModifier, 0f);
                     }
 
+                    //Debug.WriteLine($"Ramp displacement: {rampDisplacement}");
                     return true;
                 }
             }
 #endif
 
 #if !DISABLE_DESCENDING_RAMP
+            //Debug.WriteLine("> Verifying Desc ramp...");
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX) * .5f, 2f), CollisionTags, out CollisionList<Body> descdCollisionList)) {
-                if (HandleRamp(dX, DescendingRampChecks, descdCollisionList, directionSameAsNormal: true, out rampDisplacement)) {
+            //Debug.WriteLine("Maybe found it");
+                Rectangle bodyBounds = Body.Bounds;
+                Size halfBodySize = bodyBounds.Size / 2f;
+
+                Vector2[] descRampChecks = new Vector2[] {
+                    new Vector2(-2f, 2f),
+                    new Vector2(-3f, 1f),
+                    // one quarter to help check ramps
+                    new Vector2(-(halfBodySize.Width / 2f), 0f),
+                    // when leaving desc ramp
+                    new Vector2(-(halfBodySize.Width), 0f),
+                    new Vector2(-(bodyBounds.Width + 1f), 0f)
+                };
+
+                if (HandleRamp(dX, descRampChecks, descdCollisionList, directionSameAsNormal: true, out rampDisplacement)) {
+                    //Debug.WriteLine("Confirmed");
                     Body.MoveBufferY = 0;
                     IsOnAscendingRamp = false;
                     IsOnDescendingRamp = true;
@@ -845,12 +878,14 @@ namespace Raccoon.Components {
                         ExtraMaxVelocity = new Vector2(DescendingRampVelocityModifier, 0f);
                     }
 
+                    //Debug.WriteLine($"Ramp displacement: {rampDisplacement}");
                     return true;
                 }
             }
 #endif
 
             rampDisplacement = Vector2.Zero;
+            //Debug.WriteLine($"No one has been found");
             ClearRampState();
             return false;
         }
@@ -877,11 +912,10 @@ namespace Raccoon.Components {
             }
             
             bool refreshRampState = false;
-            float validRampHorizontalDist = 0f;
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
                 bool isValidRamp = false,
-                     hasFindRamp = LookForRamp(collInfo, rampPositionsToCheck, out Vector2 rampNormal, out float horizontalDistance);
+                     hasFindRamp = LookForRamp(collInfo, rampPositionsToCheck, out Vector2 rampNormal);
 
                 if (hasFindRamp) {
                     /*
@@ -916,7 +950,6 @@ namespace Raccoon.Components {
                     IsOnRamp = true;
                     _rampNormal = rampNormal;
                     _internal_isGravityEnabled = false;
-                    validRampHorizontalDist = horizontalDistance;
                     break;
                 }
             }
@@ -929,13 +962,17 @@ namespace Raccoon.Components {
             Vector2 rampMoveNormal;
             float rampDisplacementDistance;
 
-            if (Math.EqualsEstimate(validRampHorizontalDist, 0f)) {
+            //Debug.WriteLine($"ramp normal: {_rampNormal}");
+
+            //if (Math.EqualsEstimate(validRampHorizontalDist, 0f)) {
                 rampMoveNormal = Math.Sign(dX) > 0 ? _rampNormal.PerpendicularCW() : _rampNormal.PerpendicularCCW();
                 rampDisplacementDistance = Vector2.Dot(new Vector2(dX, 0f), rampMoveNormal);
+            /*
             } else {
                 rampMoveNormal = new Vector2(Math.Sign(validRampHorizontalDist), 0f);
                 rampDisplacementDistance = Math.Round(validRampHorizontalDist);
             }
+            */
 
             rampDisplacement = rampMoveNormal * rampDisplacementDistance * RampSpeedModifier;
             Body.MoveBufferX = 0;
@@ -949,7 +986,7 @@ namespace Raccoon.Components {
         /// <param name="positionsToCheck">World positions to check for a ramp.</param>
         /// <param name="rampNormal">Ramp normal, if a ramp was found.</param>
         /// <returns>True, if a ramp was found, False otherwise.</returns>
-        private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2[] positionsToCheck, out Vector2 rampNormal, out float horizontalDistance) {
+        private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2[] positionsToCheck, out Vector2 rampNormal) {
             switch (collisionInfo.Subject.Shape) {
                 case BoxShape boxShape:
                     // not implemented yet
@@ -1008,13 +1045,6 @@ namespace Raccoon.Components {
                                 }
 
                                 rampNormal = closestEdge.Normal;
-
-                                // calculate horizontal distance
-                                Range tilePolygonProj = tilePolygon.Projection(Vector2.Right),
-                                      bodyProj = Body.Shape.Projection(Body.Position, Vector2.Right);
-                                
-                                horizontalDistance = bodyProj.Distance(tilePolygonProj);
-
                                 return true;
 
                             case null:
@@ -1031,11 +1061,11 @@ namespace Raccoon.Components {
             }
 
             rampNormal = Vector2.Zero;
-            horizontalDistance = 0f;
             return false;
         }
 
         private void Fall() {
+            //Debug.WriteLine("By falling");
             ClearRampState();
             IsFalling = true;
             OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
@@ -1048,6 +1078,7 @@ namespace Raccoon.Components {
                 return;
             }
 
+            //Debug.WriteLine("Clear ramp state");
             IsOnRamp = false;
             _rampNormal = Vector2.Zero;
             _internal_isGravityEnabled = true;
