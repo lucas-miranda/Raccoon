@@ -136,7 +136,7 @@ namespace Raccoon {
         }
 
         public override void Write(object obj) {
-            Write(obj.ToString());
+            Write(obj.ToString(), "");
         }
 
         public override void WriteLine(string message, string category) {
@@ -149,7 +149,7 @@ namespace Raccoon {
             if (_messages.Count > 0) {
                 Message lastMessage = _messages[0];
 
-                // close previous opened messages
+                // always close previous opened messages
                 if (!lastMessage.IsClosed) {
                     if (IsSameCategory(lastMessage, category)) {
                         int newLines = lastMessage.Append(message);
@@ -163,6 +163,7 @@ namespace Raccoon {
 
                     lastMessage.Close();
                 }
+
 
                 if (MergeIdenticalMessages && !isMessageConsumed && IsSameMessage(lastMessage, message, category)) {
                     isMessageConsumed = true;
@@ -178,15 +179,15 @@ namespace Raccoon {
         }
 
         public override void WriteLine(string message) {
-            Write(message);
+            WriteLine(message, "");
         }
 
         public override void WriteLine(object obj, string category) {
-            Write(obj.ToString(), category);
+            WriteLine(obj.ToString(), category);
         }
 
         public override void WriteLine(object obj) {
-            Write(obj.ToString());
+            WriteLine(obj.ToString(), "");
         }
 
         public void Show() {

@@ -8,20 +8,25 @@ using Raccoon.Util;
 
 namespace Raccoon {
     public class Game : System.IDisposable {
-        #region Public Events
+        #region Public Members
 
-        public event System.Action OnBeforeRender = delegate { },
-                                   OnRender = delegate { },
-                                   OnAfterRender = delegate { },
-                                   OnDebugRender = delegate { },
-                                   OnBegin = delegate { },
-                                   OnBeforeUpdate = delegate { },
-                                   OnLateUpdate = delegate { },
-                                   OnWindowResize = delegate { };
+        public delegate void GameEventDelegate();
+        public event GameEventDelegate OnBeforeRender = delegate { },
+                                       OnRender = delegate { },
+                                       OnAfterRender = delegate { },
+                                       OnDebugRender = delegate { },
+                                       OnBegin = delegate { },
+                                       OnBeforeUpdate = delegate { },
+                                       OnLateUpdate = delegate { },
+                                       OnWindowResize = delegate { };
 
-        public event System.Action<int> OnUpdate = delegate { };
+        public delegate void GameTimedEventDelegate(int delta);
+        public event GameTimedEventDelegate OnUpdate = delegate { };
 
-        #endregion Public Events
+        public delegate void GameLogEventWriter(StreamWriter logWriter);
+        public event GameLogEventWriter OnCrash;
+
+        #endregion Public Members
 
         #region Private Members
 
@@ -92,7 +97,11 @@ Scene:
                 System.Exception e = (System.Exception) args.ExceptionObject;
 
                 using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
-                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
+                    logWriter.WriteLine($"Operating System: {System.Environment.OSVersion} ({(System.Environment.Is64BitOperatingSystem ? "x64" : "x86")})");
+                    logWriter.WriteLine($"CLR Runtime Version: {System.Environment.Version}");
+                    logWriter.WriteLine($"Command Line: {System.Environment.CommandLine}\n\n");
+                    OnCrash?.Invoke(logWriter);
+                    logWriter.WriteLine($"\n{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
 
                     while (e.InnerException != null) {
                         e = e.InnerException;

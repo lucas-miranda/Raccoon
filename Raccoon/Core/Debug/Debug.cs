@@ -136,7 +136,11 @@ namespace Raccoon {
                 IndentLevel = level;
             }
 
-            Trace.Write($"{IndentText}{message}", context);
+            if (string.IsNullOrWhiteSpace(context)) {
+                Trace.Write($"{IndentText}{message}");
+            } else {
+                Trace.Write($"{IndentText}{message}", context);
+            }
         }
 
         [Conditional("DEBUG")]
