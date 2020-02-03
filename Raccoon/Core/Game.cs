@@ -343,6 +343,25 @@ Scene:
             Dispose(true);
         }
 
+        public T GetScene<T>() where T : Scene {
+            System.Type type = typeof(T);
+            foreach (KeyValuePair<string, Scene> entry in _scenes) {
+                if (entry.Value.GetType() == type) {
+                    return entry.Value as T;
+                }
+            }
+
+            throw new System.ArgumentException($"Scene '{type.Name}' is invalid or isn't registered yet.");
+        }
+
+        public Scene GetScene(string name) {
+            if (!_scenes.TryGetValue(name, out Scene scene)) {
+                throw new System.ArgumentException($"Scene '{name}' not found", "name");
+            }
+
+            return scene;
+        }
+
         public void AddScene(Scene scene, string name = "") {
             name = !string.IsNullOrWhiteSpace(name) ? name : scene.GetType().Name.Replace("Scene", "");
             _scenes.Add(name, scene);
@@ -400,23 +419,14 @@ Scene:
         }
 
         public Scene SwitchScene(string name) {
-            if (!_scenes.TryGetValue(name, out Scene scene)) {
-                throw new System.ArgumentException($"Scene '{name}' not found", "name");
-            }
-
-            NextScene = scene;
+            NextScene = GetScene(name);
             return NextScene;
         }
 
         public T SwitchScene<T>() where T : Scene {
-            System.Type type = typeof(T);
-            foreach (KeyValuePair<string, Scene> entry in _scenes) {
-                if (entry.Value.GetType() == type) {
-                    return SwitchScene(entry.Key) as T;
-                }
-            }
-
-            throw new System.ArgumentException($"Scene '{type.Name}' is invalid or isn't registered yet.");
+            T scene = GetScene<T>();
+            NextScene = scene;
+            return scene;
         }
 
         public Scene SwitchScene(Scene scene) {
