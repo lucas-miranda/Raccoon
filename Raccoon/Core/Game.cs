@@ -809,11 +809,15 @@ Scene:
                 ResizeWindow(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height);
             }
 
+            MainRenderer.RecalculateProjection();
+            DebugRenderer.RecalculateProjection();
+            ScreenRenderer.RecalculateProjection();
+
             Initialize();
         }
 
         private void InternalUnloadContent() {
-            Scene.UnloadContent();
+            Scene?.UnloadContent();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();
         }

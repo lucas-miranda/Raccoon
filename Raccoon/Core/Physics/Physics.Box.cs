@@ -47,7 +47,7 @@ namespace Raccoon {
             polygonA.Translate(APos);
             polygonB.Translate(BPos);
 
-            if (TestSAT(polygonA, polygonB, out Contact? contact)) {
+            if (SAT.Test(polygonA, polygonB, out Contact? contact)) {
                 contacts = new Contact[] {
                     contact.Value
                 };
@@ -74,7 +74,7 @@ namespace Raccoon {
                 return false;
             }
 
-            if (TestSAT(boxA, APos, circleB, BPos, boxA.Axes, out Contact? contact)) {
+            if (SAT.Test(boxA, APos, circleB, BPos, boxA.Axes, out Contact? contact)) {
                 if (contact == null) {
                     contacts = new Contact[0];
                 } else {
@@ -98,11 +98,13 @@ namespace Raccoon {
             BoxShape boxA = A as BoxShape;
             PolygonShape polyB = B as PolygonShape;
 
-            Polygon polygonA = new Polygon(boxA.Shape), polygonB = new Polygon(polyB.Shape);
+            Polygon polygonA = new Polygon(boxA.Shape), 
+                    polygonB = new Polygon(polyB.Shape);
+
             polygonA.Translate(APos);
             polygonB.Translate(BPos);
 
-            if (TestSAT(polygonA, polygonB, out Contact? contact)) {
+            if (SAT.Test(polygonA, polygonB, out Contact? contact)) {
                 contacts = new Contact[] {
                     contact.Value
                 };
@@ -136,7 +138,7 @@ namespace Raccoon {
 
             List<Contact> gridContacts = TestGrid(gridB, BPos, boxBoundingBox,
                 (Polygon tilePolygon) => {
-                    TestSAT(polygonA, tilePolygon, out Contact? tileContact);
+                    SAT.Test(polygonA, tilePolygon, out Contact? tileContact);
                     return tileContact;
                 }
             );

@@ -52,7 +52,7 @@ namespace Raccoon {
                 return false;
             }
 
-            if (TestSAT(circleA, APos, polyB, BPos, polygonB.Normals, out Contact? contact)) {
+            if (SAT.Test(circleA, APos, polygonB, out Contact? contact)) {
                 if (contact == null) {
                     contacts = new Contact[0];
                 } else {
@@ -86,7 +86,7 @@ namespace Raccoon {
 
             List<Contact> gridContacts = TestGrid(gridB, BPos, new Rectangle(APos - circleA.Radius, APos + circleA.Radius),
                 (Polygon tilePolygon) => {
-                    TestSAT(circleA, APos, tilePolygon, out Contact? tileContact);
+                    SAT.Test(circleA, APos, tilePolygon, out Contact? tileContact);
 
                     if (tileContact == null) {
                         return null;

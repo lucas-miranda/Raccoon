@@ -1,4 +1,6 @@
-﻿using Raccoon.Graphics;
+﻿using System.Collections.Generic;
+
+using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon {
@@ -13,9 +15,18 @@ namespace Raccoon {
             Recalculate();
         }
 
+        public PolygonShape(IEnumerable<Vector2> points, bool centralize = true) {
+            _normalizedPolygon = new Polygon(points);
+
+            if (centralize) {
+                _normalizedPolygon.Translate(-_normalizedPolygon.Center);
+            }
+
+            Recalculate();
+        }
+
         public PolygonShape(Polygon polygon) {
             _normalizedPolygon = polygon;
-            _normalizedPolygon.Translate(-_normalizedPolygon.Center);
             Recalculate();
         }
 
@@ -62,6 +73,14 @@ namespace Raccoon {
 
             // centroid
             Debug.DrawCircle(position - Origin, 1, Color.White, 10);
+
+            /*
+            if (!polygon.IsConvex) {
+                foreach (Vector2[] component in polygon.ConvexComponents()) {
+                    Debug.DrawLines(component, Color.Cyan, Origin - position);
+                }
+            }
+            */
         }
 
         public bool ContainsPoint(Vector2 point) {
@@ -98,7 +117,7 @@ namespace Raccoon {
         public (Vector2 MaxProjectionVertex, Line Edge) FindBestClippingEdge(Vector2 shapePosition, Vector2 normal) {
             Polygon polygon = new Polygon(Shape);
             polygon.Translate(shapePosition);
-            return Physics.FindBestEdge(polygon, normal);
+            return SAT.FindBestEdge(polygon, normal);
         }
 
         public void Rotate(float degrees) {

@@ -466,11 +466,6 @@ namespace Raccoon {
             Contact? rayContact = null;
             float closerContactDist = float.PositiveInfinity;
 
-            Vector2[] raycastAxes = new Vector2[] {
-                direction.Normalized(),
-                direction.PerpendicularCW().Normalized()
-            };
-
             Vector2[] axes, shapeAxes;
 
             foreach (BitTag tag in tags) {
@@ -483,18 +478,13 @@ namespace Raccoon {
 
                     shapeAxes = otherCollider.Shape.CalculateAxes();
 
-                    // prepare axes
-                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
-                    raycastAxes.CopyTo(axes, 0);
-                    shapeAxes.CopyTo(axes, raycastAxes.Length);
-
                     Contact? contact = null;
 
                     switch (otherCollider.Shape) {
                         case GridShape gridShape:
                             List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
                                 (Polygon tilePolygon) => {
-                                    TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
+                                    SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
                                     return tileContact;
                                 }
                             );
@@ -516,7 +506,7 @@ namespace Raccoon {
                             break;
 
                         default:
-                            if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out contact) || contact == null) {
+                            if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
                                 continue;
                             }
 
@@ -578,13 +568,7 @@ namespace Raccoon {
 
             Vector2 endPos = position + direction * maxDistance;
 
-            Vector2[] raycastAxes = new Vector2[] {
-                direction.Normalized(),
-                direction.PerpendicularCW().Normalized()
-            };
-
             HashSet<Body> verifiedBodies = new HashSet<Body>();
-            Vector2[] axes, shapeAxes;
 
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
@@ -599,14 +583,7 @@ namespace Raccoon {
                         continue;
                     }
 
-                    shapeAxes = otherCollider.Shape.CalculateAxes();
-
-                    // prepare axes
-                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
-                    raycastAxes.CopyTo(axes, 0);
-                    shapeAxes.CopyTo(axes, raycastAxes.Length);
-
-                    if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out Contact? contact) || contact == null) {
+                    if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out Contact? contact) || contact == null) {
                         continue;
                     }
 
@@ -627,13 +604,7 @@ namespace Raccoon {
 
             Vector2 endPos = position + direction * maxDistance;
 
-            Vector2[] raycastAxes = new Vector2[] {
-                direction.Normalized(),
-                direction.PerpendicularCW().Normalized()
-            };
-
             HashSet<Body> verifiedBodies = new HashSet<Body>();
-            Vector2[] axes, shapeAxes;
 
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
@@ -648,20 +619,13 @@ namespace Raccoon {
                         continue;
                     }
 
-                    shapeAxes = otherCollider.Shape.CalculateAxes();
-
-                    // prepare axes
-                    axes = new Vector2[raycastAxes.Length + shapeAxes.Length];
-                    raycastAxes.CopyTo(axes, 0);
-                    shapeAxes.CopyTo(axes, raycastAxes.Length);
-
                     Contact? contact = null;
 
                     switch (otherCollider.Shape) {
                         case GridShape gridShape:
                             List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
                                 (Polygon tilePolygon) => {
-                                    TestSAT(position, endPos, tilePolygon, axes, out Contact? tileContact);
+                                    SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
                                     return tileContact;
                                 }
                             );
@@ -683,7 +647,7 @@ namespace Raccoon {
                             break;
 
                         default:
-                            if (!TestSAT(position, endPos, otherCollider.Shape, otherCollider.Position, axes, out contact) || contact == null) {
+                            if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
                                 continue;
                             }
 

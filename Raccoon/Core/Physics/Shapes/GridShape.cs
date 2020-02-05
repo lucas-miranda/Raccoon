@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#define DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
+
+using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Util;
@@ -7,7 +9,7 @@ namespace Raccoon {
     public class GridShape : IShape, System.IDisposable {
 #if DEBUG
         public static readonly Color BackgroundGridColor = new Color(0x9B999AFF);
-        public static bool DebugRenderDetailed = true;
+        public static bool DebugRenderDetailed = false;
 #endif
 
         private Dictionary<uint, TileShape> _collisionShapes = new Dictionary<uint, TileShape>();
@@ -67,24 +69,32 @@ namespace Raccoon {
                 if (tile is BoxTileShape boxTile) {
                     Debug.DrawRectangle(new Rectangle(tilePos, TileSize), CollisionTilesColor);
                 } else if (tile is PolygonTileShape polygonTile) {
-                    /*Polygon p = new Polygon(polygonTile.Polygon);
-                    p.Translate(tilePos);
-                    Debug.DrawPolygon(p, Color.Cyan);*/
+#if !DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
+                    if (polygonTile.Polygon.IsConvex) {
+                        Polygon p = new Polygon(polygonTile.Polygon);
+                        p.Translate(tilePos);
+                        Debug.DrawPolygon(p, CollisionTilesColor);
+                    } else {
+#endif
+                        List<Vector2[]> components = polygonTile.Polygon.ConvexComponents();
+                        Vector2[] points;
+                        Vector2 anchorVertex = polygonTile.Polygon[0];
 
-                    List<Vector2[]> components = polygonTile.Polygon.ConvexComponents();
-                    Vector2[] points;
-                    foreach (Vector2[] component in components) {
-                        points = new Vector2[component.Length];
-                        for (int i = 0; i < component.Length; i++) {
-                            points[i] = tilePos + component[i];
+                        foreach (Vector2[] component in components) {
+                            points = new Vector2[component.Length];
+                            for (int i = 0; i < component.Length; i++) {
+                                points[i] = tilePos + anchorVertex + component[i];
+                            }
+
+                            Debug.DrawLines(points, CollisionTilesColor);
                         }
 
-                        Debug.DrawLines(points, CollisionTilesColor);
+                        if (DebugRenderDetailed) {
+                            Debug.DrawString(tilePos + TileSize / 2f, $"{components.Count}");
+                        }
+#if !DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
                     }
-
-                    if (DebugRenderDetailed) {
-                        Debug.DrawString(tilePos + TileSize / 2f, $"{components.Count}");
-                    }
+#endif
                 }
             }
 
@@ -297,11 +307,12 @@ namespace Raccoon {
             public Polygon Polygon { get; private set; }
 
             public Polygon[] CreateCollisionPolygons(GridShape grid, Vector2 gridPos, int column, int row) {
+                Vector2 anchorVertex = Polygon[0];
                 List<Vector2[]> convexComponents = Polygon.ConvexComponents();
                 Polygon[] polygons = new Polygon[convexComponents.Count];
                 for (int i = 0; i < convexComponents.Count; i++) {
                     Polygon p = new Polygon(convexComponents[i]);
-                    p.Translate(grid.ConvertTilePosition(gridPos, column, row));
+                    p.Translate(grid.ConvertTilePosition(gridPos, column, row) + anchorVertex);
                     polygons[i] = p;
                 }
 

@@ -138,6 +138,7 @@
     <Compile Include="Core\Physics\Physics.Helper.cs" />
     <Compile Include="Core\Physics\Physics.Polygon.cs" />
     <Compile Include="Core\Physics\StandardMaterial.cs" />
+    <Compile Include="Core\Physics\Tools\SAT.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
     <Compile Include="Graphics\Atlas\Exceptions\AtlasMismatchSubTextureTypeException.cs" />

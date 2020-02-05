@@ -11,6 +11,7 @@ namespace Raccoon {
         private List<Vector2> _vertices;
         private List<Vector2[]> _convexComponents = new List<Vector2[]>();
         private bool _needRecalculateComponents;
+        private Vector2 _anchorPosWhenConvexComponentsWereCalculated;
 
         #endregion Private Members
 
@@ -594,19 +595,33 @@ namespace Raccoon {
         private void CalculateComponents() {
             _convexComponents.Clear();
             CalculateConvexity();
+
+            Vector2 anchorVertex;
             if (IsConvex) {
-                _convexComponents.Add(_vertices.ToArray());
+                Vector2[] singleComponent = new Vector2[_vertices.Count];
+                anchorVertex = _vertices[0];
+
+                for (int i = 0; i < _vertices.Count; i++) {
+                    singleComponent[i] = _vertices[i] - anchorVertex;
+                }
+
+                _convexComponents.Add(singleComponent);
                 return;
             }
 
-            List<Triangle> triangles = Triangulate();
             List<(int, int)> exclusionList = new List<(int, int)>();
             List<Vector2[]> components = new List<Vector2[]>();
-            triangles.ForEach(
+
+            anchorVertex = _vertices[0];
+            Triangulate().ForEach(
                 (Triangle t) => {
-                    Vector2[] vertices = new Vector2[t.Vertices.Length];
-                    t.Vertices.CopyTo(vertices, 0);
-                    components.Add(vertices);
+                    Vector2[] triangleVertices = t.Vertices;
+
+                    for (int i = 0; i < triangleVertices.Length; i++) {
+                        triangleVertices[i] -= anchorVertex;
+                    }
+
+                    components.Add(triangleVertices);
                 }
             );
 

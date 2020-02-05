@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using Raccoon.Components;
-
 namespace Raccoon {
     public sealed partial class Physics {
         #region Polygon vs Polygon
@@ -10,11 +8,13 @@ namespace Raccoon {
             PolygonShape shapeA = A as PolygonShape,
                          shapeB = B as PolygonShape;
 
-            Polygon polygonA = new Polygon(shapeA.Shape), polygonB = new Polygon(shapeB.Shape);
+            Polygon polygonA = new Polygon(shapeA.Shape), 
+                    polygonB = new Polygon(shapeB.Shape);
+
             polygonA.Translate(APos);
             polygonB.Translate(BPos);
 
-            if (TestSAT(polygonA, polygonB, out Contact? contact)) {
+            if (SAT.Test(polygonA, polygonB, out Contact? contact)) {
                 contacts = new Contact[] {
                     contact.Value
                 };
@@ -64,7 +64,7 @@ namespace Raccoon {
 
             List<Contact> gridContacts = TestGrid(gridB, BPos, polygonBoundingBox,
                 (Polygon tilePolygon) => {
-                    TestSAT(polygonA, tilePolygon, out Contact? tileContact);
+                    SAT.Test(polygonA, tilePolygon, out Contact? tileContact);
                     return tileContact;
                 }
             );
