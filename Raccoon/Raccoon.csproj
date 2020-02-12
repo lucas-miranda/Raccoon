@@ -140,6 +140,7 @@
     <Compile Include="Core\Physics\StandardMaterial.cs" />
     <Compile Include="Core\Physics\Tools\SAT.cs" />
     <Compile Include="Core\Transform.cs" />
+    <Compile Include="Core\IAsset.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
     <Compile Include="Graphics\Atlas\Exceptions\AtlasMismatchSubTextureTypeException.cs" />
     <Compile Include="Graphics\Atlas\Exceptions\AtlasSubTextureNotFoundException.cs" />

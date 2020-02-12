@@ -1,12 +1,21 @@
-﻿using System;
+﻿using System.IO;
 using Microsoft.Xna.Framework.Audio;
 
 namespace Raccoon.Audio {
-    public class SoundEffect {
+    public class SoundEffect : IAsset {
         #region Constructors
 
         public SoundEffect(string filename) {
-            Load(filename);
+            if (string.IsNullOrEmpty(filename)) {
+                throw new System.ArgumentException($"Invalid sound effect filename '{filename}'");
+            }
+
+            Filename = filename;
+            if (filename.Contains(".")) {
+                Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
+            }
+
+            Load();
         }
 
         #endregion Constructors
@@ -19,12 +28,14 @@ namespace Raccoon.Audio {
 
         #region Public Properties
 
-        public string Name { get { return XNASoundEffect.Name; } }
-        public TimeSpan Duration { get { return XNASoundEffect.Duration; } }
+        public string Name { get; set; } = "SoundEffect";
+        public string Filename { get; private set; }
+        public System.TimeSpan Duration { get { return XNASoundEffect.Duration; } }
         public float Volume { get { return Instance.Volume; } set { Instance.Volume = value; } }
         public float Pan { get { return Instance.Pan; } set { Instance.Pan = value; } }
         public float Pitch { get { return Instance.Pitch; } set { Instance.Pitch = value; } }
         public bool IsLooped { get { return Instance.IsLooped; } set { Instance.IsLooped = value; } }
+        public bool IsDisposed { get; private set; }
 
         #endregion Public Properties
 
@@ -58,17 +69,40 @@ namespace Raccoon.Audio {
             Instance.Stop(immediate);
         }
 
+        public void Reload() {
+            throw new System.NotImplementedException();
+        }
+
+        public void Reload(Stream assetStream) {
+            throw new System.NotImplementedException();
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (XNASoundEffect != null) {
+                Stop(immediate: true);
+                Instance.Dispose();
+                XNASoundEffect.Dispose();
+            }
+
+            IsDisposed = true;
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
 
-        protected void Load(string filename) {
-            XNASoundEffect = Game.Instance.XNAGameWrapper.Content.Load<Microsoft.Xna.Framework.Audio.SoundEffect>(filename);
+        protected void Load() {
+            XNASoundEffect = Game.Instance.XNAGameWrapper.Content.Load<Microsoft.Xna.Framework.Audio.SoundEffect>(Filename);
             if (XNASoundEffect == null) {
-                throw new NullReferenceException($"Sound Effect '{filename}' not found");
+                throw new System.NullReferenceException($"Sound Effect '{Filename}' not found");
             }
 
             Instance = XNASoundEffect.CreateInstance();
+            Name = XNASoundEffect.Name;
         }
 
         #endregion Protected Methods

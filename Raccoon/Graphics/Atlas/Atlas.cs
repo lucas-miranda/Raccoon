@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using Raccoon.Graphics.AtlasProcessors;
 
 namespace Raccoon.Graphics {
-    public class Atlas {
+    public class Atlas : IAsset {
         #region Private Members
 
         private static readonly IAtlasProcessor[] _processors;
@@ -24,36 +24,45 @@ namespace Raccoon.Graphics {
             };
         }
 
-        public Atlas(string imageFilename, string dataFilename) {
-            Texture = new Texture(imageFilename);
-
-            string dataFileText = File.ReadAllText(dataFilename);
-            JObject json = JObject.Parse(dataFileText);
-
-            JToken metaToken = json.SelectToken("meta", errorWhenNoMatch: true);
-            IAtlasProcessor dataProcessor = null;
-
-            foreach (IAtlasProcessor processor in _processors) {
-                // choose first processor which accepts meta
-                if (processor.VerifyJsonMeta(metaToken)) {
-                    dataProcessor = processor;
-                    break;
-                }
+        public Atlas(string textureFilename, string dataFilename) {
+            if (string.IsNullOrWhiteSpace(textureFilename)) {
+                throw new System.ArgumentException($"Invalid texture filename '{textureFilename}'.");
+            } else if (string.IsNullOrWhiteSpace(dataFilename)) {
+                throw new System.ArgumentException($"Invalid data filename '{dataFilename}'.");
             }
 
-            if (dataProcessor == null) {
-                throw new System.InvalidOperationException($"Could not find a valid atlas data processor (to file: '{dataFilename}').");
+            Filename = textureFilename;
+            if (Filename.Contains(".")) {
+                Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
             }
 
-            dataProcessor.ProcessJson(json, Texture, ref _subTextures);
+            DataFilename = dataFilename;
+            if (dataFilename.Contains(".")) {
+                DataFilename = Path.Combine(Game.Instance.ContentDirectory, DataFilename);
+            }
+
+            Load();
+        }
+
+        public Atlas(Stream textureStream, string dataFilename) {
+            if (string.IsNullOrWhiteSpace(dataFilename)) {
+                throw new System.ArgumentException("Invalid data filename.");
+            }
+
+            DataFilename = dataFilename;
+            Load(textureStream);
         }
 
         #endregion Constructors
 
         #region Public Properties
 
+        public string Name { get; set; } = "Atlas";
+        public string Filename { get; private set; }
+        public string DataFilename { get; private set; }
         public Texture Texture { get; private set; }
         public Size Size { get { return Texture.Size; } }
+        public bool IsDisposed { get; private set; }
 
         public AtlasSubTexture this[string name] {
             get {
@@ -95,6 +104,74 @@ namespace Raccoon.Graphics {
             return animation;
         }
 
+        public void Reload() {
+            foreach (AtlasSubTexture subTexture in _subTextures.Values) {
+                subTexture.Dispose();
+            }
+
+            _subTextures.Clear();
+            Load();
+        }
+
+        public void Reload(Stream textureStream) {
+            foreach (AtlasSubTexture subTexture in _subTextures.Values) {
+                subTexture.Dispose();
+            }
+
+            _subTextures.Clear();
+            Load(textureStream);
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            foreach (AtlasSubTexture subTexture in _subTextures.Values) {
+                subTexture.Dispose();
+            }
+
+            Texture.Dispose();
+
+            IsDisposed = true;
+        }
+
         #endregion Public Methods
+
+        #region Private Methods
+
+        private void Load() {
+            Texture = new Texture(Filename);
+            LoadData();
+        }
+
+        private void Load(Stream stream) {
+            Texture = new Texture(stream);
+            LoadData();
+        }
+
+        private void LoadData() {
+            string dataFileText = File.ReadAllText(DataFilename);
+            JObject json = JObject.Parse(dataFileText);
+
+            JToken metaToken = json.SelectToken("meta", errorWhenNoMatch: true);
+            IAtlasProcessor dataProcessor = null;
+
+            foreach (IAtlasProcessor processor in _processors) {
+                // choose first processor which accepts meta
+                if (processor.VerifyJsonMeta(metaToken)) {
+                    dataProcessor = processor;
+                    break;
+                }
+            }
+
+            if (dataProcessor == null) {
+                throw new System.InvalidOperationException($"Could not find a valid atlas data processor (to data file: '{DataFilename}' and texture file: '{Filename}').");
+            }
+
+            dataProcessor.ProcessJson(json, Texture, ref _subTextures);
+        }
+
+        #endregion Private Methods
     }
 }

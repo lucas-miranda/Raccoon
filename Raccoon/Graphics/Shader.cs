@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    public class Shader : IEnumerable {
+    public class Shader : IAsset, IEnumerable {
         #region Private Members
 
         private static int NextId = 0;
@@ -16,12 +16,26 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public Shader(string filename) {
-            Load(filename);
+            if (string.IsNullOrEmpty(filename)) {
+                throw new System.ArgumentException($"Invalid shader filename '{filename}'");
+            }
+
+            Filename = filename;
+            if (filename.Contains(".") && !Filename.Contains(Game.Instance.ContentDirectory)) {
+                Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
+            }
+
+            Load();
             UpdateId();
         }
 
         public Shader(byte[] shaderCode) {
             XNAEffect = new Effect(Game.Instance.GraphicsDevice, shaderCode);
+            UpdateId();
+        }
+
+        public Shader(Stream shaderStream) {
+            Load(shaderStream);
             UpdateId();
         }
 
@@ -34,8 +48,11 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
+        public string Name { get; set; } = "Shader";
+        public string Filename { get; private set; }
         public int TechniqueCount { get { return XNAEffect.Techniques.Count; } }
         public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } set { XNAEffect.CurrentTechnique = XNAEffect.Techniques[value]; } }
+        public bool IsDisposed { get; private set; }
 
         #endregion Public Properties
 
@@ -159,6 +176,35 @@ namespace Raccoon.Graphics {
             XNAEffect.Parameters[name].SetValue(value.XNATexture);
         }
 
+        public void Reload() {
+            XNAEffect?.Dispose();
+            Load();
+        }
+
+        public void Reload(Stream shaderStream) {
+            XNAEffect?.Dispose();
+            Load(shaderStream);
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (XNAEffect != null) {
+                if (string.IsNullOrWhiteSpace(XNAEffect.Name)) {
+                    ShaderIds.Remove($"Shader {Id}");
+                } else {
+                    ShaderIds.Remove(XNAEffect.Name);
+                }
+
+                XNAEffect.Dispose();
+                XNAEffect = null;
+            }
+
+            IsDisposed = true;
+        }
+
         /*
         public IEnumerator<EffectPass> GetEnumerator() {
             OnApply();
@@ -188,23 +234,56 @@ namespace Raccoon.Graphics {
         protected virtual void BeforePassApply() {
         }
 
-        protected void Load(string filename) {
+        protected void Load() {
             if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Shader needs a valid graphics device. Maybe are you creating before Scene.Start() is called?");
             }
 
-            if (filename.EndsWith(".fxb") || filename.EndsWith(".fxc")) {
-                filename = Path.Combine(Game.Instance.ContentDirectory, filename);
-                XNAEffect = new Effect(Game.Instance.GraphicsDevice, File.ReadAllBytes(filename)) {
-                    Name = Path.GetFileNameWithoutExtension(filename)
+            if (Filename.EndsWith(".fxb") || Filename.EndsWith(".fxc")) {
+                XNAEffect = new Effect(Game.Instance.GraphicsDevice, File.ReadAllBytes(Filename)) {
+                    Name = Path.GetFileNameWithoutExtension(Filename)
                 };
             } else {
-                XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(filename);
+                XNAEffect = Game.Instance.XNAGameWrapper.Content.Load<Effect>(Filename);
             }
 
             if (XNAEffect == null) {
-                throw new System.NullReferenceException($"Shader '{filename}' not found");
+                throw new System.NullReferenceException($"Shader '{Filename}' not found");
             }
+        }
+
+        protected void Load(Stream shaderStream) {
+            if (shaderStream is FileStream fileStream) {
+                Filename = fileStream.Name;
+            }
+
+            shaderStream.Seek(0, SeekOrigin.End);
+            long streamSize = shaderStream.Position;
+            shaderStream.Seek(0, SeekOrigin.Begin);
+
+            byte[] shaderCode = new byte[streamSize];
+
+            if (streamSize > int.MaxValue) {
+                byte[] buffer = new byte[int.MaxValue];
+                int count;
+                long offset = 0L;
+
+                while (offset < streamSize) {
+                    if (streamSize >= int.MaxValue) {
+                        count = int.MaxValue;
+                    } else {
+                        count = (int) streamSize;
+                    }
+
+                    shaderStream.Read(buffer, 0, count);
+                    buffer.CopyTo(shaderCode , offset);
+                    offset += count;
+                }
+            } else {
+                shaderStream.Read(shaderCode , 0, (int) streamSize);
+            }
+
+            XNAEffect = new Effect(Game.Instance.GraphicsDevice, shaderCode);
         }
 
         #endregion Protected Methods

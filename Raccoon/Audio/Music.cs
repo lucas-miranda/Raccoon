@@ -1,8 +1,8 @@
-﻿using System;
+﻿using System.IO;
 using Microsoft.Xna.Framework.Media;
 
 namespace Raccoon.Audio {
-    public class Music {
+    public class Music : IAsset {
         #region Private Static Members
 
         private static float _masterVolume = 1f;
@@ -12,14 +12,23 @@ namespace Raccoon.Audio {
         #region Private Members
 
         private float _volume = 1f;
-        private TimeSpan _currentTime;
+        private System.TimeSpan _currentTime;
 
         #endregion Private Members
 
         #region Constructors
 
         public Music(string filename) {
-            Load(filename);
+            if (string.IsNullOrEmpty(filename)) {
+                throw new System.ArgumentException($"Invalid music filename '{filename}'");
+            }
+
+            Filename = filename;
+            if (filename.Contains(".") && !Filename.Contains(Game.Instance.ContentDirectory)) {
+                Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
+            }
+
+            Load();
         }
 
         #endregion Constructors
@@ -45,13 +54,15 @@ namespace Raccoon.Audio {
 
         #region Public Properties
 
-        public string Name { get { return XNASong.Name; } }
-        public TimeSpan Duration { get { return XNASong.Duration; } }
-        public TimeSpan CurrentTime { get { return CurrentMusic == this ? MediaPlayer.PlayPosition : _currentTime; } private set { _currentTime = value; } }
+        public string Name { get; set; } = "Music";
+        public string Filename { get; private set; }
+        public System.TimeSpan Duration { get { return XNASong.Duration; } }
+        public System.TimeSpan CurrentTime { get { return CurrentMusic == this ? MediaPlayer.PlayPosition : _currentTime; } private set { _currentTime = value; } }
         public bool IsLooped { get; set; }
         public bool IsPlaying { get { return !(IsPaused || IsStopped); } private set { IsPaused = IsStopped = !value; } }
         public bool IsPaused { get; private set; }
         public bool IsStopped { get; private set; } = true;
+        public bool IsDisposed { get; private set; }
 
         public float Volume {
             get {
@@ -93,7 +104,7 @@ namespace Raccoon.Audio {
         public void Play() {
             PrepareMediaPlayer();
 
-            CurrentTime = TimeSpan.FromSeconds(0);
+            CurrentTime = System.TimeSpan.FromSeconds(0);
             MediaPlayer.Play(XNASong);
 
             IsPlaying = true;
@@ -122,7 +133,7 @@ namespace Raccoon.Audio {
                 MediaPlayer.Stop();
             }
 
-            CurrentTime = TimeSpan.FromSeconds(MediaPlayer.PlayPosition.TotalSeconds - 1);
+            CurrentTime = System.TimeSpan.FromSeconds(MediaPlayer.PlayPosition.TotalSeconds - 1);
             IsPaused = true;
             IsStopped = false;
         }
@@ -132,21 +143,48 @@ namespace Raccoon.Audio {
                 MediaPlayer.Stop();
             }
 
-            CurrentTime = TimeSpan.FromSeconds(0);
+            CurrentTime = System.TimeSpan.FromSeconds(0);
             IsPaused = false;
             IsStopped = true;
+        }
+
+        public void Reload() {
+            throw new System.NotImplementedException();
+        }
+
+        public void Reload(Stream assetStream) {
+            throw new System.NotImplementedException();
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            if (IsPlaying) {
+                Stop();
+            }
+
+            if (XNASong != null) {
+                XNASong.Dispose();
+                XNASong = null;
+            }
+
+            IsDisposed = true;
         }
 
         #endregion Public Methods
 
         #region Protected Methods
 
-        protected void Load(string filename) {
-            XNASong = Game.Instance.XNAGameWrapper.Content.Load<Song>(filename);
+        protected void Load() {
+            XNASong = Game.Instance.XNAGameWrapper.Content.Load<Song>(Filename);
 
             if (XNASong == null) {
-                throw new NullReferenceException($"Music '{filename}' not found");
+                throw new System.NullReferenceException($"Music '{Filename}' not found");
             }
+
+            Name = XNASong.Name;
         }
 
         #endregion Protected Methods

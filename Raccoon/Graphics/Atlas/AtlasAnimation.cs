@@ -50,6 +50,16 @@ namespace Raccoon.Graphics {
             _tracks[targetTag].Add(new AtlasAnimationFrame(duration, clippingRegion));
         }
 
+        public override void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            _tracks.Clear();
+
+            base.Dispose();
+        }
+
         public IEnumerator GetEnumerator() {
             return _tracks.GetEnumerator();
         }

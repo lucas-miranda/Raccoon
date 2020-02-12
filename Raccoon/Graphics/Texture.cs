@@ -3,7 +3,7 @@
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Raccoon.Graphics {
-    public class Texture : System.IDisposable {
+    public class Texture : IAsset {
         #region Private Static Members
 
         private static Texture _white, _black;
@@ -34,7 +34,20 @@ namespace Raccoon.Graphics {
         }
 
         public Texture(string filename) {
-            Load(filename);
+            if (string.IsNullOrEmpty(filename)) {
+                throw new System.ArgumentException($"Invalid texture filename '{filename}'");
+            }
+
+            Filename = filename;
+            if (filename.Contains(".") && !Filename.Contains(Game.Instance.ContentDirectory)) {
+                Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
+            }
+
+            Load();
+        }
+
+        public Texture(Stream textureStream) {
+            Load(textureStream);
         }
 
         /*public Texture(Texture texture) {
@@ -127,37 +140,13 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload(Stream textureStream) {
-            XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, textureStream);
-
-            if (XNATexture == null) {
-                throw new System.NullReferenceException($"Texture not found");
-            }
-
-            Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
-            Size = Bounds.Size;
+            XNATexture?.Dispose();
+            Load(textureStream);
         }
 
         public void Reload() {
-            if (string.IsNullOrWhiteSpace(Filename)) {
-                return;
-            }
-
-            if (_isFromContentManager) {
-                XNATexture = Game.Instance.XNAGameWrapper.Content.Load<Texture2D>(Filename);
-            } else {
-                XNATexture.Dispose();
-
-                using (FileStream stream = File.Open(Path.Combine(Game.Instance.ContentDirectory, Filename), FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
-                }
-            }
-
-            if (XNATexture == null) {
-                throw new System.NullReferenceException($"Texture '{Filename}' not found");
-            }
-
-            Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
-            Size = Bounds.Size;
+            XNATexture?.Dispose();
+            Load();
         }
 
         public void Dispose() {
@@ -182,19 +171,19 @@ namespace Raccoon.Graphics {
                 throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
             }
 
+            Filename = "";
             XNATexture = new Texture2D(Game.Instance.XNAGameWrapper.GraphicsDevice, width, height);
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
             Size = Bounds.Size;
         }
 
-        protected void Load(string filename) {
+        protected void Load() {
             if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
                 throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
             }
 
-            Filename = filename;
             if (Filename.EndsWith(".bmp") || Filename.EndsWith(".gif") || Filename.EndsWith(".jpg") || Filename.EndsWith(".png") || Filename.EndsWith(".tif") || Filename.EndsWith(".dds")) {
-                using (FileStream stream = File.Open(Path.Combine(Game.Instance.ContentDirectory, Filename), FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                using (FileStream stream = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
                 }
             } else {
@@ -204,6 +193,31 @@ namespace Raccoon.Graphics {
 
             if (XNATexture == null) {
                 throw new System.NullReferenceException($"Texture '{Filename}' not found");
+            }
+
+            Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
+            Size = Bounds.Size;
+        }
+
+        protected void Load(Stream stream) {
+            if (Game.Instance.XNAGameWrapper.GraphicsDevice == null) {
+                throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
+            }
+
+            if (stream is FileStream fileStream) {
+                Filename = fileStream.Name;
+            } else {
+                Filename = "";
+            }
+
+            XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
+
+            if (XNATexture == null) {
+                if (string.IsNullOrWhiteSpace(Filename)) {
+                    throw new System.NullReferenceException($"Texture not found");
+                } else {
+                    throw new System.NullReferenceException($"Texture '{Filename}' not found");
+                }
             }
 
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
