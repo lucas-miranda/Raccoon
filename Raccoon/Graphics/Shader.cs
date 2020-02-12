@@ -177,13 +177,29 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload() {
-            XNAEffect?.Dispose();
-            Load();
+            try {
+                Effect currentEffect = XNAEffect;
+                Load();
+
+                if (currentEffect != null) {
+                    currentEffect.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Reload(Stream shaderStream) {
-            XNAEffect?.Dispose();
-            Load(shaderStream);
+            try {
+                Effect currentEffect = XNAEffect;
+                Load(shaderStream);
+
+                if (currentEffect != null) {
+                    currentEffect.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Dispose() {

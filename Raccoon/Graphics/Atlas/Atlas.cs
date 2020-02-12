@@ -105,21 +105,33 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload() {
-            foreach (AtlasSubTexture subTexture in _subTextures.Values) {
-                subTexture.Dispose();
-            }
+            try {
+                Texture.Reload();
 
-            _subTextures.Clear();
-            Load();
+                foreach (AtlasSubTexture subTexture in _subTextures.Values) {
+                    subTexture.Dispose();
+                }
+
+                _subTextures.Clear();
+                LoadData();
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Reload(Stream textureStream) {
-            foreach (AtlasSubTexture subTexture in _subTextures.Values) {
-                subTexture.Dispose();
-            }
+            try {
+                Texture.Reload(textureStream);
 
-            _subTextures.Clear();
-            Load(textureStream);
+                foreach (AtlasSubTexture subTexture in _subTextures.Values) {
+                    subTexture.Dispose();
+                }
+
+                _subTextures.Clear();
+                LoadData();
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Dispose() {

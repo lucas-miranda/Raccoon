@@ -93,18 +93,42 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload() {
-            Face?.Dispose();
-            Load();
+            try {
+                SharpFont.Face currentFace = Face;
+                Load();
+
+                if (currentFace != null) {
+                    currentFace.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Reload(Stream fontStream) {
-            Face?.Dispose();
-            Load(fontStream, FaceIndex);
+            try {
+                SharpFont.Face currentFace = Face;
+                Load(fontStream, FaceIndex);
+
+                if (currentFace != null) {
+                    currentFace.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Reload(Stream fontStream, int faceIndex) {
-            Face?.Dispose();
-            Load(fontStream, faceIndex);
+            try {
+                SharpFont.Face currentFace = Face;
+                Load(fontStream, faceIndex);
+
+                if (currentFace != null) {
+                    currentFace.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Dispose() {

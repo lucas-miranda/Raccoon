@@ -140,13 +140,29 @@ namespace Raccoon.Graphics {
         }
 
         public void Reload(Stream textureStream) {
-            XNATexture?.Dispose();
-            Load(textureStream);
+            try {
+                Texture2D currentTexture = XNATexture;
+                Load(textureStream);
+
+                if (currentTexture != null) {
+                    currentTexture.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Reload() {
-            XNATexture?.Dispose();
-            Load();
+            try {
+                Texture2D currentTexture = XNATexture;
+                Load();
+
+                if (currentTexture != null) {
+                    currentTexture.Dispose();
+                }
+            } catch(System.Exception e) {
+                throw e;
+            }
         }
 
         public void Dispose() {
@@ -154,8 +170,11 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            if (XNATexture != null && !XNATexture.IsDisposed) {
-                XNATexture.Dispose();
+            if (XNATexture != null) {
+                if (!XNATexture.IsDisposed) {
+                    XNATexture.Dispose();
+                }
+
                 XNATexture = null;
             }
 
@@ -204,12 +223,6 @@ namespace Raccoon.Graphics {
                 throw new NoSuitableGraphicsDeviceException("Texture needs a valid graphics device initialized. Maybe are you creating before first Scene.Start() is called?");
             }
 
-            if (stream is FileStream fileStream) {
-                Filename = fileStream.Name;
-            } else {
-                Filename = "";
-            }
-
             XNATexture = Texture2D.FromStream(Game.Instance.XNAGameWrapper.GraphicsDevice, stream);
 
             if (XNATexture == null) {
@@ -218,6 +231,12 @@ namespace Raccoon.Graphics {
                 } else {
                     throw new System.NullReferenceException($"Texture '{Filename}' not found");
                 }
+            }
+
+            if (stream is FileStream fileStream) {
+                Filename = fileStream.Name;
+            } else {
+                Filename = "";
             }
 
             Bounds = new Rectangle(0, 0, XNATexture.Width, XNATexture.Height);
