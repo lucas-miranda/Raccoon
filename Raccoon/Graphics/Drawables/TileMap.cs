@@ -4,6 +4,15 @@ using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class TileMap : PrimitiveGraphic {
+        #region Public Members
+
+        public const uint TileFlippedHorizontallyFlag = 0x80000000,
+                          TileFlippedVerticallyFlag = 0x40000000,
+                          TileFlippedDiagonallyFlag = 0x20000000,
+                          TileFlippedAllFlags = TileFlippedHorizontallyFlag | TileFlippedVerticallyFlag | TileFlippedDiagonallyFlag;
+
+        #endregion Public Members
+
         #region Private Static Members
 
         private static readonly Regex GidRegex = new Regex(@"(\d+)");
@@ -265,18 +274,18 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            bool isAntiDiagonally = (gid & Tiled.TiledTile.FlippedDiagonallyFlag) != 0;
+            bool isAntiDiagonally = (gid & TileFlippedDiagonallyFlag) != 0;
 
             ImageFlip flip = ImageFlip.None;
-            if ((gid & Tiled.TiledTile.FlippedHorizontallyFlag) != 0) {
+            if ((gid & TileFlippedHorizontallyFlag) != 0) {
                 flip |= ImageFlip.Horizontal;
             }
 
-            if ((gid & Tiled.TiledTile.FlippedVerticallyFlag) != 0) {
+            if ((gid & TileFlippedVerticallyFlag) != 0) {
                 flip |= ImageFlip.Vertical;
             }
 
-            int id = (int) (gid & ~Tiled.TiledTile.FlippedAllFlags) - 1; // clear flags
+            int id = (int) (gid & ~TileFlippedAllFlags) - 1; // clear flags
             float texLeft = (id % _tileSetColumns) * TileSize.Width,
                   texTop = (id / _tileSetColumns) * TileSize.Height;
 
