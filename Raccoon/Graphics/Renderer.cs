@@ -141,6 +141,32 @@ namespace Raccoon.Graphics {
             }
         }
 
+        #region Draw Texture With Explicit Vertices
+
+        public void Draw(Texture texture, Vector2[] vertices, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.Draw(texture, vertices, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.Draw(texture, vertices, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void Draw(Texture texture, VertexPositionColorTexture[] vertexData, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.Draw(texture, vertexData, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.Draw(texture, vertexData, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        #endregion Draw Texture With Explicit Vertices
+
         #region Draw Texture on Destination Rectangle
 
         public void Draw(Canvas canvas, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {

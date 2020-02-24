@@ -131,6 +131,28 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void Draw(Texture texture, Vector2[] vertices, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            PreDrawItemCheck();
+
+            SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+            batchItem.Set(texture, vertices, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
+
+        public void Draw(Texture texture, VertexPositionColorTexture[] vertexData, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            PreDrawItemCheck();
+
+            SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+            batchItem.Set(texture, vertexData, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
+
         #endregion Draw with Texture
 
         #region Draw String
