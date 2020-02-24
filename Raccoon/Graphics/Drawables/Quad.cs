@@ -1,4 +1,5 @@
-﻿using Raccoon.Util;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class Quad : Graphic {
@@ -14,6 +15,7 @@ namespace Raccoon.Graphics {
 
         private Vector2[] _vertices = new Vector2[4];
         private int[] _indices;
+        private VertexPositionColorTexture[] _vertexData;
 
         private bool _filled = true, 
                      _needsSetup;
@@ -37,6 +39,44 @@ namespace Raccoon.Graphics {
         public Quad(Size size) : this(size.Width, size.Height) {
         }
 
+        public Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Texture texture, Rectangle? sourceRegion = null, Rectangle? clippingRegion = null) {
+            Setup(a, b, c, d);
+
+            if (sourceRegion != null) {
+                if (clippingRegion != null) {
+                    Setup(texture, sourceRegion.Value, clippingRegion.Value);
+                } else {
+                    Setup(texture, sourceRegion.Value);
+                }
+            } else {
+                Setup(texture);
+            }
+
+            Load();
+        }
+
+        public Quad(float width, float height, Texture texture, Rectangle? sourceRegion = null, Rectangle? clippingRegion = null) {
+            Setup(width, height);
+
+            if (sourceRegion != null) {
+                if (clippingRegion != null) {
+                    Setup(texture, sourceRegion.Value, clippingRegion.Value);
+                } else {
+                    Setup(texture, sourceRegion.Value);
+                }
+            } else {
+                Setup(texture);
+            }
+
+            Load();
+        }
+
+        public Quad(float wh, Texture texture, Rectangle? sourceRegion = null, Rectangle? clippingRegion = null) : this(wh, wh, texture, sourceRegion, clippingRegion) {
+        }
+
+        public Quad(Size size, Texture texture, Rectangle? sourceRegion = null, Rectangle? clippingRegion = null) : this(size.Width, size.Height, texture, sourceRegion, clippingRegion) {
+        }
+
         #endregion Constructors
 
         #region Public Properties
@@ -45,6 +85,9 @@ namespace Raccoon.Graphics {
         public Vector2 PointB { get; private set; }
         public Vector2 PointC { get; private set; }
         public Vector2 PointD { get; private set; }
+        public Texture Texture { get; private set; }
+        public Rectangle SourceRegion { get; private set; }
+        public Rectangle ClippingRegion { get; private set; }
 
         public bool Filled {
             get {
@@ -83,6 +126,19 @@ namespace Raccoon.Graphics {
             NeedsReload = _needsSetup = true;
         }
 
+        public void Setup(Vector2[] vertices) {
+            if (vertices.Length < 4) {
+                throw new System.ArgumentException("Vertices count should be at least 4.");
+            }
+
+            Setup(
+                vertices[0],
+                vertices[1],
+                vertices[2],
+                vertices[3]
+            );
+        }
+
         public void Setup(float width, float height) {
             PointA = Vector2.Zero;
             PointB = new Vector2(width, 0f);
@@ -90,6 +146,85 @@ namespace Raccoon.Graphics {
             PointD = new Vector2(0f, height);
             Size = new Size(width, height);
             NeedsReload = _needsSetup = true;
+        }
+
+        public void Setup(Texture texture) {
+            NeedsReload = _needsSetup = Texture != texture && (Texture == null || texture == null);
+            Texture = texture;
+
+            if (texture == null) {
+                ClippingRegion = SourceRegion = Rectangle.Empty;
+            } else {
+                ClippingRegion = SourceRegion = texture.Bounds;
+            }
+        }
+
+        public void Setup(Texture texture, Rectangle clippingRegion) {
+            if (texture == null) {
+                throw new System.ArgumentNullException("Invalid texture.");
+            }
+
+            NeedsReload = _needsSetup = Texture == null;
+            Texture = texture;
+            SourceRegion = texture.Bounds;
+
+            if (clippingRegion.Left < 0 || clippingRegion.Top < 0 
+              || clippingRegion.Right > SourceRegion.Width 
+              || clippingRegion.Bottom > SourceRegion.Height) {
+                throw new System.ArgumentOutOfRangeException("clippingRegion", clippingRegion, $"Value must be within source region bounds {SourceRegion}");
+            }
+
+            ClippingRegion = clippingRegion;
+        }
+
+        public void Setup(Texture texture, Rectangle sourceRegion, Rectangle clippingRegion) {
+            if (texture == null) {
+                throw new System.ArgumentNullException("Invalid texture.");
+            }
+
+            NeedsReload = _needsSetup = Texture == null;
+            Texture = texture;
+
+            if (sourceRegion.Left < Texture.Bounds.Left || sourceRegion.Top < Texture.Bounds.Top 
+              || sourceRegion.Right > Texture.Bounds.Right || sourceRegion.Bottom > Texture.Bounds.Bottom) {
+                throw new System.ArgumentOutOfRangeException("sourceRegion", sourceRegion, "Value must be within texture bounds.");
+            }
+
+            SourceRegion = sourceRegion;
+
+            if (clippingRegion.Left < 0 || clippingRegion.Top < 0 
+              || clippingRegion.Right > SourceRegion.Width 
+              || clippingRegion.Bottom > SourceRegion.Height) {
+                throw new System.ArgumentOutOfRangeException("clippingRegion", clippingRegion, $"Value must be within source region bounds {SourceRegion}");
+            }
+
+            ClippingRegion = clippingRegion;
+            NeedsReload = _needsSetup = true;
+        }
+
+        public void Setup(Texture texture, (Vector2 Position, Color Color, Vector2 TextureCoordinate)[] vertexData) {
+            if (texture == null) {
+                throw new System.ArgumentNullException("Invalid texture.");
+            }
+
+            Texture = texture;
+
+            if (vertexData.Length < 4) {
+                throw new System.ArgumentException("Vertices count should be at least 4.");
+            }
+
+            if (_vertexData == null) {
+                _vertexData = new VertexPositionColorTexture[4];
+            }
+
+            for (int i = 0; i < 4; i++) {
+                (Vector2 Position, Color Color, Vector2 TextureCoordinate) vertex = vertexData[i];
+                _vertexData[i] = new VertexPositionColorTexture(
+                    new Microsoft.Xna.Framework.Vector3(vertex.Position, 0f),
+                    vertex.Color,
+                    vertex.TextureCoordinate
+                );
+            }
         }
 
         #region Protected Methods
@@ -105,6 +240,25 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
+            if (Texture != null) {
+                Renderer.Draw(
+                    Texture,
+                    _vertexData,
+                    Position + position,
+                    Rotation + rotation,
+                    Scale * scale,
+                    Flipped,
+                    (Color * color) * Opacity,
+                    Origin + origin,
+                    Scroll + scroll,
+                    shader,
+                    shaderParameters,
+                    layerDepth
+                );
+
+                return;
+            }
+
             Renderer.DrawVertices(
                 _vertices,
                 minVertexIndex: 0,
@@ -129,6 +283,7 @@ namespace Raccoon.Graphics {
 
         private void Setup() {
             // preparing vertices
+
             //
             // Vertices layout:
             //
@@ -138,17 +293,10 @@ namespace Raccoon.Graphics {
             //  0--2
             //
 
-            // PointA
-            _vertices[1] = new Vector2(PointA.X, PointA.Y);
-
-            // PointB
-            _vertices[3] = new Vector2(PointB.X, PointB.Y);
-
-            // PointC
-            _vertices[2] = new Vector2(PointC.X, PointC.Y);
-
-            // PointD
-            _vertices[0] = new Vector2(PointD.X, PointD.Y);
+            _vertices[1] = PointA;
+            _vertices[3] = PointB;
+            _vertices[2] = PointC;
+            _vertices[0] = PointD;
 
             _needsSetup = false;
         }
