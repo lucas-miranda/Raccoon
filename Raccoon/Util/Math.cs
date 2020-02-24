@@ -172,16 +172,64 @@
             return n;
         }
 
-        public static float Min(float n1, float n2) {
-            return Microsoft.Xna.Framework.MathHelper.Min(n1, n2);
+        public static float Min(params float[] values) {
+            if (values.Length == 0) {
+                throw new System.ArgumentException("At least one value must be supplied.");
+            } else if (values.Length == 1) {
+                return values[0];
+            } else if (values.Length == 2) {
+                return values[0] < values[1] ? values[0] : values[1];
+            }
+
+            float min = values[0];
+
+            for (int i = 1; i < values.Length; i++) {
+                if (values[i] < min) {
+                    min = values[i];
+                }
+            }
+
+            return min;
         }
 
-        public static int Min(int n1, int n2) {
-			return n1 < n2 ? n1 : n2;
+        public static int Min(params int[] values) {
+            if (values.Length == 0) {
+                throw new System.ArgumentException("At least one value must be supplied.");
+            } else if (values.Length == 1) {
+                return values[0];
+            } else if (values.Length == 2) {
+                return values[0] < values[1] ? values[0] : values[1];
+            }
+
+            int min = values[0];
+
+            for (int i = 1; i < values.Length; i++) {
+                if (values[i] < min) {
+                    min = values[i];
+                }
+            }
+
+            return min;
         }
 
-        public static int Max(int n1, int n2) {
-			return n1 > n2 ? n1 : n2;
+        public static int Max(params int[] values) {
+            if (values.Length == 0) {
+                throw new System.ArgumentException("At least one value must be supplied.");
+            } else if (values.Length == 1) {
+                return values[0];
+            } else if (values.Length == 2) {
+                return values[0] > values[1] ? values[0] : values[1];
+            }
+
+            int max = values[0];
+
+            for (int i = 1; i < values.Length; i++) {
+                if (values[i] > max) {
+                    max = values[i];
+                }
+            }
+
+            return max;
         }
 
         public static Vector2 Max(Vector2 v1, Vector2 v2) {
@@ -200,8 +248,24 @@
             return new Size(Min(s1.Width, s2.Width), Min(s1.Height, s2.Height));
         }
 
-        public static float Max(float n1, float n2) {
-            return Microsoft.Xna.Framework.MathHelper.Max(n1, n2);
+        public static float Max(params float[] values) {
+            if (values.Length == 0) {
+                throw new System.ArgumentException("At least one value must be supplied.");
+            } else if (values.Length == 1) {
+                return values[0];
+            } else if (values.Length == 2) {
+                return values[0] > values[1] ? values[0] : values[1];
+            }
+
+            float max = values[0];
+
+            for (int i = 1; i < values.Length; i++) {
+                if (values[i] > max) {
+                    max = values[i];
+                }
+            }
+
+            return max;
         }
 
         public static float NormalizeInRange(float value, float min, float max) {
