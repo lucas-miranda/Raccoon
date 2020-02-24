@@ -88,6 +88,9 @@ namespace Raccoon.Graphics {
         public Color(Color color, byte alpha) : this(color.R, color.G, color.B, alpha) {
         }
 
+        public Color(Microsoft.Xna.Framework.Color color) : this(color.R, color.G, color.B, color.A) {
+        }
+
         #endregion Constructors
 
         #region Public Properties
