@@ -107,6 +107,11 @@ Scene:
                         e = e.InnerException;
                         logWriter.WriteLine($"{System.DateTime.Now.ToString()}  InnerException: {e.Message}\n{e.StackTrace}\n");
                     }
+
+                    // include report.log
+                    System.Diagnostics.Debug.Flush();
+                    logWriter.WriteLine("\n\nreport.log\n-------------\n");
+                    logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
                 }
 
                 switch (System.Environment.OSVersion.Platform) {
