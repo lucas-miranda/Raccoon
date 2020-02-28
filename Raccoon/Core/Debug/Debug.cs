@@ -34,7 +34,6 @@ namespace Raccoon {
 
         // compose message
         private static StringBuilder _composeMessage = new StringBuilder();
-        private static bool _isComposingMessage;
 
         #endregion Private Members
 

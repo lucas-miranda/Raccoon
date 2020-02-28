@@ -11,7 +11,6 @@ namespace Raccoon {
         private List<Vector2> _vertices;
         private List<Vector2[]> _convexComponents = new List<Vector2[]>();
         private bool _needRecalculateComponents;
-        private Vector2 _anchorPosWhenConvexComponentsWereCalculated;
 
         #endregion Private Members
 

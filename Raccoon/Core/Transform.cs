@@ -9,8 +9,6 @@ namespace Raccoon {
 
         private Locker<Transform> _children = new Locker<Transform>();
 
-        private bool _isChildrenListLocked;
-
         private Transform _parent;
 
         #endregion Private Members

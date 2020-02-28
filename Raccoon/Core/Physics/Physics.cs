@@ -466,7 +466,7 @@ namespace Raccoon {
             Contact? rayContact = null;
             float closerContactDist = float.PositiveInfinity;
 
-            Vector2[] axes, shapeAxes;
+            Vector2[] shapeAxes;
 
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
