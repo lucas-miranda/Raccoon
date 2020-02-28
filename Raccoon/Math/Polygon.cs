@@ -445,11 +445,14 @@ namespace Raccoon {
                 current = current.Next;
             }
 
+            if (ears.Count == 0) {
+                // no ears found, just stop
+                return triangles;
+            }
+
             LinkedListNode<Vector2> prev2, prev, next, next2;
 
             while (vertices.Count > 3) {
-                Debug.Assert(ears.Count > 0, "Error in Triangulate: No ear found.");
-
                 current = ears.Pop();
                 prev = current.PreviousOrLast();
                 prev2 = prev.PreviousOrLast();
@@ -613,7 +616,13 @@ namespace Raccoon {
             List<Vector2[]> components = new List<Vector2[]>();
 
             anchorVertex = _vertices[0];
-            Triangulate().ForEach(
+            List<Triangle> triangles = Triangulate();
+
+            if (triangles.Count == 0) {
+                return;
+            }
+
+            triangles.ForEach(
                 (Triangle t) => {
                     Vector2[] triangleVertices = t.Vertices;
 
