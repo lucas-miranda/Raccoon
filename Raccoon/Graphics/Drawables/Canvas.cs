@@ -91,7 +91,11 @@ namespace Raccoon.Graphics {
         }
 
         public override void Dispose() {
-            XNARenderTarget.Dispose();
+            if (IsDisposed) {
+                return;
+            }
+
+            base.Dispose();
         }
 
         #endregion Public Methods
