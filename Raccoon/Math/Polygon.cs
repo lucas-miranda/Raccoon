@@ -451,8 +451,13 @@ namespace Raccoon {
 
             LinkedListNode<Vector2> prev2, prev, next, next2;
 
-            while (vertices.Count > 3) {
+            while (vertices.Count > 3 && ears.Count > 0) {
                 current = ears.Pop();
+
+                if (current == null || current.List == null) {
+                    continue;
+                }
+
                 prev = current.PreviousOrLast();
                 prev2 = prev.PreviousOrLast();
                 next = current.NextOrFirst();
