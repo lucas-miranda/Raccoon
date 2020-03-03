@@ -302,6 +302,30 @@ namespace Raccoon.Graphics {
             XNAEffect = new Effect(Game.Instance.GraphicsDevice, shaderCode);
         }
 
+        protected EffectParameter RequestParameter(string paramName) {
+            return XNAEffect.Parameters[paramName] ?? throw new System.InvalidOperationException($"Requested parameter '{paramName}' was not found.");
+        }
+
+        protected EffectParameter RequestParameter(int id) {
+            return XNAEffect.Parameters[id] ?? throw new System.InvalidOperationException($"Requested parameter with index {id} was not found.");
+        }
+
+        protected bool TryRequestParameter(string paramName, out EffectParameter parameter) {
+            parameter = XNAEffect.Parameters[paramName];
+            return parameter != null;
+        }
+
+        protected bool TryRequestParameter(int id, out EffectParameter parameter) {
+            try {
+                parameter = XNAEffect.Parameters[id];
+            } catch (System.ArgumentOutOfRangeException) {
+                parameter = null;
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion Protected Methods
 
         #region Private Methods
