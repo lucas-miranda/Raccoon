@@ -181,7 +181,7 @@ namespace Raccoon {
         }
 
         public static Size operator /(float v, Size r) {
-            return r * v;
+            return new Size(v / r.Width, v / r.Height);
         }
 
         public static Size operator /(Size l, Vector2 r) {
