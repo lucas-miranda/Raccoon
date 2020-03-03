@@ -8,7 +8,7 @@ namespace Raccoon.Graphics {
         #region Public Members
 
         [System.Flags]
-        public enum DirtyFlags {
+        public enum DirtyFlag {
             None                    = 0,
             TechniqueIndex          = 1 << 0,
             WorldViewProjection     = 1 << 1,
@@ -24,8 +24,6 @@ namespace Raccoon.Graphics {
         private float _alpha;
         private bool _textureEnabled, _depthWriteEnabled;
         private Texture _texture;
-
-        private BitTag _dirtyFlags = DirtyFlags.None;
 
         #endregion Private Members
 
@@ -59,7 +57,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _world = value;
-                _dirtyFlags |= DirtyFlags.WorldViewProjection;
+                DirtyFlags |= DirtyFlag.WorldViewProjection;
             }
         }
 
@@ -70,7 +68,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _view = value;
-                _dirtyFlags |= DirtyFlags.WorldViewProjection;
+                DirtyFlags |= DirtyFlag.WorldViewProjection;
             }
         }
 
@@ -81,7 +79,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _projection = value;
-                _dirtyFlags |= DirtyFlags.WorldViewProjection;
+                DirtyFlags |= DirtyFlag.WorldViewProjection;
             }
         }
 
@@ -92,7 +90,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _diffuseColor = value;
-                _dirtyFlags |= DirtyFlags.MaterialColor;
+                DirtyFlags |= DirtyFlag.MaterialColor;
             }
         }
 
@@ -103,7 +101,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _alpha = value;
-                _dirtyFlags |= DirtyFlags.MaterialColor;
+                DirtyFlags |= DirtyFlag.MaterialColor;
             }
         }
 
@@ -118,7 +116,7 @@ namespace Raccoon.Graphics {
                 }
 
                 _textureEnabled = value;
-                _dirtyFlags |= DirtyFlags.TechniqueIndex;
+                DirtyFlags |= DirtyFlag.TechniqueIndex;
             }
         }
 
@@ -154,13 +152,15 @@ namespace Raccoon.Graphics {
                 }
 
                 _depthWriteEnabled = value;
-                _dirtyFlags |= DirtyFlags.TechniqueIndex;
+                DirtyFlags |= DirtyFlag.TechniqueIndex;
             }
         }
 
         #endregion Public Properties
 
         #region Internal Properties
+
+        protected BitTag DirtyFlags { get; set; }
 
         protected internal EffectParameter WorldViewProjectionParameter { get; set; }
         protected internal EffectParameter DiffuseColorParameter { get; set; }
@@ -187,17 +187,17 @@ namespace Raccoon.Graphics {
             Alpha = diffuseColor.A / 255f;
         }
 
-        public void UpdateParameters() {
-            if (_dirtyFlags.Has(DirtyFlags.WorldViewProjection)) {
+        public virtual void UpdateParameters() {
+            if (DirtyFlags.Has(DirtyFlag.WorldViewProjection)) {
                 Matrix.Multiply(ref _world, ref _view, out Matrix worldView);
                 Matrix.Multiply(ref worldView, ref _projection, out Matrix worldViewProjection);
                 WorldViewProjection = worldViewProjection;
                 WorldViewProjectionParameter.SetValue(worldViewProjection);
 
-                _dirtyFlags -= DirtyFlags.WorldViewProjection;
+                DirtyFlags -= DirtyFlag.WorldViewProjection;
             }
 
-            if (_dirtyFlags.Has(DirtyFlags.MaterialColor)) {
+            if (DirtyFlags.Has(DirtyFlag.MaterialColor)) {
                 Vector4 diffuseColor = new Vector4(
                     DiffuseColor.R / 255f * Alpha,
                     DiffuseColor.G / 255f * Alpha,
@@ -207,23 +207,12 @@ namespace Raccoon.Graphics {
 
                 DiffuseColorParameter.SetValue(diffuseColor);
 
-                _dirtyFlags -= DirtyFlags.MaterialColor;
+                DirtyFlags -= DirtyFlag.MaterialColor;
             }
 
-            if (_dirtyFlags.Has(DirtyFlags.TechniqueIndex)) {
-                int techniqueIndex = 0;
-
-                if (TextureEnabled) {
-                    techniqueIndex |= 1;
-                }
-
-                if (DepthWriteEnabled) {
-                    techniqueIndex |= 1 << 1;
-                }
-
-                SetCurrentTechnique(techniqueIndex);
-
-                _dirtyFlags -= DirtyFlags.TechniqueIndex;
+            if (DirtyFlags.Has(DirtyFlag.TechniqueIndex)) {
+                OnUpdateTechniqueIndex();
+                DirtyFlags -= DirtyFlag.TechniqueIndex;
             }
         }
 
@@ -247,6 +236,20 @@ namespace Raccoon.Graphics {
         protected override void BeforePassApply() {
             base.BeforePassApply();
             XNAEffect.GraphicsDevice.Textures[0] = TextureEnabled ? Texture.XNATexture : null;
+        }
+
+        protected virtual void OnUpdateTechniqueIndex() {
+            int techniqueIndex = 0;
+
+            if (TextureEnabled) {
+                techniqueIndex |= 1;
+            }
+
+            if (DepthWriteEnabled) {
+                techniqueIndex |= 1 << 1;
+            }
+
+            SetCurrentTechnique(techniqueIndex);
         }
 
         #endregion Protected Methods
