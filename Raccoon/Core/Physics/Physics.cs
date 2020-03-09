@@ -809,12 +809,12 @@ namespace Raccoon {
                                           verticalContacts = new List<Contact>();
 
                             // vertical collision check
-                            if (canMoveV && CheckCollision(body.Shape, moveVerticalPos, otherBody, out ContactList contactsV)) {
+                            if (CheckCollision(body.Shape, moveVerticalPos, otherBody, out ContactList contactsV)) {
                                 foreach (Contact c in contactsV) {
                                     verticalContacts.Add(c);
                                 }
 
-                                if (isMovementCollidable 
+                                if (canMoveV && isMovementCollidable 
                                   && contactsV.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f) >= 0
                                   && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))) {
                                     canMoveV = false;
@@ -825,12 +825,12 @@ namespace Raccoon {
                             }
 
                             // horizontal collision check
-                            if (canMoveH && CheckCollision(body.Shape, moveHorizontalPos, otherBody, out ContactList contactsH)) {
+                            if (CheckCollision(body.Shape, moveHorizontalPos, otherBody, out ContactList contactsH)) {
                                 foreach (Contact c in contactsH) {
                                     horizontalContacts.Add(c);
                                 }
 
-                                if (isMovementCollidable
+                                if (canMoveH && isMovementCollidable
                                   && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f) && c.PenetrationDepth > 0.5f) >= 0
                                   && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
                                     canMoveH = false;
