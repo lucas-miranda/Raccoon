@@ -67,7 +67,6 @@ namespace Raccoon.Components {
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
         public Vector2 LastPosition { get; private set; }
-        public Vector2 Position { get { return Entity.Transform.Position - Shape.Origin; } set { Entity.Transform.Position = value + Shape.Origin; } }
         public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
         public int Constraints { get { return _constraints.Count; } }
@@ -82,6 +81,16 @@ namespace Raccoon.Components {
 #if DEBUG
         public Color Color { get; set; } = Color.White;
 #endif
+
+        public Vector2 Position { 
+            get { 
+                return Entity.Transform.Position - Shape.Origin; 
+            } 
+
+            set { 
+                Entity.Transform.Position = value + Shape.Origin; 
+            } 
+        }
 
         public BitTag Tags {
             get {
@@ -249,11 +258,11 @@ namespace Raccoon.Components {
 #endif
 
         public void PhysicsUpdate(float dt) {
+            LastPosition = Position;
             if (!Active || Entity == null || !Entity.Active) {
                 return;
             }
 
-            LastPosition = Position;
             _currentUpdateCollisionList.Clear();
 
             if (Movement != null) {
