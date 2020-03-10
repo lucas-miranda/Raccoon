@@ -18,7 +18,11 @@ namespace Raccoon {
                                        OnBegin = delegate { },
                                        OnBeforeUpdate = delegate { },
                                        OnLateUpdate = delegate { },
-                                       OnWindowResize = delegate { };
+                                       OnWindowResize = delegate { },
+                                       OnActivated,
+                                       OnDeactivated,
+                                       OnDisposed,
+                                       OnExiting;
 
         public delegate void GameTimedEventDelegate(int delta);
         public event GameTimedEventDelegate OnUpdate = delegate { };
@@ -140,6 +144,10 @@ Scene:
             BackgroundColor = Color.Black;
 
             // events
+            XNAGameWrapper.Activated += Activated;
+            XNAGameWrapper.Deactivated += Deactivated;
+            XNAGameWrapper.Disposed += Disposed;
+            XNAGameWrapper.Exiting += Exiting;
             XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // window and game internal size
@@ -170,14 +178,14 @@ Scene:
 
         #region Public Properties
 
-        public bool Disposed { get; private set; }
+        public bool IsDisposed { get; private set; }
         public bool IsRunning { get; private set; }
         public bool IsFixedTimeStep { get { return XNAGameWrapper.IsFixedTimeStep; } }
         public bool VSync { get { return XNAGameWrapper.GraphicsDeviceManager.SynchronizeWithVerticalRetrace; } set { XNAGameWrapper.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = value; } }
         public bool IsFullscreen { get { return XNAGameWrapper.GraphicsDeviceManager.IsFullScreen; } }
         public bool IsMouseVisible { get { return XNAGameWrapper.IsMouseVisible; } set { XNAGameWrapper.IsMouseVisible = value; } }
         public bool AllowResize { get { return XNAGameWrapper.Window.AllowUserResizing; } set { XNAGameWrapper.Window.AllowUserResizing = value; } }
-        public bool HasFocus { get { return XNAGameWrapper.IsActive; } }
+        public bool IsActive { get { return XNAGameWrapper.IsActive; } }
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public string StartSceneName { get; private set; }
@@ -670,13 +678,13 @@ Scene:
         }
 
         protected virtual void Dispose(bool disposing) {
-            if (!Disposed) {
+            if (!IsDisposed) {
                 if (disposing) {
                     XNAGameWrapper.Dispose();
                 }
 
                 IsRunning = false;
-                Disposed = true;
+                IsDisposed = true;
             }
         }
 
@@ -908,6 +916,24 @@ Scene:
             ScreenRenderer.End();
 
             _fpsCount++;
+        }
+
+        private void Activated(object sender, System.EventArgs args) {
+            Input.Input.Instance?.OnGameActivated();
+            OnActivated?.Invoke();
+        }
+
+        private void Deactivated(object sender, System.EventArgs args) {
+            Input.Input.Instance?.OnGameDeactivated();
+            OnDeactivated?.Invoke();
+        }
+
+        private void Disposed(object sender, System.EventArgs args) {
+            OnDisposed?.Invoke();
+        }
+
+        private void Exiting(object sender, System.EventArgs args) {
+            OnExiting?.Invoke();
         }
 
         #endregion Private Methods

@@ -163,6 +163,10 @@ namespace Raccoon.Input {
         #region Keyboard
 
         public static bool IsKeyPressed(Key key) {
+            if (!Game.Instance.IsActive) {
+                return false;
+            }
+
             return Instance._keyboardPreviousState[(Keys) key] == KeyState.Up && Instance._keyboardState[(Keys) key] == KeyState.Down;
         }
 
@@ -356,7 +360,7 @@ namespace Raccoon.Input {
         #endregion Mouse
 
         public void Update(int delta) {
-            if (!Game.Instance.HasFocus) {
+            if (!Game.Instance.IsActive) {
                 return;
             }
 
@@ -481,5 +485,23 @@ namespace Raccoon.Input {
         }
 
         #endregion Private Methods
+
+        #region Internal Methods
+
+        internal void OnGameActivated() {
+            if (LockMouseOnCenter) {
+                // reenable it
+                Mouse.IsRelativeMouseModeEXT = true;
+            }
+        }
+
+        internal void OnGameDeactivated() {
+            if (LockMouseOnCenter) {
+                // temporary disable it
+                Mouse.IsRelativeMouseModeEXT = false;
+            }
+        }
+
+        #endregion Internal Methods
     }
 }
