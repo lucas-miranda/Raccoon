@@ -722,8 +722,9 @@ namespace Raccoon {
                        movementCollidableTags = body.Movement == null ? BitTag.None : body.Movement.Tags;
 
                 // initial body vars
-                int currentX = (int) body.Position.X,
-                    currentY = (int) body.Position.Y;
+                Vector2 bodyPos = body.Position;
+                int currentX = PreciseConvertToInt32(bodyPos.X),
+                    currentY = PreciseConvertToInt32(bodyPos.Y);
 
                 double diffX = (nextPosition.X + body.MoveBufferX) - currentX,
                        diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
@@ -905,7 +906,10 @@ namespace Raccoon {
 
                 body.MoveBufferX = remainderMovementXBuffer;
                 body.MoveBufferY = remainderMovementYBuffer;
-                body.Position = new Vector2(currentX, currentY);
+
+                if (!singleCheck) {
+                    body.Position = new Vector2(currentX, currentY);
+                }
             }
 
             foreach (Body body in _collidedOnThisFrame) {
@@ -959,6 +963,10 @@ namespace Raccoon {
 #if DEBUG
             CollisionDetectionNarrowPhaseExecutionTime = Time.EndStopwatch();
 #endif
+
+            int PreciseConvertToInt32(float n) {
+                return (int) (Math.Sign(n) * Math.Floor(Math.Abs(n) + Math.Epsilon));
+            }
         }
 
         private void AddCollider(Body collider, BitTag tags) {
