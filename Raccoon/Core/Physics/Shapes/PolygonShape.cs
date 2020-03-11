@@ -61,8 +61,7 @@ namespace Raccoon {
             Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
 
             Polygon polygon = new Polygon(Shape);
-            polygon.Translate(position - Origin);
-            Debug.DrawPolygon(polygon, color);
+            Debug.DrawPolygon(polygon, position, color, Origin);
 
             // normals
             /*int i = 0;

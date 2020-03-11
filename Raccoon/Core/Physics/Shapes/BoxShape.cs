@@ -81,8 +81,7 @@ namespace Raccoon {
 
             // draw using Polygon
             Polygon polygon = new Polygon(Shape);
-            polygon.Translate(position - Origin);
-            Debug.DrawPolygon(polygon, color);
+            Debug.DrawPolygon(polygon, position, color, Origin);
 
             // normals
             /*int i = 0;

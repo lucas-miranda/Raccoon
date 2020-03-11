@@ -82,7 +82,7 @@ namespace Raccoon.Graphics {
             IsBatching = false;
         }
 
-        public void DrawLines(IList<Vector2> points, Color color, float rotation, Vector2 scale, Vector2 origin, bool cyclic = true) {
+        public void DrawLines(IList<Vector2> points, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, bool cyclic = true) {
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[points.Count];
 
             int[] indexData;
@@ -97,7 +97,7 @@ namespace Raccoon.Graphics {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), 
+                        new Vector3(Math.Rotate(((point + position) - origin) * scale, rotation), 0f), 
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -114,7 +114,7 @@ namespace Raccoon.Graphics {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3((point - origin) * scale, 0f), 
+                        new Vector3((point + position - origin) * scale, 0f), 
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -441,12 +441,12 @@ namespace Raccoon.Graphics {
             _filledIndicesCount += indexData.Length;
         }
 
-        public void DrawHollowPolygon(IList<Vector2> points, Color color, float rotation, Vector2 scale, Vector2 origin) {
-            DrawLines(points, color, rotation, scale, origin, cyclic: true);
+        public void DrawHollowPolygon(IList<Vector2> points, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin) {
+            DrawLines(points, position, color, rotation, scale, origin, cyclic: true);
         }
 
-        public void DrawHollowPolygon(Polygon polygon, Color color, float rotation, Vector2 scale, Vector2 origin) {
-            DrawLines(polygon.Vertices, color, rotation, scale, origin, cyclic: true);
+        public void DrawHollowPolygon(Polygon polygon, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin) {
+            DrawLines(polygon.Vertices, position, color, rotation, scale, origin, cyclic: true);
         }
 
         #endregion Polygon

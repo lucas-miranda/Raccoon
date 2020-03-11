@@ -263,11 +263,9 @@ namespace Raccoon {
         #region Private Methods
 
         private void OnParentAdded() {
-            LocalPosition -= Parent.Position;
         }
 
         private void OnParentRemoved() {
-            LocalPosition += Parent.Position;
         }
 
         private void OnChildAdded(Transform child) {

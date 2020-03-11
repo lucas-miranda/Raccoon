@@ -77,16 +77,10 @@ namespace Raccoon {
                     } else {
 #endif
                         List<Vector2[]> components = polygonTile.Polygon.ConvexComponents();
-                        Vector2[] points;
                         Vector2 anchorVertex = polygonTile.Polygon[0];
 
                         foreach (Vector2[] component in components) {
-                            points = new Vector2[component.Length];
-                            for (int i = 0; i < component.Length; i++) {
-                                points[i] = tilePos + anchorVertex + component[i];
-                            }
-
-                            Debug.DrawLines(points, CollisionTilesColor);
+                            Debug.DrawLines(component, tilePos + anchorVertex, CollisionTilesColor);
                         }
 
                         if (DebugRenderDetailed) {

@@ -411,7 +411,7 @@ namespace Raccoon {
                 (-cameraPos + to) * zoom
             };
 
-            Game.Instance.DebugPrimitiveBatch.DrawLines(points, color, 0, new Vector2(1f), Vector2.Zero, cyclic: false);
+            Game.Instance.DebugPrimitiveBatch.DrawLines(points, Vector2.Zero, color, 0, new Vector2(1f), Vector2.Zero, cyclic: false);
         }
 
         [Conditional("DEBUG")]
@@ -439,7 +439,7 @@ namespace Raccoon {
         #region Lines
 
         [Conditional("DEBUG")]
-        public static void DrawLines(Camera camera, IList<Vector2> points, Color color, Vector2? origin = null) {
+        public static void DrawLines(Camera camera, IList<Vector2> points, Vector2 position, Color color, Vector2? origin = null) {
             if (points == null || points.Count == 0) {
                 return;
             }
@@ -458,25 +458,30 @@ namespace Raccoon {
 
             List<Vector2> pointList = new List<Vector2>();
             for (int i = 0; i < points.Count; i++) {
-                pointList.Add((-cameraPos + points[i]) * zoom);
+                pointList.Add((-cameraPos + points[i] + position) * zoom);
             }
 
-            Game.Instance.DebugPrimitiveBatch.DrawLines(pointList, color, 0, new Vector2(1f), origin.Value);
+            Game.Instance.DebugPrimitiveBatch.DrawLines(pointList, Vector2.Zero, color, 0, new Vector2(1f), origin.Value);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawLines(Camera camera, IList<Vector2> points) {
-            DrawLines(camera, points, Color.White);
+        public static void DrawLines(Camera camera, IList<Vector2> points, Vector2 position) {
+            DrawLines(camera, points, position, Color.White);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawLines(IList<Vector2> points, Color color, Vector2? origin = null) {
-            DrawLines(Camera.Current, points, color, origin);
+        public static void DrawLines(IList<Vector2> points, Vector2 position, Color color, Vector2? origin = null) {
+            DrawLines(Camera.Current, points, position, color, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawLines(IList<Vector2> points, Vector2 position) {
+            DrawLines(Camera.Current, points, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLines(IList<Vector2> points) {
-            DrawLines(Camera.Current, points, Color.White);
+            DrawLines(Camera.Current, points, Vector2.Zero, Color.White);
         }
 
         #endregion Line
@@ -651,7 +656,7 @@ namespace Raccoon {
         #region Triangle
 
         [Conditional("DEBUG")]
-        public static void DrawTriangle(Camera camera, Triangle triangle, Color color) {
+        public static void DrawTriangle(Camera camera, Triangle triangle, Vector2 position, Color color) {
             Vector2 cameraPos = Vector2.Zero;
             float zoom = 1f;
 
@@ -661,27 +666,32 @@ namespace Raccoon {
             }
 
             Vector2[] points = new Vector2[] {
-                (-cameraPos + triangle.A) * zoom,
-                (-cameraPos + triangle.B) * zoom,
-                (-cameraPos + triangle.C) * zoom
+                (-cameraPos + triangle.A + position) * zoom,
+                (-cameraPos + triangle.B + position) * zoom,
+                (-cameraPos + triangle.C + position) * zoom
             };
 
-            Game.Instance.DebugPrimitiveBatch.DrawLines(points, color, 0, new Vector2(zoom), Vector2.Zero);
+            Game.Instance.DebugPrimitiveBatch.DrawLines(points, Vector2.Zero, color, 0, new Vector2(zoom), Vector2.Zero);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawTriangle(Camera camera, Triangle triangle) {
-            DrawTriangle(camera, triangle, Color.White);
+        public static void DrawTriangle(Camera camera, Triangle triangle, Vector2 position) {
+            DrawTriangle(camera, triangle, position, Color.White);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawTriangle(Triangle triangle, Color color) {
-            DrawTriangle(Camera.Current, triangle, color);
+        public static void DrawTriangle(Triangle triangle, Vector2 position, Color color) {
+            DrawTriangle(Camera.Current, triangle, position, color);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawTriangle(Triangle triangle, Vector2 position) {
+            DrawTriangle(Camera.Current, triangle, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle) {
-            DrawTriangle(Camera.Current, triangle, Color.White);
+            DrawTriangle(Camera.Current, triangle, Vector2.Zero, Color.White);
         }
 
         #endregion Triangle
@@ -689,23 +699,28 @@ namespace Raccoon {
         #region Polygon
 
         [Conditional("DEBUG")]
-        public static void DrawPolygon(Camera camera, Polygon polygon, Color color) {
-            DrawLines(camera, polygon.Vertices, color);
+        public static void DrawPolygon(Camera camera, Polygon polygon, Vector2 position, Color color, Vector2? origin = null) {
+            DrawLines(camera, polygon.Vertices, position, color, origin);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawPolygon(Camera camera, Polygon polygon) {
-            DrawPolygon(camera, polygon, Color.White);
+        public static void DrawPolygon(Camera camera, Polygon polygon, Vector2 position) {
+            DrawPolygon(camera, polygon, position, Color.White);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawPolygon(Polygon polygon, Color color) {
-            DrawPolygon(Camera.Current, polygon, color);
+        public static void DrawPolygon(Polygon polygon, Vector2 position, Color color, Vector2? origin = null) {
+            DrawPolygon(Camera.Current, polygon, position, color, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawPolygon(Polygon polygon, Vector2 position) {
+            DrawPolygon(Camera.Current, polygon, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawPolygon(Polygon polygon) {
-            DrawPolygon(Camera.Current, polygon, Color.White);
+            DrawPolygon(Camera.Current, polygon, Vector2.Zero, Color.White);
         }
 
         #endregion Polygon
