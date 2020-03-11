@@ -14,7 +14,7 @@ namespace Raccoon {
 
         public Body BodyA { get; }
         public Body BodyB { get; }
-        public Vector2 Movement { get; }
+        public Vector2 Movement { get; set; }
         public List<Contact> HorizontalContacts { get; }
         public List<Contact> VerticalContacts { get; }
     }

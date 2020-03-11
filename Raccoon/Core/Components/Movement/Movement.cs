@@ -202,6 +202,10 @@ namespace Raccoon.Components {
             }
         }
 
+        public virtual bool CanKeepMoving(Vector2 distance, Vector2 movement) {
+            return true;
+        }
+
         public virtual bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
             return true;
         }

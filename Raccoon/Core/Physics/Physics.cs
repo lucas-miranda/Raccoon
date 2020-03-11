@@ -723,8 +723,10 @@ namespace Raccoon {
 
                 // initial body vars
                 Vector2 bodyPos = body.Position;
-                int currentX = PreciseConvertToInt32(bodyPos.X),
-                    currentY = PreciseConvertToInt32(bodyPos.Y);
+                int startX = PreciseConvertToInt32(bodyPos.X),
+                    startY = PreciseConvertToInt32(bodyPos.Y),
+                    currentX = startX,
+                    currentY = startY;
 
                 double diffX = (nextPosition.X + body.MoveBufferX) - currentX,
                        diffY = (nextPosition.Y + body.MoveBufferY) - currentY;
@@ -815,13 +817,15 @@ namespace Raccoon {
                                     verticalContacts.Add(c);
                                 }
 
-                                if (canMoveV && isMovementCollidable 
-                                  && contactsV.FindIndex(c => Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f) >= 0
-                                  && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))) {
-                                    canMoveV = false;
-                                    distanceY = 0;
-                                    directionX = Math.Sign(directionX);
-                                    moveHorizontalPos.Y = currentY;
+                                if (canMoveV) {
+                                    if (!body.Movement.CanKeepMoving(new Vector2(moveVerticalPos.X - startX, moveVerticalPos.Y - startY), new Vector2(0f, movementY))
+                                     || (isMovementCollidable && contactsV.FindIndex(FilterValidVerticalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray())))
+                                    ) {
+                                        canMoveV = false;
+                                        distanceY = 0;
+                                        directionX = Math.Sign(directionX);
+                                        moveHorizontalPos.Y = currentY;
+                                    }
                                 }
                             }
 
@@ -831,13 +835,15 @@ namespace Raccoon {
                                     horizontalContacts.Add(c);
                                 }
 
-                                if (canMoveH && isMovementCollidable
-                                  && contactsH.FindIndex(c => (Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f) && c.PenetrationDepth > 0.5f) >= 0
-                                  && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))) {
-                                    canMoveH = false;
-                                    distanceX = 0;
-                                    directionY = Math.Sign(directionY);
-                                    moveVerticalPos.X = currentX;
+                                if (canMoveH) {
+                                    if (!body.Movement.CanKeepMoving(new Vector2(moveHorizontalPos.X - startX, moveHorizontalPos.Y - startY), new Vector2(movementX, 0f)) 
+                                     || (isMovementCollidable && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray())))
+                                    ) {
+                                        canMoveH = false;
+                                        distanceX = 0;
+                                        directionY = Math.Sign(directionY);
+                                        moveVerticalPos.X = currentX;
+                                    }
                                 }
                             }
 
@@ -851,6 +857,11 @@ namespace Raccoon {
                                     _internalCollisionInfo.Add(new InternalCollisionInfo(body, otherBody, new Vector2(movementX, movementY), horizontalContacts, verticalContacts));
                                 } else {
                                     InternalCollisionInfo previousCollisionInfo = _internalCollisionInfo[collisionInfoIndex];
+
+                                    // try to change to more meaningfull movement values
+                                    if (previousCollisionInfo.Movement == Vector2.Zero) {
+                                        previousCollisionInfo.Movement = new Vector2(-movementX, -movementY);
+                                    }
 
                                     previousCollisionInfo.HorizontalContacts.AddRange(horizontalContacts);
                                     previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
@@ -966,6 +977,17 @@ namespace Raccoon {
 
             int PreciseConvertToInt32(float n) {
                 return (int) (Math.Sign(n) * Math.Floor(Math.Abs(n) + Math.Epsilon));
+            }
+
+            bool FilterValidVerticalContact(Contact c) {
+                return Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f;
+            }
+
+            bool FilterValidHorizontalContact(Contact c) {
+                return (
+                    Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f 
+                    || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f
+                ) && c.PenetrationDepth > 0.5f;
             }
         }
 
