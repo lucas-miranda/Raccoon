@@ -477,7 +477,6 @@ namespace Raccoon.Components {
                     return false;
                 } else if (collisionAxes.Y < 0f || collisionAxes.X != 0f) {
                     // pass through from below to above
-                    
                     return false;
                 } else if (!collisionInfo.Contacts.Contains(c => Vector2.Dot(c.Normal, Vector2.Down) >= .6f && Math.EqualsEstimate(c.PenetrationDepth, 1f))) {
                     // body can pass through the other body, if isn't directly above

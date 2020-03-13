@@ -792,6 +792,11 @@ namespace Raccoon {
                                                     currentY + movementY
                                                 ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
 
+                    Vector2 movement = new Vector2(
+                        Math.Abs(body.Velocity.X) > 10f ? Math.Sign(body.Velocity.X) : 0f,
+                        Math.Abs(body.Velocity.Y) > 10f ? Math.Sign(body.Velocity.Y) : 0f
+                    );
+
                     if (bodyCollidableTags != BitTag.None || movementCollidableTags != BitTag.None) {
                         for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
                             Body otherBody = _narrowPhaseBodies[k];
@@ -818,8 +823,8 @@ namespace Raccoon {
                                 }
 
                                 if (canMoveV) {
-                                    if (!body.Movement.CanKeepMoving(new Vector2(moveVerticalPos.X - startX, moveVerticalPos.Y - startY), new Vector2(0f, movementY))
-                                     || (isMovementCollidable && contactsV.FindIndex(FilterValidVerticalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(0f, movementY), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray())))
+                                    if (!body.Movement.CanKeepMoving(new Vector2(moveVerticalPos.X - startX, moveVerticalPos.Y - startY), new Vector2(0f, movement.Y))
+                                     || (isMovementCollidable && contactsV.FindIndex(FilterValidVerticalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(0f, movement.Y), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray())))
                                     ) {
                                         canMoveV = false;
                                         distanceY = 0;
@@ -836,8 +841,8 @@ namespace Raccoon {
                                 }
 
                                 if (canMoveH) {
-                                    if (!body.Movement.CanKeepMoving(new Vector2(moveHorizontalPos.X - startX, moveHorizontalPos.Y - startY), new Vector2(movementX, 0f)) 
-                                     || (isMovementCollidable && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(movementX, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray())))
+                                    if (!body.Movement.CanKeepMoving(new Vector2(moveHorizontalPos.X - startX, moveHorizontalPos.Y - startY), new Vector2(movement.X, 0f)) 
+                                     || (isMovementCollidable && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(movement.X, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray())))
                                     ) {
                                         canMoveH = false;
                                         distanceX = 0;
@@ -854,20 +859,22 @@ namespace Raccoon {
                                 int collisionInfoIndex = _internalCollisionInfo.FindIndex(ci => Helper.EqualsPermutation(body, otherBody, ci.BodyA, ci.BodyB));
 
                                 if (collisionInfoIndex < 0) {
-                                    _internalCollisionInfo.Add(new InternalCollisionInfo(body, otherBody, new Vector2(movementX, movementY), horizontalContacts, verticalContacts));
+                                    _internalCollisionInfo.Add(new InternalCollisionInfo(body, otherBody, movement, horizontalContacts, verticalContacts));
                                 } else {
                                     InternalCollisionInfo previousCollisionInfo = _internalCollisionInfo[collisionInfoIndex];
 
                                     // try to change to more meaningfull movement values
+                                    /*
                                     if (previousCollisionInfo.Movement == Vector2.Zero) {
-                                        previousCollisionInfo.Movement = new Vector2(-movementX, -movementY);
+                                        previousCollisionInfo.Movement = -movement;
                                     }
+                                    */
 
                                     previousCollisionInfo.HorizontalContacts.AddRange(horizontalContacts);
                                     previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
                                 }
 
-                                body.PhysicsCollisionSubmit(otherBody, new Vector2(movementX, movementY), horizontalContacts.AsReadOnly(), verticalContacts.AsReadOnly());
+                                body.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts.AsReadOnly(), verticalContacts.AsReadOnly());
                                 //otherBody.PhysicsCollisionSubmit(body, new Vector2(- movementX, - movementY), hContacts, vContacts);
 
                                 _collidedOnThisFrame.Add(body);
