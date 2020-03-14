@@ -68,25 +68,26 @@ namespace Raccoon.Components {
     Jump
       Jumps: {18}
       Can Jump? {19}
-      Is Jumping? {20}
-      Just Jumped? {21}
-      Is Still Jumping? {22}
-      Height: {23}
+      Has Jumped? {20}
+      Is Jumping? {21}
+      Just Jumped? {22}
+      Is Still Jumping? {23}
+      Height: {24}
 
-      can keep current jump? {24}
-      jump max y: {25}
+      can keep current jump? {25}
+      jump max y: {26}
 
     Ramps
-      On Ramp? {26}
-      Ascd? {27} Descd? {28}
-      internal isGravityEnabled {29}
-      isEnteringRamp? {30}, isLeavingRamp? {31}
-      smooth entering (a: {32}, d: {33})
-      smooth leaving (a: {34}, d: {35})
+      On Ramp? {27}
+      Ascd? {28} Descd? {29}
+      internal isGravityEnabled {30}
+      isEnteringRamp? {31}, isLeavingRamp? {32}
+      smooth entering (a: {33}, d: {34})
+      smooth leaving (a: {35}, d: {36})
 
     Fall Through
-      Can Fall Through? {36}
-      is trying to fall through? {37}
+      Can Fall Through? {37}
+      is trying to fall through? {38}
     ";
 
         // general
@@ -162,6 +163,12 @@ namespace Raccoon.Components {
         /// Holds True from leaving the ground, by jump, until before start falling.
         /// </summary>
         public bool IsJumping { get; protected set; }
+
+        /// <summary>
+        /// Means, even when is falling, that is at a jump sequence
+        ///  and not just fall from somewhere.
+        /// </summary>
+        public bool HasJumped { get; protected set; }
 
         /// <summary>
         /// If it's moving down, falling from a jump or from a higher place.
@@ -439,15 +446,20 @@ namespace Raccoon.Components {
                             isNotJumpingAnymore = true;
                         }
                     } else if (!CanContinuousJump && _canPerformEarlyJumpInput && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
-                        _canKeepCurrentJump = true;
-                        isNotJumpingAnymore = true;
+                        _canKeepCurrentJump = 
+                            isNotJumpingAnymore = true;
                     } else {
                         isNotJumpingAnymore = true;
                     }
 
                     if (isNotJumpingAnymore) {
                         OnGround = true;
-                        IsStillJumping = IsJumping = IsFalling = false;
+
+                        IsStillJumping = 
+                            IsJumping = 
+                            IsFalling = 
+                            HasJumped = false;
+
                         Jumps = MaxJumps;
                         _isTryingToFallThrough = false;
 
@@ -703,7 +715,7 @@ namespace Raccoon.Components {
                 Body.Force, GravityForce * GravityScale,
                 Enabled, CanMove,
                 OnGround, IsFalling,
-                Jumps, CanJump, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+                Jumps, CanJump, HasJumped, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
                 IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
                 AscendingRampEnteringAccelerationSmoothing, DescendingRampEnteringAccelerationSmoothing,
                 AscendingRampLeavingAccelerationSmoothing, DescendingRampLeavingAccelerationSmoothing,
@@ -735,8 +747,13 @@ namespace Raccoon.Components {
             } else if (distance.Y < 0f) {
                 if (IsStillJumping || JustReceiveImpulse) {
                     if (!IsJumping) {
-                        IsJumping = JustJumped = true;
-                        OnGround = IsFalling = false;
+                        IsJumping = 
+                            JustJumped = 
+                            HasJumped = true;
+
+                        OnGround = 
+                            IsFalling = false;
+
                         Jumps--;
                         OnJumpBegin();
                         ClearRampState();
@@ -746,7 +763,8 @@ namespace Raccoon.Components {
 
                     // checks if jump max distance has been reached
                     if (OnAir && Body.Position.Y <= _jumpMaxY) {
-                        _canKeepCurrentJump = IsStillJumping = false;
+                        _canKeepCurrentJump = 
+                            IsStillJumping = false;
                     }
                 }
             }
