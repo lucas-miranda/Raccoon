@@ -239,5 +239,12 @@ namespace Raccoon.Util {
 
             return -1;
         }
+
+        public static T Retrieve<T>(IList<T> list) {
+            int index = Integer(0, list.Count - 1);
+            T value = list[index];
+            list.RemoveAt(index);
+            return value;
+        }
     }
 }
