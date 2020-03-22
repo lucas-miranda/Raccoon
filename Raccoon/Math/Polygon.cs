@@ -379,21 +379,17 @@ namespace Raccoon {
             int windNumber = 0;
             foreach (Line edge in Edges()) {
                 if (edge.PointA.Y <= point.Y) {
-                    if (edge.PointB.Y > point.Y && isLeft(edge, point) > 0) {
+                    if (edge.PointB.Y > point.Y && Math.IsLeft(edge.PointA, edge.PointB, point)) {
                         ++windNumber;
                     }
                 } else {
-                    if (edge.PointB.Y <= point.Y && isLeft(edge, point) < 0) {
+                    if (edge.PointB.Y <= point.Y && Math.IsRight(edge.PointA, edge.PointB, point)) {
                         --windNumber;
                     }
                 }
             }
 
-            return windNumber > 0;
-
-            int isLeft(Line line, Vector2 p) {
-                return (int) System.Math.Round((line.PointB.X - line.PointA.X) * (p.Y - line.PointA.Y) - (p.X - line.PointA.X) * (line.PointB.Y - line.PointA.Y));
-            }
+            return windNumber != 0;
         }
 
         public Vector2[] Intersects(Line segment) {
