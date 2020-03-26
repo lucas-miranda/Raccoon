@@ -1,3 +1,6 @@
 [submodule "FNA"]
 	path = FNA
 	url = https://github.com/FNA-XNA/FNA.git
+[submodule "SharpFont"]
+	path = SharpFont
+	url = https://github.com/lucas-miranda/SharpFont.git
