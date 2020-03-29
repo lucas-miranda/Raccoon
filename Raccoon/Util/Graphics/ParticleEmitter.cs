@@ -55,7 +55,7 @@ namespace Raccoon.Util.Graphics {
         public void Emit(string label, Entity entity, float rotation = 0f, ImageFlip flip = ImageFlip.None, Vector2? movementDirection = null) {
             InternalEmit(
                 label, 
-                entity.Transform.Position, 
+                Vector2.Zero, 
                 rotation, 
                 flip, 
                 movementDirection, 
