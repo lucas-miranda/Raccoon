@@ -264,10 +264,7 @@ namespace Raccoon.Components {
             }
 
             _currentUpdateCollisionList.Clear();
-
-            if (Movement != null) {
-                Movement.PhysicsUpdate(dt);
-            }
+            Movement?.PhysicsUpdate(dt);
         }
 
         public void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
@@ -275,9 +272,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Movement != null) {
-                Movement.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
-            }
+            Movement?.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
         }
 
         public void PhysicsLateUpdate() {
@@ -296,9 +291,7 @@ namespace Raccoon.Components {
             _collisionList.Clear();
             _collisionList.AddRange(_currentUpdateCollisionList);
 
-            if (Movement != null) {
-                Movement.PhysicsLateUpdate();
-            }
+            Movement?.PhysicsLateUpdate();
 
             IsResting = (Position - LastPosition).LengthSquared() == 0f;
         }
@@ -308,9 +301,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Movement != null) {
-                Movement.BeforeBodySolveCollisions();
-            }
+            Movement?.BeforeBodySolveCollisions();
         }
 
         public void CollidedWith(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
@@ -337,9 +328,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Movement != null) {
-                Movement.AfterBodySolveCollisions();
-            }
+            Movement?.AfterBodySolveCollisions();
         }
 
         public Vector2 Integrate(float dt) {
