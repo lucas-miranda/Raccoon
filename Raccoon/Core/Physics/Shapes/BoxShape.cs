@@ -55,7 +55,11 @@ namespace Raccoon {
             set {
                 _origin = value;
                 Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(Rotation, Shape.Center + Origin);
+
+                if (!Math.EqualsEstimate(Rotation, 0f)) {
+                    Shape.RotateAround(Rotation, Shape.Center + Origin);
+                }
+
                 BoundingBox = Shape.BoundingBox();
             }
         }
@@ -77,7 +81,9 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
+            if (!Math.EqualsEstimate(Rotation, 0f)) {
+                Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
+            }
 
             // draw using Polygon
             Polygon polygon = new Polygon(Shape);
