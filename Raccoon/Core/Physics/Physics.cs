@@ -706,7 +706,7 @@ namespace Raccoon {
                 body.PhysicsUpdate(dt);
 
                 // check if Body is static
-                if (body.Movement == null) {
+                if (body.Movement == null && !body.AllowIndependentCollisionChecksAsStatic) {
                     // early exit, static Body, well.. should remain static
                     continue;
                 }
@@ -822,7 +822,7 @@ namespace Raccoon {
                                     verticalContacts.Add(c);
                                 }
 
-                                if (canMoveV) {
+                                if (canMoveV && body.Movement != null) {
                                     if (!body.Movement.CanKeepMoving(new Vector2(moveVerticalPos.X - startX, moveVerticalPos.Y - startY), new Vector2(0f, movement.Y))
                                      || (isMovementCollidable && contactsV.FindIndex(FilterValidVerticalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(0f, movement.Y), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray())))
                                     ) {
@@ -840,7 +840,7 @@ namespace Raccoon {
                                     horizontalContacts.Add(c);
                                 }
 
-                                if (canMoveH) {
+                                if (canMoveH && body.Movement != null) {
                                     if (!body.Movement.CanKeepMoving(new Vector2(moveHorizontalPos.X - startX, moveHorizontalPos.Y - startY), new Vector2(movement.X, 0f)) 
                                      || (isMovementCollidable && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 && body.Movement.CanCollideWith(new Vector2(movement.X, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray())))
                                     ) {

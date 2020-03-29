@@ -879,7 +879,7 @@ Scene:
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Purple);
+            GraphicsDevice.Clear(Color.Black);
 
             ScreenRenderer.Begin();
 
