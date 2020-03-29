@@ -458,10 +458,10 @@ namespace Raccoon {
 
             List<Vector2> pointList = new List<Vector2>();
             for (int i = 0; i < points.Count; i++) {
-                pointList.Add((-cameraPos + points[i] + position) * zoom);
+                pointList.Add((-cameraPos + points[i] + position - origin.Value) * zoom);
             }
 
-            Game.Instance.DebugPrimitiveBatch.DrawLines(pointList, Vector2.Zero, color, 0, new Vector2(1f), origin.Value);
+            Game.Instance.DebugPrimitiveBatch.DrawLines(pointList, Vector2.Zero, color, 0, new Vector2(1f), Vector2.Zero);
         }
 
         [Conditional("DEBUG")]
