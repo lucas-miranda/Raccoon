@@ -24,6 +24,14 @@
         public FrameSet(string filename, Size frameSize) : this(filename, frameSize, -1) {
         }
 
+        public FrameSet(Texture texture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
+            Texture = texture;
+            Load();
+        }
+
+        public FrameSet(Texture texture, Size frameSize) : this(texture, frameSize, -1) {
+        }
+
         public FrameSet(AtlasSubTexture subTexture, Size frameSize, int frameCount) : this(frameSize, frameCount) {
             Texture = subTexture.Texture;
             SourceRegion = subTexture.SourceRegion;
