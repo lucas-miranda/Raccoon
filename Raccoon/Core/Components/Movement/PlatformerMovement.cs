@@ -527,20 +527,8 @@ namespace Raccoon.Components {
 
                 if (Math.EqualsEstimate(velocity.X, 0f)) {
                     velocity.X = 0f;
-
-                    // resetting ramp leaving values
-                    if (IsLeavingRamp) {
-                        ExtraAcceleration = Vector2.Zero;
-                        _rampAccSmoothing = 1f;
-                        IsLeavingRamp = false;
-                    } else if (_isEnteringRamp) {
-                        ExtraAcceleration = Vector2.Zero;
-                        _rampAccSmoothing = 1f;
-                        _isEnteringRamp = false;
-                    }
                 } else if (OnGround && !JustReceiveImpulse) {
                     // ground drag force
-
                     float factor = (1f - DragForce) * (1f - GroundDragForce);
 
                     velocity.X *= factor;
@@ -563,6 +551,19 @@ namespace Raccoon.Components {
 
                     if (Math.Abs(velocity.X) < impulseSpeedCutoff) {
                         JustReceiveImpulse = false;
+                    }
+                }
+
+                if (Math.Abs(velocity.X) <= Math.Abs(MaxVelocity.X * .5f)) {
+                    // resetting ramp leaving values
+                    if (IsLeavingRamp) {
+                        ExtraAcceleration = Vector2.Zero;
+                        _rampAccSmoothing = 1f;
+                        IsLeavingRamp = false;
+                    } else if (_isEnteringRamp) {
+                        ExtraAcceleration = Vector2.Zero;
+                        _rampAccSmoothing = 1f;
+                        _isEnteringRamp = false;
                     }
                 }
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
