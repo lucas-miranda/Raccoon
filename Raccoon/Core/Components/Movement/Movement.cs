@@ -98,6 +98,7 @@ namespace Raccoon.Components {
         public Vector2 ImpulsePerSec { get; protected set; }
         public float ImpulseTime { get; protected set; }
         public bool JustReceiveImpulse { get; protected set; }
+        public bool IsReceivingImpulse { get; protected set; }
 
         public bool SnapHorizontalAxis {
             get {
@@ -269,7 +270,10 @@ namespace Raccoon.Components {
 
             ImpulsePerSec = (2f * distance) / (duration * duration); // acceleration
             ImpulseTime = duration;
-            JustReceiveImpulse = true;
+
+            JustReceiveImpulse =
+                IsReceivingImpulse = true;
+
             OnReceiveImpulse(ImpulsePerSec);
         }
 
