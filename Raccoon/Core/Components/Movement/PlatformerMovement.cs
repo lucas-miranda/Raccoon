@@ -88,16 +88,14 @@ namespace Raccoon.Components {
       Ascd? {32} Descd? {33}
       internal isGravityEnabled {34}
       isEnteringRamp? {35}, isLeavingRamp? {36}
-      smooth entering (a: {37}, d: {38})
-      smooth leaving (a: {39}, d: {40})
 
     Fall Through
-      Can Fall Through? {41}
-      is trying to fall through? {42}
+      Can Fall Through? {37}
+      is trying to fall through? {38}
     ";
 
         // general
-        
+
         /// <summary>
         /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
         /// </summary>
@@ -117,8 +115,10 @@ namespace Raccoon.Components {
         // ramp movement
         private Vector2 _rampNormal;
         private int _previousRampDirection;
-        private float _rampAccSmoothing = 1f;
         private bool _isEnteringRamp, _justLeavedRamp;
+
+        private float _rampCurrentAcceleration;
+        private bool _isRampAccelerationApplied;
 
         // fall through
         private BitTag _fallthroughTags;
@@ -241,22 +241,52 @@ namespace Raccoon.Components {
         /// </summary>
         public bool IsOnAscendingRamp { get; private set; }
 
-        public float AscendingRampVelocityModifier { get; set; }
-
-        public float AscendingRampEnteringAccelerationSmoothing { get; set; } = 1f;
-        public float AscendingRampLeavingAccelerationSmoothing { get; set; } = 1f;
-
         /// <summary>
         /// Is Body on a descending ramp.
         /// </summary>
         public bool IsOnDescendingRamp { get; private set; }
 
+        /// <summary>
+        /// Is leaving ramp (ascending or descending).
+        /// This stays true until velocity smooth ends.
+        /// </summary>
+        public bool IsLeavingRamp { get; private set; }
+
+        /// <summary>
+        /// Ramp acceleration that should be applied.
+        /// It'll be calculated dynamically.
+        /// </summary>
+        public float RampAcceleration { get; private set; }
+
+        /// <summary>
+        /// Extra velocity applied at an ascending ramp.
+        /// </summary>
+        public float AscendingRampVelocityModifier { get; set; }
+
+        /// <summary>
+        /// Extra velocity applied at a descending ramp.
+        /// </summary>
         public float DescendingRampVelocityModifier { get; set; }
 
-        public float DescendingRampEnteringAccelerationSmoothing { get; set; } = 1f;
-        public float DescendingRampLeavingAccelerationSmoothing { get; set; } = 1f;
+        /// <summary>
+        /// Controls ascending ramp acceleration gain.
+        /// </summary>
+        public int TimeToAchieveMaxVelocityAtAscendingRamp { get; set; } = 1000;
 
-        public bool IsLeavingRamp { get; private set; }
+        /// <summary>
+        /// Controls descending ramp acceleration gain.
+        /// </summary>
+        public int TimeToAchieveMaxVelocityAtDescendingRamp { get; set; } = 1000;
+
+        /// <summary>
+        /// When leaving ascending ramp, velocity will be reduced to this amount smooth it.
+        /// </summary>
+        public float SmoothLeavingAscendingRampVelocityCuttoff { get; set; } = 1f;
+
+        /// <summary>
+        /// When leaving descending ramp, velocity will be reduced to this amount smooth it.
+        /// </summary>
+        public float SmoothLeavingDescendingRampVelocityCuttoff { get; set; } = 1f;
 
         /// <summary>
         /// Tags to check using fall through platform logic.
@@ -567,12 +597,12 @@ namespace Raccoon.Components {
                     // resetting ramp leaving values
                     if (IsLeavingRamp) {
                         ExtraAcceleration = Vector2.Zero;
-                        _rampAccSmoothing = 1f;
                         IsLeavingRamp = false;
+                        _rampCurrentAcceleration = 0f;
                     } else if (_isEnteringRamp) {
                         ExtraAcceleration = Vector2.Zero;
-                        _rampAccSmoothing = 1f;
                         _isEnteringRamp = false;
+                        _rampCurrentAcceleration = 0f;
                     }
                 }
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
@@ -586,11 +616,9 @@ namespace Raccoon.Components {
                 // resetting ramp leaving values
                 if (IsLeavingRamp) {
                     ExtraAcceleration = Vector2.Zero;
-                    _rampAccSmoothing = 1f;
                     IsLeavingRamp = false;
                 } else if (_isEnteringRamp) {
                     ExtraAcceleration = Vector2.Zero;
-                    _rampAccSmoothing = 1f;
                     _isEnteringRamp = false;
                 }
             } else if (MaxVelocity.X > 0f) {
@@ -599,36 +627,46 @@ namespace Raccoon.Components {
 
                 // smoothing when entering on a ramp
                 if (_isEnteringRamp) {
-                    if (Math.EqualsEstimate(velocity.X, TargetVelocity.X)) {
-                        // already reached max horizontal velocity at a ramp
-                        _isEnteringRamp = false;
-                    } else if (IsOnAscendingRamp) {
+                    if (IsOnAscendingRamp) {
                         OnEnteringRamp?.Invoke(-1);
-
-                        // only apply custom smoothing if is atleast at full speed
-                        if (velocity.X < BaseMaxVelocity.X) {
-                            acceleration *= 2f - Vector2.Dot(_rampNormal, Vector2.Up);
-                        } else {
-                            acceleration *= AscendingRampEnteringAccelerationSmoothing;
-                        }
                     } else if (IsOnDescendingRamp) {
                         OnEnteringRamp?.Invoke(1);
-
-                        // only apply custom smoothing if is atleast at full speed
-                        if (velocity.X < BaseMaxVelocity.X) {
-                            acceleration *= 2f - Vector2.Dot(_rampNormal, Vector2.Up);
-                        } else {
-                            acceleration *= DescendingRampEnteringAccelerationSmoothing;
-                        }
                     }
+
+                    _isEnteringRamp = false;
                 } else if (IsLeavingRamp) {
-                    if (Math.EqualsEstimate(velocity.X, TargetVelocity.X)) {
-                        // already reached max horizontal velocity off a ramp
-                        IsLeavingRamp = false;
+                    if (!Math.EqualsEstimate(Math.Abs(velocity.X), MaxVelocity.X)) {
+                        // we'll need to smooth this
+                        acceleration = _rampCurrentAcceleration;
                     } else {
                         OnLeavingRamp?.Invoke(_previousRampDirection);
-                        acceleration *= _rampAccSmoothing;
+                        IsLeavingRamp =
+                            _isRampAccelerationApplied = false;
+
+                        _rampCurrentAcceleration = 0f;
                     }
+                } else if (IsOnRamp) {
+                    // velocity grows a lot slower on ramps
+                    // to avoid suddenly velocity changes
+
+                    if (Math.Abs(velocity.X) < BaseMaxVelocity.X) {
+                        if (_rampCurrentAcceleration < Acceleration.X) {
+                            _rampCurrentAcceleration = Acceleration.X * 4f;
+                            _isRampAccelerationApplied = false;
+                        }
+                    } else if (!_isRampAccelerationApplied) {
+                        _rampCurrentAcceleration = RampAcceleration;
+                        _isRampAccelerationApplied = true;
+                    }
+
+                    if (IsOnAscendingRamp) {
+                    } else if (IsOnDescendingRamp) {
+                        if (_isRampAccelerationApplied) {
+                            _rampCurrentAcceleration += 10;
+                        }
+                    }
+
+                    acceleration = _rampCurrentAcceleration;
                 }
 
                 velocity.X = Math.Approach(velocity.X, TargetVelocity.X, acceleration * dt);
@@ -652,7 +690,7 @@ namespace Raccoon.Components {
             ///////////////////////
 
 #if !DISABLE_RAMPS
-            bool isWalkingOnRamp = HandleRamps(displacement, out Vector2 rampDisplacement);
+            bool isWalkingOnRamp = HandleRamps(displacement, out Vector2 rampDisplacement, ref velocity);
 
             if (isWalkingOnRamp) {
                 displacement = rampDisplacement;
@@ -735,8 +773,14 @@ namespace Raccoon.Components {
         public string ToStringDetailed() {
             return string.Format(
                 DebugText,
+
+                // axes
                 Axis, LastAxis, SnapHorizontalAxis, SnapVerticalAxis,
+
+                // velocity
                 Velocity, BonusMaxVelocity, ExtraMaxVelocity, MaxVelocity, TargetVelocity, 
+
+                // * acceleration
                 Acceleration, BonusAcceleration, ExtraAcceleration,
 
                 // impulse
@@ -748,10 +792,14 @@ namespace Raccoon.Components {
                 Body.Force, GravityForce * GravityScale,
                 Enabled, CanMove,
                 OnGround, IsFalling,
+
+                // jump
                 Jumps, CanJump, HasJumped, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+
+                // ramps
                 IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
-                AscendingRampEnteringAccelerationSmoothing, DescendingRampEnteringAccelerationSmoothing,
-                AscendingRampLeavingAccelerationSmoothing, DescendingRampLeavingAccelerationSmoothing,
+
+                // fallthrough
                 CanFallThrough, _isTryingToFallThrough
             );
         }
@@ -822,7 +870,7 @@ namespace Raccoon.Components {
         /// <param name="displacement">Movement displacement.</param>
         /// <param name="rampDisplacement">Calculated ramp displacement.</param>
         /// <returns>True, if it's on a ramp, False otherwise.</returns>
-        private bool HandleRamps(Vector2 displacement, out Vector2 rampDisplacement) {
+        private bool HandleRamps(Vector2 displacement, out Vector2 rampDisplacement, ref Vector2 currentVelocity) {
             bool wasOnAscendingRamp = IsOnAscendingRamp,
                  wasOnDescendingRamp = IsOnDescendingRamp;
 
@@ -841,7 +889,38 @@ namespace Raccoon.Components {
             float dX = displacement.X + (float) Body.MoveBufferX;
 
 #if !DISABLE_ASCENDING_RAMP
-            if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX) + .5f, 0f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
+            if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX), 1f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
+
+                bool shouldMoveTowardsRamp = true;
+                Vector2 moveDir = new Vector2(Math.Sign(dX), 0f);
+                float greaterDist = 0f;
+
+                foreach (CollisionInfo<Body> collInfo in ascdCollisionList) {
+                    foreach (Contact c in collInfo.Contacts) {
+                        float proj = moveDir.Projection(c.Normal);
+                        if (proj <= 0f) {
+                            continue;
+                        }
+
+                        float dist = proj * c.PenetrationDepth;
+                        if (dist > greaterDist) {
+                            greaterDist = dist;
+                        }
+                    }
+
+                    if (!shouldMoveTowardsRamp) {
+                        break;
+                    }
+                }
+
+                if (greaterDist > 0.01f && greaterDist < .8f) {
+                    rampDisplacement = new Vector2(Math.Sign(dX) * (Math.Abs(dX) - greaterDist), 0f);
+                    return true;
+                }
+
+                Rectangle bodyBounds = Body.Bounds;
+                Size halfBodySize = bodyBounds.Size / 2f;
+
                 Vector2[] ascRampChecks = new Vector2[] {
                     new Vector2(0f, -1f),
                     new Vector2(1f, -1f)
@@ -856,7 +935,6 @@ namespace Raccoon.Components {
                         IsLeavingRamp = true;
                         _previousRampDirection = 1;
                         OnLeaveRamp?.Invoke(1);
-                        _rampAccSmoothing = DescendingRampLeavingAccelerationSmoothing;
                         ExtraMaxVelocity = Vector2.Zero;
                     }
 
@@ -864,8 +942,9 @@ namespace Raccoon.Components {
                         IsLeavingRamp = false;
                         _isEnteringRamp = true;
                         OnTouchRamp?.Invoke(-1);
-                        _rampAccSmoothing = AscendingRampEnteringAccelerationSmoothing;
                         ExtraMaxVelocity = new Vector2(AscendingRampVelocityModifier, 0f);
+                        RampAcceleration = MaxVelocity.X / (Time.MiliToSec * TimeToAchieveMaxVelocityAtAscendingRamp);
+                        _rampCurrentAcceleration = 0f; // it'll be defined at Integrate step
                     }
 
                     return true;
@@ -897,7 +976,6 @@ namespace Raccoon.Components {
                         IsLeavingRamp = true;
                         _previousRampDirection = -1;
                         OnLeaveRamp?.Invoke(-1);
-                        _rampAccSmoothing = AscendingRampLeavingAccelerationSmoothing;
                         ExtraMaxVelocity = Vector2.Zero;
                     }
 
@@ -905,8 +983,9 @@ namespace Raccoon.Components {
                         IsLeavingRamp = false;
                         _isEnteringRamp = true;
                         OnTouchRamp?.Invoke(1);
-                        _rampAccSmoothing = DescendingRampEnteringAccelerationSmoothing;
                         ExtraMaxVelocity = new Vector2(DescendingRampVelocityModifier, 0f);
+                        RampAcceleration = MaxVelocity.X / (Time.MiliToSec * TimeToAchieveMaxVelocityAtDescendingRamp);
+                        _rampCurrentAcceleration = 0f; // it'll be defined at Integrate step
                     }
 
                     return true;
@@ -915,6 +994,7 @@ namespace Raccoon.Components {
 #endif
 
             rampDisplacement = Vector2.Zero;
+            SmoothRampVelocity(ref currentVelocity);
             ClearRampState();
             return false;
         }
@@ -1107,21 +1187,43 @@ namespace Raccoon.Components {
             IsOnRamp = false;
             _rampNormal = Vector2.Zero;
             _internal_isGravityEnabled = true;
+            _isRampAccelerationApplied = false;
 
-            IsLeavingRamp = _justLeavedRamp = true;
+            IsLeavingRamp = 
+                _justLeavedRamp = true;
+
             if (IsOnDescendingRamp) {
                 _previousRampDirection = 1;
                 OnLeaveRamp?.Invoke(1);
-                _rampAccSmoothing = DescendingRampLeavingAccelerationSmoothing;
                 ExtraMaxVelocity = Vector2.Zero;
             } else {
                 _previousRampDirection = -1;
                 OnLeaveRamp?.Invoke(-1);
-                _rampAccSmoothing = AscendingRampLeavingAccelerationSmoothing;
                 ExtraMaxVelocity = Vector2.Zero;
             }
 
             IsOnDescendingRamp = IsOnAscendingRamp = false;
+        }
+
+        private void SmoothRampVelocity(ref Vector2 currentVelocity) {
+            if (!IsOnRamp) {
+                return;
+            }
+
+            float realXVelocity = Math.Abs(_rampNormal.X) * Math.Abs(currentVelocity.X);
+
+            if (IsOnAscendingRamp) {
+                realXVelocity *= SmoothLeavingAscendingRampVelocityCuttoff;
+            } else if (IsOnDescendingRamp) {
+                realXVelocity *= SmoothLeavingDescendingRampVelocityCuttoff;
+            }
+
+            currentVelocity = new Vector2(
+                Math.Sign(Velocity.X) * realXVelocity,
+                Velocity.Y
+            );
+
+            _rampCurrentAcceleration = Math.Distance(Math.Abs(BaseMaxVelocity.X), realXVelocity) / 0.2f;
         }
 
         #endregion Private Methods
