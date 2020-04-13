@@ -134,7 +134,15 @@
         }
 
         public static float Lerp(float start, float end, float t) {
-            return Microsoft.Xna.Framework.MathHelper.Lerp(start, end, t);
+            return (1.0f - t) * start + end * t;
+        }
+
+        public static float InverseLerp(float start, float end, float value) {
+            if (Math.Abs(end - start) < Epsilon) {
+                return start;
+            }
+
+            return (value - start) / (end - start);
         }
 
         /*
@@ -311,7 +319,7 @@
         }
 
         public static float Map(float value, float min, float max, float targetMin, float targetMax) {
-            return targetMin + ((value - min) / (Math.Abs(max) + Math.Abs(min))) * (targetMax - targetMin);
+            return Lerp(targetMin, targetMax, InverseLerp(min, max, value));
         }
 
         public static float Map(float value, Range range, Range targetRange) {
