@@ -51,6 +51,11 @@ namespace Raccoon.Util {
 
         public System.Type EnumType { get; private set; }
         public bool IsSingleValue { get { return Math.IsPowerOfTwo(LiteralValue); } }
+        public string BinaryRepresentation { 
+            get {
+                return System.Convert.ToString((long) LiteralValue, 2);
+            }
+        }
 
         #endregion Public Properties
 
@@ -130,7 +135,7 @@ namespace Raccoon.Util {
                 return $"{System.Enum.ToObject(EnumType, LiteralValue)}";
             }
 
-            return $"{System.Convert.ToString((long) LiteralValue, 2)}";
+            return BinaryRepresentation;
         }
 
         #endregion Public Methods
