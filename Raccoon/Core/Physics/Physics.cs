@@ -1022,7 +1022,7 @@ namespace Raccoon {
         [System.Diagnostics.Conditional("DEBUG")]
         private void ValidateTag(BitTag tag, string paramName = "tag") {
             if (!_collidersByTag.ContainsKey(tag)) {
-                throw new System.ArgumentException($"Tag '{tag}' not found.", paramName);
+                throw new System.ArgumentException($"Tag '{tag}' ({tag.BinaryRepresentation}) not found.", paramName);
             }
         }
 

@@ -55,7 +55,7 @@ namespace Raccoon.Audio {
         #region Public Properties
 
         public string Name { get; set; } = "Music";
-        public string Filename { get; private set; }
+        public string[] Filenames { get; private set; }
         public System.TimeSpan Duration { get { return XNASong.Duration; } }
         public System.TimeSpan CurrentTime { get { return CurrentMusic == this ? MediaPlayer.PlayPosition : _currentTime; } private set { _currentTime = value; } }
         public bool IsLooped { get; set; }
@@ -63,6 +63,20 @@ namespace Raccoon.Audio {
         public bool IsPaused { get; private set; }
         public bool IsStopped { get; private set; } = true;
         public bool IsDisposed { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[1];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
 
         public float Volume {
             get {

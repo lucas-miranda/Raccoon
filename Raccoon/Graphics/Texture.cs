@@ -99,9 +99,23 @@ namespace Raccoon.Graphics {
         public Size Size { get; private set; }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
-        public string Filename { get; private set; }
+        public string[] Filenames { get; private set; }
         public Texture2D XNATexture { get; private set; }
         public bool IsDisposed { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[1];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
 
         #endregion Public Properties
 

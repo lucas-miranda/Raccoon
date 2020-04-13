@@ -49,10 +49,24 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public string Name { get; set; } = "Shader";
-        public string Filename { get; private set; }
+        public string[] Filenames { get; private set; }
         public int TechniqueCount { get { return XNAEffect.Techniques.Count; } }
         public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } set { XNAEffect.CurrentTechnique = XNAEffect.Techniques[value]; } }
         public bool IsDisposed { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[1];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
 
         #endregion Public Properties
 

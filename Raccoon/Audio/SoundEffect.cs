@@ -29,13 +29,27 @@ namespace Raccoon.Audio {
         #region Public Properties
 
         public string Name { get; set; } = "SoundEffect";
-        public string Filename { get; private set; }
+        public string[] Filenames { get; private set; }
         public System.TimeSpan Duration { get { return XNASoundEffect.Duration; } }
         public float Volume { get { return Instance.Volume; } set { Instance.Volume = value; } }
         public float Pan { get { return Instance.Pan; } set { Instance.Pan = value; } }
         public float Pitch { get { return Instance.Pitch; } set { Instance.Pitch = value; } }
         public bool IsLooped { get { return Instance.IsLooped; } set { Instance.IsLooped = value; } }
         public bool IsDisposed { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[1];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
 
         #endregion Public Properties
 

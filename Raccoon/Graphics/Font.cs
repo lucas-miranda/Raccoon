@@ -52,13 +52,27 @@ namespace Raccoon.Graphics {
 
         public string Name { get; set; } = "Font";
         public string FamilyName { get { return Face.FamilyName; } }
-        public string Filename { get; private set; }
+        public string[] Filenames { get; private set; }
         public SharpFont.Face Face { get; private set; }
         public Texture Texture { get { return RenderMap?.Texture; } }
         public float LineSpacing { get { return RenderMap.NominalHeight; } }
         public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face.BBox.Right - Face.BBox.Left, RenderMap.NominalWidth, Face.UnitsPerEM); } }
         public bool IsDisposed { get; private set; }
         public int FaceIndex { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[1];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
 
         public float Size {
             get {

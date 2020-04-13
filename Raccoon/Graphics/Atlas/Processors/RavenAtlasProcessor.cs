@@ -82,6 +82,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
                     uint to = trackToken.Value<uint>("to");
                     string direction = trackToken.Value<string>("direction"); //! unused yet
 
+
                     for (uint i = from; i <= to; i++) {
                         (Rectangle source, uint duration, Rectangle originalFrame) = frames[(int) i];
                         animation.AddFrame(source, (int) duration, originalFrame, name);

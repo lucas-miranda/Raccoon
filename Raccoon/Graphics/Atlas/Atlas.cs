@@ -31,6 +31,8 @@ namespace Raccoon.Graphics {
                 throw new System.ArgumentException($"Invalid data filename '{dataFilename}'.");
             }
 
+            Filenames = new string[2];
+
             Filename = textureFilename;
             if (Filename.Contains(".")) {
                 Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
@@ -49,6 +51,7 @@ namespace Raccoon.Graphics {
                 throw new System.ArgumentException("Invalid data filename.");
             }
 
+            Filenames = new string[2];
             DataFilename = dataFilename;
             Load(textureStream);
         }
@@ -58,11 +61,38 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public string Name { get; set; } = "Atlas";
-        public string Filename { get; private set; }
-        public string DataFilename { get; private set; }
+        public string[] Filenames { get; private set; }
         public Texture Texture { get; private set; }
         public Size Size { get { return Texture.Size; } }
         public bool IsDisposed { get; private set; }
+
+        public string Filename { 
+            get { 
+                return Filenames?[0] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[2];
+                }
+
+                Filenames[0] = value; 
+            } 
+        }
+
+        public string DataFilename { 
+            get { 
+                return Filenames?[1] ?? ""; 
+            } 
+
+            private set { 
+                if (Filenames == null) {
+                    Filenames = new string[2];
+                }
+
+                Filenames[1] = value; 
+            } 
+        }
 
         public AtlasSubTexture this[string name] {
             get {
