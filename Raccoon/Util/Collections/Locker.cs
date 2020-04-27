@@ -11,6 +11,7 @@ namespace Raccoon.Util.Collections {
                         _items = new List<T>();
 
         private System.Comparison<T> _sortComparer;
+        private int _locks = 0;
 
         #endregion Private Members
 
@@ -27,7 +28,7 @@ namespace Raccoon.Util.Collections {
 
         #region Public Properties
 
-        public bool IsLocked { get; private set; }
+        public bool IsLocked { get { return _locks > 0; } }
         public int Count { get { return _items.Count + _toAdd.Count  - _toRemove.Count; } }
         public ReadOnlyCollection<T> ToAdd { get { return _toAdd.AsReadOnly(); } }
         public ReadOnlyCollection<T> ToRemove { get { return _toRemove.AsReadOnly(); } }
@@ -53,6 +54,23 @@ namespace Raccoon.Util.Collections {
         #endregion Public Properties
 
         #region Public Methods
+
+        public void Lock() {
+            _locks += 1;
+        }
+
+        public void Unlock() {
+            if (_locks == 0) {
+                return;
+            }
+
+            _locks -= 1;
+            if (_locks > 0) {
+                return;
+            }
+
+            Upkeep();
+        }
 
         public void Add(T item) {
             if (IsLocked) {
@@ -185,29 +203,17 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
-            Lock();
-
-            if (_items != null) {
-                using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
-                    while (enumerator.MoveNext()) {
-                        yield return enumerator.Current;
-                    }
+            using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
+                while (enumerator.MoveNext()) {
+                    yield return enumerator.Current;
                 }
             }
-
-            Unlock();
-            Upkeep();
         }
 
         public IEnumerable<T> ReverseIterator() {
-            Lock();
-
             for (int i = _items.Count - 1; i >= 0; i--) {
                 yield return _items[i];
             }
-
-            Unlock();
-            Upkeep();
         }
 
         public void CopyTo(T[] array, int arrayIndex) {
@@ -223,14 +229,6 @@ namespace Raccoon.Util.Collections {
         #endregion Public Methods
 
         #region Private Methods
-
-        private void Lock() {
-            IsLocked = true;
-        }
-
-        private void Unlock() {
-            IsLocked = false;
-        }
 
         private void Upkeep() {
             bool modified = false;
