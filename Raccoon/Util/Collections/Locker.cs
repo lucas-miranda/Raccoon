@@ -28,7 +28,7 @@ namespace Raccoon.Util.Collections {
         #region Public Properties
 
         public bool IsLocked { get; private set; }
-        public int Count { get { return _items.Count; } }
+        public int Count { get { return _items.Count + _toAdd.Count  - _toRemove.Count; } }
         public ReadOnlyCollection<T> ToAdd { get { return _toAdd.AsReadOnly(); } }
         public ReadOnlyCollection<T> ToRemove { get { return _toRemove.AsReadOnly(); } }
         public ReadOnlyCollection<T> Items { get { return _items.AsReadOnly(); } }
@@ -159,7 +159,11 @@ namespace Raccoon.Util.Collections {
         }
 
         public bool Contains(T item) {
-            return IsLocked ? (!_toRemove.Contains(item) && (_items.Contains(item) || _toAdd.Contains(item))) : _items.Contains(item);
+            if (IsLocked) {
+                return !_toRemove.Contains(item) && (_items.Contains(item) || _toAdd.Contains(item));
+            }
+
+            return _items.Contains(item);
         }
 
         public T Find(System.Predicate<T> match) {
@@ -181,7 +185,6 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
-            Upkeep();
             Lock();
 
             if (_items != null) {
@@ -197,7 +200,6 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerable<T> ReverseIterator() {
-            Upkeep();
             Lock();
 
             for (int i = _items.Count - 1; i >= 0; i--) {
@@ -233,7 +235,7 @@ namespace Raccoon.Util.Collections {
         private void Upkeep() {
             bool modified = false;
 
-            if (_toAdd != null && _toAdd.Count > 0) {
+            if (_toAdd.Count > 0) {
                 modified = true;
                 foreach (T item in _toAdd) {
                     AddItem(item);
@@ -242,7 +244,7 @@ namespace Raccoon.Util.Collections {
                 _toAdd.Clear();
             }
 
-            if (_toRemove != null && _toRemove.Count > 0) {
+            if (_toRemove.Count > 0) {
                 modified = true;
                 foreach (T item in _toRemove) {
                     RemoveItem(item);
