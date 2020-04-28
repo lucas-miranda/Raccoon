@@ -112,6 +112,7 @@
             }
 
             _font = null;
+            _value = null;
             Data = null;
 
             base.Dispose();
