@@ -984,12 +984,14 @@ namespace Raccoon {
                 _toRemoveMessages.Clear();
             }
 
+            _alarms.Lock();
             foreach (Alarm alarm in _alarms) {
                 alarm.Update(delta);
                 if (alarm.TriggeredCount > alarm.RepeatTimes) {
                     _alarms.Remove(alarm);
                 }
             }
+            _alarms.Unlock();
 
             Console.Update(delta);
         }

@@ -69,6 +69,7 @@ namespace Raccoon.Util.Tween {
                 return;
             }
 
+            _tweens.Lock();
             foreach (Tween tween in _tweens) {
                 tween.Update(delta);
 
@@ -76,6 +77,7 @@ namespace Raccoon.Util.Tween {
                     _tweens.Remove(tween);
                 }
             }
+            _tweens.Unlock();
         }
 
         #endregion Internal Methods

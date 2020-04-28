@@ -43,13 +43,16 @@ namespace Raccoon {
                 return;
             }
 
+            _pausedCoroutines.Lock();
             foreach (Coroutine coroutine in _pausedCoroutines) {
                 if (coroutine.IsRunning) { // checks if a coroutine it's running again
                     _pausedCoroutines.Remove(coroutine);
                     _runningCoroutines.Add(coroutine);
                 }
             }
+            _pausedCoroutines.Unlock();
 
+            _runningCoroutines.Lock();
             foreach (Coroutine coroutine in _runningCoroutines) {
                 coroutine.Update(delta);
 
@@ -60,6 +63,7 @@ namespace Raccoon {
                     _pausedCoroutines.Add(coroutine);
                 }
             }
+            _runningCoroutines.Unlock();
         }
 
         public Coroutine Start(IEnumerator coroutine) {

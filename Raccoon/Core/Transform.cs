@@ -204,6 +204,7 @@ namespace Raccoon {
                 return;
             }
 
+            _children.Lock();
             foreach (Transform child in _children) {
                 if (child.IsDetached) {
                     continue;
@@ -218,6 +219,7 @@ namespace Raccoon {
 
                 OnChildRemoved(child);
             }
+            _children.Unlock();
 
             _children.Clear();
         }
@@ -227,6 +229,7 @@ namespace Raccoon {
                 return;
             }
 
+            _children.Lock();
             foreach (Transform child in _children) {
                 if (child.IsDetached) {
                     _children.Remove(child);
@@ -241,10 +244,19 @@ namespace Raccoon {
                     OnChildRemoved(child);
                 }
             }
+            _children.Unlock();
         }
 
         public override string ToString() {
             return $"{Position}  Rot: {Rotation}  Origin: {Origin}  Parent? {_parent != null}  Childs: {_children.Count}";
+        }
+
+        public void LockChildren() {
+            _children.Lock();
+        }
+
+        public void UnlockChildren() {
+            _children.Unlock();
         }
 
         public IEnumerator<Transform> GetEnumerator() {
@@ -295,6 +307,7 @@ namespace Raccoon {
         }
 
         internal void EntitySceneAdded(Scene scene) {
+            _children.Lock();
             foreach (Transform child in _children) {
                 if (!child.Entity.IsSceneFromTransformAncestor) {
                     continue;
@@ -302,10 +315,12 @@ namespace Raccoon {
 
                 child.Entity.SceneAdded(scene);
             }
+            _children.Unlock();
         }
 
         internal void EntitySceneRemoved(bool wipe) {
             if (wipe) {
+                _children.Lock();
                 foreach (Transform child in _children) {
                     if (child.IsDetached) {
                         continue;
@@ -322,10 +337,12 @@ namespace Raccoon {
 
                     OnChildRemoved(child);
                 }
+                _children.Unlock();
 
                 return;
             }
 
+            _children.Lock();
             foreach (Transform child in _children) {
                 if (child.IsDetached) {
                     continue;
@@ -335,6 +352,7 @@ namespace Raccoon {
                     child.Entity.SceneRemoved(allowWipe: false);
                 }
             }
+            _children.Unlock();
         }
 
         #endregion Internal Methods

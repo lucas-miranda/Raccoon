@@ -54,11 +54,13 @@ namespace Raccoon.Components {
                 return;
             }
 
+            _coroutines.Lock();
             foreach (Coroutine coroutine in _coroutines) {
                 if (coroutine.HasEnded) {
                     _coroutines.Remove(coroutine);
                 }
             }
+            _coroutines.Unlock();
         }
 
         public override void Render() {

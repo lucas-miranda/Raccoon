@@ -114,9 +114,11 @@ namespace Raccoon {
             }
 
             Scene = scene;
+            Components.Lock();
             foreach (Component c in Components) {
                 c.OnSceneAdded();
             }
+            Components.Unlock();
 
             Transform.EntitySceneAdded(Scene);
             OnSceneAdded();
@@ -148,6 +150,7 @@ namespace Raccoon {
                 _renderer = null;
             }
 
+            Components.Lock();
             foreach (Component c in Components) {
                 if (c.Entity == null) {
                     continue;
@@ -155,6 +158,7 @@ namespace Raccoon {
 
                 c.OnSceneRemoved(WipeOnRemoved && allowWipe);
             }
+            Components.Unlock();
 
             Transform.EntitySceneRemoved(WipeOnRemoved && allowWipe);
             OnSceneRemoved?.Invoke();
@@ -163,18 +167,22 @@ namespace Raccoon {
                 OnSceneRemoved = null;
                 Transform.Detach();
 
+                Graphics.Lock();
                 foreach (Graphic g in Graphics) {
                     GraphicRemoved(g);
                     g.Dispose();
                 }
+                Graphics.Unlock();
 
                 Graphics.Clear();
 
+                Components.Lock();
                 foreach (Component c in Components) {
                     ComponentRemoved(c);
                     c.OnRemoved();
                     c.Dispose();
                 }
+                Components.Unlock();
 
                 Components.Clear();
             }
@@ -187,6 +195,7 @@ namespace Raccoon {
 
             HasStarted = true;
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.Entity.HasStarted) {
                     continue;
@@ -194,11 +203,13 @@ namespace Raccoon {
 
                 child.Entity.Start();
             }
+            Transform.UnlockChildren();
 
             OnStart();
         }
 
         public virtual void SceneBegin() {
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
                     continue;
@@ -206,11 +217,13 @@ namespace Raccoon {
 
                 child.Entity.SceneBegin();
             }
+            Transform.UnlockChildren();
 
             OnSceneBegin();
         }
 
         public virtual void SceneEnd() {
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
                     continue;
@@ -218,11 +231,13 @@ namespace Raccoon {
 
                 child.Entity.SceneEnd();
             }
+            Transform.UnlockChildren();
 
             OnSceneEnd();
         }
 
         public virtual void BeforeUpdate() {
+            Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Active) {
                     continue;
@@ -230,7 +245,9 @@ namespace Raccoon {
 
                 c.BeforeUpdate();
             }
+            Components.Unlock();
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
@@ -238,6 +255,7 @@ namespace Raccoon {
 
                 child.Entity.BeforeUpdate();
             }
+            Transform.UnlockChildren();
 
             OnBeforeUpdate();
         }
@@ -245,6 +263,7 @@ namespace Raccoon {
         public virtual void Update(int delta) {
             Timer += (uint) delta;
 
+            Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
@@ -252,7 +271,9 @@ namespace Raccoon {
 
                 g.Update(delta);
             }
+            Graphics.Unlock();
 
+            Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Active) {
                     continue;
@@ -260,7 +281,9 @@ namespace Raccoon {
 
                 c.Update(delta);
             }
+            Components.Unlock();
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
@@ -268,11 +291,13 @@ namespace Raccoon {
 
                 child.Entity.Update(delta);
             }
+            Transform.UnlockChildren();
 
             OnUpdate();
         }
 
         public virtual void LateUpdate() {
+            Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Active) {
                     continue;
@@ -280,7 +305,9 @@ namespace Raccoon {
 
                 c.LateUpdate();
             }
+            Components.Unlock();
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
                     continue;
@@ -288,11 +315,13 @@ namespace Raccoon {
 
                 child.Entity.LateUpdate();
             }
+            Transform.UnlockChildren();
 
             OnLateUpdate();
         }
 
         public virtual void Render() {
+            Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
@@ -300,7 +329,9 @@ namespace Raccoon {
 
                 g.Render(Transform.Position, Transform.Rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.One, null, Layer);
             }
+            Graphics.Unlock();
 
+            Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Visible) {
                     continue;
@@ -308,7 +339,9 @@ namespace Raccoon {
 
                 c.Render();
             }
+            Components.Unlock();
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
                     continue;
@@ -316,12 +349,14 @@ namespace Raccoon {
 
                 child.Entity.Render();
             }
+            Transform.UnlockChildren();
 
             OnRender();
         }
 
 #if DEBUG
         public virtual void DebugRender() {
+            Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 if (!g.Visible || g.IgnoreDebugRender) {
                     continue;
@@ -329,7 +364,9 @@ namespace Raccoon {
 
                 g.DebugRender();
             }
+            Graphics.Unlock();
 
+            Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Enabled || c.IgnoreDebugRender) {
                     continue;
@@ -337,7 +374,9 @@ namespace Raccoon {
 
                 c.DebugRender();
             }
+            Components.Unlock();
 
+            Transform.LockChildren();
             foreach (Transform child in Transform) {
                 if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
                     continue;
@@ -345,6 +384,7 @@ namespace Raccoon {
 
                 child.Entity.DebugRender();
             }
+            Transform.UnlockChildren();
 
             OnDebugRender();
         }
@@ -454,12 +494,14 @@ namespace Raccoon {
         }
 
         public void RemoveComponents<T>() {
+            Components.Lock();
             foreach (Component c in Components) {
                 if (c is T && Components.Remove(c)) {
                     ComponentRemoved(c);
                     c.OnRemoved();
                 }
             }
+            Components.Unlock();
         }
 
         public void ClearGraphics() {
@@ -467,9 +509,11 @@ namespace Raccoon {
                 return;
             }
 
+            Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 GraphicRemoved(g);
             }
+            Graphics.Unlock();
 
             Graphics.Clear();
         }

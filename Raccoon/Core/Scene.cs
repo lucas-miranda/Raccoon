@@ -434,6 +434,7 @@ namespace Raccoon {
         public virtual void Start() {
             HasStarted = true;
 
+            _sceneObjects.Lock();
             foreach (ISceneObject sceneObject in _sceneObjects) {
                 if (sceneObject.HasStarted) {
                     continue;
@@ -441,6 +442,7 @@ namespace Raccoon {
 
                 sceneObject.Start();
             }
+            _sceneObjects.Unlock();
 
             Camera.Start();
         }
@@ -456,9 +458,11 @@ namespace Raccoon {
             IsRunning = true;
             Camera.Begin();
 
+            _sceneObjects.Lock();
             foreach (ISceneObject sceneObject in _sceneObjects) {
                 sceneObject.SceneBegin();
             }
+            _sceneObjects.Unlock();
         }
 
         /// <summary>
@@ -466,9 +470,12 @@ namespace Raccoon {
         /// </summary>
         public virtual void End() {
             IsRunning = false;
+
+            _sceneObjects.Lock();
             foreach (ISceneObject sceneObject in _sceneObjects) {
                 sceneObject.SceneEnd();
             }
+            _sceneObjects.Unlock();
 
             Camera.End();
         }
@@ -497,6 +504,7 @@ namespace Raccoon {
                 return;
             }
 
+            _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
                 if (!updatable.Active
                   || !(updatable is IExtendedUpdatable extendedUpdatable)
@@ -506,6 +514,7 @@ namespace Raccoon {
 
                 extendedUpdatable.BeforeUpdate();
             }
+            _updatables.Unlock();
         }
 
         /// <summary>
@@ -520,6 +529,7 @@ namespace Raccoon {
 
             Timer += (uint) delta;
 
+            _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
                 if (!updatable.Active
                   || !(updatable is IExtendedUpdatable extendedUpdatable)
@@ -529,6 +539,7 @@ namespace Raccoon {
 
                 extendedUpdatable.Update(delta);
             }
+            _updatables.Unlock();
         }
 
         /// <summary>
@@ -540,6 +551,7 @@ namespace Raccoon {
                 return;
             }
 
+            _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
                 if (!updatable.Active
                   || !(updatable is IExtendedUpdatable extendedUpdatable)
@@ -549,6 +561,7 @@ namespace Raccoon {
 
                 extendedUpdatable.LateUpdate();
             }
+            _updatables.Unlock();
 
             Camera.Update(Game.Instance.LastUpdateDeltaTime);
         }
@@ -559,6 +572,7 @@ namespace Raccoon {
         public virtual void Render() {
             Camera.PrepareRender();
 
+            _renderables.Lock();
             foreach (IRenderable renderable in _renderables) {
                 if (!renderable.Visible
                   || (renderable is ISceneObject sceneObject && !sceneObject.AutoRender)) {
@@ -567,6 +581,7 @@ namespace Raccoon {
 
                 renderable.Render();
             }
+            _renderables.Unlock();
         }
 
 #if DEBUG
@@ -577,6 +592,7 @@ namespace Raccoon {
         /// Everything rendered here doesn't suffer from Game.PixelScale factor.
         /// </summary>
         public virtual void DebugRender() {
+            _renderables.Lock();
             foreach (IRenderable renderable in _renderables) {
                 if (!renderable.Visible
                   || !(renderable is IDebugRenderable debugRenderable)) {
@@ -585,6 +601,7 @@ namespace Raccoon {
 
                 debugRenderable.DebugRender();
             }
+            _renderables.Unlock();
 
             Camera.DebugRender();
         }
