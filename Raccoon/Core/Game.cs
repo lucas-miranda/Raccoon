@@ -13,7 +13,8 @@ namespace Raccoon {
         public delegate void GameEventDelegate();
         public event GameEventDelegate OnBeforeRender = delegate { },
                                        OnRender = delegate { },
-                                       OnAfterRender = delegate { },
+                                       OnAfterMainCanvasRender,
+                                       OnLateRender,
                                        OnDebugRender = delegate { },
                                        OnBegin = delegate { },
                                        OnBeforeUpdate = delegate { },
@@ -295,6 +296,7 @@ Scene:
             }
         }
 
+        public float KeepProportionsScale { get; private set; } = 1f;
         public ResizeMode ResizeMode { get; set; } = ResizeMode.ExpandView;
 
 #if DEBUG
@@ -313,7 +315,6 @@ Scene:
         internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
-        internal float KeepProportionsScale { get; private set; } = 1f;
 
 #if DEBUG
         internal Canvas DebugCanvas { get; private set; }
@@ -461,6 +462,10 @@ Scene:
         }
 
         public Renderer AddRenderer(Renderer renderer) {
+            if (renderer == null) {
+                throw new System.ArgumentNullException("renderer");
+            }
+
             if (!Renderers.Contains(renderer)) {
                 Renderers.Add(renderer);
                 renderer.RecalculateProjection();
@@ -795,7 +800,15 @@ Scene:
 
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
 
-            MainCanvas = new Canvas(Width, Height, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
+            MainCanvas = new Canvas(
+                Width, 
+                Height, 
+                mipMap: false, 
+                SurfaceFormat.Color, 
+                DepthFormat.Depth24Stencil8, 
+                multiSampleCount: 0, 
+                RenderTargetUsage.PreserveContents
+            ) {
                 //InternalRenderer = MainRenderer
                 InternalRenderer = null
             };
@@ -803,7 +816,15 @@ Scene:
             AddRenderer(MainRenderer);
 
 #if DEBUG
-            DebugCanvas = new Canvas(WindowWidth, WindowHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.None, multiSampleCount: 0, RenderTargetUsage.PreserveContents) {
+            DebugCanvas = new Canvas(
+                WindowWidth, 
+                WindowHeight, 
+                mipMap: false, 
+                SurfaceFormat.Color, 
+                DepthFormat.None, 
+                multiSampleCount: 0, 
+                RenderTargetUsage.PreserveContents
+            ) {
                 InternalRenderer = DebugRenderer
             };
 
@@ -895,6 +916,8 @@ Scene:
                 Vector2.One
             );
 
+            OnAfterMainCanvasRender?.Invoke();
+
 #if DEBUG
             ScreenRenderer.Draw(
                 DebugCanvas,
@@ -909,10 +932,8 @@ Scene:
             );
 #endif
 
-            ScreenRenderer.End();
+            OnLateRender?.Invoke();
 
-            ScreenRenderer.Begin();
-            OnAfterRender();
             ScreenRenderer.End();
 
             _fpsCount++;
