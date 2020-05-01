@@ -48,6 +48,7 @@ namespace Raccoon.Graphics {
         public float ScaleXY { get { return Scale.X; } set { Scale = new Vector2(value); } }
         public int Order { get; set; }
         public int Layer { get; set; }
+        public int ControlGroup { get; set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public float Width { get { return Size.Width; } }

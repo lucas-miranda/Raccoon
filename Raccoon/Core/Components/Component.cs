@@ -23,6 +23,9 @@ namespace Raccoon.Components {
         public int Layer { get; set; }
         public Renderer Renderer { get; set; }
 
+        // TODO  Properly enable/disable components using ControlGroup (at Scene)
+        public int ControlGroup { get; set; }
+
         public bool Active {
             get {
                 return _active;

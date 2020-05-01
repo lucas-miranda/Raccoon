@@ -55,6 +55,7 @@ namespace Raccoon {
         public bool IsWiped { get; private set; }
         public int Order { get; set; }
         public int Layer { get; set; }
+        public int ControlGroup { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(Graphic.LayerComparer);
         public Locker<Component> Components { get; private set; } = new Locker<Component>();

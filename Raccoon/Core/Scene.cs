@@ -9,6 +9,8 @@ namespace Raccoon {
 
         private Camera _camera;
 
+        private HashSet<int> _pausedGroups = new HashSet<int>();
+
         /// <summary>
         /// All scene objects for quickly access.
         /// </summary>
@@ -69,7 +71,7 @@ namespace Raccoon {
         /// <summary>
         /// If Scene is updating.
         /// </summary>
-        public bool IsRunning { get; set; }
+        public bool IsRunning { get; private set; }
 
         /// <summary>
         /// Camera instance.
@@ -113,7 +115,7 @@ namespace Raccoon {
             bool added = false;
 
             if (obj is IUpdatable updatable) {
-                _updatables.Add(updatable);
+                AddUpdatable(updatable);
                 added = true;
             }
 
@@ -145,7 +147,7 @@ namespace Raccoon {
         /// <param name="graphic">Graphic to add.</param>
         /// <returns>Reference to Graphic.</returns>
         public Graphic AddGraphic(Graphic graphic) {
-            _updatables.Add(graphic);
+            AddUpdatable(graphic);
             _renderables.Add(graphic);
             return graphic;
         }
@@ -165,7 +167,10 @@ namespace Raccoon {
         /// </summary>
         /// <param name="graphics">IEnumerable containing Graphic.</param>
         public void AddGraphics(IEnumerable<Graphic> graphics) {
-            _updatables.AddRange(graphics);
+            foreach (Graphic graphic in graphics) {
+                AddUpdatable(graphic);
+            }
+
             _renderables.AddRange(graphics);
         }
 
@@ -189,8 +194,8 @@ namespace Raccoon {
                 throw new System.InvalidOperationException($"Before adding entity to scene '{GetType().Name}', remove it from scene '{entity.Scene.GetType().Name}'.");
             }
 
-            _updatables.Add(entity);
             _renderables.Add(entity);
+            AddUpdatable(entity);
             _sceneObjects.Add(entity);
 
             if (entity.IsSceneFromTransformAncestor) {
@@ -608,6 +613,82 @@ namespace Raccoon {
 
 #endif
 
+        public void PauseControlGroup(int controlGroup) {
+            _pausedGroups.Add(controlGroup);
+            foreach (IUpdatable updatable in _updatables) {
+                if (updatable.ControlGroup != controlGroup) {
+                    continue;
+                }
+
+                updatable.Active = false;
+            }
+        }
+
+        public void ResumeControlGroup(int controlGroup) {
+            if (!_pausedGroups.Remove(controlGroup)) {
+                return;
+            }
+
+            foreach (IUpdatable updatable in _updatables) {
+                if (updatable.ControlGroup != controlGroup) {
+                    continue;
+                }
+
+                updatable.Active = true;
+            }
+        }
+
+        public void PauseAll() {
+            foreach (IUpdatable updatable in _updatables) {
+                _pausedGroups.Add(updatable.ControlGroup);
+                updatable.Active = false;
+            }
+        }
+
+        public void ResumeAll() {
+            foreach (IUpdatable updatable in _updatables) {
+                if (_pausedGroups.Contains(updatable.ControlGroup)) {
+                    continue;
+                }
+
+                updatable.Active = true;
+            }
+
+            _pausedGroups.Clear();
+        }
+
+        public bool IsControlGroupPaused(int controlGroup) {
+            return _pausedGroups.Contains(controlGroup);
+        }
+
+        public void Pause() {
+            if (!HasStarted) {
+                return;
+            }
+
+            IsRunning = false;
+        }
+
+        public void Resume() {
+            if (!HasStarted) {
+                return;
+            }
+
+            IsRunning = true;
+        }
+
         #endregion
+
+        #region Private Methods
+
+        private void AddUpdatable(IUpdatable updatable) {
+            _updatables.Add(updatable);
+
+            if (IsControlGroupPaused(updatable.ControlGroup)) {
+                updatable.Active = false;
+            }
+        }
+
+        #endregion Private Methods
     }
 }
