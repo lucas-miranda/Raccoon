@@ -48,7 +48,7 @@ namespace Raccoon.Graphics {
         public BatchMode SpriteBatchMode { get; set; }
         public BlendState BlendState { get; set; }
         public SamplerState SamplerState { get; set; }
-        public DepthStencilState DepthStencilState { get; set; }
+        public DepthStencilState DepthStencilState { get; set; } = DepthStencilState.None;
         public RasterizerState RasterizerState { get; set; }
         public Shader Shader { get; set; }
         public Matrix World { get; set; } = Matrix.Identity;
@@ -341,6 +341,74 @@ namespace Raccoon.Graphics {
             }
 
             Batch.DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic, layerDepth);
+        }
+
+        public void DrawLineStroke(Vector2 startPoint, Vector2 endPoint, float thickness, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (thickness <= 0f) {
+                throw new System.ArgumentException("Thickness must be greater than zero.");
+            }
+
+            Vector2 direction = (endPoint - startPoint).Normalized();
+
+            Vector2 normal = direction.PerpendicularCCW(),
+                    antiNormal = direction.PerpendicularCW();
+
+            float halfThickness = thickness / 2f;
+
+            List<Vector2> vertices = new List<Vector2>(4) {
+                startPoint  + normal * halfThickness,
+                endPoint    + normal * halfThickness,
+                endPoint    + antiNormal * halfThickness,
+                startPoint  + antiNormal * halfThickness
+            };
+
+            int[] indices = new int[] {
+                3, 0, 2,
+                2, 0, 1
+            };
+
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawVertices(
+                    vertices, 
+                    minVertexIndex: 0,
+                    verticesLength: vertices.Count,
+                    indices,
+                    minIndex: 0,
+                    primitivesCount: 2,
+                    isHollow: false,
+                    position: Vector2.Zero, 
+                    rotation, 
+                    scale, 
+                    color, 
+                    origin, 
+                    scroll, 
+                    shader, 
+                    shaderParameters, 
+                    layerDepth
+                );
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawVertices(
+                vertices, 
+                minVertexIndex: 0,
+                verticesLength: vertices.Count,
+                indices,
+                minIndex: 0,
+                primitivesCount: 2,
+                isHollow: false,
+                position: Vector2.Zero, 
+                rotation, 
+                scale, 
+                color, 
+                origin, 
+                scroll, 
+                shader, 
+                shaderParameters, 
+                layerDepth
+            );
         }
 
         #endregion Line
