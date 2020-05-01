@@ -2,6 +2,12 @@
 
 namespace Raccoon.Graphics {
     public class Canvas : Image {
+        #region Private Members
+
+        private Renderer _internalRenderer;
+
+        #endregion Private Members
+
         #region Constructors
 
         public Canvas(int width, int height)
@@ -23,8 +29,33 @@ namespace Raccoon.Graphics {
         public DepthFormat DepthStencilFormat { get { return XNARenderTarget.DepthStencilFormat; } }
         public int MultiSampleCount { get { return XNARenderTarget.MultiSampleCount; } }
         public RenderTargetUsage Usage { get { return XNARenderTarget.RenderTargetUsage; } }
-        public Renderer InternalRenderer { get; set; } = new Renderer();
         public RenderTarget2D XNARenderTarget { get { return Texture.XNATexture as RenderTarget2D; } }
+
+        public Renderer InternalRenderer {
+            get {
+                return _internalRenderer;
+            }
+
+            set {
+                if (value == _internalRenderer) {
+                    return;
+                }
+
+                if (value != null) {
+                    if (DepthStencilFormat == DepthFormat.None) {
+                        if (value.SpriteBatchMode == BatchMode.DepthBuffer || value.SpriteBatchMode == BatchMode.DepthBufferDescending) {
+                            throw new System.ArgumentException($"Canvas isn't prepared to handle batch mode using depth buffer, depth format shouldn't be DepthFormat.None in this case.");
+                        }
+
+                        if (value.DepthStencilState != DepthStencilState.None) {
+                            throw new System.ArgumentException($"Canvas isn't prepared to handle depth read, depth format shouldn't be DepthFormat.None in this case.");
+                        }
+                    }
+                }
+
+                _internalRenderer = value;
+            }
+        }
 
         #endregion Public Properties
 
@@ -94,6 +125,9 @@ namespace Raccoon.Graphics {
             if (IsDisposed) {
                 return;
             }
+
+            //InternalRenderer.Dispose();
+            InternalRenderer = null;
 
             base.Dispose();
         }
