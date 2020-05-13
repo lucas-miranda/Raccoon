@@ -203,6 +203,8 @@
     <Compile Include="Util\Collections\BinaryHeap.cs" />
     <Compile Include="Util\Collections\Locker.cs" />
     <Compile Include="Util\Collections\PriorityQueue.cs" />
+    <Compile Include="Util\Collections\ReadOnlyCollection.cs" />
+    <Compile Include="Util\Collections\ReadOnlyList.cs" />
     <Compile Include="Util\Graphics\EmissionOptions.cs" />
     <Compile Include="Util\Graphics\Particle.cs" />
     <Compile Include="Util\Graphics\ParticleEmitter.cs" />

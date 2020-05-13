@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Raccoon.Util.Collections {
     public class Locker<T> : ICollection<T> {
@@ -18,9 +17,12 @@ namespace Raccoon.Util.Collections {
         #region Constructors
 
         public Locker() { 
+            ToAdd = new ReadOnlyList<T>(_toAdd);
+            ToRemove = new ReadOnlyList<T>(_toRemove);
+            Items = new ReadOnlyList<T>(_items);
         }
 
-        public Locker(System.Comparison<T> comparer) {
+        public Locker(System.Comparison<T> comparer) : this() {
             _sortComparer = comparer;
         }
 
@@ -30,9 +32,9 @@ namespace Raccoon.Util.Collections {
 
         public bool IsLocked { get { return _locks > 0; } }
         public int Count { get { return _items.Count + _toAdd.Count  - _toRemove.Count; } }
-        public ReadOnlyCollection<T> ToAdd { get { return _toAdd.AsReadOnly(); } }
-        public ReadOnlyCollection<T> ToRemove { get { return _toRemove.AsReadOnly(); } }
-        public ReadOnlyCollection<T> Items { get { return _items.AsReadOnly(); } }
+        public ReadOnlyList<T> ToAdd { get; private set; }
+        public ReadOnlyList<T> ToRemove { get; private set; }
+        public ReadOnlyList<T> Items { get; private set; }
         public bool IsReadOnly { get { return false; } }
 
         public T this[int i] {
