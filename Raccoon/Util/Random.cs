@@ -212,8 +212,8 @@ namespace Raccoon.Util {
         /// </summary>
         /// <param name="chanceValues">Integer chances.</param>
         /// <returns>Id of the chance value choosed.</returns>
-        public static int Choose(int[] chanceValues) {
-            if (chanceValues.Length == 0) {
+        public static int ChooseWeighted(IList<int> chanceValues) {
+            if (chanceValues.Count == 0) {
                 throw new System.ArgumentException("Can't choose without a defined chance value.");
             }
 
@@ -228,10 +228,13 @@ namespace Raccoon.Util {
             }
 
             int targetChance = Integer(1, total);
-            for (int i = 0; i < chanceValues.Length; i++) {
+            for (int i = 0; i < chanceValues.Count; i++) {
                 int chance = chanceValues[i];
-                targetChance -= chance;
+                if (chance == 0) {
+                    continue;
+                }
 
+                targetChance -= chance;
                 if (targetChance <= 0) {
                     return i;
                 }
