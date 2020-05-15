@@ -244,6 +244,10 @@ namespace Raccoon.Util {
         }
 
         public static T Retrieve<T>(IList<T> list) {
+            if (list.Count <= 0) {
+                throw new System.ArgumentException($"Can't retrieve an element from a empty IList<{typeof(T)}>");
+            }
+
             int index = Integer(0, list.Count - 1);
             T value = list[index];
             list.RemoveAt(index);
