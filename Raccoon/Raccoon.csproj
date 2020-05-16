@@ -103,9 +103,6 @@
     <Compile Include="Core\Input\Key.cs" />
     <Compile Include="Core\Input\Trigger.cs" />
     <Compile Include="Core\Input\XboxController.cs" />
-    <Compile Include="Core\Physics\Constraints\DistanceJoint.cs" />
-    <Compile Include="Core\Physics\Constraints\IConstraint.cs" />
-    <Compile Include="Core\Physics\Constraints\Joint.cs" />
     <Compile Include="Core\Physics\Shapes\BoxShape.cs" />
     <Compile Include="Core\Physics\Shapes\CircleShape.cs" />
     <Compile Include="Core\Physics\Shapes\GridShape.cs" />

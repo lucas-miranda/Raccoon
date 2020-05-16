@@ -14,8 +14,6 @@ namespace Raccoon.Components {
         public static bool ShowDebugInfo = false;
 #endif
 
-        public static IMaterial StandardMaterial = new StandardMaterial();
-
         public delegate void CollisionDelegate(Body body, Vector2 collisionAxes);
         public delegate void EndCollisionDelegate(Body body);
 
@@ -26,7 +24,6 @@ namespace Raccoon.Components {
 
         #region Private Members
 
-        private List<IConstraint> _constraints = new List<IConstraint>();
         private Movement _movement;
         private BitTag _tags = BitTag.None;
         private bool _isPhysicsActive;
@@ -49,13 +46,13 @@ namespace Raccoon.Components {
 
         #region Constructors
 
-        public Body(IShape shape, IMaterial material = null) {
+        public Body() {
             IgnoreDebugRender = false;
-            Shape = shape;
-            Material = material ?? StandardMaterial;
-            Mass = Shape.ComputeMass(1f);
-            InverseMass = Mass == 0f ? 0f : (1f / Mass);
             CollisionList = _collisionList.AsReadOnly();
+        }
+
+        public Body(IShape shape) : this() {
+            Shape = shape;
         }
 
         #endregion Constructors
@@ -63,13 +60,15 @@ namespace Raccoon.Components {
         #region Public Properties
 
         public IShape Shape { get; set; }
+        /*
         public IMaterial Material { get; set; }
         public float Mass { get; private set; }
         public float InverseMass { get; private set; }
+        */
         public Vector2 LastPosition { get; private set; }
         public Vector2 Velocity { get; set; }
         public Vector2 Force { get; set; }
-        public int Constraints { get { return _constraints.Count; } }
+        //public int Constraints { get { return _constraints.Count; } }
         public bool IsResting { get; private set; } = true;
 
         /// <summary>
@@ -165,7 +164,7 @@ namespace Raccoon.Components {
 
             _collisionList.Clear();
             _currentUpdateCollisionList.Clear();
-            _constraints.Clear();
+            //_constraints.Clear();
 
             OnBeginCollision = OnCollided = null;
             OnEndCollision = null;
@@ -254,7 +253,8 @@ namespace Raccoon.Components {
                         Position.Y,
                         Velocity.X,
                         Velocity.Y,
-                        Mass
+                        1f
+                        //Mass
                     )
                 );
             }
@@ -365,20 +365,6 @@ namespace Raccoon.Components {
             return Position + (Velocity + Force) * dt;
         }
 
-        public void SolveConstraints() {
-            foreach (IConstraint constraint in _constraints) {
-                constraint.Solve();
-            }
-        }
-
-        public void AddConstraint(IConstraint constraint) {
-            _constraints.Add(constraint);
-        }
-
-        public void RemoveConstraint(IConstraint constraint) {
-            _constraints.Remove(constraint);
-        }
-
         public void ApplyConstantForce(Vector2 force) {
             Force += force;
         }
@@ -410,14 +396,12 @@ namespace Raccoon.Components {
                 Shape = null;
             }
 
-            Material = null;
-
             if (Movement != null) {
                 Movement.Dispose();
                 Movement = null;
             }
 
-            _constraints.Clear();
+            //_constraints.Clear();
             _collisionList.Clear();
             _currentUpdateCollisionList.Clear();
 
