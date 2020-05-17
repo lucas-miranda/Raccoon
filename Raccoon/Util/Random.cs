@@ -7,18 +7,40 @@ namespace Raccoon.Util {
     /// Provides a set of Random generation utility methods.
     /// </summary>
     public static class Random {
-        private static int _seedValue;
+        #region Private Members
 
+        private static int _seedValue;
         private static System.Random _rand = new System.Random();
+
+        #endregion Private Members
+
+        #region Constructors
 
         static Random() {
             Seed = (int) System.DateTime.Now.Ticks;
         }
 
+        #endregion Constructors
+
+        #region Public Properties
+
         /// <summary>
         /// A number used to calculate values in the pseudo-random sequence.
         /// </summary>
-        public static int Seed { get { return _seedValue; } set { _seedValue = value; _rand = new System.Random(_seedValue); } }
+        public static int Seed { 
+            get { 
+                return _seedValue; 
+            } 
+
+            set { 
+                _seedValue = value; 
+                _rand = new System.Random(_seedValue); 
+            } 
+        }
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         /// <summary>
         /// Returns a random boolean value.
@@ -51,6 +73,10 @@ namespace Raccoon.Util {
         /// <param name="max">The inclusive upper bound value, must be greater than min value.</param>
         /// <returns>Number in range [min, max].</returns>
         public static int Integer(int min, int max) {
+            if (max < min) {
+                throw new System.ArgumentException("Max should be greater or equals min.");
+            }
+
             return _rand.Next(min, max + 1);
         }
 
@@ -69,6 +95,10 @@ namespace Raccoon.Util {
         /// <param name="max">The inclusive upper bound value, must be greater than min value.</param>
         /// <returns>Number in range [min, max[.</returns>
         public static float Single(float min, float max) {
+            if (max < min) {
+                throw new System.ArgumentException("Max should be greater or equals min.");
+            }
+
             return (float) Double(min, max);
         }
 
@@ -87,6 +117,10 @@ namespace Raccoon.Util {
         /// <param name="max">The inclusive upper bound value, must be greater than min value.</param>
         /// <returns>Number in range [0.0, 1.0[.</returns>
         public static double Double(double min, double max) {
+            if (max < min) {
+                throw new System.ArgumentException("Max should be greater or equals min.");
+            }
+
             return min + Double() * (max - min);
         }
 
@@ -125,6 +159,14 @@ namespace Raccoon.Util {
         }
 
         public static Vector2 Vector2(Vector2 min, Vector2 max) {
+            if (max.X < min.X) {
+                throw new System.ArgumentException("Max.X should be greater or equals min.X.");
+            }
+
+            if (max.Y < min.Y) {
+                throw new System.ArgumentException("Max.Y should be greater or equals min.Y.");
+            }
+
             return new Vector2(Single(min.X, max.X), Single(min.Y, max.Y));
         }
 
@@ -183,6 +225,10 @@ namespace Raccoon.Util {
         /// <param name="list">A list containing values.</param>
         /// <returns>A random value in list or default T value, if list is empty.</returns>
         public static T Choose<T>(IList<T> list) {
+            if (list.Count == 0) {
+                throw new System.ArgumentException($"Can't choose an element from a empty IList<{typeof(T)}>");
+            }
+
             return list[Integer(0, list.Count - 1)];
         }
 
@@ -193,6 +239,10 @@ namespace Raccoon.Util {
         /// <param name="collection">A collection containing values.</param>
         /// <returns>A random value in collection or default T value, if collection is empty.</returns>
         public static T Choose<T>(ICollection<T> collection) {
+            if (collection.Count == 0) {
+                throw new System.ArgumentException($"Can't choose an element from a empty ICollection<{typeof(T)}>");
+            }
+
             IEnumerator<T> enumerator = collection.GetEnumerator();
             int i = Integer(0, collection.Count - 1);
 
@@ -253,5 +303,7 @@ namespace Raccoon.Util {
             list.RemoveAt(index);
             return value;
         }
+
+        #endregion Public Methods
     }
 }
