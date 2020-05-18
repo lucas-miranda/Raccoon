@@ -810,7 +810,7 @@ namespace Raccoon.Components {
             }
 
             OnJumpBegin = OnTouchGround = OnFallingBegin = null;
-            OnTouchRamp = OnLeaveRamp = null;
+            OnTouchRamp = OnLeaveRamp = OnEnteringRamp = OnLeavingRamp = null;
 
             base.Dispose();
         }
