@@ -105,7 +105,12 @@ Scene:
                     logWriter.WriteLine($"Operating System: {System.Environment.OSVersion} ({(System.Environment.Is64BitOperatingSystem ? "x64" : "x86")})");
                     logWriter.WriteLine($"CLR Runtime Version: {System.Environment.Version}");
                     logWriter.WriteLine($"Command Line: {System.Environment.CommandLine}\n\n");
-                    OnCrash?.Invoke(logWriter);
+                    try {
+                        OnCrash?.Invoke(logWriter);
+                    } catch (System.Exception onCrashException) {
+                        logWriter.WriteLine($"Game.OnCrash raised an exception: {onCrashException.Message}\n{onCrashException.StackTrace}\n\n");
+                    }
+
                     logWriter.WriteLine($"\n{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
 
                     while (e.InnerException != null) {
