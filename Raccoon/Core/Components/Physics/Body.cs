@@ -221,7 +221,9 @@ namespace Raccoon.Components {
 
 #if DEBUG
         public override void DebugRender() {
-            Shape.DebugRender(Entity.Transform.Position, Color);
+            if (Active) {
+                Shape.DebugRender(Entity.Transform.Position, Color);
+            }
 
 #if RENDER_COLLISION_CONTACT_POINTS
             if (_contactsToRender.Count > 0) {
