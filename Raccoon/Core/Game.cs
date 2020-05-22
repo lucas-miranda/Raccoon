@@ -157,6 +157,7 @@ Scene:
             XNAGameWrapper.Window.ClientSizeChanged += InternalOnWindowResize;
 
             // window and game internal size
+            WindowSize = new Size(windowWidth, windowHeight);
             WindowCenter = new Vector2(windowWidth / 2f, windowHeight/2f);
             Size = new Size(windowWidth, windowHeight) / PixelScale;
             Center = (Size / 2f).ToVector2();
@@ -198,13 +199,13 @@ Scene:
         public int LastUpdateDeltaTime { get; private set; }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
-        public int WindowWidth { get { return XNAGameWrapper.Window.ClientBounds.Width; } }
-        public int WindowHeight { get { return XNAGameWrapper.Window.ClientBounds.Height; } }
+        public int WindowWidth { get { return (int) WindowSize.Width; } }
+        public int WindowHeight { get { return (int) WindowSize.Height; } }
         public int DisplayWidth { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Width; } }
         public int DisplayHeight { get { return XNAGameWrapper.GraphicsDevice.DisplayMode.Height; } }
         public int TargetFramerate { get; private set; }
         public Size Size { get; private set; }
-        public Size WindowSize { get { return new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height); } }
+        public Size WindowSize { get; private set; }
         public Size DisplaySize { get { return new Size(XNAGameWrapper.GraphicsDevice.DisplayMode.Width, XNAGameWrapper.GraphicsDevice.DisplayMode.Height); } }
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
@@ -220,6 +221,7 @@ Scene:
         public System.TimeSpan Time { get; private set; }
         public PrimitiveBatch DebugPrimitiveBatch { get; private set; }
         public BasicShader BasicShader { get; private set; }
+        public ResizeMode ResizeMode { get; private set; } = ResizeMode.ExpandView;
 
         public string Title {
             get {
@@ -302,7 +304,6 @@ Scene:
         }
 
         public float KeepProportionsScale { get; private set; } = 1f;
-        public ResizeMode ResizeMode { get; set; } = ResizeMode.ExpandView;
 
 #if DEBUG
         public bool DebugMode { get; set; }
@@ -487,38 +488,100 @@ Scene:
             Renderers.Clear();
         }
 
-        public void ResizeWindow(int width, int height) {
-            Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
+        public void ResizeWindow(int windowWidth, int windowHeight, bool fullscreen, int pixelScale = -1) {
+            if (windowWidth <= 0) {
+                throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
+            }
 
-            if (width == WindowWidth && height == WindowHeight) {
+            if (windowHeight <= 0) {
+                throw new System.ArgumentException($"Invalid window height '{windowHeight}', must be greater than zero.");
+            }
+
+            pixelScale = pixelScale <= 0 ? 1 : pixelScale;
+
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+             && fullscreen == IsFullscreen && pixelScale == PixelScale) {
                 return;
             }
 
-            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
-            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
-
-            RefreshViewMode();
+            InternalResize(windowWidth, windowHeight, fullscreen);
+            RefreshViewMode(ResizeMode, pixelScale);
         }
 
-        public void ResizeWindow(int width, int height, bool fullscreen) {
-            Debug.Assert(width > 0 && height > 0, $"Width and Height can't be zero or smaller (width: {width}, height: {height})");
-
-            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
-            XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
-            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
-
-            RefreshViewMode();
+        public void ResizeWindow(int width, int height) {
+            ResizeWindow(width, height, IsFullscreen);
         }
 
         public void ResizeWindow(Size size) {
-            ResizeWindow((int) size.Width, (int) size.Height);
+            ResizeWindow((int) size.Width, (int) size.Height, IsFullscreen);
         }
+
+        public void SetupWindowExpandView(int windowWidth, int windowHeight, bool fullscreen, int pixelScale = -1) {
+            if (windowWidth <= 0) {
+                throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
+            }
+
+            if (windowHeight <= 0) {
+                throw new System.ArgumentException($"Invalid window height '{windowHeight}', must be greater than zero.");
+            }
+
+            pixelScale = pixelScale <= 0 ? 1 : pixelScale;
+
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+             && fullscreen == IsFullscreen && pixelScale == PixelScale) {
+                return;
+            }
+
+            InternalResize(windowWidth, windowHeight, fullscreen);
+            RefreshViewMode(ResizeMode.ExpandView, pixelScale);
+        }
+
+        public void SetupWindowKeepProportionsView(int windowWidth, int windowHeight, int gameWidth, int gameHeight, bool fullscreen, int pixelScale = -1) {
+            if (windowWidth <= 0) {
+                throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
+            }
+
+            if (windowHeight <= 0) {
+                throw new System.ArgumentException($"Invalid window height '{windowHeight}', must be greater than zero.");
+            }
+
+            if (gameWidth <= 0) {
+                throw new System.ArgumentException($"Invalid game width '{gameWidth}', must be greater than zero.");
+            }
+
+            if (windowHeight <= 0) {
+                throw new System.ArgumentException($"Invalid game height '{gameHeight}', must be greater than zero.");
+            }
+
+            pixelScale = pixelScale <= 0 ? 1 : pixelScale;
+
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+             && gameWidth == Width && gameHeight == Height
+             && fullscreen == IsFullscreen 
+             && ResizeMode == ResizeMode.KeepProportions && pixelScale == PixelScale) {
+                return;
+            }
+
+            InternalResize(windowWidth, windowHeight, fullscreen);
+            Size = new Size(gameWidth, gameHeight);
+            RefreshViewMode(ResizeMode.KeepProportions, pixelScale);
+        }
+
+        /*
+        public void ResizeWindow(int width, int height, bool fullscreen) {
+            if (width <= 0) {
+                throw new System.ArgumentException($"Invalid width '{width}', must be greater than zero.");
+            }
+
+            if (height <= 0) {
+                throw new System.ArgumentException($"Invalid height '{height}', must be greater than zero.");
+            }
+
+            if (InternalResize(width, height, fullscreen)) {
+                RefreshViewMode(ResizeMode, PixelScale);
+            }
+        }
+        */
 
         public void ToggleFullscreen() {
             bool isSwitchingToFullscreen = !IsFullscreen;
@@ -724,25 +787,32 @@ Scene:
             Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
 
             // checks if preffered backbuffer size is the same as current window size
-            if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth != windowClientBounds.Width || XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight != windowClientBounds.Height) {
-                DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimumSize.Width, displayMode.Width);
-                XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimumSize.Height, displayMode.Height);
-                XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+            if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth == windowClientBounds.Width && XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight == windowClientBounds.Height) {
             }
 
-            RefreshViewMode();
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimumSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+
+            RefreshViewMode(ResizeMode, PixelScale);
         }
 
-        private void RefreshViewMode() {
+        private void RefreshViewMode(ResizeMode resizeMode, float pixelScale) {
+            Size newWindowSize = new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height);
+
+            WindowSize = newWindowSize;
             WindowCenter = (WindowSize / 2f).ToVector2();
 
-            switch (ResizeMode) {
+            ResizeMode previousResizeMode = ResizeMode;
+            _pixelScale = pixelScale;
+
+            switch (resizeMode) {
                 case ResizeMode.KeepProportions:
-                    KeepProportionsScale = WindowHeight / (Height * PixelScale);
+                    KeepProportionsScale = WindowHeight / (Height * _pixelScale);
 
                     // width correction
-                    float internalGameWidth = Width * PixelScale * KeepProportionsScale;
+                    float internalGameWidth = Width * _pixelScale * KeepProportionsScale;
                     _gameCanvasPosition = new Vector2((WindowWidth - internalGameWidth) / 2f, 0f);
                     break;
 
@@ -750,14 +820,15 @@ Scene:
                     KeepProportionsScale = 1f;
                     _gameCanvasPosition = Vector2.Zero;
 
-                    Size = WindowSize / PixelScale;
-                    Center = (Size / 2f).ToVector2();
+                    Size = WindowSize / _pixelScale;
                     break;
 
                 default:
                     break;
             }
 
+            ResizeMode = resizeMode;
+            Center = (Size / 2f).ToVector2();
 
             // internal resize
             // renderer
@@ -960,6 +1031,21 @@ Scene:
 
         private void Exiting(object sender, System.EventArgs args) {
             OnExiting?.Invoke();
+        }
+
+        private bool InternalResize(int width, int height, bool fullscreen) {
+            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
+
+            if (width == windowClientBounds.Width && height == windowClientBounds.Height && fullscreen == XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
+                return false;
+            }
+
+            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(width, WindowMinimumSize.Width, displayMode.Width);
+            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(height, WindowMinimumSize.Height, displayMode.Height);
+            XNAGameWrapper.GraphicsDeviceManager.IsFullScreen = fullscreen;
+            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
+            return true;
         }
 
         #endregion Private Methods
