@@ -277,29 +277,12 @@ Scene:
             }
 
             set {
-                _pixelScale = value;
-
-                if (IsRunning) {
-                    Size = WindowSize / _pixelScale;
-                } else {
-                    // when game isn't running yet, probably GraphicsDeviceManager hasn't applied changes to window size
-                    // so just use preffered back buffer size instead current window size
-                    Size = new Size(XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth, XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight) / _pixelScale;
-                }
-
-                Center = (Size / 2f).ToVector2();
-
-                if (!IsRunning) {
-                    return;
-                }
-
-                MainCanvas.Resize(Size);
-
-                foreach (Renderer renderer in Renderers) {
-                    renderer.RecalculateProjection();
-                }
-
-                ScreenRenderer.RecalculateProjection();
+                ResizeWindow(
+                    WindowWidth,
+                    WindowHeight,
+                    IsFullscreen,
+                    value
+                );
             }
         }
 
@@ -488,7 +471,7 @@ Scene:
             Renderers.Clear();
         }
 
-        public void ResizeWindow(int windowWidth, int windowHeight, bool fullscreen, int pixelScale = -1) {
+        public void ResizeWindow(int windowWidth, int windowHeight, bool fullscreen, float pixelScale = -1) {
             if (windowWidth <= 0) {
                 throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
             }
@@ -516,7 +499,7 @@ Scene:
             ResizeWindow((int) size.Width, (int) size.Height, IsFullscreen);
         }
 
-        public void SetupWindowExpandView(int windowWidth, int windowHeight, bool fullscreen, int pixelScale = -1) {
+        public void SetupWindowExpandView(int windowWidth, int windowHeight, bool fullscreen, float pixelScale = -1) {
             if (windowWidth <= 0) {
                 throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
             }
@@ -536,7 +519,7 @@ Scene:
             RefreshViewMode(ResizeMode.ExpandView, pixelScale);
         }
 
-        public void SetupWindowKeepProportionsView(int windowWidth, int windowHeight, int gameWidth, int gameHeight, bool fullscreen, int pixelScale = -1) {
+        public void SetupWindowKeepProportionsView(int windowWidth, int windowHeight, int gameWidth, int gameHeight, bool fullscreen, float pixelScale = -1) {
             if (windowWidth <= 0) {
                 throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
             }
@@ -553,7 +536,7 @@ Scene:
                 throw new System.ArgumentException($"Invalid game height '{gameHeight}', must be greater than zero.");
             }
 
-            pixelScale = pixelScale <= 0 ? 1 : pixelScale;
+            pixelScale = pixelScale <= 0f ? 1 : pixelScale;
 
             if (windowWidth == WindowWidth && windowHeight == WindowHeight 
              && gameWidth == Width && gameHeight == Height
@@ -566,22 +549,6 @@ Scene:
             Size = new Size(gameWidth, gameHeight);
             RefreshViewMode(ResizeMode.KeepProportions, pixelScale);
         }
-
-        /*
-        public void ResizeWindow(int width, int height, bool fullscreen) {
-            if (width <= 0) {
-                throw new System.ArgumentException($"Invalid width '{width}', must be greater than zero.");
-            }
-
-            if (height <= 0) {
-                throw new System.ArgumentException($"Invalid height '{height}', must be greater than zero.");
-            }
-
-            if (InternalResize(width, height, fullscreen)) {
-                RefreshViewMode(ResizeMode, PixelScale);
-            }
-        }
-        */
 
         public void ToggleFullscreen() {
             bool isSwitchingToFullscreen = !IsFullscreen;
@@ -788,6 +755,7 @@ Scene:
 
             // checks if preffered backbuffer size is the same as current window size
             if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth == windowClientBounds.Width && XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight == windowClientBounds.Height) {
+                return;
             }
 
             DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
