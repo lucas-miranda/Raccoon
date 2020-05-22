@@ -101,20 +101,24 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            RenderTarget2D renderTarget2D = new RenderTarget2D(
+            SurfaceFormat format = XNARenderTarget.Format;
+            DepthFormat depthStencil = XNARenderTarget.DepthStencilFormat;
+            int multiSampleCount = XNARenderTarget.MultiSampleCount;
+            RenderTargetUsage renderTargetUsage = XNARenderTarget.RenderTargetUsage;
+
+            Texture.Dispose();
+            Texture = new Texture(new RenderTarget2D(
                 Game.Instance.GraphicsDevice,
                 width,
                 height,
                 mipmap,
-                XNARenderTarget.Format,
-                XNARenderTarget.DepthStencilFormat,
-                XNARenderTarget.MultiSampleCount,
-                XNARenderTarget.RenderTargetUsage
-            );
+                format,
+                depthStencil,
+                multiSampleCount,
+                renderTargetUsage
+            ));
 
             InternalRenderer?.RecalculateProjection();
-
-            Texture = new Texture(renderTarget2D);
         }
 
         public void Resize(Size size) {
