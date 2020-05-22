@@ -63,7 +63,6 @@ namespace Raccoon.Components {
         }
 
         ~Movement() {
-            Dispose();
         }
 
         #endregion Constructors
