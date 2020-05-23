@@ -466,8 +466,6 @@ namespace Raccoon {
             Contact? rayContact = null;
             float closerContactDist = float.PositiveInfinity;
 
-            Vector2[] shapeAxes;
-
             foreach (BitTag tag in tags) {
                 ValidateTag(tag);
 
@@ -475,8 +473,6 @@ namespace Raccoon {
                     if (otherCollider.Shape == null || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
                         continue;
                     }
-
-                    shapeAxes = otherCollider.Shape.CalculateAxes();
 
                     Contact? contact = null;
 

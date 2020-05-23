@@ -648,9 +648,14 @@ namespace Raccoon {
                 PenetrationDepth = float.PositiveInfinity
             };
 
-            if (intersections.Length > 1 && Math.DistanceSquared(startPoint, intersections[1]) < Math.DistanceSquared(startPoint, intersections[0])) {
-                // test if second intersection point it's closer than first one
-                leastPenetrationContact.Position = intersections[1];
+            // calculate line-segment first contact point position
+            float closestIntersectionDist = Math.DistanceSquared(startPoint, intersections[0]);
+            for (int i = 1; i < intersections.Length; i++) {
+                float d = Math.DistanceSquared(startPoint, intersections[i]);
+                if (d < closestIntersectionDist) {
+                    leastPenetrationContact.Position = intersections[i];
+                    closestIntersectionDist = d;
+                }
             }
 
             foreach (Vector2 axis in axes) {
@@ -666,26 +671,6 @@ namespace Raccoon {
                     leastPenetrationContact.PenetrationDepth = penetrationDepth;
                     leastPenetrationContact.Normal = projectionA.Min > projectionB.Min ? -axis : axis;
                 }
-            }
-
-            // contact points
-            float startPointProjection = startPoint.Projection(leastPenetrationContact.Normal),
-                  endPointProjection = endPoint.Projection(leastPenetrationContact.Normal);
-
-            Vector2 maxProjVertex;
-            if (startPointProjection > endPointProjection) {
-                maxProjVertex = startPoint;
-            } else {
-                maxProjVertex = endPoint;
-            }
-
-            (Vector2 MaxProjVertex, Line Edge) edgeA = (maxProjVertex, new Line(startPoint, endPoint));
-            (Vector2 MaxProjVertex, Line Edge) edgeB = FindBestEdge(polygon, -leastPenetrationContact.Normal);
-
-            Vector2[] contactPoints = CalculateContactPoints(edgeA, edgeB, leastPenetrationContact.Normal);
-
-            if (contactPoints.Length > 0) {
-                leastPenetrationContact.Position = contactPoints[0];
             }
 
             contact = leastPenetrationContact;
