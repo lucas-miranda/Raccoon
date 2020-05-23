@@ -189,6 +189,9 @@ namespace Raccoon.Components {
         public virtual void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
         }
 
+        public virtual void PhysicsStepMove(int movementX, int movementY) {
+        }
+
         public virtual void PhysicsLateUpdate() {
             OnPhysicsLateUpdate();
 
@@ -202,7 +205,7 @@ namespace Raccoon.Components {
             }
         }
 
-        public virtual bool CanKeepMoving(Vector2 distance, Vector2 movement) {
+        public virtual bool CanExecuteMove(int movementX, int movementY) {
             return true;
         }
 

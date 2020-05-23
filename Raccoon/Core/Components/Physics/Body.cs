@@ -285,6 +285,14 @@ namespace Raccoon.Components {
             Movement?.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
         }
 
+        public void PhysicsStepMove(int movementX, int movementY) {
+            if (!Active || Entity == null || !Entity.Active) {
+                return;
+            }
+
+            Movement?.PhysicsStepMove(movementX, movementY);
+        }
+
         public void PhysicsLateUpdate() {
             if (!Active || Entity == null || !Entity.Active) {
                 return;
