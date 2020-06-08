@@ -41,8 +41,16 @@ namespace Raccoon.Util {
             }
 
             Animation<T>.Track track = animation[trackName];
-            while (!track.HasEnded) {
-                yield return null;
+            if (track.IsLooping) {
+                // play a single time and leave
+                int timesPlayed = track.TimesPlayed;
+                while (track.TimesPlayed == timesPlayed) {
+                    yield return null;
+                }
+            } else {
+                while (!track.HasEnded) {
+                    yield return null;
+                }
             }
         }
 
