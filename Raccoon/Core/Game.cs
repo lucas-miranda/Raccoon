@@ -121,7 +121,11 @@ Scene:
                     // include report.log
                     System.Diagnostics.Debug.Flush();
                     logWriter.WriteLine("\n\nreport.log\n-------------\n");
-                    logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
+                    if (File.Exists(Debug.LogFileName)) {
+                        logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
+                    } else {
+                        logWriter.WriteLine("  No 'report.log' file");
+                    }
                 }
 
                 switch (System.Environment.OSVersion.Platform) {
