@@ -66,6 +66,9 @@ namespace Raccoon.Components {
         }
 
         public virtual void OnSceneRemoved(bool wipe) {
+            if (wipe) {
+                Dispose();
+            }
         }
 
         public virtual void BeforeUpdate() {

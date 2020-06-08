@@ -181,7 +181,7 @@ namespace Raccoon {
                 foreach (Component c in Components) {
                     ComponentRemoved(c);
                     c.OnRemoved();
-                    c.Dispose();
+                    c.OnSceneRemoved(wipe: true);
                 }
                 Components.Unlock();
 
@@ -467,6 +467,7 @@ namespace Raccoon {
 
             ComponentRemoved(component);
             component.OnRemoved();
+            component.OnSceneRemoved(wipe: true);
         }
 
         public T GetComponent<T>() where T : Component {
@@ -500,6 +501,7 @@ namespace Raccoon {
                 if (c is T && Components.Remove(c)) {
                     ComponentRemoved(c);
                     c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
                 }
             }
             Components.Unlock();
@@ -528,17 +530,20 @@ namespace Raccoon {
                 foreach (Component c in Components.ToAdd) {
                     ComponentRemoved(c);
                     c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
                 }
 
                 foreach (Component c in Components.ToRemove) {
                     ComponentRemoved(c);
                     c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
                 }
             }
 
             foreach (Component c in Components.Items) {
                 ComponentRemoved(c);
                 c.OnRemoved();
+                c.OnSceneRemoved(wipe: true);
             }
 
             Components.Clear();
