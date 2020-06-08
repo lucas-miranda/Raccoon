@@ -135,14 +135,10 @@ namespace Raccoon.Components {
             }
         }
 
+        public double MoveBufferX { get; set; }
+        public double MoveBufferY { get; set; }
+
         #endregion Public Properties
-
-        #region Internal Properties
-
-        internal double MoveBufferX { get; set; }
-        internal double MoveBufferY { get; set; }
-
-        #endregion Internal Properties
 
         #region Public Methods
 
