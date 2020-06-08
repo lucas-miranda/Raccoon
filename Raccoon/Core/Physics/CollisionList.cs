@@ -23,6 +23,36 @@ namespace Raccoon {
             return FindIndex(predicate) > -1;
         }
 
+        public bool CollidesButExcept(T exceptionSubject, bool touchIsCollision) {
+            if (touchIsCollision) {
+                foreach (CollisionInfo<T> collisionInfo in this) {
+                    if (collisionInfo.Subject.Equals(exceptionSubject)) {
+                        continue;
+                    }
+
+                    foreach (Contact c in collisionInfo.Contacts) {
+                        if (c.PenetrationDepth >= 0f) {
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                foreach (CollisionInfo<T> collisionInfo in this) {
+                    if (collisionInfo.Subject.Equals(exceptionSubject)) {
+                        continue;
+                    }
+
+                    foreach (Contact c in collisionInfo.Contacts) {
+                        if (c.PenetrationDepth > 0f) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public IEnumerable<T> Subjects() {
             foreach (CollisionInfo<T> collisionInfo in this) {
                 yield return collisionInfo.Subject;

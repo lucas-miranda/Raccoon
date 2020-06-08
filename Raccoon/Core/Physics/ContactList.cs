@@ -33,6 +33,24 @@ namespace Raccoon {
             return System.Array.FindIndex(_entries, predicate);
         }
 
+        public bool Collides(bool touchIsCollision) {
+            if (touchIsCollision) {
+                foreach (Contact c in _entries) {
+                    if (c.PenetrationDepth >= 0f) {
+                        return true;
+                    }
+                }
+            } else {
+                foreach (Contact c in _entries) {
+                    if (c.PenetrationDepth > 0.1f) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public void CopyTo(Contact[] contacts, int index) {
             _entries.CopyTo(contacts, index);
         }
