@@ -43,7 +43,7 @@ namespace Raccoon {
                     }
 
                     foreach (Contact c in collisionInfo.Contacts) {
-                        if (c.PenetrationDepth > 0f) {
+                        if (c.PenetrationDepth > 0.01f) {
                             return true;
                         }
                     }
