@@ -147,7 +147,7 @@ Scene:
 
             // wrapper
             XNAGameWrapper = new XNAGameWrapper(windowWidth, windowHeight, TargetFramerate, fullscreen, vsync, InternalLoadContent, InternalUnloadContent, InternalUpdate, InternalDraw);
-            XNAGameWrapper.Content.RootDirectory = "Content/";
+            XNAGameWrapper.Content.RootDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Content/");
             Title = title;
 
             // background
