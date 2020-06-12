@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<Platforms>x64</Platforms>
+		<AssemblyName>Raccoon</AssemblyName>
+		<RootNamespace>Raccoon</RootNamespace>
+		<LangVersion>8.0</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <WarningLevel>4</WarningLevel>
+        <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <BaseOutputPath>bin\</BaseOutputPath>
+        <ProjectConfigFileName>App.config</ProjectConfigFileName>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+        <PlatformTarget>x64</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <DefineConstants>TRACE;DEBUG;</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+        <PlatformTarget>x64</PlatformTarget>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win10-x64'">
+        <Content Include="..\SharpFont\Dependencies\freetype2\2.6-alldeps\windows\mingw\x64\freetype6.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <Link>lib\%(Filename)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+        <Content Include="..\SharpFont\Dependencies\freetype2\2.6-alldeps\unix\x64\libfreetype6.so">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <Link>lib\%(Filename)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resource.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+            <SubType>Designer</SubType>
+        </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FNA\FNA.Core.csproj"/>
+        <ProjectReference Include="..\SharpFont\Source\SharpFont\SharpFont.Core.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.json" Version="12.0.2" />
+        <PackageReference Include="NUnit" Version="3.12.0" />
+    </ItemGroup>
+</Project>
