@@ -5,6 +5,7 @@
 		<AssemblyName>Raccoon</AssemblyName>
 		<RootNamespace>Raccoon</RootNamespace>
 		<LangVersion>8.0</LangVersion>
+        <RuntimeIdentifiers>win-x64;linux-x64;osx.10.10-x64</RuntimeIdentifiers>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <WarningLevel>4</WarningLevel>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
