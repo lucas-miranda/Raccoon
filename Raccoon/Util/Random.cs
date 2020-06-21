@@ -293,6 +293,19 @@ namespace Raccoon.Util {
             return -1;
         }
 
+        public static T ChooseWeighted<T>(IList<T> items, IList<int> chanceValues) {
+            if (items.Count != chanceValues.Count) {
+                throw new System.ArgumentException($"{nameof(items)} count ({items.Count}) and {nameof(chanceValues)} count ({chanceValues.Count}) should be equals.");
+            }
+
+            int index = ChooseWeighted(chanceValues);
+            if (index < 0) {
+                throw new System.InvalidOperationException($"Something unexpected happened. Choosed index is invalid.");
+            }
+
+            return items[index];
+        }
+
         public static T Retrieve<T>(IList<T> list) {
             if (list.Count <= 0) {
                 throw new System.ArgumentException($"Can't retrieve an element from a empty IList<{typeof(T)}>");
