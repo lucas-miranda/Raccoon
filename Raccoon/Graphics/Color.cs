@@ -98,13 +98,23 @@ namespace Raccoon.Graphics {
         public uint RGBA { get { return ((uint) R << 24) | ((uint) G << 16) | ((uint) B << 8) | A; } }
         public uint ARGB { get { return ((uint) A << 24) | ((uint) R << 16) | ((uint) G << 8) | B; } }
 
-        public float[] Normalized {
+        public float[] NormalizedRGBA {
             get {
                 return new float[4] {
                     R / 255f,
                     G / 255f,
                     B / 255f,
                     A / 255f
+                };
+            }
+        }
+
+        public float[] NormalizedRGB {
+            get {
+                return new float[3] {
+                    R / 255f,
+                    G / 255f,
+                    B / 255f
                 };
             }
         }
@@ -298,8 +308,8 @@ namespace Raccoon.Graphics {
         }
 
         public static Color operator *(Color l, Color r) {
-            float[] lNormalized = l.Normalized,
-                    rNormalized = r.Normalized;
+            float[] lNormalized = l.NormalizedRGBA,
+                    rNormalized = r.NormalizedRGBA;
             return new Color(
                 lNormalized[0] * rNormalized[0],
                 lNormalized[1] * rNormalized[1],
@@ -309,7 +319,7 @@ namespace Raccoon.Graphics {
         }
 
         public static Color operator *(Color l, float n) {
-            float[] normalized = l.Normalized;
+            float[] normalized = l.NormalizedRGBA;
 
             return new Color(
                 normalized[0] * n,
@@ -320,7 +330,7 @@ namespace Raccoon.Graphics {
         }
 
         public static Color operator /(Color l, float n) {
-            float[] normalized = l.Normalized;
+            float[] normalized = l.NormalizedRGBA;
 
             return new Color(
                 normalized[0] / n,
