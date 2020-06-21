@@ -114,4 +114,37 @@ public static class Extensions {
     }
 
     #endregion IList
+
+    #region List
+
+    public static List<K> Map<T, K>(this List<T> list, System.Func<T, K> map) {
+        List<K> result = new List<K>();
+        foreach (T item in list) {
+            result.Add(map(item));
+        }
+
+        return result;
+    }
+
+    public static K Reduce<T, K>(this List<T> list, System.Func<K, T, K> reduce) {
+        K result = default;
+        foreach (T item in list) {
+            result = reduce(result, item);
+        }
+
+        return result;
+    }
+
+    public static List<T> Filter<T>(this List<T> list, System.Predicate<T> filter) {
+        List<T> result = new List<T>();
+        foreach (T item in list) {
+            if (filter(item)) {
+                result.Add(item);
+            }
+        }
+
+        return result;
+    }
+
+    #endregion List
 }
