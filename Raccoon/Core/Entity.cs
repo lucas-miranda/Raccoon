@@ -149,17 +149,30 @@ namespace Raccoon {
 #endif
 
                 _renderer = null;
-            }
 
-            Components.Lock();
-            foreach (Component c in Components) {
-                if (c.Entity == null) {
-                    continue;
+                Components.Lock();
+                foreach (Component c in Components) {
+                    if (c.Entity == null) {
+                        continue;
+                    }
+
+                    c.OnSceneRemoved(wipe: true);
+                    ComponentRemoved(c);
+                    c.OnRemoved();
                 }
+                Components.Unlock();
+                Components.Clear();
+            } else {
+                Components.Lock();
+                foreach (Component c in Components) {
+                    if (c.Entity == null) {
+                        continue;
+                    }
 
-                c.OnSceneRemoved(WipeOnRemoved && allowWipe);
+                    c.OnSceneRemoved(WipeOnRemoved && allowWipe);
+                }
+                Components.Unlock();
             }
-            Components.Unlock();
 
             Transform.EntitySceneRemoved(WipeOnRemoved && allowWipe);
             OnSceneRemoved?.Invoke();
@@ -176,16 +189,6 @@ namespace Raccoon {
                 Graphics.Unlock();
 
                 Graphics.Clear();
-
-                Components.Lock();
-                foreach (Component c in Components) {
-                    ComponentRemoved(c);
-                    c.OnRemoved();
-                    c.OnSceneRemoved(wipe: true);
-                }
-                Components.Unlock();
-
-                Components.Clear();
             }
         }
 
@@ -207,6 +210,7 @@ namespace Raccoon {
             Transform.UnlockChildren();
 
             OnStart();
+            OnStart = null;
         }
 
         public virtual void SceneBegin() {
@@ -465,9 +469,9 @@ namespace Raccoon {
                 return;
             }
 
+            component.OnSceneRemoved(wipe: true);
             ComponentRemoved(component);
             component.OnRemoved();
-            component.OnSceneRemoved(wipe: true);
         }
 
         public T GetComponent<T>() where T : Component {
