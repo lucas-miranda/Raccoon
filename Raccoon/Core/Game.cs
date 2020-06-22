@@ -89,6 +89,9 @@ Scene:
         public Game(string title = "Raccoon Game", int windowWidth = 1280, int windowHeight = 720, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
             Instance = this;
 
+            // start core systems
+            Logger.Initialize();
+
 #if DEBUG
             Debug.Start();
 
@@ -173,10 +176,6 @@ Scene:
 
                 UpdateCurrentScene();
             };
-        }
-
-        ~Game() {
-            Dispose(false);
         }
 
         #endregion Constructors
@@ -318,7 +317,7 @@ Scene:
         #region Public Methods
 
         public void Start() {
-            Debug.Info("| Raccoon Started |");
+            Logger.Info("| Raccoon Started |");
             IsRunning = true;
             XNAGameWrapper.Run();
         }
