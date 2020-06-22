@@ -22,14 +22,16 @@ namespace Raccoon {
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
-        private static int _indentSize = 4,
-                           _indentLevel = 0;
-        private static string IndentText = "";
-
+#if DEBUG
         private bool _useLogToFile;
+#endif
+
         private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
         private Vector2 _screenMessagePosition;
-        private List<Message> _messagesList = new List<Message>(), _toRemoveMessages = new List<Message>();
+
+        private List<Message> _messagesList = new List<Message>(),
+                              _toRemoveMessages = new List<Message>();
+
         private Locker<Alarm> _alarms = new Locker<Alarm>();
 
         // compose message
@@ -40,25 +42,9 @@ namespace Raccoon {
         #region Constructors
 
         private Debug() {
-            _useLogToFile = true;
 #if DEBUG
-            System.Diagnostics.Debug.Listeners.Add(_textWriterTraceListener);
-            System.Diagnostics.Debug.AutoFlush = true;
-
-            System.Diagnostics.Debug.Listeners.Add(Console);
-
-            switch (System.Environment.OSVersion.Platform) {
-                case System.PlatformID.Unix:
-                    ConsoleTraceListener consoleListener = new ConsoleTraceListener();
-                    System.Diagnostics.Debug.Listeners.Add(consoleListener);
-                    break;
-
-                default:
-                    break;
-            }
-#elif TRACE
-            Trace.Listeners.Add(_textWriterTraceListener);
-            Trace.AutoFlush = true;
+            _useLogToFile = true;
+            Logger.RegisterListener(Console);
 #endif
 
             using (StreamWriter logWriter = new StreamWriter(LogFileName, append: false)) {
@@ -71,30 +57,6 @@ namespace Raccoon {
         #region Public Static Properties
 
         public static Debug Instance { get; private set; }
-
-        public static int IndentSize { 
-            get { 
-                return _indentSize; 
-            } 
-
-            set { 
-                //Trace.IndentSize = value; 
-                _indentSize = value;
-                PrepareIndentText();
-            } 
-        }
-
-        public static int IndentLevel { 
-            get { 
-                return _indentLevel; 
-            } 
-
-            set { 
-                //Trace.IndentLevel = value; 
-                _indentLevel = value;
-                PrepareIndentText();
-            } 
-        }
 
 #if DEBUG
         public static bool ShowPerformanceDiagnostics { get; set; }
@@ -130,61 +92,46 @@ namespace Raccoon {
         #region Messages
 
         [Conditional("DEBUG")]
-        public static void Write(string message, string context, int level = 0) {
-            if (IndentLevel != level) {
-                IndentLevel = level;
-            }
-
-            if (string.IsNullOrWhiteSpace(context)) {
-                Trace.Write($"{IndentText}{message}");
-            } else {
-                Trace.Write($"{IndentText}{message}", context);
-            }
+        public static void Write(string context, string message) {
+            Logger.Write(context, message);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(object obj, string context, int level = 0) {
-            Write(obj.ToString(), context, level);
+        public static void Write(string context, object obj) {
+            Write(context, obj.ToString());
         }
 
         [Conditional("DEBUG")]
-        public static void Write(string message, int level = 0) {
-            Write(message, null, level);
+        public static void Write(string message) {
+            Write(message);
         }
 
         [Conditional("DEBUG")]
-        public static void Write(object obj, int level = 0) {
-            Write(obj.ToString(), null, level);
+        public static void Write(object obj) {
+            Write(obj.ToString());
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(string message, string context, int level = 0) {
-            if (IndentLevel != level) {
-                IndentLevel = level;
-            }
-
-            if (string.IsNullOrWhiteSpace(context)) {
-                Trace.WriteLine($"{IndentText}{message}");
-            } else {
-                Trace.WriteLine($"{IndentText}{message}", context);
-            }
+        public static void WriteLine(string context, string message) {
+            Logger.WriteLine(context, message);
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(object obj, string context, int level = 0) {
-            WriteLine(obj.ToString(), context, level);
+        public static void WriteLine(string context, object obj) {
+            WriteLine(context, obj.ToString());
         }
 
         [Conditional("DEBUG")]
-        public static void WriteLine(string message, int level = 0) {
-            WriteLine(message, null, level);
+        public static void WriteLine(string message) {
+            WriteLine(message);
         }
 
         [Conditional("DEBUG")]
         public static void WriteLine(object obj, int level = 0) {
-            WriteLine(obj.ToString(), null, level);
+            WriteLine(obj.ToString());
         }
 
+        /*
         [Conditional("DEBUG")]
         public static void ComposeMessage(string message, int level = 0) {
             if (IndentLevel != level) {
@@ -231,57 +178,7 @@ namespace Raccoon {
         public static string RetrieveComposedMessage(int startIndex, int length) {
             return _composeMessage.ToString(startIndex, length);
         }
-
-        [Conditional("DEBUG")]
-        public static void Critical(string message, int level = 0) {
-            if (AutoRaiseConsole && !Console.Visible) {
-                Console.Show();
-            }
-
-            WriteLine(message, "Critical", level);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Warning(string message, int level = 0) {
-            if (AutoRaiseConsole && !Console.Visible) {
-                Console.Show();
-            }
-
-            WriteLine(message, "Warning", level);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Error(string message, int level = 0) {
-            if (AutoRaiseConsole && !Console.Visible) {
-                Console.Show();
-            }
-
-            WriteLine(message, "Error", level);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Error(string message, string detailMessage, int level = 0) {
-            if (AutoRaiseConsole && !Console.Visible) {
-                Console.Show();
-            }
-
-            WriteLine($"{message}\n{detailMessage}", "Error", level);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Info(string message, int level = 0) {
-            WriteLine(message, "Info", level);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Fail(string message) {
-            Trace.Fail(message);
-        }
-
-        [Conditional("DEBUG")]
-        public static void Fail(string message, string detailMessage) {
-            Trace.Fail(message, detailMessage);
-        }
+        */
 
         public static void Dump(params object[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
@@ -884,12 +781,12 @@ namespace Raccoon {
         #region Log
 
         public static void Log(string message) {
-            Instance._textWriterTraceListener.WriteLine($"{System.DateTime.Now.ToString()}  {new string(' ', IndentSize * IndentLevel)}{message}");
+            Instance._textWriterTraceListener.WriteLine($"{System.DateTime.Now.ToString()}  {message}");
         }
 
         public static void Log(string filename, string message) {
             using (StreamWriter logWriter = new StreamWriter($"{filename}.log", true)) {
-                logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {new string(' ', IndentSize)}{message}");
+                logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {message}");
             }
         }
 
@@ -922,7 +819,7 @@ namespace Raccoon {
                 string stdMessage = $"[Debug] Stopwatch ended.\n  Start: {startTime.ToString(@"hh\:mm\:ss\.fff")}, End: {{0}}\n  Duration: {{1}}";
                 action = () => {
                     System.TimeSpan endTime = Game.Instance.Time;
-                    Info(string.Format(stdMessage, endTime.ToString(@"hh\:mm\:ss\.fff"), endTime.Subtract(startTime).ToString(@"hh\:mm\:ss\.fff")));
+                    Logger.Info(string.Format(stdMessage, endTime.ToString(@"hh\:mm\:ss\.fff"), endTime.Subtract(startTime).ToString(@"hh\:mm\:ss\.fff")));
                 };
             }
 
@@ -950,7 +847,7 @@ namespace Raccoon {
         #region Private Methods
 
         private static void PrepareIndentText() {
-            IndentText = new string(' ', IndentSize * IndentLevel);
+            //IndentText = new string(' ', IndentSize * IndentLevel);
         }
 
         #endregion Private Methods
@@ -1007,8 +904,6 @@ namespace Raccoon {
             if (Console.Visible) {
                 Console.Render();
             }
-
-            IndentLevel = 0;
         }
 
         #endregion Internal Static Methods

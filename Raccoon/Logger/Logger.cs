@@ -3,14 +3,14 @@ using System.Text;
 
 namespace Raccoon {
     public sealed class Logger {
-        #region Priavte Members
+        #region Private Members
 
         private List<ILoggerListener> _listeners = new List<ILoggerListener>();
         private List<string> _subjects = new List<string>();
         private int _previousHeaderLength;
         private string _indent = string.Empty;
 
-        #endregion Priavte Members
+        #endregion Private Members
 
         #region Constructors
 
