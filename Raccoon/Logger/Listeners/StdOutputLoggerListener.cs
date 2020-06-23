@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 
 namespace Raccoon {
-    public class StdOutputListener : ILoggerListener {
+    public class StdOutputLoggerListener : ILoggerListener {
         #region Private Members
 
         private TextWriter _out;
@@ -13,7 +13,7 @@ namespace Raccoon {
 
         #region Constructors
 
-        public StdOutputListener() {
+        public StdOutputLoggerListener() {
             _out = System.Console.Out;
             System.Console.OutputEncoding = new UTF8Encoding();
 
@@ -57,13 +57,19 @@ namespace Raccoon {
                 { 
                     "subject-name", 
                     new Context() { 
-                        ForegroundColor = System.ConsoleColor.White
+                        ForegroundColor = System.ConsoleColor.DarkGray
                     } 
                 },
             };
         }
 
         #endregion Constructors
+
+        #region Public Properties
+
+        public bool IsDisposed { get; private set; }
+
+        #endregion Public Properties
 
         #region Public Methods
 
@@ -109,6 +115,17 @@ namespace Raccoon {
             _contexts.Clear();
         }
 
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            _out = null;
+            _contexts.Clear();
+
+            IsDisposed = true;
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
@@ -117,13 +134,13 @@ namespace Raccoon {
             WriteMessageToOutput(message);
         }
 
-        protected virtual void HandleContextMessage(Context category, string message) {
-            if (category.ForegroundColor.HasValue) {
-                System.Console.ForegroundColor = category.ForegroundColor.Value;
+        protected virtual void HandleContextMessage(Context context, string message) {
+            if (context.ForegroundColor.HasValue) {
+                System.Console.ForegroundColor = context.ForegroundColor.Value;
             }
 
-            if (category.BackgroundColor.HasValue) {
-                System.Console.BackgroundColor = category.BackgroundColor.Value;
+            if (context.BackgroundColor.HasValue) {
+                System.Console.BackgroundColor = context.BackgroundColor.Value;
             }
 
             WriteMessageToOutput(message);

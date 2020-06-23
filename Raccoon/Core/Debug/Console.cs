@@ -80,6 +80,7 @@ namespace Raccoon {
         public bool ShowTimestamp { get; set; } = true;
         public bool MergeIdenticalMessages { get; set; } = true;
         public bool AlwaysShowCategory { get; set; }
+        public bool IsDisposed { get; private set; }
         public Button PageUpButton { get; set; }
         public Button PageDownButton { get; set; }
         public Button PageHomeButton { get; set; }
@@ -235,6 +236,28 @@ namespace Raccoon {
             _messages.RemoveAt(0);
         }
 
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            foreach (Message message in _messages) {
+                message.Dispose();
+            }
+
+            _messages.Clear();
+            _contexts.Clear();
+
+            _background.Dispose();
+            _scrollGraphic.Dispose();
+            _background = null;
+            _scrollGraphic = null;
+
+            Renderer = null;
+
+            IsDisposed = true;
+        }
+
         #endregion Public Methods
 
         #region Private Methods
@@ -308,6 +331,9 @@ namespace Raccoon {
 
             float y;
 
+            // help perfectly align contexts one above each other
+            float whitespaceX = Font.MeasureText(" ").X;
+
             for (int i = 0; i < _messages.Count && linesToProcess > 0; i++) {
                 Message message = _messages[i];
 
@@ -325,7 +351,17 @@ namespace Raccoon {
 
                 y = Math.Map(messagesY, -Viewport.Height, 0f, 0f, Viewport.Height) - lines * Font.LineSpacing;
                 float x = Viewport.X + 60f;
-                foreach ((Context Context, string Text) textEntry in message) {
+
+                for (int j = 0; j < message.Sections; j++) {
+                    (Context Context, string Text) textEntry = message[j];
+
+                    if (textEntry.Context.Name == "spacing") {
+                        x += whitespaceX * textEntry.Text.Length;
+                        continue;
+                    } else if (textEntry.Text.Length == 0) {
+                        continue;
+                    }
+
                     Renderer.DrawString(
                         Font,
                         textEntry.Text,
@@ -409,7 +445,7 @@ namespace Raccoon {
 
         #region Class Message
 
-        public class Message : System.IEquatable<Message> {
+        public class Message : System.IEquatable<Message>, System.IDisposable {
             private List<(Context Context, string Text)> _text = new List<(Context, string)>();
 
             public Message() {
@@ -417,9 +453,17 @@ namespace Raccoon {
 
             public int Count { get; private set; } = 1;
             public int Lines { get; private set; }
+            public int Sections { get { return _text.Count; } }
             public bool IsMultiline { get { return Lines > 1; } }
             public bool IsClosed { get; private set; }
             public bool IsOpened { get { return !IsClosed; } }
+            public bool IsDisposed { get; private set; }
+
+            public (Context Context, string Text) this [int index] {
+                get {
+                    return _text[index];
+                }
+            }
 
             public void Repeat(string newTimestamp) {
                 if (!IsClosed) {
@@ -535,6 +579,16 @@ namespace Raccoon {
 
             public override int GetHashCode() {
                 return base.GetHashCode();
+            }
+
+            public void Dispose() {
+                if (IsDisposed) {
+                    return;
+                }
+
+                _text.Clear();
+
+                IsDisposed = true;
             }
         }
 

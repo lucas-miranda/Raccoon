@@ -8,7 +8,8 @@ namespace Raccoon {
         private List<ILoggerListener> _listeners = new List<ILoggerListener>();
         private List<string> _subjects = new List<string>();
         private int _previousHeaderLength;
-        private string _indent = string.Empty;
+        private string _indent = string.Empty,
+                       _lastContext = string.Empty;
 
         #endregion Private Members
 
@@ -56,13 +57,17 @@ namespace Raccoon {
             Instance = new Logger();
 
             if (initializeStdOutput) {
-                Instance._listeners.Add(new StdOutputListener());
+                Instance._listeners.Add(new StdOutputLoggerListener());
             }
         }
 
         public static void Deinitialize() {
             if (Instance == null) {
                 return;
+            }
+
+            foreach (ILoggerListener listener in Instance._listeners) {
+                listener.Dispose();
             }
 
             Instance._listeners.Clear();
@@ -76,6 +81,7 @@ namespace Raccoon {
 
         public static void RemoveListener(ILoggerListener listener) {
             CheckInitialization();
+            listener.Dispose();
             Instance._listeners.Remove(listener);
         }
 
@@ -246,17 +252,17 @@ namespace Raccoon {
         private static void WriteMessageHeader(ILoggerListener listener, string context) {
             int length = 0;
             listener.Write("start-message", "");
-            string timestamp = System.DateTime.Now.ToString();
-            listener.Write("timestamp", timestamp);
-            listener.Write("  ");
+            int timestampTextLength = WriteTimestamp(listener, System.DateTime.Now);
+            listener.Write("spacing", "  ");
 
             if (string.IsNullOrEmpty(context)) {
                 throw new System.ArgumentException($"Can't write message header with invalid context '{context}'.");
             }
 
+            Instance._lastContext = context;
             listener.Write(context, context);
-            listener.Write("  ");
-            length += timestamp.Length + 2 + context.Length + 2;
+            listener.Write("spacing", "  ");
+            length += timestampTextLength + 2 + context.Length + 2;
             WriteSubjects(listener, out int subjectsLength);
             Instance._previousHeaderLength = length;
 
@@ -268,10 +274,9 @@ namespace Raccoon {
         private static void WriteMessageHeader(ILoggerListener listener) {
             int length = 0;
             listener.Write("start-message", "");
-            string timestamp = System.DateTime.Now.ToString();
-            listener.Write("timestamp", timestamp);
-            listener.Write("  ");
-            length += timestamp.Length + 2;
+            int timestampTextLength = WriteTimestamp(listener, System.DateTime.Now);
+            listener.Write("spacing", "  ");
+            length += timestampTextLength + 2;
 
             if (Instance._previousHeaderLength > length) {
                 // padding
@@ -301,8 +306,14 @@ namespace Raccoon {
                 length += subject.Length + 2;
             }
 
-            listener.Write("  ");
+            listener.Write("spacing", "  ");
             length += 2;
+        }
+
+        private static int WriteTimestamp(ILoggerListener listener, System.DateTime datetime) {
+            string timestamp = datetime.ToString("dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            listener.Write("timestamp", timestamp);
+            return timestamp.Length;
         }
 
         #endregion Private Methods

@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 
@@ -19,14 +18,10 @@ namespace Raccoon {
 
         #region Private Members
 
+#if DEBUG
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
-#if DEBUG
-        private bool _useLogToFile;
-#endif
-
-        private TextWriterTraceListener _textWriterTraceListener = new TextWriterTraceListener(LogFileName, "logger");
         private Vector2 _screenMessagePosition;
 
         private List<Message> _messagesList = new List<Message>(),
@@ -36,6 +31,7 @@ namespace Raccoon {
 
         // compose message
         private static StringBuilder _composeMessage = new StringBuilder();
+#endif
 
         #endregion Private Members
 
@@ -43,13 +39,9 @@ namespace Raccoon {
 
         private Debug() {
 #if DEBUG
-            _useLogToFile = true;
             Logger.RegisterListener(Console);
+            Logger.RegisterListener(new TextWriterLoggerListener(LogFileName));
 #endif
-
-            using (StreamWriter logWriter = new StreamWriter(LogFileName, append: false)) {
-                logWriter.WriteLine($"{System.DateTime.Now.ToString()}\n");
-            }
         }
 
         #endregion Constructors
@@ -62,27 +54,6 @@ namespace Raccoon {
         public static bool ShowPerformanceDiagnostics { get; set; }
         public static bool AutoRaiseConsole { get; set; } = true;
         public static Console Console { get; private set; } = new Console();
-
-        public static bool UseLogToFile {
-            get {
-                return Instance._useLogToFile;
-            }
-
-            set {
-                if (value == Instance._useLogToFile) {
-                    return;
-                }
-
-                Instance._useLogToFile = value;
-                if (value) {
-                    Trace.Listeners.Add(Instance._textWriterTraceListener);
-                } else {
-                    Trace.Listeners.Remove(Instance._textWriterTraceListener);
-                }
-            }
-        }
-#else
-        public static bool UseLogToFile { get { return true; } }
 #endif
 
         #endregion Public Static Properties
@@ -171,15 +142,18 @@ namespace Raccoon {
             _composeMessage.Clear();
         }
 
+        [Conditional("DEBUG")]
         public static string RetrieveComposedMessage() {
             return _composeMessage.ToString();
         }
 
+        [Conditional("DEBUG")]
         public static string RetrieveComposedMessage(int startIndex, int length) {
             return _composeMessage.ToString(startIndex, length);
         }
         */
 
+        [Conditional("DEBUG")]
         public static void Dump(params object[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
@@ -190,6 +164,7 @@ namespace Raccoon {
             Write(str.ToString());
         }
 
+        [Conditional("DEBUG")]
         public static void Dump(params (string, object)[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
@@ -200,6 +175,7 @@ namespace Raccoon {
             Write(str.ToString());
         }
 
+        [Conditional("DEBUG")]
         public static void DumpLine(params object[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
@@ -211,6 +187,7 @@ namespace Raccoon {
             Write(str.ToString());
         }
 
+        [Conditional("DEBUG")]
         public static void DumpLine(params (string, object)[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
@@ -780,15 +757,19 @@ namespace Raccoon {
 
         #region Log
 
+        /*
+        [Conditional("DEBUG")]
         public static void Log(string message) {
             Instance._textWriterTraceListener.WriteLine($"{System.DateTime.Now.ToString()}  {message}");
         }
 
+        [Conditional("DEBUG")]
         public static void Log(string filename, string message) {
             using (StreamWriter logWriter = new StreamWriter($"{filename}.log", true)) {
                 logWriter.WriteLine($"{System.DateTime.Now.ToString()}  {message}");
             }
         }
+        */
 
         #endregion Log
 
@@ -813,6 +794,7 @@ namespace Raccoon {
 
         #region Time
 
+        [Conditional("DEBUG")]
         public static void Stopwatch(uint interval, System.Action action = null) {
             if (action == null) {
                 System.TimeSpan startTime = Game.Instance.Time;
@@ -832,10 +814,12 @@ namespace Raccoon {
 
         #region Others
 
+        [Conditional("DEBUG")]
         public static void Indent() {
             Trace.Indent();
         }
 
+        [Conditional("DEBUG")]
         public static void Unindent() {
             Trace.Unindent();
         }
@@ -843,14 +827,6 @@ namespace Raccoon {
         #endregion Others
 
         #endregion Public Methods
-
-        #region Private Methods
-
-        private static void PrepareIndentText() {
-            //IndentText = new string(' ', IndentSize * IndentLevel);
-        }
-
-        #endregion Private Methods
 
         #region Internal Methods
 
@@ -910,6 +886,7 @@ namespace Raccoon {
 
         #region Class Message
 
+#if DEBUG
         private class Message {
             public Message(string text, Vector2 position, bool positionRelativeToCamera) {
                 Text = text;
@@ -988,7 +965,8 @@ namespace Raccoon {
                 }
             }
         }
+#endif
 
-        #endregion Class RichMessage
+        #endregion Class Message
     }
 }
