@@ -1,6 +1,7 @@
+using Raccoon.Log;
+
 namespace Raccoon {
     public interface ILoggerListener : System.IDisposable {
-        void Write(string context, string message);
-        void Write(string message);
+        void WriteTokens(in MessageLoggerTokenTree tokens);
     }
 }

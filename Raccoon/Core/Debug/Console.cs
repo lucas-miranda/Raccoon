@@ -2,6 +2,7 @@
 
 using Raccoon.Graphics;
 using Raccoon.Graphics.Primitives;
+using Raccoon.Log;
 using Raccoon.Input;
 using Raccoon.Util;
 
@@ -17,47 +18,55 @@ namespace Raccoon {
         #region Private Members
 
         private List<Message> _messages = new List<Message>();
-        private Dictionary<string, Context> _contexts;
+        private Dictionary<System.Type, TextFormatter> _contexts;
+        private Dictionary<string, TextFormatter> _categories;
 
         // graphics
         private RectanglePrimitive _background, _scrollGraphic;
 
+        // scroll
         private Vector2 _pageScroll;
+
+        // tokens
+        private List<ConsoleLoggerToken> _previousTokens = new List<ConsoleLoggerToken>();
 
         #endregion Private Members
 
         #region Constructors
 
         internal Console() {
-            _contexts = new Dictionary<string, Context> {
+            _contexts = new Dictionary<System.Type, TextFormatter> {
                 { 
-                    "timestamp",
-                    new Context("timestamp", new Color(0xA3A3A3FF))
+                    typeof(TimestampLoggerToken),
+                    new TextFormatter(new Color(0xA3A3A3FF))
                 },
                 { 
+                    typeof(SubjectsLoggerToken),
+                    new TextFormatter(new Color(0xA3A3A3FF))
+                }
+            };
+
+            _categories = new Dictionary<string, TextFormatter> {
+                { 
                     "error",
-                    new Context("error", Color.Red)
+                    new TextFormatter(Color.Red)
                 },
                 { 
                     "info",
-                    new Context("info", new Color(0x00D4FFFF))
+                    new TextFormatter(new Color(0x00D4FFFF))
                 },
                 { 
                     "warning",
-                    new Context("warning", new Color(0xFFEE00FF))
+                    new TextFormatter(new Color(0xFFEE00FF))
                 },
                 { 
                     "critical",
-                    new Context("critical", new Color(0xFF6A00FF))
+                    new TextFormatter(new Color(0xFF6A00FF))
                 },
                 { 
                     "success",
-                    new Context("success", Color.Green)
-                },
-                { 
-                    "subject-name",
-                    new Context("subject-name", new Color(0xA3A3A3FF))
-                },
+                    new TextFormatter(Color.Green)
+                }
             };
 
             PageUpButton = new Button(Key.NumPad9);
@@ -130,56 +139,56 @@ namespace Raccoon {
             */
         }
 
-        public void Write(string context, string message) {
-            if (message == null) {
-                throw new System.ArgumentNullException("message");
+        public void WriteTokens(in MessageLoggerTokenTree tokens) {
+            if (tokens == null) {
+                throw new System.ArgumentNullException(nameof(tokens));
             }
 
             Message lastMessage = LastMessage;
-            switch (context) {
-                case "start-message":
-                    CloseLastMessage();
-                    _messages.Add(new Message());
+            if (tokens.HeaderToken == null) {
+                if (tokens.TextToken == null) {
                     return;
+                }
 
-                case "timestamp":
-                    EnsureLastMessageIsOpen();
+                if (lastMessage == null || lastMessage.IsClosed) {
+                    lastMessage = PushEmptyMessage();
+                }
 
-                    if (_contexts.TryGetValue("timestamp", out Context timestampContext)) {
-                        lastMessage.SetOrAppend(timestampContext, message);
-                    } else {
-                        lastMessage.Append(Context.None, message);
-                    }
+                lastMessage.AppendToken(tokens.TextToken, out int newLines);
 
-                    return;
+                if (newLines > 0) {
+                    Lines += newLines;
+                }
 
-                default:
-                    EnsureLastMessageIsOpen();
-                    break;
+                return;
             }
 
-            if (_contexts.TryGetValue(context, out Context c)) {
-                Lines += lastMessage.Append(c, message);
-            } else {
-                Lines += lastMessage.Append(Context.None, message);
+            // check if last message is the same
+            if (lastMessage != null) {
+                if (lastMessage.Equals(tokens)) {
+                    lastMessage.Repeat(tokens.HeaderToken.TimestampToken);
+                    lastMessage.Close();
+                    return;
+                } else if (lastMessage.IsOpened) {
+                    lastMessage.Close();
+                }
+            }
+
+            lastMessage = PushEmptyMessage();
+            List<LoggerToken> tokenList = tokens.Decompose();
+            foreach (LoggerToken token in tokenList) {
+                if (token == null) {
+                    continue;
+                }
+
+                lastMessage.AppendToken(token, out int newLines);
+
+                if (newLines > 0) {
+                    Lines += newLines;
+                }
             }
 
             TrimExcess();
-            return;
-
-            void EnsureLastMessageIsOpen() {
-                if (lastMessage == null) {
-                    lastMessage = new Message();
-                    _messages.Add(lastMessage);
-                } else if (lastMessage.IsClosed) {
-                    lastMessage = new Message();
-                    _messages.Insert(0, lastMessage);
-                }
-            }
-        }
-
-        public void Write(string message) {
-            Write(string.Empty, message);
         }
 
         public void Show() {
@@ -199,6 +208,7 @@ namespace Raccoon {
             Show();
         }
 
+        /*
         public void RegisterContext(Context context, bool overrides = false) {
             if (overrides) {
                 _contexts[context.Name] = context;
@@ -211,6 +221,7 @@ namespace Raccoon {
         public void ClearContexts() {
             _contexts.Clear();
         }
+        */
 
         public void ClearMessages() {
             _messages.Clear();
@@ -329,12 +340,13 @@ namespace Raccoon {
             int linesToSkip = lineStartIndex,
                 linesToProcess = lineEndIndex - lineStartIndex;
 
-            float y;
+            float y = Math.Map(messagesY, -Viewport.Height, 0f, 0f, Viewport.Height);
 
-            // help perfectly align contexts one above each other
-            float whitespaceX = Font.MeasureText(" ").X;
+            // find viewable messages
+            int startIndex = -1,
+                endIndex = -1;
 
-            for (int i = 0; i < _messages.Count && linesToProcess > 0; i++) {
+            for (int i = 0; i < _messages.Count; i++) {
                 Message message = _messages[i];
 
                 if (linesToSkip - message.Lines > 0) {
@@ -344,49 +356,33 @@ namespace Raccoon {
 
                 int lines = message.Lines - linesToSkip;
                 linesToProcess -= lines;
+                y -= lines * Font.LineSpacing;
 
                 if (linesToSkip > 0) {
                     linesToSkip = 0;
                 }
 
-                y = Math.Map(messagesY, -Viewport.Height, 0f, 0f, Viewport.Height) - lines * Font.LineSpacing;
-                float x = Viewport.X + 60f;
-
-                for (int j = 0; j < message.Sections; j++) {
-                    (Context Context, string Text) textEntry = message[j];
-
-                    if (textEntry.Context.Name == "spacing") {
-                        x += whitespaceX * textEntry.Text.Length;
-                        continue;
-                    } else if (textEntry.Text.Length == 0) {
-                        continue;
-                    }
-
-                    Renderer.DrawString(
-                        Font,
-                        textEntry.Text,
-                        new Vector2(x, y), 
-                        rotation: 0f,
-                        scale: Vector2.One,
-                        ImageFlip.None,
-                        textEntry.Context.TextColor,
-                        origin: Vector2.Zero,
-                        scroll: Vector2.One
-                    );
-
-                    if (!textEntry.Text.Contains("\n")) {
-                        x += Font.MeasureText(textEntry.Text).X;
-                    }
+                if (endIndex < 0) {
+                    endIndex = i;
                 }
+
+                if (linesToProcess <= 0) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            float x;
+            for (int i = startIndex; i >= endIndex; i--) {
+                Message message = _messages[i];
+                x = Viewport.X + 60f;
+                
+                RenderMessage(new Vector2(x, y), message);
 
                 // message repeat count
                 if (MergeIdenticalMessages && message.Count > 1) {
                     string countText = message.Count > 999 ? "[999+]" : $"[{message.Count}]";
                     x = Viewport.X + (60f - Font.MeasureText(countText).X) / 2f;
-
-                    if (!_contexts.TryGetValue("repeat-count", out Context repeatCountContext)) {
-                        repeatCountContext = Context.None;
-                    }
 
                     Renderer.DrawString(
                         Font,
@@ -395,14 +391,16 @@ namespace Raccoon {
                         rotation: 0f,
                         scale: Vector2.One,
                         ImageFlip.None,
-                        repeatCountContext.TextColor,
+                        Color.White,
                         origin: Vector2.Zero,
                         scroll: Vector2.One
                     );
                 }
 
-                messagesY -= lines * Font.LineSpacing;
+                y += message.Lines * Font.LineSpacing;
             }
+
+            _previousTokens.Clear();
         }
 
         #endregion Internal Methods
@@ -421,23 +419,96 @@ namespace Raccoon {
             MoveVerticalScroll(Font.LineSpacing * lines);
         }
 
-        private void CloseLastMessage() {
-            Message lastMessage = LastMessage;
-            if (lastMessage == null) {
-                return;
+        private Message PushEmptyMessage() {
+            Message message = new Message();
+            _messages.Insert(0, message);
+            return message;
+        }
+
+        private void RenderMessage(Vector2 topLeft, Message message) {
+            Vector2 localPos = Vector2.Zero;
+
+            // check if need to force position recalculation
+            if (message.HasTokenType<SubjectsLoggerToken>()) {
+                _previousTokens.Clear();
             }
 
-            lastMessage.Close();
+            int previousTokenIndex = 0;
+            for (int i = 0; i < message.TokensCount; i++) {
+                ConsoleLoggerToken token = message[i];
+                string representation = token.Representation;
+                Color textColor = Color.White;
 
-            if (!MergeIdenticalMessages || _messages.Count < 2) {
-                return;
-            }
-            
-            Message secondLastMessage = _messages[1];
-            if (secondLastMessage.Equals(lastMessage)) {
-                // merge
-                secondLastMessage.Repeat(lastMessage.GetTextByContext("timestamp"));
-                RemoveLastMessage();
+                if (string.IsNullOrEmpty(representation)) {
+                    continue;
+                }
+
+                if (token.LoggerToken is CategoryLoggerToken categoryToken
+                 && _categories.TryGetValue(categoryToken.CategoryName, out TextFormatter categoryFormatter)) {
+                    textColor = categoryFormatter.TextColor;
+                } else if (_contexts.TryGetValue(token.LoggerToken.GetType(), out TextFormatter contextFormatter)) {
+                    textColor = contextFormatter.TextColor; }
+
+                if (token.TextSize == null) {
+                    token.CalculateTextSize(Font);
+                }
+
+                if (_previousTokens.Count > previousTokenIndex) {
+                    int previousTokenStartIndex = previousTokenIndex;
+                    ConsoleLoggerToken previousToken = _previousTokens[previousTokenIndex];
+
+                    while (!previousToken.IsLoggerType(token.LoggerToken)) {
+                        previousTokenIndex += 1;
+
+                        if (previousTokenIndex >= _previousTokens.Count) {
+                            break;
+                        }
+
+                        previousToken = _previousTokens[previousTokenIndex];
+                    }
+
+                    if (previousTokenIndex < _previousTokens.Count) {
+                        if (previousTokenIndex - 1 >= 0) {
+                            for (int j = previousTokenStartIndex - 1; j <= previousTokenIndex - 1; j++) {
+                                localPos.X += _previousTokens[j].TextSize.GetValueOrDefault().X + 16f;
+                            }
+                        }
+
+                        if (previousToken.Representation.Length != token.Representation.Length) {
+                            _previousTokens.RemoveRange(previousTokenIndex, _previousTokens.Count - previousTokenIndex);
+                            _previousTokens.Add(token);
+                        }
+                    } else {
+                        if (previousTokenStartIndex - 1 >= 0) {
+                            localPos.X += _previousTokens[previousTokenStartIndex - 1].TextSize.GetValueOrDefault().X + 16f;
+                        }
+
+                        _previousTokens.RemoveRange(previousTokenStartIndex, _previousTokens.Count - previousTokenStartIndex);
+                        _previousTokens.Add(token);
+                        previousTokenIndex = previousTokenStartIndex;
+                    }
+                } else {
+                    if (previousTokenIndex - 1 >= 0) {
+                        localPos.X += _previousTokens[previousTokenIndex - 1].TextSize.GetValueOrDefault().X + 16f;
+                    }
+
+                    _previousTokens.Add(token);
+                }
+
+                Renderer.DrawString(
+                    Font,
+                    representation,
+                    topLeft + localPos, 
+                    rotation: 0f,
+                    scale: Vector2.One,
+                    ImageFlip.None,
+                    textColor,
+                    origin: Vector2.Zero,
+                    scroll: Vector2.One
+                );
+
+                //localPos.X += token.TextSize.GetValueOrDefault().X + 16f;
+                previousTokenIndex += 1;
             }
         }
 
@@ -445,39 +516,38 @@ namespace Raccoon {
 
         #region Class Message
 
-        public class Message : System.IEquatable<Message>, System.IDisposable {
-            private List<(Context Context, string Text)> _text = new List<(Context, string)>();
+        public class Message : System.IEquatable<Message>, System.IEquatable<MessageLoggerTokenTree>, System.IDisposable {
+            private List<ConsoleLoggerToken> _tokens = new List<ConsoleLoggerToken>();
 
             public Message() {
             }
 
             public int Count { get; private set; } = 1;
             public int Lines { get; private set; }
-            public int Sections { get { return _text.Count; } }
+            public int TokensCount { get { return _tokens.Count; } }
             public bool IsMultiline { get { return Lines > 1; } }
             public bool IsClosed { get; private set; }
             public bool IsOpened { get { return !IsClosed; } }
             public bool IsDisposed { get; private set; }
 
-            public (Context Context, string Text) this [int index] {
+            public ConsoleLoggerToken this [int index] {
                 get {
-                    return _text[index];
+                    return _tokens[index];
                 }
             }
 
-            public void Repeat(string newTimestamp) {
-                if (!IsClosed) {
-                    return;
+            public void Repeat(TimestampLoggerToken timestampToken) {
+                if (timestampToken == null) {
+                    throw new System.ArgumentNullException(nameof(timestampToken));
                 }
 
-                if (newTimestamp == null) {
-                    throw new System.ArgumentNullException(nameof(newTimestamp));
-                }
+                for (int i = 0; i < _tokens.Count; i++) {
+                    if (_tokens[i].LoggerToken is TimestampLoggerToken previousTimestampToken) {
+                        if (timestampToken.IsEarlier(previousTimestampToken)) {
+                            throw new System.InvalidOperationException("Repeat only accepts later timestamps than current one.");
+                        }
 
-                for (int i = 0; i < _text.Count; i++) {
-                    (Context Context, string Text) textEntry = _text[i];
-                    if (textEntry.Context.Name == "timestamp") {
-                        _text[i] = (textEntry.Context, newTimestamp);
+                        _tokens[i] = ConsoleLoggerToken.From(timestampToken);
                         break;
                     }
                 }
@@ -485,6 +555,17 @@ namespace Raccoon {
                 Count++;
             }
 
+            public void AppendToken(LoggerToken token, out int newLines) {
+                if (IsClosed) {
+                    throw new System.InvalidOperationException("Can't modify a closed message.");
+                }
+
+                newLines = CountLines(token);
+                Lines += newLines;
+                _tokens.Add(ConsoleLoggerToken.From(token));
+            }
+
+            /*
             public int Append(Context context, string text) {
                 if (IsClosed) {
                     return 0;
@@ -502,42 +583,56 @@ namespace Raccoon {
 
                 return newLines;
             }
+            */
 
-            public void SetOrAppend(Context context, string text) {
+            public bool SetOrAppend(LoggerToken token) {
                 if (IsClosed) {
-                    return;
+                    throw new System.InvalidOperationException("Can't modify a closed message.");
                 }
 
-                for (int i = 0; i < _text.Count; i++) {
-                    (Context Context, string Text) textEntry = _text[i];
-                    if (textEntry.Context.Equals(context)) {
-                        _text[i] = (textEntry.Context, text);
-                        // TODO  recalculate lines
-                        return;
+                for (int i = 0; i < _tokens.Count; i++) {
+                    ConsoleLoggerToken consoleToken = _tokens[i];
+
+                    if (consoleToken.IsLoggerType(token.GetType())) {
+                        int previousEntryLines = CountLines(consoleToken),
+                            newEntryLines = CountLines(token);
+
+                        Lines += -previousEntryLines + newEntryLines;
+                        _tokens[i] = ConsoleLoggerToken.From(token);
+                        return true;
                     }
                 }
 
-                Append(context, text);
+                _tokens.Add(ConsoleLoggerToken.From(token));
+                return false;
             }
 
-            public bool GetLastEntry(out (Context Context, string Text)? lastEntry) {
-                if (_text.Count == 0) {
-                    lastEntry = null;
-                    return false;
+            public ConsoleLoggerToken GetLastEntry() {
+                if (_tokens.Count == 0) {
+                    return null;
                 }
 
-                lastEntry = _text[_text.Count - 1];
-                return true;
+                return _tokens[_tokens.Count - 1];
             }
 
-            public string GetTextByContext(string context) {
-                foreach ((Context Context, string Text) entry in _text) {
-                    if (entry.Context.Name == context) {
-                        return entry.Text;
+            public ConsoleLoggerToken ByTokenType<T>() where T : LoggerToken {
+                foreach (ConsoleLoggerToken token in _tokens) {
+                    if (token.LoggerToken is T) {
+                        return token;
                     }
                 }
 
                 return null;
+            }
+
+            public bool HasTokenType<T>() where T : LoggerToken {
+                foreach (ConsoleLoggerToken token in _tokens) {
+                    if (token.LoggerToken is T) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
 
             public void Close() {
@@ -548,25 +643,52 @@ namespace Raccoon {
                 IsClosed = true;
             }
 
-            public IEnumerator<(Context Context, string Text)> GetEnumerator() {
-                return _text.GetEnumerator();
+            public IEnumerator<ConsoleLoggerToken> GetEnumerator() {
+                return _tokens.GetEnumerator();
             }
 
             public bool Equals(Message message) {
-                if (message._text.Count != _text.Count) {
+                if (message._tokens.Count != _tokens.Count) {
                     return false;
                 }
 
-                for (int i = 0; i < _text.Count; i++) {
-                    (Context Context, string Text) text = _text[i],
-                                                   otherText = message._text[i];
+                for (int i = 0; i < _tokens.Count; i++) {
+                    ConsoleLoggerToken token = _tokens[i],
+                                       otherToken = message._tokens[i];
 
-                    if (!text.Context.Equals(otherText.Context)) {
+                    if (!token.Equals(otherToken)) {
                         return false;
                     }
+                }
 
-                    if (text.Context.Equals(Context.None) && text.Text != otherText.Text) {
-                        return false;
+                return true;
+            }
+
+            public bool Equals(MessageLoggerTokenTree message) {
+                List<LoggerToken> tokens = message.Decompose();
+                if (tokens.Count != _tokens.Count) {
+                    return false;
+                }
+
+                for (int i = 0; i < tokens.Count; i++) {
+                    ConsoleLoggerToken token = _tokens[i];
+                    LoggerToken messageToken = tokens[i];
+
+                    switch (token.LoggerToken) {
+                        case TimestampLoggerToken timestampToken:
+                            if (!(messageToken is TimestampLoggerToken)) {
+                                return false;
+                            }
+
+                            break;
+
+                        default:
+                            if ((token.LoggerToken == null && messageToken != null) 
+                             || (token.LoggerToken != null && !token.LoggerToken.Equals(messageToken))) {
+                                return false;
+                            }
+
+                            break;
                     }
                 }
 
@@ -586,40 +708,127 @@ namespace Raccoon {
                     return;
                 }
 
-                _text.Clear();
+                _tokens.Clear();
 
                 IsDisposed = true;
+            }
+
+            private int CountLines(LoggerToken token) {
+                int newLines;
+
+                switch (token) {
+                    case TextLoggerToken textToken:
+                        newLines = textToken.Text.Count("\n");
+                        break;
+
+                    default:
+                        newLines = 0;
+                        break;
+                }
+
+                return newLines;
+            }
+
+            private int CountLines(ConsoleLoggerToken token) {
+                int newLines;
+
+                switch (token.LoggerToken) {
+                    case TextLoggerToken textToken:
+                        newLines = textToken.Text.Count("\n");
+                        break;
+
+                    default:
+                        newLines = 0;
+                        break;
+                }
+
+                return newLines;
             }
         }
 
         #endregion Class Message
 
-        #region Class Context
+        #region Class ConsoleLoggerToken
 
-        public class Context : System.IEquatable<Context> {
-            public static readonly Context None = new Context("none", Color.White);
-
-            public Context(string name, Color textColor) {
-                Name = name;
-                TextColor = textColor;
+        public class ConsoleLoggerToken {
+            private ConsoleLoggerToken() {
             }
 
-            public string Name { get; private set; }
-            public Color TextColor { get; private set; }
+            public LoggerToken LoggerToken { get; private set; }
+            public string Representation { get; private set; }
+            public Vector2? TextSize { get; private set; }
 
-            public bool Equals(Context context) {
-                return context.Name == Name;
+            public static ConsoleLoggerToken From(LoggerToken token) {
+                if (token == null) {
+                    throw new System.ArgumentNullException(nameof(token));
+                }
+
+                string representation = string.Empty;
+
+                switch (token) {
+                    case TimestampLoggerToken timestampToken:
+                        representation = timestampToken.Timestamp;
+                        break;
+
+                    case CategoryLoggerToken categoryToken:
+                        representation = categoryToken.CategoryName;
+                        break;
+
+                    case SubjectsLoggerToken subjectsToken:
+                        if (subjectsToken.Subjects.Count == 0) {
+                            break;
+                        }
+
+                        representation = subjectsToken.Subjects[0];
+                        for (int i = 1; i < subjectsToken.Subjects.Count; i++) {
+                            representation += "->" + subjectsToken.Subjects[i];
+                        }
+
+                        break;
+
+                    case TextLoggerToken textToken:
+                        representation = textToken.Text;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                return new ConsoleLoggerToken() {
+                    LoggerToken = token,
+                    Representation = representation
+                };
             }
 
-            public override bool Equals(object obj) {
-                return obj is Context context && context.Name == Name;
+            public void CalculateTextSize(Font font) {
+                TextSize = font.MeasureText(Representation);
             }
 
-            public override int GetHashCode() {
-                return Name.GetHashCode();
+            public bool IsLoggerType(System.Type loggerType) {
+                return LoggerToken != null && LoggerToken.GetType().Equals(loggerType);
+            }
+
+            public bool IsLoggerType(LoggerToken token) {
+                return token != null 
+                    && LoggerToken != null 
+                    && LoggerToken.GetType().Equals(token.GetType());
             }
         }
 
-        #endregion Class Category
+        #endregion Class ConsoleLoggerToken
+
+        #region Class TextFormatter
+
+        public class TextFormatter {
+            public static readonly TextFormatter None = new TextFormatter(Color.White);
+
+            public TextFormatter(Color textColor) {
+                TextColor = textColor;
+            }
+
+            public Color TextColor { get; private set; }
+        }
+
+        #endregion Class MessageFormat
     }
 }

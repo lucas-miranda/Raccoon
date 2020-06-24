@@ -2,12 +2,16 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 
+using Raccoon.Log;
+
 namespace Raccoon {
     public class StdOutputLoggerListener : ILoggerListener {
         #region Private Members
 
         private TextWriter _out;
-        private Dictionary<string, Context> _contexts;
+        private Dictionary<System.Type, TextFormatter> _contexts;
+        private Dictionary<string, TextFormatter> _categories;
+        private List<int> _sectionsTextLength = new List<int>();
 
         #endregion Private Members
 
@@ -17,49 +21,52 @@ namespace Raccoon {
             _out = System.Console.Out;
             System.Console.OutputEncoding = new UTF8Encoding();
 
-            _contexts = new Dictionary<string, Context> {
+            _contexts = new Dictionary<System.Type, TextFormatter> {
                 { 
-                    "timestamp", 
-                    new Context() { 
+                    typeof(TimestampLoggerToken), 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.DarkGray
                     } 
                 },
                 { 
+                    typeof(SubjectsLoggerToken), 
+                    new TextFormatter() { 
+                        ForegroundColor = System.ConsoleColor.DarkGray
+                    } 
+                }
+            };
+
+            _categories = new Dictionary<string, TextFormatter> {
+                { 
                     "error", 
-                    new Context() { 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.Red
                     } 
                 },
                 { 
                     "info", 
-                    new Context() { 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.Blue
                     } 
                 },
                 { 
                     "warning", 
-                    new Context() { 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.Yellow
                     } 
                 },
                 { 
                     "critical", 
-                    new Context() { 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.DarkYellow
                     } 
                 },
                 { 
                     "success", 
-                    new Context() { 
+                    new TextFormatter() { 
                         ForegroundColor = System.ConsoleColor.Green
                     } 
-                },
-                { 
-                    "subject-name", 
-                    new Context() { 
-                        ForegroundColor = System.ConsoleColor.DarkGray
-                    } 
-                },
+                }
             };
         }
 
@@ -73,19 +80,57 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public void Write(string context, string message) {
-            if (_contexts.TryGetValue(context, out Context c)) {
-                HandleContextMessage(c, message);
-                return;
+        public void WriteTokens(in MessageLoggerTokenTree tokens) {
+            if (tokens == null) {
+                throw new System.ArgumentNullException(nameof(tokens));
             }
 
-            HandleDefaultMessage(message);
+            if (tokens.HeaderToken != null) {
+                HeaderLoggerToken header = tokens.HeaderToken;
+
+                if (header.TimestampToken != null) {
+                    CalculateLeftPadding(sectionId: 0, header.TimestampToken.Timestamp);
+                    WriteToken<TimestampLoggerToken>(header.TimestampToken.Timestamp);
+                    WriteMessage("  ");
+                } else {
+                    WritePadding(sectionId: 0);
+                }
+
+                if (header.CategoryToken != null) {
+                    CalculateLeftPadding(sectionId: 1, header.CategoryToken.CategoryName);
+
+                    if (_categories.TryGetValue(header.CategoryToken.CategoryName, out TextFormatter categoryFormatter)) {
+                        WriteFormattedMessage(header.CategoryToken.CategoryName, categoryFormatter);
+                    } else {
+                        WriteToken<CategoryLoggerToken>(header.CategoryToken.CategoryName);
+                    }
+
+                    WriteMessage("  ");
+                } else {
+                    WritePadding(sectionId: 1);
+                }
+
+                if (header.SubjectsToken != null
+                 && header.SubjectsToken.Subjects.Count > 0) {
+                    string representation = header.SubjectsToken.Subjects[0];
+
+                    for (int i = 1; i < header.SubjectsToken.Subjects.Count; i++) {
+                        representation += "->" + header.SubjectsToken.Subjects[i];
+                    }
+
+                    WriteToken<SubjectsLoggerToken>(representation);
+                    WriteMessage("  ");
+                }
+            }
+
+            if (tokens.TextToken != null) {
+                WriteToken<TextLoggerToken>(tokens.TextToken.Text);
+            }
+
+            Flush();
         }
 
-        public void Write(string message) {
-            Write(string.Empty, message);
-        }
-
+        /*
         public Context GetContext(string contextIdentifier) {
             if (_contexts.TryGetValue(contextIdentifier, out Context context)) {
                 return context;
@@ -114,6 +159,7 @@ namespace Raccoon {
         public void ClearContexts() {
             _contexts.Clear();
         }
+        */
 
         public void Dispose() {
             if (IsDisposed) {
@@ -130,40 +176,66 @@ namespace Raccoon {
 
         #region Protected Methods
 
-        protected virtual void HandleDefaultMessage(string message) {
-            WriteMessageToOutput(message);
+        protected void WriteToken<T>(string representation) where T : LoggerToken {
+            if (_contexts.TryGetValue(typeof(T), out TextFormatter textFormatter)) {
+                WriteFormattedMessage(representation, textFormatter);
+                return;
+            }
+
+            WriteMessage(representation);
         }
 
-        protected virtual void HandleContextMessage(Context context, string message) {
-            if (context.ForegroundColor.HasValue) {
-                System.Console.ForegroundColor = context.ForegroundColor.Value;
+        protected virtual void WriteFormattedMessage(string message, TextFormatter formatter) {
+            if (formatter.ForegroundColor.HasValue) {
+                System.Console.ForegroundColor = formatter.ForegroundColor.Value;
             }
 
-            if (context.BackgroundColor.HasValue) {
-                System.Console.BackgroundColor = context.BackgroundColor.Value;
+            if (formatter.BackgroundColor.HasValue) {
+                System.Console.BackgroundColor = formatter.BackgroundColor.Value;
             }
 
-            WriteMessageToOutput(message);
+            WriteMessage(message);
             System.Console.ResetColor();
         }
 
-        protected virtual void WriteMessageToOutput(string message) {
+        protected virtual void WriteMessage(string message) {
             _out.Write(message);
+        }
+
+        protected virtual void Flush() {
             _out.Flush();
         }
 
         #endregion Protected Methods
 
-        #region Context Class
+        #region Private Methods
 
-        public class Context {
-            public Context() {
+        private void CalculateLeftPadding(int sectionId, string text) {
+            if (sectionId < _sectionsTextLength.Count) {
+                _sectionsTextLength[sectionId] = text.Length + 2; // 2 => section spacing
+            } else {
+                _sectionsTextLength.Add(text.Length + 2);
+            }
+        }
+
+        private void WritePadding(int sectionId) {
+            if (_sectionsTextLength.Count > sectionId) {
+                WriteMessage(new string(' ', _sectionsTextLength[sectionId]));
+            }
+        }
+
+        #endregion Private Methods
+
+        #region TextFormatter Class
+
+        public class TextFormatter {
+            public TextFormatter() {
             }
 
             public System.ConsoleColor? ForegroundColor { get; set; }
             public System.ConsoleColor? BackgroundColor { get; set; }
         }
 
-        #endregion Context Class
+        #endregion TextFormatter Class
     }
 }

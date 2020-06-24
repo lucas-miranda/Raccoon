@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using Raccoon.Log;
+
 namespace Raccoon {
     public sealed class Logger {
         #region Private Members
@@ -90,10 +92,17 @@ namespace Raccoon {
             Instance._listeners.Clear();
         }
 
-        public static void Write(string context, string message) {
+        public static void Write(string category, string message) {
             CheckInitialization();
+
+            MessageLoggerTokenTree tokens = BuildTokens(
+                category,
+                message,
+                appendNewLine: false
+            );
+
             foreach (ILoggerListener listener in Instance._listeners) {
-                listener.Write(context, message);
+                listener.WriteTokens(tokens);
             }
         }
 
@@ -101,21 +110,17 @@ namespace Raccoon {
             Write(string.Empty, message);
         }
 
-        public static void WriteLine(string context, string message) {
+        public static void WriteLine(string category, string message) {
             CheckInitialization();
 
-            if (string.IsNullOrEmpty(context)) {
-                foreach (ILoggerListener listener in Instance._listeners) {
-                    WriteMessageHeader(listener);
-                    listener.Write(message);
-                    listener.Write(NewLine);
-                }
-            } else {
-                foreach (ILoggerListener listener in Instance._listeners) {
-                    WriteMessageHeader(listener, context);
-                    listener.Write(message);
-                    listener.Write(NewLine);
-                }
+            MessageLoggerTokenTree tokens = BuildTokens(
+                category,
+                message,
+                appendNewLine: true
+            );
+
+            foreach (ILoggerListener listener in Instance._listeners) {
+                listener.WriteTokens(tokens);
             }
         }
 
@@ -249,6 +254,42 @@ namespace Raccoon {
             }
         }
 
+        private static MessageLoggerTokenTree BuildTokens(string category, string message, bool appendNewLine = true) {
+            MessageLoggerTokenTree messageTokenTree = new MessageLoggerTokenTree() {
+                HeaderToken = new HeaderLoggerToken() {
+                    TimestampToken = new TimestampLoggerToken(System.DateTime.Now)
+                }
+            };
+
+            if (!string.IsNullOrEmpty(category)) {
+                messageTokenTree.HeaderToken.CategoryToken = new CategoryLoggerToken(category);
+            }
+
+            if (Instance._subjects.Count > 0) {
+                messageTokenTree.HeaderToken.SubjectsToken = new SubjectsLoggerToken();
+                foreach (string subject in Instance._subjects) {
+                    messageTokenTree.HeaderToken.SubjectsToken.AddSubject(subject);
+                }
+            }
+
+            if (appendNewLine) {
+                if (message != null) {
+                    message += NewLine;
+                } else {
+                    message = NewLine;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(message)) {
+                messageTokenTree.TextToken = new TextLoggerToken() {
+                    Text = message
+                };
+            }
+
+            return messageTokenTree;
+        }
+
+        /*
         private static void WriteMessageHeader(ILoggerListener listener, string context) {
             int length = 0;
             listener.Write("start-message", "");
@@ -274,7 +315,7 @@ namespace Raccoon {
         private static void WriteMessageHeader(ILoggerListener listener) {
             int length = 0;
             listener.Write("start-message", "");
-            int timestampTextLength = WriteTimestamp(listener, System.DateTime.Now);
+            int timestampTextLength = WriteTimestamp(listener, );
             listener.Write("spacing", "  ");
             length += timestampTextLength + 2;
 
@@ -311,10 +352,11 @@ namespace Raccoon {
         }
 
         private static int WriteTimestamp(ILoggerListener listener, System.DateTime datetime) {
-            string timestamp = datetime.ToString("dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            string timestamp = ;
             listener.Write("timestamp", timestamp);
             return timestamp.Length;
         }
+        */
 
         #endregion Private Methods
     }

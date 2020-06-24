@@ -188,6 +188,13 @@
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Logger\Listeners\StdOutputLoggerListener.cs" />
     <Compile Include="Logger\Listeners\TextWriterLoggerListener.cs" />
+    <Compile Include="Logger\Tokens\CategoryLoggerToken.cs" />
+    <Compile Include="Logger\Tokens\HeaderLoggerToken.cs" />
+    <Compile Include="Logger\Tokens\LoggerToken.cs" />
+    <Compile Include="Logger\Tokens\MessageLoggerTokenTree.cs" />
+    <Compile Include="Logger\Tokens\SubjectsLoggerToken.cs" />
+    <Compile Include="Logger\Tokens\TextLoggerToken.cs" />
+    <Compile Include="Logger\Tokens\TimestampLoggerToken.cs" />
     <Compile Include="Logger\ILoggerListener.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Math\Circle.cs" />
