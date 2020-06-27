@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 
 using Raccoon.Log;
 
@@ -9,7 +10,6 @@ namespace Raccoon {
 
         private List<ILoggerListener> _listeners = new List<ILoggerListener>();
         private List<string> _subjects = new List<string>();
-        private int _previousHeaderLength;
         private string _indent = string.Empty,
                        _lastContext = string.Empty;
 
@@ -33,6 +33,8 @@ namespace Raccoon {
                     NewLine = "\n";
                     break;
             }
+
+            CanWrite = true;
         }
 
         #endregion Constructors
@@ -41,6 +43,7 @@ namespace Raccoon {
 
         public static Logger Instance { get; private set; }
         public static bool IsInitialized { get { return Instance != null; } }
+        public static bool CanWrite { get; set; }
         public static string NewLine { get; set; }
         public static string LastSubject { get { return Instance._subjects.Count == 0 ? null : Instance._subjects[Instance._subjects.Count - 1]; } }
         public static int SubjectCount { get { return Instance._subjects.Count; } }
@@ -92,25 +95,40 @@ namespace Raccoon {
             Instance._listeners.Clear();
         }
 
-        public static void Write(string category, string message) {
+        public static void Write(string message) {
+            if (!CanWrite) {
+                return;
+            }
+
             CheckInitialization();
 
-            MessageLoggerTokenTree tokens = BuildTokens(
-                category,
-                message,
-                appendNewLine: false
-            );
+            if (string.IsNullOrEmpty(message)) {
+                return;
+            }
+
+            MessageLoggerTokenTree tokens = new MessageLoggerTokenTree() {
+                TextToken = new TextLoggerToken() {
+                    Text = message
+                }
+            };
 
             foreach (ILoggerListener listener in Instance._listeners) {
-                listener.WriteTokens(tokens);
+                try {
+                    listener.WriteTokens(tokens);
+                } catch (System.Exception e) {
+                    CanWrite = false;
+                    System.Console.WriteLine($"Logger listener ({listener.GetType()}) raised an exception.");
+                    LogListenerException(listener, e);
+                    Game.Instance.Exit();
+                }
             }
         }
 
-        public static void Write(string message) {
-            Write(string.Empty, message);
-        }
-
         public static void WriteLine(string category, string message) {
+            if (!CanWrite) {
+                return;
+            }
+
             CheckInitialization();
 
             MessageLoggerTokenTree tokens = BuildTokens(
@@ -120,7 +138,14 @@ namespace Raccoon {
             );
 
             foreach (ILoggerListener listener in Instance._listeners) {
-                listener.WriteTokens(tokens);
+                try {
+                    listener.WriteTokens(tokens);
+                } catch (System.Exception e) {
+                    CanWrite = false;
+                    System.Console.WriteLine($"Logger listener ({listener.GetType()}) raised an exception.");
+                    LogListenerException(listener, e);
+                    Game.Instance.Exit();
+                }
             }
         }
 
@@ -255,22 +280,7 @@ namespace Raccoon {
         }
 
         private static MessageLoggerTokenTree BuildTokens(string category, string message, bool appendNewLine = true) {
-            MessageLoggerTokenTree messageTokenTree = new MessageLoggerTokenTree() {
-                HeaderToken = new HeaderLoggerToken() {
-                    TimestampToken = new TimestampLoggerToken(System.DateTime.Now)
-                }
-            };
-
-            if (!string.IsNullOrEmpty(category)) {
-                messageTokenTree.HeaderToken.CategoryToken = new CategoryLoggerToken(category);
-            }
-
-            if (Instance._subjects.Count > 0) {
-                messageTokenTree.HeaderToken.SubjectsToken = new SubjectsLoggerToken();
-                foreach (string subject in Instance._subjects) {
-                    messageTokenTree.HeaderToken.SubjectsToken.AddSubject(subject);
-                }
-            }
+            MessageLoggerTokenTree messageTokenTree = new MessageLoggerTokenTree();
 
             if (appendNewLine) {
                 if (message != null) {
@@ -284,79 +294,50 @@ namespace Raccoon {
                 messageTokenTree.TextToken = new TextLoggerToken() {
                     Text = message
                 };
+
+                if (message.Equals(NewLine)) {
+                    // just a new line message
+                    // don't need to insert header and stuff
+                    return messageTokenTree;
+                }
+            }
+
+            messageTokenTree.HeaderToken = new HeaderLoggerToken() {
+                TimestampToken = new TimestampLoggerToken(System.DateTime.Now)
+            };
+
+            if (!string.IsNullOrEmpty(category)) {
+                messageTokenTree.HeaderToken.CategoryToken = new CategoryLoggerToken(category);
+            }
+
+            if (Instance._subjects.Count > 0) {
+                messageTokenTree.HeaderToken.SubjectsToken = new SubjectsLoggerToken();
+                foreach (string subject in Instance._subjects) {
+                    messageTokenTree.HeaderToken.SubjectsToken.AddSubject(subject);
+                }
             }
 
             return messageTokenTree;
         }
 
-        /*
-        private static void WriteMessageHeader(ILoggerListener listener, string context) {
-            int length = 0;
-            listener.Write("start-message", "");
-            int timestampTextLength = WriteTimestamp(listener, System.DateTime.Now);
-            listener.Write("spacing", "  ");
+        private static void LogListenerException(ILoggerListener listener, System.Exception e) {
+            using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
+                logWriter.WriteLine($"Logger Listener ({listener.GetType()}) raised an exception:");
+                logWriter.WriteLine($"\n{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
 
-            if (string.IsNullOrEmpty(context)) {
-                throw new System.ArgumentException($"Can't write message header with invalid context '{context}'.");
-            }
+                while (e.InnerException != null) {
+                    e = e.InnerException;
+                    logWriter.WriteLine($"{System.DateTime.Now.ToString()}  InnerException: {e.Message}\n{e.StackTrace}\n");
+                }
 
-            Instance._lastContext = context;
-            listener.Write(context, context);
-            listener.Write("spacing", "  ");
-            length += timestampTextLength + 2 + context.Length + 2;
-            WriteSubjects(listener, out int subjectsLength);
-            Instance._previousHeaderLength = length;
-
-            if (Instance._indent.Length > 0) {
-                listener.Write(Instance._indent);
+                logWriter.WriteLine("\n\nreport.log\n-------------\n");
+                if (File.Exists(Debug.LogFileName)) {
+                    logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
+                } else {
+                    logWriter.WriteLine("  No 'report.log' file");
+                }
             }
         }
-
-        private static void WriteMessageHeader(ILoggerListener listener) {
-            int length = 0;
-            listener.Write("start-message", "");
-            int timestampTextLength = WriteTimestamp(listener, );
-            listener.Write("spacing", "  ");
-            length += timestampTextLength + 2;
-
-            if (Instance._previousHeaderLength > length) {
-                // padding
-                listener.Write(new string(' ', Instance._previousHeaderLength - length));
-            }
-
-            WriteSubjects(listener, out int subjectsLength);
-
-            if (Instance._indent.Length > 0) {
-                listener.Write(Instance._indent);
-            }
-        }
-
-        private static void WriteSubjects(ILoggerListener listener, out int length) {
-            length = 0;
-            if (Instance._subjects.Count == 0) {
-                return;
-            }
-
-            string subject = Instance._subjects[0];
-            listener.Write("subject-name", subject);
-            length += subject.Length;
-            for (int i = 1; i < Instance._subjects.Count; i++) {
-                subject = Instance._subjects[i];
-                listener.Write("subject-separator", "->");
-                listener.Write("subject-name", subject);
-                length += subject.Length + 2;
-            }
-
-            listener.Write("spacing", "  ");
-            length += 2;
-        }
-
-        private static int WriteTimestamp(ILoggerListener listener, System.DateTime datetime) {
-            string timestamp = ;
-            listener.Write("timestamp", timestamp);
-            return timestamp.Length;
-        }
-        */
 
         #endregion Private Methods
     }
