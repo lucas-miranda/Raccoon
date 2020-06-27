@@ -64,22 +64,23 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void Write(string context, string message) {
-            Logger.Write(context, message);
+            Logger.Write(message);
         }
 
         [Conditional("DEBUG")]
         public static void Write(string context, object obj) {
-            Write(context, obj.ToString());
+            //Logger.Write(context, obj.ToString());
+            Logger.Write(obj.ToString());
         }
 
         [Conditional("DEBUG")]
         public static void Write(string message) {
-            Write(message);
+            Logger.Write(message);
         }
 
         [Conditional("DEBUG")]
         public static void Write(object obj) {
-            Write(obj.ToString());
+            Logger.Write(obj.ToString());
         }
 
         [Conditional("DEBUG")]
@@ -89,17 +90,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void WriteLine(string context, object obj) {
-            WriteLine(context, obj.ToString());
+            Logger.WriteLine(context, obj.ToString());
         }
 
         [Conditional("DEBUG")]
         public static void WriteLine(string message) {
-            WriteLine(message);
+            Logger.WriteLine(message);
         }
 
         [Conditional("DEBUG")]
         public static void WriteLine(object obj, int level = 0) {
-            WriteLine(obj.ToString());
+            Logger.WriteLine(obj.ToString());
         }
 
         /*
