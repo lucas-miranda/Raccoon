@@ -37,6 +37,7 @@ namespace Raccoon.Util {
         #region Public Properties
 
         public float Length { get { return Max - Min; } }
+        public float Center { get { return Min + Length / 2f; } }
 
         #endregion Public Properties
 
