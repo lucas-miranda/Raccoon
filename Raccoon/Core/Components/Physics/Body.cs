@@ -14,7 +14,7 @@ namespace Raccoon.Components {
         public static bool ShowDebugInfo = false;
 #endif
 
-        public delegate void CollisionDelegate(Body body, Vector2 collisionAxes);
+        public delegate void CollisionDelegate(Body body, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo);
         public delegate void EndCollisionDelegate(Body body);
 
         public event CollisionDelegate OnBeginCollision, OnCollided;
@@ -604,7 +604,7 @@ namespace Raccoon.Components {
         }
 
         protected virtual void BeginCollision(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
-            OnBeginCollision?.Invoke(otherBody, collisionAxes);
+            OnBeginCollision?.Invoke(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
 
             if (Movement != null) {
                 Movement.BeginBodyCollision(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
@@ -616,7 +616,7 @@ namespace Raccoon.Components {
         }
 
         protected virtual void Collided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
-            OnCollided?.Invoke(otherBody, collisionAxes);
+            OnCollided?.Invoke(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
 
             if (Movement != null) {
                 Movement.BodyCollided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
