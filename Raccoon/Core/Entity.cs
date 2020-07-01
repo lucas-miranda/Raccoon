@@ -469,6 +469,7 @@ namespace Raccoon {
                 return;
             }
 
+            component.Enabled = false;
             component.OnSceneRemoved(wipe: true);
             ComponentRemoved(component);
             component.OnRemoved();
@@ -503,6 +504,7 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if (c is T && Components.Remove(c)) {
+                    c.Enabled = false;
                     ComponentRemoved(c);
                     c.OnRemoved();
                     c.OnSceneRemoved(wipe: true);
@@ -532,12 +534,14 @@ namespace Raccoon {
 
             if (Components.IsLocked) {
                 foreach (Component c in Components.ToAdd) {
+                    c.Enabled = false;
                     ComponentRemoved(c);
                     c.OnRemoved();
                     c.OnSceneRemoved(wipe: true);
                 }
 
                 foreach (Component c in Components.ToRemove) {
+                    c.Enabled = false;
                     ComponentRemoved(c);
                     c.OnRemoved();
                     c.OnSceneRemoved(wipe: true);
@@ -545,6 +549,7 @@ namespace Raccoon {
             }
 
             foreach (Component c in Components.Items) {
+                c.Enabled = false;
                 ComponentRemoved(c);
                 c.OnRemoved();
                 c.OnSceneRemoved(wipe: true);
