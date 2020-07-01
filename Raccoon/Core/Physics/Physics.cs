@@ -829,6 +829,10 @@ namespace Raccoon {
                                         moveHorizontalPos.Y = currentY;
                                     }
                                 }
+
+                                if (otherBody.Entity == null) {
+                                    continue;
+                                }
                             }
 
                             // horizontal collision check
@@ -847,6 +851,10 @@ namespace Raccoon {
                                         directionY = Math.Sign(directionY);
                                         moveVerticalPos.X = currentX;
                                     }
+                                }
+
+                                if (otherBody.Entity == null) {
+                                    continue;
                                 }
                             }
 
