@@ -72,93 +72,103 @@ namespace Raccoon {
             Wait((int) (seconds * Util.Time.SecToMili));
         }
 
+        /// <summary>
+        /// Force Coroutine to take a step foward.
+        /// </summary>
+        public void Step() {
+            if (!IsRunning || HasEnded || DelayInterval > 0) {
+                return;
+            }
+
+            if (!MoveNext(Enumerator)) {
+                Stop();
+            }
+        }
+
         private bool MoveNext(IEnumerator enumerator) {
             if (enumerator == null) {
                 return false;
             }
 
             // checks if need to run a nested coroutine
-            if (enumerator.Current is IEnumerator 
-              && !(enumerator.Current is CoroutineInstruction) 
-              && MoveNext(enumerator.Current as IEnumerator)) {
-                return true;
-            }
-
-            // special Current values
-            switch (enumerator.Current) {
-                case null:
-                    break;
-
-                case CoroutineInstruction instruction:
-                    if (!instruction.MoveNext()) {
+            if (enumerator.Current is IEnumerator nestedEnumerator && !(enumerator.Current is CoroutineInstruction)) {
+                if (MoveNext(nestedEnumerator)) {
+                    return true;
+                }
+            } else {
+                // special Current values
+                switch (enumerator.Current) {
+                    case null:
                         break;
-                    }
 
-                    IEnumerator instructionEnumerator = instruction.RetrieveRoutine();
-
-                    if (instructionEnumerator == null) {
-                        return true;
-                    }
-
-                    bool isRunningInstruction = true;
-
-                    do {
-                        instructionEnumerator.MoveNext();
-
-                        switch (instructionEnumerator.Current) {
-                            case CoroutineInstruction.Signal signal:
-                                if (signal == CoroutineInstruction.Signal.Continue) {
-                                    isRunningInstruction = false;
-                                }
-
-                                break;
-
-                            case IEnumerator instructionInternalEnumerator:
-                                instruction.RoutineMoveNextCallback(MoveNext(instructionInternalEnumerator));
-                                break;
-
-                            default:
-                                break;
+                    case CoroutineInstruction instruction:
+                        if (!instruction.MoveNext()) {
+                            break;
                         }
-                    } while (isRunningInstruction);
-                    
-                    return true;
 
-                case float seconds:
-                    if (_waitingDelay) {
-                        _waitingDelay = false;
+                        IEnumerator instructionEnumerator = instruction.RetrieveRoutine();
+
+                        if (instructionEnumerator == null) {
+                            return true;
+                        }
+
+                        bool isRunningInstruction = true;
+
+                        do {
+                            instructionEnumerator.MoveNext();
+
+                            switch (instructionEnumerator.Current) {
+                                case CoroutineInstruction.Signal signal:
+                                    if (signal == CoroutineInstruction.Signal.Continue) {
+                                        isRunningInstruction = false;
+                                    }
+
+                                    break;
+
+                                case IEnumerator instructionInternalEnumerator:
+                                    instruction.RoutineMoveNextCallback(MoveNext(instructionInternalEnumerator));
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        } while (isRunningInstruction);
+                        
+                        return true;
+
+                    case float seconds:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+
+                        Wait(seconds);
+                        return true;
+
+                    case int miliI:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+
+                        Wait(miliI);
+                        return true;
+
+                    case uint miliU:
+                        if (_waitingDelay) {
+                            _waitingDelay = false;
+                            break;
+                        }
+
+                        Wait(miliU);
+                        return true;
+
+                    default:
                         break;
-                    }
-
-                    Wait(seconds);
-                    return true;
-
-                case int miliI:
-                    if (_waitingDelay) {
-                        _waitingDelay = false;
-                        break;
-                    }
-
-                    Wait(miliI);
-                    return true;
-
-                case uint miliU:
-                    if (_waitingDelay) {
-                        _waitingDelay = false;
-                        break;
-                    }
-
-                    Wait(miliU);
-                    return true;
-
-                default:
-                    break;
+                }
             }
 
             return enumerator.MoveNext();
-        }
-
-        public class SpecialRoutine {
         }
     }
 }

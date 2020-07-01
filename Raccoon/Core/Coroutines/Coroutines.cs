@@ -88,6 +88,16 @@ namespace Raccoon {
             return coroutine;
         }
 
+        public Coroutine StartNow(IEnumerator coroutine) {
+            Coroutine c = Start(coroutine);
+            c.Step();
+            return c;
+        }
+
+        public Coroutine StartNow(System.Func<IEnumerator> coroutine) {
+            return StartNow(coroutine());
+        }
+
         public bool Remove(Coroutine coroutine) {
             bool removedFromRunning = _runningCoroutines.Remove(coroutine),
                  removedFromPaused = _pausedCoroutines.Remove(coroutine);
