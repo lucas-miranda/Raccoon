@@ -521,10 +521,123 @@ namespace Raccoon {
             return components;
         }
 
-        public void RemoveComponents<T>() {
+        public void RemoveComponents<T>() where T : Component {
             Components.Lock();
             foreach (Component c in Components) {
                 if (c is T && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents<T, K>() 
+         where T : Component 
+         where K : Component {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if ((c is T || c is K) && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents<T, K, V>() 
+         where T : Component 
+         where K : Component
+         where V : Component {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if ((c is T || c is K || c is V) && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents<T, K, V, U>() 
+         where T : Component 
+         where K : Component
+         where V : Component
+         where U : Component {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if ((c is T || c is K || c is V || c is U) && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+
+        }
+
+        public void RemoveComponents(System.Type componentType) {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if (c.GetType().Equals(componentType) && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents(System.Type componentAType, System.Type componentBType) {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType)) 
+                 && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents(System.Type componentAType, System.Type componentBType, System.Type componentCType) {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType) || c.GetType().Equals(componentCType)) 
+                 && Components.Remove(c)) {
+                    c.Enabled = false;
+                    ComponentRemoved(c);
+                    c.OnRemoved();
+                    c.OnSceneRemoved(wipe: true);
+                }
+            }
+            Components.Unlock();
+        }
+
+        public void RemoveComponents(params System.Type[] componentTypes) {
+            Components.Lock();
+            foreach (Component c in Components) {
+                bool canRemove = false;
+                System.Type type = c.GetType();
+
+                foreach (System.Type componentType in componentTypes) {
+                    if (type.Equals(componentType)) {
+                        canRemove = true;
+                        break;
+                    }
+                }
+
+                if (canRemove && Components.Remove(c)) {
                     c.Enabled = false;
                     ComponentRemoved(c);
                     c.OnRemoved();
