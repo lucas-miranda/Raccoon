@@ -85,8 +85,12 @@ namespace Raccoon.Components {
         }
 
         public void Clear() {
+            if (Coroutine == null) {
+                return;
+            }
+
+            Coroutines.Instance.Remove(Coroutine);
             Stop();
-            Coroutine = null;
         }
 
         private Coroutine RegisterCoroutine(Coroutine coroutine) {
