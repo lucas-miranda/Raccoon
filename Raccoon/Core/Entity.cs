@@ -464,15 +464,36 @@ namespace Raccoon {
             RemoveGraphics((IEnumerable<Graphic>) graphics);
         }
 
-        public void RemoveComponent(Component component) {
+        public bool RemoveComponent(Component component, bool wipe = true) {
             if (Components == null || !Components.Remove(component)) {
-                return;
+                return false;
             }
 
             component.Enabled = false;
-            component.OnSceneRemoved(wipe: true);
+            component.OnSceneRemoved(wipe);
             ComponentRemoved(component);
             component.OnRemoved();
+            return true;
+        }
+
+        public T RemoveComponent<T>(bool wipe = true) where T : Component {
+            if (Components == null) {
+                return null;
+            }
+
+            T retComponent = null;
+
+            Components.Lock();
+            foreach (Component component in Components) {
+                if (component is T ct) {
+                    Components.Remove(component);
+                    retComponent = ct;
+                    break;
+                }
+            }
+            Components.Unlock();
+
+            return retComponent;
         }
 
         public T GetComponent<T>() where T : Component {
