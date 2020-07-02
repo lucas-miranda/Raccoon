@@ -295,6 +295,10 @@ namespace Raccoon {
                 Viewport = new Rectangle(Game.Instance.WindowSize);
             }
 
+            if (_messages.Count == 0) {
+                return;
+            }
+
             PageUpButton.Update(delta);
             if (PageUpButton.IsPressed) {
                 MoveVerticalScrollLines(-4);
@@ -318,6 +322,10 @@ namespace Raccoon {
         internal void Render() {
             // background
             _background.Render(Viewport.Position, 0f, Viewport.Size.ToVector2());
+
+            if (_messages.Count == 0) {
+                return;
+            }
 
             // scroll
             float scrollHeight = Viewport.Height / (TotalHeight / Viewport.Height);
