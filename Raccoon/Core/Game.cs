@@ -102,6 +102,7 @@ Scene:
 #endif
 
             System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
+                Logger.ClearSubjects();
                 System.Exception e = (System.Exception) args.ExceptionObject;
 
                 using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
@@ -134,10 +135,6 @@ Scene:
                 switch (System.Environment.OSVersion.Platform) {
                     case System.PlatformID.Win32NT:
                         System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
-                        break;
-
-                    case System.PlatformID.Unix:
-                        Debug.WriteLine(File.ReadAllText("crash-report.log", System.Text.Encoding.UTF8));
                         break;
 
                     default:
