@@ -300,6 +300,10 @@ namespace Raccoon {
                     // don't need to insert header and stuff
                     return messageTokenTree;
                 }
+
+                if (IndentLevel > 0) {
+                    messageTokenTree.TextToken.Text = Instance._indent + messageTokenTree.TextToken.Text;
+                }
             }
 
             messageTokenTree.HeaderToken = new HeaderLoggerToken() {
