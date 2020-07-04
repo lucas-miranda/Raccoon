@@ -76,8 +76,6 @@
     <Compile Include="Core\Components\Physics\Body.cs" />
     <Compile Include="Core\Components\StateMachine\State.cs" />
     <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
-    <Compile Include="Core\Components\StateMachine\Transition.cs" />
-    <Compile Include="Core\Components\StateMachine\Trigger.cs" />
     <Compile Include="Core\Components\Alarm.cs" />
     <Compile Include="Core\Components\Component.cs" />
     <Compile Include="Core\Components\CoroutineHandler.cs" />

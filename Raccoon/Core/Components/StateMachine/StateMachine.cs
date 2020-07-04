@@ -17,7 +17,6 @@ namespace Raccoon.Components {
         #region Private Members
 
         private Dictionary<T, State<T>> _states = new Dictionary<T, State<T>>();
-        private Dictionary<string, System.IComparable> _triggerValues = new Dictionary<string, System.IComparable>();
 
         #endregion Private Members
 
@@ -34,7 +33,6 @@ namespace Raccoon.Components {
         public State<T> PreviousState { get; private set; }
         public State<T> CurrentState { get; private set; }
         public State<T> NextState { get; private set; } = null;
-        public bool KeepTriggerValuesBetweenStates { get; set; } = false;
         public Coroutine CurrentCoroutine { get; private set; }
         public bool IsRunning { get; private set; }
         public bool HasStarted { get; private set; }
@@ -78,22 +76,8 @@ namespace Raccoon.Components {
                 return;
             }
 
-            // default triggers
-            SetTrigger("Timer", GetTrigger<uint>("Timer") + (uint) delta);
-
             if (NextState != null && NextState != CurrentState) {
                 UpdateState();
-                return;
-            }
-
-            foreach (Transition<T> transition in CurrentState.Transitions) {
-                foreach (KeyValuePair<string, Trigger> triggerEntry in transition.Triggers) {
-                    if (_triggerValues.TryGetValue(triggerEntry.Key, out System.IComparable triggerValue) && triggerEntry.Value.Comparison(triggerValue)) {
-                        NextState = _states[transition.TargetStateName];
-                        UpdateState();
-                        return;
-                    }
-                }
             }
         }
 
@@ -126,6 +110,7 @@ namespace Raccoon.Components {
 
             if (CurrentCoroutine != null) {
                 CurrentCoroutine.Pause();
+                Coroutines.Instance.Remove(CurrentCoroutine);
             }
 
             IsRunning = false;
@@ -142,6 +127,7 @@ namespace Raccoon.Components {
 
             if (CurrentCoroutine != null) {
                 CurrentCoroutine.Resume();
+                Coroutines.Instance.Start(CurrentCoroutine);
             }
 
             IsRunning = true;
@@ -159,19 +145,24 @@ namespace Raccoon.Components {
                 CurrentCoroutine = null;
             }
 
-            ClearTriggers();
             HasStarted = IsRunning = false;
         }
 
         public void ChangeState(T label) {
-            State<T> nextState = _states[label];
+            if (CurrentState == null) {
+                throw new System.InvalidOperationException("StateMachine hasn't started yet.\nStart() should be called before anything else.");
+            }
+
+            if (!_states.TryGetValue(label, out State<T> nextState)) {
+                throw new System.ArgumentException($"There is no registered state with label '{label.ToString()}'.");
+            }
 
             if (nextState == CurrentState) {
                 return;
             }
 
             NextState = nextState;
-            CurrentCoroutine?.Stop(); // avoid running current state update
+            UpdateState();
         }
 
         public void AddState(T label) {
@@ -225,48 +216,6 @@ namespace Raccoon.Components {
             }
         }
 
-        public Transition<T> AddTransition(T fromStateLabel, T toStateLabel) {
-            if (fromStateLabel.Equals(toStateLabel)) {
-                throw new System.InvalidOperationException($"Can't add a transition from a state to itself.");
-            }
-
-            if (!_states.TryGetValue(fromStateLabel, out State<T> fromState)) {
-                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{fromStateLabel}");
-            }
-
-            if (!_states.TryGetValue(toStateLabel, out State<T> toState)) {
-                throw new System.InvalidOperationException($"StateMachine doesn't contains a State '{toStateLabel}");
-            }
-
-            if (fromState.Transitions.Find(p => p.TargetStateName.Equals(toStateLabel)) != null) {
-                throw new System.InvalidOperationException($"StateMachine already have a transition from '{fromStateLabel}' to '{toStateLabel}'");
-            }
-
-            Transition<T> transition = new Transition<T>(toStateLabel);
-            fromState.Transitions.Add(transition);
-            return transition;
-        }
-
-        public void SetTrigger<K>(string label, K value) where K : System.IComparable {
-            _triggerValues[label] = value;
-        }
-
-        public K GetTrigger<K>(string label) where K : System.IComparable {
-            if (_triggerValues.TryGetValue(label, out System.IComparable value)) {
-                return (K) value;
-            }
-
-            return default;
-        }
-
-        public void RemoveTrigger(string label) {
-            _triggerValues.Remove(label);
-        }
-
-        public void ClearTriggers() {
-            _triggerValues.Clear();
-        }
-
         #endregion Public Methods
 
         #region Private Methods
@@ -275,10 +224,6 @@ namespace Raccoon.Components {
             ProcessStateLeave(CurrentState.OnLeave);
 
             CurrentCoroutine.Stop();
-
-            if (!KeepTriggerValuesBetweenStates) {
-                ClearTriggers();
-            }
 
             PreviousState = CurrentState;
             CurrentState = NextState;
