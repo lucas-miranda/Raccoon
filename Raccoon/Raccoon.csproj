@@ -195,6 +195,7 @@
     <Compile Include="Logger\Tokens\TimestampLoggerToken.cs" />
     <Compile Include="Logger\ILoggerListener.cs" />
     <Compile Include="Logger\Logger.cs" />
+    <Compile Include="Math\BezierCurve.cs" />
     <Compile Include="Math\Circle.cs" />
     <Compile Include="Math\Line.cs" />
     <Compile Include="Math\Polygon.cs" />
