@@ -146,5 +146,18 @@ public static class Extensions {
         return result;
     }
 
+    public static void Shuffle<T>(this List<T> list) {
+        if (list.Count == 0) {
+            return;
+        }
+
+        List<T> cloneList = new List<T>(list);
+        list.Clear();
+
+        while (cloneList.Count > 0) {
+            list.Add(Random.Retrieve(cloneList));
+        }
+    }
+
     #endregion List
 }
