@@ -134,7 +134,7 @@ namespace Raccoon.Graphics.Primitives {
                 if (Filled) {
                     _indices[i * 3] = centerIndex; // circle center
                     _indices[i * 3 + 1] = i; // current vertex
-                    _indices[i * 3 + 2] = 1 + (i % _vertices.Length); // next vertex (cyclic)
+                    _indices[i * 3 + 2] = (i + 1) % _vertices.Length; // next vertex (cyclic)
                 } else {
                     _indices[i * 2] = i; // current vertex
                     _indices[i * 2 + 1] = (i + 1) % _vertices.Length; // current vertex
