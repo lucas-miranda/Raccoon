@@ -215,6 +215,7 @@ Scene:
         public Scene NextScene { get; private set; }
         public Font StdFont { get; private set; }
         public Color BackgroundColor { get; set; }
+        public Color ScreenBackgroundColor { get; set; } = Color.Black;
         public Renderer MainRenderer { get; private set; }
         public Renderer DebugRenderer { get; private set; }
         public Renderer ScreenRenderer { get; private set; }
@@ -944,7 +945,7 @@ Scene:
 
             // draw main render target to screen
             GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(ScreenBackgroundColor);
 
             ScreenRenderer.Begin();
 
