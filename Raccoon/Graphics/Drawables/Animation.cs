@@ -156,8 +156,9 @@ namespace Raccoon.Graphics {
         }
 
         public void Play(KeyType key, int frameIndex) {
+            Play(key);
             Tracks[key].CurrentFrameIndex = frameIndex;
-            Play(key, forceReset: false);
+            UpdateClippingRegion();
         }
 
         public void Prepare(KeyType key, bool forceReset = true) {
