@@ -129,6 +129,7 @@ namespace Raccoon.Graphics {
 
             IsPlaying = true;
             if (forceReset) {
+                ElapsedTime = 0;
                 CurrentTrack.Reset();
                 UpdateClippingRegion();
             }
@@ -143,6 +144,7 @@ namespace Raccoon.Graphics {
             if (CurrentTrack == null || !CurrentKey.Equals(key)) {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
+                ElapsedTime = 0;
                 
                 if (forceReset) {
                     CurrentTrack.Reset();
@@ -150,6 +152,7 @@ namespace Raccoon.Graphics {
 
                 UpdateClippingRegion();
             } else if (forceReset) {
+                ElapsedTime = 0;
                 CurrentTrack.Reset();
                 UpdateClippingRegion();
             }
@@ -167,8 +170,8 @@ namespace Raccoon.Graphics {
         }
 
         public void Prepare(KeyType key, int frameIndex) {
+            Play(key);
             Tracks[key].CurrentFrameIndex = frameIndex;
-            Play(key, forceReset: false);
             Pause();
         }
 
@@ -184,6 +187,7 @@ namespace Raccoon.Graphics {
             Pause();
             CurrentTrack.Reset();
             UpdateClippingRegion();
+            ElapsedTime = 0;
         }
 
         public virtual Track Add(KeyType key, Rectangle[] framesRegions, string durations) {
