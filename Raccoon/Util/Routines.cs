@@ -29,6 +29,44 @@ namespace Raccoon.Util {
             }
         }
 
+        public static IEnumerator WaitEndOf<T>(Animation<T> animation, T trackName, T alternativeTrackName, bool autoPlay = false) {
+            if (animation == null || !animation.ContainsTrack(trackName) || !animation.ContainsTrack(alternativeTrackName)) {
+                yield break;
+            }
+
+            if (autoPlay) {
+                animation.Play(trackName);
+            }
+
+            Animation<T>.Track track,
+                               primaryTrack = animation[trackName],
+                               alternativeTrack = animation[alternativeTrackName];
+
+            int trackTimesPlayed,
+                primaryTrackTimesPlayed = primaryTrack.TimesPlayed,
+                alternativeTrackTimesPlayed = alternativeTrack.TimesPlayed;
+
+            if (animation.CurrentKey.Equals(trackName)) {
+                track = primaryTrack;
+                trackTimesPlayed = primaryTrackTimesPlayed;
+            } else if (animation.CurrentKey.Equals(alternativeTrackName)) {
+                track = alternativeTrack;
+                trackTimesPlayed = alternativeTrackTimesPlayed;
+            } else {
+                yield break;
+            }
+
+            while ((track.IsLooping && track.TimesPlayed == trackTimesPlayed) || (!track.IsLooping && !track.HasEnded)) {
+                yield return null;
+
+                if (track == alternativeTrack && animation.CurrentKey.Equals(trackName)) {
+                    track = primaryTrack;
+                } else if (track == primaryTrack && animation.CurrentKey.Equals(alternativeTrackName)) {
+                    track = alternativeTrack;
+                }
+            }
+        }
+
         public static IEnumerator WaitEndOf<T>(Animation<T> animation, T trackName, bool autoPlay = false) {
             if (animation == null || !animation.ContainsTrack(trackName)) {
                 yield break;
