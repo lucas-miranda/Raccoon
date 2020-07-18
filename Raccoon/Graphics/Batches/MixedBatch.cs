@@ -11,6 +11,26 @@ namespace Raccoon.Graphics {
 
         public const int StartBatchItemsCount = 100;
 
+        public static readonly DepthStencilState DefaultDepthReadStencilState = new DepthStencilState() {
+                                                     Name = "MixedBatch.DepthReadState",
+                                                     DepthBufferEnable = true,
+                                                     DepthBufferWriteEnable = false,
+                                                     DepthBufferFunction = CompareFunction.LessEqual,
+                                                     StencilEnable = false,
+                                                     StencilFunction = CompareFunction.Always,
+                                                     StencilPass = StencilOperation.Keep,
+                                                     StencilFail = StencilOperation.Keep,
+                                                     StencilDepthBufferFail = StencilOperation.Keep,
+                                                     TwoSidedStencilMode = false,
+                                                     CounterClockwiseStencilFunction = CompareFunction.Always,
+                                                     CounterClockwiseStencilFail = StencilOperation.Keep,
+                                                     CounterClockwiseStencilPass = StencilOperation.Keep,
+                                                     CounterClockwiseStencilDepthBufferFail = StencilOperation.Keep,
+                                                     StencilMask = System.Int32.MaxValue,
+                                                     StencilWriteMask = System.Int32.MaxValue,
+                                                     ReferenceStencil = 0
+                                                 };
+
         #endregion Public Members
 
         #region Private Members
@@ -31,7 +51,7 @@ namespace Raccoon.Graphics {
         public MixedBatch(GraphicsDevice graphicsDevice = null, bool autoHandleAlphaBlendedSprites = false) {
             GraphicsDevice = graphicsDevice ?? Game.Instance.GraphicsDevice;
             Shader = Game.Instance.BasicShader;
-            DepthReadState = DepthStencilState.DepthRead;
+            DepthReadState = DefaultDepthReadStencilState;
 
             AutoHandleAlphaBlendedSprites = autoHandleAlphaBlendedSprites;
             if (AutoHandleAlphaBlendedSprites) {

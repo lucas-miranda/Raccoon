@@ -4,7 +4,7 @@ namespace Raccoon.Graphics {
     public abstract class Graphic : IUpdatable, IRenderable, System.IDisposable {
         #region Public Members
 
-        public static int LayersCount = 65536; // 16 bits layers
+        public static int LayersCount = 65536; // 16 bits layers [-32768, 32768]
 
         #endregion Public Members
 
@@ -127,7 +127,7 @@ namespace Raccoon.Graphics {
         }
 
         public static int ConvertLayerDepthToLayer(float layerDepth) {
-            return (int) (layerDepth * LayersCount) - LayersCount / 2;
+            return (LayersCount / 2) - (int) (layerDepth * LayersCount);
         }
 
         public virtual void Update(int delta) {
