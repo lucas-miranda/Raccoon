@@ -15,8 +15,6 @@ namespace Raccoon.Components {
         #region Public Members
 
         public static Vector2 GravityForce;
-        public static int LedgeJumpMaxTime = 200;       // milliseconds
-        public static uint JumpInputBufferTime = 200;   // milliseconds
 
         /// <summary>
         /// Elevation range degrees where it's considered a ramp, and will be walkable,
@@ -109,7 +107,7 @@ namespace Raccoon.Components {
                      _requestedJump,
                      _canPerformEarlyJumpInput = true;
 
-        private int _jumpMaxY, _ledgeJumpTime;
+        private int _jumpMaxY, _ledgeJumpTime, _currentLedgeJumpMaxTime;
         private uint _lastTimeFirstRequestToJump;
 
         // ramp movement
@@ -288,6 +286,21 @@ namespace Raccoon.Components {
         /// </summary>
         public float SmoothLeavingDescendingRampVelocityCuttoff { get; set; } = 1f;
 
+        public float SmoothFallingFromDescendingRampVelocityCuttoff { get; set; } = 1f;
+
+        /// <summary>
+        /// Time limit that it's allowed to jump action perform a jump when start falling.
+        /// </summary>
+        public int LedgeJumpMaxTime { get; set; }
+
+        public int RampLedgeJumpMaxTime { get; set; }
+
+        /// <summary>
+        /// If jump action continuously happens until this time (in milliseconds) before touching the ground,
+        /// jump will happen automatically after ground is touched.
+        /// </summary>
+        public uint JumpInputBufferTime { get; set; }
+
         /// <summary>
         /// Tags to check using fall through platform logic.
         /// </summary>
@@ -367,10 +380,10 @@ namespace Raccoon.Components {
             base.Update(delta);
 
             if (IsFalling) {
-                if (_ledgeJumpTime <= LedgeJumpMaxTime) {
+                if (_ledgeJumpTime <= _currentLedgeJumpMaxTime) {
                     _ledgeJumpTime += delta;
                 } else if (Jumps > 0) {
-                    // ledge jump time has been missed, so lost all jumps
+                    // ledge jump time has been missed, so all jumps are lost
                     Jumps = 0;
                     _canKeepCurrentJump = false; // Body has just fallen
                 }
@@ -758,7 +771,7 @@ namespace Raccoon.Components {
             }
 
             // checks if can jump and ledge jump time
-            if (!CanJump || (!OnGround && _ledgeJumpTime > LedgeJumpMaxTime)) {
+            if (!CanJump || (!OnGround && _ledgeJumpTime > _currentLedgeJumpMaxTime)) {
                 return;
             }
 
@@ -1169,10 +1182,17 @@ namespace Raccoon.Components {
         }
 
         private void Fall() {
+            // ledge jump
+            _ledgeJumpTime = 0;
+            if (IsOnRamp || IsLeavingRamp) {
+                _currentLedgeJumpMaxTime = RampLedgeJumpMaxTime;
+            } else {
+                _currentLedgeJumpMaxTime = LedgeJumpMaxTime;
+            }
+
             ClearRampState();
             IsFalling = true;
             OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
-            _ledgeJumpTime = 0;
             OnFallingBegin();
         }
 
