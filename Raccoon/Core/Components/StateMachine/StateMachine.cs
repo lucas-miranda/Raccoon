@@ -141,6 +141,7 @@ namespace Raccoon.Components {
             NextState = PreviousState = CurrentState = StartState = null;
 
             if (CurrentCoroutine != null) {
+                Coroutines.Instance.Remove(CurrentCoroutine);
                 CurrentCoroutine.Stop();
                 CurrentCoroutine = null;
             }
