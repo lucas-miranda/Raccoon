@@ -283,6 +283,15 @@ namespace Raccoon.Components {
             ApplyCustomImpulse(normal * distance, duration);
         }
 
+        public void FullStop() {
+            NextAxis = Vector2.Zero;
+            Body.Velocity = Vector2.Zero;
+
+            // impulse
+            ImpulsePerSec = Vector2.Zero;
+            ImpulseTime = 0f;
+        }
+
         public virtual void Dispose() {
             if (IsDisposed) {
                 return;
