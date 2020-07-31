@@ -87,6 +87,14 @@ namespace Raccoon.Util.Tween {
 
         #region Public Methods
 
+        public static float Apply(float value, float t, System.Func<float, float> easing) {
+            return value * easing(t);
+        }
+
+        public static float Apply(float from, float to, float t, System.Func<float, float> easing) {
+            return from + (to - from) * easing(t);
+        }
+
         public void Update(int delta) {
             if (!IsPlaying) {
                 return;
