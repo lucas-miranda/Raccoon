@@ -5,11 +5,18 @@ using Raccoon.Graphics;
 
 namespace Raccoon.Util.Tween {
     public class Tween {
+        #region Public Members
+
+        public delegate void TweenUpdateDelegate(float t);
+
+        #endregion Public Members
+
         #region Private Members
 
         private static Dictionary<System.Type, ConstructorInfo> LerpersAvailable;
 
-        private event System.Action _onStart, _onUpdate, _onEnd;
+        private event System.Action _onStart, _onEnd;
+        private event TweenUpdateDelegate _onUpdate;
 
         private Dictionary<string, Lerper> _lerpers = new Dictionary<string, Lerper>();
         private bool _startReverse;
@@ -92,7 +99,7 @@ namespace Raccoon.Util.Tween {
                 lerp.Interpolate(IsReverse ? 1f - Time : Time);
             }
 
-            _onUpdate?.Invoke();
+            _onUpdate?.Invoke(IsReverse ? 1f - Time : Time);
 
             if (Time >= 1) {
                 TimesPlayed++;
@@ -234,7 +241,7 @@ namespace Raccoon.Util.Tween {
             return this;
         }
 
-        public Tween OnUpdate(System.Action onUpdate) {
+        public Tween OnUpdate(TweenUpdateDelegate onUpdate) {
             _onUpdate += onUpdate;
             return this;
         }
