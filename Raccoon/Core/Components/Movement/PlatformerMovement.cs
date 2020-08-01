@@ -611,12 +611,14 @@ namespace Raccoon.Components {
                     if (IsLeavingRamp) {
                         ExtraAcceleration = Vector2.Zero;
                         IsLeavingRamp = false;
-                        _rampCurrentAcceleration = 0f;
                     } else if (_isEnteringRamp) {
                         ExtraAcceleration = Vector2.Zero;
                         _isEnteringRamp = false;
-                        _rampCurrentAcceleration = 0f;
                     }
+
+                    // reset ramp smooth control
+                    _rampCurrentAcceleration = 0f;
+                    _isRampAccelerationApplied = false;
                 }
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(Axis.X) != Math.Sign(velocity.X)) {
                 // snaps horizontal velocity to zero, if horizontal axis is on opposite direction
@@ -634,6 +636,10 @@ namespace Raccoon.Components {
                     ExtraAcceleration = Vector2.Zero;
                     _isEnteringRamp = false;
                 }
+
+                // reset ramp smooth control
+                _rampCurrentAcceleration = 0f;
+                _isRampAccelerationApplied = false;
             } else if (MaxVelocity.X > 0f) {
                 // velocity increasing until reach MaxVelocity.X limit
                 float acceleration = Acceleration.X;
