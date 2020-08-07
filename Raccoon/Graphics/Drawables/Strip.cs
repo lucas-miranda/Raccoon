@@ -7,6 +7,8 @@ namespace Raccoon.Graphics {
 
         private DynamicVertexBuffer _vertexBuffer;
         private IndexBuffer _indexBuffer;
+        private VertexPositionColorTexture[] _vertices;
+        private int[] _indices;
 
 #if DEBUG
         private IndexBuffer _debug_indexBuffer;
@@ -44,6 +46,7 @@ namespace Raccoon.Graphics {
 
         public override void DebugRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll) {
 #if DEBUG
+            /*
             if (Sections == 0) {
                 return;
             }
@@ -69,6 +72,7 @@ namespace Raccoon.Graphics {
             }
 
             bs.ResetParameters();
+            */
 #endif
         }
 
@@ -80,7 +84,7 @@ namespace Raccoon.Graphics {
             sectionsPoints.CopyTo(SectionsPoints, 0);
 
             // update vertices
-            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[(sectionsPoints.Count - 1) * 4];
+            _vertices = new VertexPositionColorTexture[(sectionsPoints.Count - 1) * 4];
             float upWidth = width * Alignment.Y,
                   downWidth = width - upWidth,
                   leftWidth = upWidth * Alignment.X,
@@ -119,8 +123,8 @@ namespace Raccoon.Graphics {
                     // the goal is to smooth hard turns
 
                     Vector2 previousPoint = SectionsPoints[s - 1];
-                    Microsoft.Xna.Framework.Vector3 previousBottomPoint = vertices[vertexStart - 2].Position,
-                                                    previousTopPoint = vertices[vertexStart - 1].Position;
+                    Microsoft.Xna.Framework.Vector3 previousBottomPoint = _vertices[vertexStart - 2].Position,
+                                                    previousTopPoint = _vertices[vertexStart - 1].Position;
 
                     float angle = Util.Math.Angle(previousPoint, startPoint, endPoint);
                     bool isClosedAngle = !Util.Helper.InRange(angle, 180 - 45, 180 + 45);
@@ -142,8 +146,8 @@ namespace Raccoon.Graphics {
 
                             // apply correction on previous pair of points too (for a nice alignment)
                             Microsoft.Xna.Framework.Vector3 upCorrection = new Microsoft.Xna.Framework.Vector3(up.X, up.Y, 0f);
-                            vertices[vertexStart - 2].Position = previousBottomPoint + upCorrection;
-                            vertices[vertexStart - 1].Position = previousTopPoint + upCorrection;
+                            _vertices[vertexStart - 2].Position = previousBottomPoint + upCorrection;
+                            _vertices[vertexStart - 1].Position = previousTopPoint + upCorrection;
                         } else {
                             // left turn
                             pivot = new Vector2(previousBottomPoint.X, previousBottomPoint.Y);
@@ -158,8 +162,8 @@ namespace Raccoon.Graphics {
 
                             // apply correction on previous pair of points too (for a nice alignment)
                             Microsoft.Xna.Framework.Vector3 downCorrection = new Microsoft.Xna.Framework.Vector3(down.X, down.Y, 0f);
-                            vertices[vertexStart - 2].Position = previousBottomPoint + downCorrection;
-                            vertices[vertexStart - 1].Position = previousTopPoint + downCorrection;
+                            _vertices[vertexStart - 2].Position = previousBottomPoint + downCorrection;
+                            _vertices[vertexStart - 1].Position = previousTopPoint + downCorrection;
                         }
                     } else {
                         bottomStart = previousBottomPoint;
@@ -168,35 +172,35 @@ namespace Raccoon.Graphics {
                 }
 
                 // start-bottom
-                vertices[vertexStart] = new VertexPositionColorTexture(
+                _vertices[vertexStart] = new VertexPositionColorTexture(
                     bottomStart,
                     Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(0f, 1f)
                 );
 
                 // start-top
-                vertices[vertexStart + 1] = new VertexPositionColorTexture(
+                _vertices[vertexStart + 1] = new VertexPositionColorTexture(
                     topStart,
                     Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(0f, 0f)
                 );
 
                 // end-bottom
-                vertices[vertexStart + 2] = new VertexPositionColorTexture(
+                _vertices[vertexStart + 2] = new VertexPositionColorTexture(
                     new Microsoft.Xna.Framework.Vector3(endPoint.X + down.X, endPoint.Y + down.Y, 0f),
                     Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(1f, 1f)
                 );
 
                 // end-top
-                vertices[vertexStart + 3] = new VertexPositionColorTexture(
+                _vertices[vertexStart + 3] = new VertexPositionColorTexture(
                     new Microsoft.Xna.Framework.Vector3(endPoint.X + up.X, endPoint.Y + up.Y, 0f),
                     Microsoft.Xna.Framework.Color.White,
                     new Microsoft.Xna.Framework.Vector2(1f, 0f)
                 );
             }
 
-            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
+            //_vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
         }
 
         public override void Dispose() {
@@ -216,35 +220,29 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            if (Sections == 0) {
+            if (Sections == 0 || _vertices.Length == 0 || _indices.Length == 0) {
                 return;
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f) * Renderer.World;
-            //bs.View = Microsoft.Xna.Framework.Matrix.Invert(scrollMatrix) * Renderer.View * scrollMatrix;
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.SetMaterial(color * Color, Opacity);
-
-            // texture
-            bs.TextureEnabled = true;
-            bs.Texture = Texture;
-
-            shaderParameters?.ApplyParameters(shader);
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-            foreach (object pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, Sections * 2);
-            }
-
-            bs.ResetParameters();
+            Renderer.DrawVertices(
+                Texture,
+                _vertices,
+                minVertexIndex: 0,
+                verticesLength: _vertices.Length,
+                _indices,
+                minIndex: 0,
+                primitivesCount: Sections * 2,
+                isHollow: false,
+                Position + position,
+                Rotation + rotation,
+                Scale * scale,
+                (Color * color) * Opacity,
+                Origin + origin,
+                Scroll + scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
         }
 
         #endregion Protected Methods
@@ -254,9 +252,9 @@ namespace Raccoon.Graphics {
         private void SetupSections(int sections) {
             SectionsPoints = new Vector2[sections + 1];
 
-            int[] indices = new int[sections * 2 * 3];
+            _indices = new int[sections * 2 * 3];
 #if DEBUG
-            int[] debug_indices = new int[indices.Length];
+            int[] debug_indices = new int[_indices.Length];
 #endif
 
             for (int s = 0, i = 0; s < sections; s++, i += 4) {
@@ -270,12 +268,12 @@ namespace Raccoon.Graphics {
                 //
 
                 int indexStart = s * 6;
-                indices[indexStart] = i;
-                indices[indexStart + 1] = i + 1;
-                indices[indexStart + 2] = i + 2;
-                indices[indexStart + 3] = i + 2;
-                indices[indexStart + 4] = i + 1;
-                indices[indexStart + 5] = i + 3;
+                _indices[indexStart] = i;
+                _indices[indexStart + 1] = i + 1;
+                _indices[indexStart + 2] = i + 2;
+                _indices[indexStart + 3] = i + 2;
+                _indices[indexStart + 4] = i + 1;
+                _indices[indexStart + 5] = i + 3;
 
 #if DEBUG
                 int debugIndexStart = s * 6;
@@ -292,11 +290,11 @@ namespace Raccoon.Graphics {
                 _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, sections * 4, BufferUsage.WriteOnly);
             }
 
-            if (_indexBuffer == null || indices.Length > _indexBuffer.IndexCount) {
-                _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
+            if (_indexBuffer == null || _indices.Length > _indexBuffer.IndexCount) {
+                _indexBuffer = new IndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, _indices.Length, BufferUsage.WriteOnly);
             }
 
-            _indexBuffer.SetData(indices);
+            _indexBuffer.SetData(_indices);
 
 #if DEBUG
             if (_debug_indexBuffer == null || debug_indices.Length > _debug_indexBuffer.IndexCount) {
