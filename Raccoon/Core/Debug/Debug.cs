@@ -689,7 +689,19 @@ namespace Raccoon {
         #region Bezier Curve
 
         [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Camera camera, Vector2[] points, Color color, float step = .1f) {
+        public static void DrawBezierCurve(Camera camera, Vector2[] points, Vector2 position, Color color, float step = .1f, Vector2? origin = null) {
+            if (points == null) {
+                throw new System.ArgumentNullException(nameof(points));
+            } else if (points.Length != 3 && points.Length != 4) {
+                throw new System.ArgumentException($"To properly draw a bezier curve, only 3 or 4 control points are expected, but {points.Length} points was provided.");
+            }
+
+            if (Math.EqualsEstimate(step, 0f)) {
+                throw new System.ArgumentException("Step can't be zero.", nameof(step));
+            } else if (step < 0f) {
+                throw new System.ArgumentException("Step can't be negative.", nameof(step));
+            }
+
             Vector2 cameraPos = Vector2.Zero;
             float zoom = 1f;
 
@@ -698,58 +710,56 @@ namespace Raccoon {
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
-            BasicShader bs = Game.Instance.BasicShader;
+            if (!origin.HasValue) {
+                origin = Vector2.Zero;
+            }
 
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateTranslation(-cameraPos.X, -cameraPos.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateScale(zoom, zoom, 1f)
-                * Game.Instance.DebugRenderer.World;
-
-            bs.View = Game.Instance.DebugRenderer.View;
-            bs.Projection = Game.Instance.DebugRenderer.Projection;
-
-            // material
-            bs.SetMaterial(color);
-
-            // build bezier curve points
             int steps = 1 + (int) Math.Ceiling(1f / step);
-            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[steps];
+            List<Vector2> pointList = new List<Vector2>();
+
             if (points.Length == 3) {
                 float t = 0f;
                 for (int i = 0; i < steps; i++) {
-                    Vector2 point = Math.BezierCurve(points[0], points[1], points[2], t);
-                    vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
+                    pointList.Add((-cameraPos + Math.BezierCurve(points[0], points[1], points[2], t) + position - origin.Value) * zoom);
                     t = Math.Approach(t, 1f, step);
                 }
             } else if (points.Length == 4) {
                 float t = 0f;
                 for (int i = 0; i < steps; i++) {
-                    Vector2 point = Math.BezierCurve(points[0], points[1], points[2], points[3], t);
-                    vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(point.X, point.Y, 0f), Color.White);
+                    pointList.Add((-cameraPos + Math.BezierCurve(points[0], points[1], points[2], points[3], t) + position - origin.Value) * zoom);
                     t = Math.Approach(t, 1f, step);
                 }
             }
 
-            foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, steps - 1);
-            }
-
-            bs.ResetParameters();
+            Game.Instance.DebugPrimitiveBatch.DrawLines(
+                pointList,
+                position: Vector2.Zero,
+                color,
+                rotation: 0,
+                scale: Vector2.One,
+                origin: Vector2.Zero,
+                cyclic: false
+            );
         }
 
         [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Camera camera, Vector2[] points, float step = .1f) {
-            DrawBezierCurve(camera, points, Color.White, step);
+        public static void DrawBezierCurve(Camera camera, Vector2[] points, Vector2 position, float step = .1f) {
+            DrawBezierCurve(camera, points, position, Color.White, step);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawBezierCurve(Vector2[] points, Color color, float step = .1f) {
-            DrawBezierCurve(Camera.Current, points, color, step);
+        public static void DrawBezierCurve(Vector2[] points, Vector2 position, Color color, float step = .1f, Vector2? origin = null) {
+            DrawBezierCurve(Camera.Current, points, position, color, step, origin);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DrawBezierCurve(Vector2[] points, Vector2 position, float step = .1f, Vector2? origin = null) {
+            DrawBezierCurve(Camera.Current, points, position, Color.White, step, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, float step = .1f) {
-            DrawBezierCurve(Camera.Current, points, Color.White, step);
+            DrawBezierCurve(Camera.Current, points, position: Vector2.Zero, Color.White, step, origin: null);
         }
 
         #endregion Bezier Curve
