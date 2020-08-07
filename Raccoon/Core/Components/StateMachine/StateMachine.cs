@@ -59,6 +59,7 @@ namespace Raccoon.Components {
 
         public override void OnSceneAdded() {
             base.OnSceneAdded();
+
             if (HasStarted) {
                 Resume();
             }
@@ -66,7 +67,10 @@ namespace Raccoon.Components {
 
         public override void OnSceneRemoved(bool wipe) {
             base.OnSceneRemoved(wipe);
-            if (HasStarted) {
+
+            if (wipe) {
+                Stop();
+            } else if (HasStarted) {
                 Pause();
             }
         }
@@ -109,8 +113,11 @@ namespace Raccoon.Components {
             }
 
             if (CurrentCoroutine != null) {
-                CurrentCoroutine.Pause();
-                Coroutines.Instance.Remove(CurrentCoroutine);
+                if (CurrentCoroutine.HasEnded) {
+                    CurrentCoroutine = null;
+                } else {
+                    CurrentCoroutine.Pause();
+                }
             }
 
             IsRunning = false;
@@ -126,8 +133,15 @@ namespace Raccoon.Components {
             }
 
             if (CurrentCoroutine != null) {
-                CurrentCoroutine.Resume();
-                Coroutines.Instance.Start(CurrentCoroutine);
+                if (!CurrentCoroutine.HasEnded) {
+                    CurrentCoroutine.Resume();
+
+                    if ( !Coroutines.Instance.Has(CurrentCoroutine)) {
+                        Coroutines.Instance.Start(CurrentCoroutine);
+                    }
+                } else {
+                    CurrentCoroutine = null;
+                }
             }
 
             IsRunning = true;
@@ -224,7 +238,7 @@ namespace Raccoon.Components {
         private void UpdateState() {
             ProcessStateLeave(CurrentState.OnLeave);
 
-            CurrentCoroutine.Stop();
+            CurrentCoroutine?.Stop();
 
             PreviousState = CurrentState;
             CurrentState = NextState;
