@@ -531,6 +531,17 @@ namespace Raccoon.Graphics {
             Batch.DrawVertices(vertices, minVertexIndex, verticesLength, indices, minIndex, primitivesCount, isHollow, position, rotation, scale, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
+        public void DrawVertices(Texture texture, VertexPositionColorTexture[] vertexData, int minVertexIndex, int verticesLength, int[] indices, int minIndex, int primitivesCount, bool isHollow, Vector2 position, float rotation, Vector2 scale, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawVertices(texture, vertexData, minVertexIndex, verticesLength, indices, minIndex, primitivesCount, isHollow, position, rotation, scale, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawVertices(texture, vertexData, minVertexIndex, verticesLength, indices, minIndex, primitivesCount, isHollow, position, rotation, scale, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
         #endregion Others
 
         #endregion Public Methods
