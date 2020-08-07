@@ -96,6 +96,16 @@ namespace Raccoon.Util {
             yield return WaitEndOf(animation, animation.CurrentKey);
         }
 
+        public static IEnumerator WaitEndOf(Coroutine coroutine) {
+            if (coroutine == null) {
+                yield break;
+            }
+
+            while (!coroutine.HasEnded) {
+                yield return null;
+            }
+        }
+
         public static IEnumerator Repeat(int times, Func<IEnumerator> routine) {
             while (times > 0) {
                 yield return routine();
