@@ -105,6 +105,10 @@ namespace Raccoon {
             return removedFromRunning || removedFromPaused;
         }
 
+        public bool Has(Coroutine coroutine) {
+            return _runningCoroutines.Contains(coroutine) || _pausedCoroutines.Contains(coroutine);
+        }
+
         public void ClearAll() {
             foreach (Coroutine coroutine in _runningCoroutines) {
                 coroutine.Stop();
