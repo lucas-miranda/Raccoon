@@ -81,6 +81,15 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Returns a random integer in range.
+        /// </summary>
+        /// <param name="min">Values range.</param>
+        /// <returns>Number in range.</returns>
+        public static int Integer(Range range) {
+            return _rand.Next((int) range.Min, ((int) range.Max) + 1);
+        }
+
+        /// <summary>
         /// Returns a random single precision floating-point number in range [0.0, 1.0[.
         /// </summary>
         /// <returns>Number in range [0.0, 1.0[.</returns>
@@ -103,6 +112,15 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Returns a random single precision floating-point number in range.
+        /// </summary>
+        /// <param name="min">Values range.</param>
+        /// <returns>Number in range.</returns>
+        public static float Single(Range range) {
+            return (float) Double(range.Min, range.Max);
+        }
+
+        /// <summary>
         /// Returns a random double precision floating-point number in range [0.0, 1.0[.
         /// </summary>
         /// <returns>Number in range [0.0, 1.0[.</returns>
@@ -122,6 +140,15 @@ namespace Raccoon.Util {
             }
 
             return min + Double() * (max - min);
+        }
+
+        /// <summary>
+        /// Returns a random double precision floating-point number in range.
+        /// </summary>
+        /// <param name="min">Values range.</param>
+        /// <returns>Number in range.</returns>
+        public static double Double(Range range) {
+            return (double) range.Min + Double() * (double) (range.Max - range.Min);
         }
 
         /// <summary>
