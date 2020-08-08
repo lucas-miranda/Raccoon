@@ -11,6 +11,7 @@ namespace Raccoon {
         private TextWriter _out;
         private Dictionary<System.Type, TextFormatter> _contexts;
         private Dictionary<string, TextFormatter> _categories;
+        private int _categorySectionLength;
         private List<int> _sectionsTextLength = new List<int>();
 
         #endregion Private Members
@@ -68,6 +69,13 @@ namespace Raccoon {
                     } 
                 }
             };
+
+            // find category section length
+            foreach (string key in _categories.Keys) {
+                if (key.Length > _categorySectionLength) {
+                    _categorySectionLength = key.Length;
+                }
+            }
         }
 
         #endregion Constructors
@@ -97,12 +105,13 @@ namespace Raccoon {
                 }
 
                 if (header.CategoryToken != null) {
-                    CalculateLeftPadding(sectionId: 1, header.CategoryToken.CategoryName);
+                    string formatedCategoryName = string.Format($"{{0,{_categorySectionLength}}}", header.CategoryToken.CategoryName);
+                    CalculateLeftPadding(sectionId: 1, formatedCategoryName);
 
                     if (_categories.TryGetValue(header.CategoryToken.CategoryName, out TextFormatter categoryFormatter)) {
-                        WriteFormattedMessage(header.CategoryToken.CategoryName, categoryFormatter);
+                        WriteFormattedMessage(formatedCategoryName, categoryFormatter);
                     } else {
-                        WriteToken<CategoryLoggerToken>(header.CategoryToken.CategoryName);
+                        WriteToken<CategoryLoggerToken>(formatedCategoryName);
                     }
 
                     WriteMessage("  ");
