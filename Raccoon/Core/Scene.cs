@@ -106,6 +106,10 @@ namespace Raccoon {
         /// <param name="obj">Object to add.</param>
         /// <returns>Reference to the object.</returns>
         public T Add<T>(T obj) {
+            if (obj == null) {
+                throw new System.ArgumentNullException(nameof(obj));
+            }
+
             if (obj is Entity entity) {
                 return (T) (ISceneObject) AddEntity(entity);
             } else if (obj is Graphic graphic) {
@@ -147,6 +151,10 @@ namespace Raccoon {
         /// <param name="graphic">Graphic to add.</param>
         /// <returns>Reference to Graphic.</returns>
         public Graphic AddGraphic(Graphic graphic) {
+            if (graphic == null) {
+                throw new System.ArgumentNullException(nameof(graphic));
+            }
+
             AddUpdatable(graphic);
             _renderables.Add(graphic);
             return graphic;
@@ -188,6 +196,10 @@ namespace Raccoon {
         /// <param name="entity">Entity to add.</param>
         /// <returns>Reference to Entity.</returns>
         public Entity AddEntity(Entity entity) {
+            if (entity == null) {
+                throw new System.ArgumentNullException(nameof(entity));
+            }
+
             if (entity.Scene == this && !entity.IsSceneFromTransformAncestor) {
                 return entity;
             } else if (entity.Scene != null && entity.Scene != this) {
