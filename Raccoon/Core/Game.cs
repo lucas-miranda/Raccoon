@@ -123,12 +123,13 @@ Scene:
                     }
 
                     // include report.log
-                    System.Diagnostics.Debug.Flush();
-                    logWriter.WriteLine("\n\nreport.log\n-------------\n");
-                    if (File.Exists(Debug.LogFileName)) {
-                        logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
+                    string reportLogFilepath = Path.Combine(System.Environment.CurrentDirectory, Debug.LogFileName);
+                    logWriter.WriteLine($"\n\nreport.log\n-------------\n{reportLogFilepath}\n-------------\n");
+
+                    if (File.Exists(reportLogFilepath)) {
+                        logWriter.WriteLine(File.ReadAllText(reportLogFilepath));
                     } else {
-                        logWriter.WriteLine("  No 'report.log' file");
+                        logWriter.WriteLine($"  No 'report.log' file found. (At: {reportLogFilepath})");
                     }
                 }
 
@@ -147,7 +148,7 @@ Scene:
 
             // wrapper
             XNAGameWrapper = new XNAGameWrapper(windowWidth, windowHeight, TargetFramerate, fullscreen, vsync, InternalLoadContent, InternalUnloadContent, InternalUpdate, InternalDraw);
-            XNAGameWrapper.Content.RootDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Content/");
+            XNAGameWrapper.Content.RootDirectory = Path.Combine(System.Environment.CurrentDirectory, "Content/");
             Title = title;
 
             // background
