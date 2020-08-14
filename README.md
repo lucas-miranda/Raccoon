@@ -1,4 +1,6 @@
-![Raccoon](/Raccoon/logo.png)
+<p align="center">
+  <img src="/Raccoon/logo.png"/>
+</p>
 
 # About
 
@@ -15,10 +17,10 @@ But any missing attribution, please contact me and I'll make the necessary chang
 
 # Acknowledgements
 
-- [FNA](https://fna-xna.github.io)
+- [FNA](https://fna-xna.github.io):
 XNA 4.0 well made reimplementation, provides the rendering, input, audio to make everything running in several platforms.
 
-- [Otter2d](http://otter2d.com/)
+- [Otter2d](http://otter2d.com/):
 An excellent C# framework built on SFML 2, without it this project would never happen. That was my introduction to C# and how a real game framework works. Because of that, some concepts are similar and others changed through time to fit my needs.
 
 # License
