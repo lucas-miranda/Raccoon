@@ -59,6 +59,7 @@ namespace Raccoon.Graphics {
         public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face.BBox.Right - Face.BBox.Left, RenderMap.NominalWidth, Face.UnitsPerEM); } }
         public bool IsDisposed { get; private set; }
         public int FaceIndex { get; private set; }
+        public FontFaceRenderMap RenderMap { get; private set; }
 
         public string Filename { 
             get { 
@@ -92,14 +93,17 @@ namespace Raccoon.Graphics {
 
         internal static FontService Service { get; }
 
-        internal FontFaceRenderMap RenderMap { get; private set; }
-
         #endregion Internal Properties
 
         #region Public Methods
 
+        public Text.RenderData GetRenderData(string text, out Size textSize) {
+            return RenderMap.PrepareText(text, out textSize);
+        }
+
         public Vector2 MeasureText(string text) {
-            return RenderMap.MeasureString(text).ToVector2();
+            RenderMap.PrepareText(text, out Size textSize);
+            return textSize.ToVector2();
         }
 
         public bool CanRenderCharacter(char c) {
