@@ -348,7 +348,7 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible || !child.Entity.AutoRender) {
                     continue;
                 }
 
