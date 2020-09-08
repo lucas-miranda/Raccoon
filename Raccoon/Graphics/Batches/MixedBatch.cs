@@ -186,6 +186,112 @@ namespace Raccoon.Graphics {
             DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
         }
 
+        public void DrawString(Font font, Text.RenderData glyphs, int glyphStartIndex, int glyphCount, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            PreDrawItemCheck();
+
+            if (glyphCount == 0) {
+                return;
+            }
+
+            if (glyphs.GlyphCount <= 0) {
+                throw new System.InvalidOperationException("Glyphs are empty.");
+            }
+
+            if (glyphStartIndex < 0 || glyphStartIndex >= glyphs.GlyphCount) {
+                throw new System.ArgumentOutOfRangeException(nameof(glyphStartIndex), $"Glyph should be zero or a positive integer in range [0, {glyphs.GlyphCount - 1}]");
+            }
+
+            if (glyphStartIndex + glyphCount > glyphs.GlyphCount) {
+                throw new System.ArgumentOutOfRangeException(nameof(glyphCount), $"Selected glyph range [{glyphStartIndex}, {glyphStartIndex + glyphCount - 1}] is out of bounds [0, {glyphs.GlyphCount - 1}]");
+            }
+
+            bool applyRotation = false,
+                 needsTransparency = AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue;
+
+            float cos = 0f,
+                  sin = 0f;
+
+            if (!Util.Math.EqualsEstimate(rotation, 0f)) {
+                applyRotation = true;
+                cos = Util.Math.Cos(rotation);
+                sin = Util.Math.Sin(rotation);
+            }
+
+            Size textSize = destinationRectangle.Size;
+
+
+            if (!applyRotation && flip == ImageFlip.None) {
+                for (int i = 0; i < glyphCount; i++) {
+                    Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
+                    DrawGlyph(glyph, glyph.Position * scale - origin);
+                }
+            } else {
+                for (int i = 0; i < glyphCount; i++) {
+                    Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
+                    Vector2 pos = glyph.Position;
+
+                    if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
+                        pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
+                    }
+
+                    if ((flip & ImageFlip.Vertical) != ImageFlip.None) {
+                        pos.Y = textSize.Height - pos.Y - glyph.SourceArea.Height;
+                    }
+
+                    pos = pos * scale - origin;
+
+                    if (applyRotation) {
+                        pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
+                    }
+
+                    DrawGlyph(glyph, pos);
+                }
+            }
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+
+            return;
+
+            void DrawGlyph(Text.RenderData.Glyph glyph, Vector2 pos) {
+                SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
+                batchItem.Set(
+                    font.RenderMap.Texture,
+                    destinationRectangle.Position + pos,
+                    glyph.SourceArea,
+                    rotation,
+                    scale,
+                    flip,
+                    color,
+                    Vector2.Zero,
+                    scroll,
+                    shader,
+                    shaderParameters,
+                    layerDepth
+                );
+            }
+        }
+
+        public void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            DrawString(
+                font,
+                glyphs,
+                glyphStartIndex: 0,
+                glyphCount: glyphs.GlyphCount,
+                destinationRectangle,
+                rotation,
+                scale,
+                flip,
+                color,
+                origin,
+                scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
+        }
+
         #endregion Draw String
 
         #region Line
@@ -1115,63 +1221,6 @@ namespace Raccoon.Graphics {
         #region Internal Methods
 
 #if DEBUG
-
-        internal void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            PreDrawItemCheck();
-
-            bool applyRotation = false,
-                 needsTransparency = AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue;
-
-            float cos = 0f,
-                  sin = 0f;
-
-            if (!Util.Math.EqualsEstimate(rotation, 0f)) {
-                applyRotation = true;
-                cos = Util.Math.Cos(rotation);
-                sin = Util.Math.Sin(rotation);
-            }
-
-            Size textSize = destinationRectangle.Size;
-
-            foreach (Text.RenderData.Glyph glyph in glyphs) {
-                Vector2 pos = glyph.Position;
-
-                if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
-                    pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
-                }
-
-                if ((flip & ImageFlip.Vertical) != ImageFlip.None) {
-                    pos.Y = textSize.Height - pos.Y - glyph.SourceArea.Height;
-                }
-
-                pos = pos * scale - origin;
-
-                if (applyRotation) {
-                    pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
-                }
-
-                SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
-                batchItem.Set(
-                    font.RenderMap.Texture,
-                    destinationRectangle.Position + pos,
-                    glyph.SourceArea,
-                    rotation,
-                    scale,
-                    flip,
-                    color,
-                    Vector2.Zero,
-                    scroll,
-                    shader,
-                    shaderParameters,
-                    layerDepth
-                );
-            }
-
-            if (BatchMode == BatchMode.Immediate) {
-                Flush();
-            }
-        }
-
         internal static void ResetMetrics() {
             TotalDrawCalls = SpriteCount = 0;
         }
