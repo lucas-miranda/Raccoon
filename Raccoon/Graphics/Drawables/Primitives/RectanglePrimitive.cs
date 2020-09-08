@@ -49,7 +49,7 @@
         }
 
         public void Setup(float width, float height) {
-            Setup(new Size(width, height));
+            Size = new Size(width, height);
         }
 
         #endregion Public Methods
