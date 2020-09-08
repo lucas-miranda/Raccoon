@@ -5,7 +5,7 @@ namespace Raccoon.Graphics {
     public partial class Text {
         #region RenderInfo Class
 
-        internal class RenderData : IEnumerable<RenderData.Glyph> {
+        public class RenderData {
             #region Private Members
 
             private readonly Glyph[] _glyphs;
@@ -25,21 +25,38 @@ namespace Raccoon.Graphics {
             public int GlyphCount { get; private set; }
             public int Capacity { get { return _glyphs.Length; } }
 
+            public Glyph this[int index] {
+                get {
+                    return _glyphs[index];
+                }
+
+                set {
+                    _glyphs[index] = value;
+                }
+            }
+
             #endregion Public Properties
 
             #region Public Methods
 
-            public void AppendGlyph(Glyph glyph) {
+            public Glyph GetGlyph(int index) {
+                return _glyphs[index];
+            }
+
+            public Glyph AppendGlyph(Glyph glyph) {
                 if (GlyphCount == _glyphs.Length) {
                     throw new System.InvalidOperationException($"Trying to append a glyph where is no glyph slot left.");
                 }
 
                 _glyphs[GlyphCount] = glyph;
                 GlyphCount++;
+                return glyph;
             }
 
-            public void AppendGlyph(Vector2 position, Rectangle sourceArea) {
-                AppendGlyph(new Glyph(position, sourceArea));
+            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation) {
+                Glyph glyph = new Glyph(position, sourceArea, representation);
+                AppendGlyph(glyph);
+                return glyph;
             }
 
             public void Clear() {
@@ -52,22 +69,30 @@ namespace Raccoon.Graphics {
                 }
             }
 
+            /*
             IEnumerator IEnumerable.GetEnumerator() {
                 return GetEnumerator();
             }
+            */
 
             #endregion Public Methods
 
             #region Glyph Struct
 
-            internal struct Glyph {
-                public Glyph(Vector2 position, Rectangle sourceArea) {
+            public struct Glyph {
+                public Glyph(Vector2 position, Rectangle sourceArea, char representation) {
                     Position = position;
                     SourceArea = sourceArea;
+                    Representation = representation;
                 }
 
-                public Vector2 Position { get; }
-                public Rectangle SourceArea { get; }
+                public Vector2 Position { get; set; }
+                public Rectangle SourceArea { get; set; }
+                public char Representation { get; set; }
+
+                public override string ToString() {
+                    return $"Position: {Position}; SourceArea: {SourceArea}; Representation: {Representation};";
+                }
             }
 
             #endregion Glyph Struct
