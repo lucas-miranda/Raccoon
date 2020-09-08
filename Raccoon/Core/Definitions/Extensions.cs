@@ -164,4 +164,12 @@ public static class Extensions {
     }
 
     #endregion List
+
+    #region Boolean
+
+    public static string ToPrettyString(this bool value) {
+        return value ? "yes" : "no";
+    }
+
+    #endregion Boolean
 }
