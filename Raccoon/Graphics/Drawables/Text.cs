@@ -23,15 +23,21 @@
         public Text(string value, Font font) : this(value, font, Color.White) {
         }
 
+        public Text(Font font) : this(string.Empty, font, Color.White) {
+        }
+
         public Text(string value) : this(value, Game.Instance.StdFont, Color.White) {
         }
 
-        public Text() : this("", Game.Instance.StdFont, Color.White) {
+        public Text() : this(string.Empty, Game.Instance.StdFont, Color.White) {
         }
 
         #endregion Constructors
 
         #region Public Properties
+
+        public int StartIndex { get; private set; }
+        public int EndIndex { get; private set; } = -1;
 
         public Font Font {
             get {
@@ -126,12 +132,14 @@
             Renderer.DrawString(
                 Font,
                 Data,
-                new Rectangle(Position + position, _unscaledSize),
+                StartIndex,
+                EndIndex < 0 ? (Data.GlyphCount + EndIndex + 1) : (EndIndex - StartIndex),
+                new Rectangle(position, _unscaledSize),
                 Rotation + rotation,
                 Scale * scale,
                 Flipped ^ flip,
                 (color * Color) * Opacity,
-                Origin,
+                Origin + origin,
                 Scroll + scroll,
                 shader,
                 shaderParameters,
