@@ -35,7 +35,7 @@ namespace Raccoon {
         #region Public Properties
 
         public float Area { get { return Width * Height; } }
-        public bool IsEmpty { get { return (int) Width == 0 && (int) Height == 0; } }
+        public bool IsEmpty { get { return (int) Width == 0 || (int) Height == 0; } }
 
         #endregion Public Properties
 
