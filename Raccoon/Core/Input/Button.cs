@@ -45,7 +45,8 @@ namespace Raccoon.Input {
         public Buttons GamePadButton { get; set; }
         public bool IsDown { get; protected set; }
         public bool IsPressed { get; protected set; }
-        public bool IsReleased { get; protected set; } = true;
+        public bool IsReleased { get; protected set; }
+        public bool IsUp { get; protected set; } = true;
         public uint HoldDuration { get; private set; }
 
         #endregion Public Properties
@@ -57,9 +58,9 @@ namespace Raccoon.Input {
               || (Key != Key.None && Input.IsKeyDown(Key))
               || (_isUsingMouseButton && Input.IsMouseButtonDown(MouseButton))
               || (GamePadIndex != GamePadIndex.None && Input.IsGamePadButtonDown(GamePadIndex, GamePadButton))) {
-                if (IsReleased) {
+                if (IsUp) {
                     IsPressed = IsDown = true;
-                    IsReleased = false;
+                    IsReleased = IsUp = false;
                     HoldDuration = 0u;
                 } else if (IsPressed) {
                     IsPressed = false;
@@ -67,10 +68,12 @@ namespace Raccoon.Input {
                     HoldDuration += (uint) delta;
                 }
             } else {
-                if (!IsReleased) {
-                    IsReleased = true;
+                if (!IsReleased && !IsUp) {
+                    IsReleased = IsUp = true;
                     IsPressed = IsDown = false;
                     HoldDuration += (uint) delta;
+                } else if (IsUp && IsReleased) {
+                    IsReleased = false;
                 }
             }
         }
@@ -80,7 +83,7 @@ namespace Raccoon.Input {
         }
 
         public override string ToString() {
-            return $"[Button |" + (Key != Key.None ? $" Key: {Key}" : " ") + (_isUsingMouseButton ? $" MouseButton: {MouseButton}" : " ") + (GamePadIndex != GamePadIndex.None ? $" GamePad Index: {GamePadIndex} GamePad Button: {GamePadButton}" : "") + $" |{(IsReleased ? " Released" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
+            return $"[Button |" + (Key != Key.None ? $" Key: {Key}" : " ") + (_isUsingMouseButton ? $" MouseButton: {MouseButton}" : " ") + (GamePadIndex != GamePadIndex.None ? $" GamePad Index: {GamePadIndex} GamePad Button: {GamePadButton}" : "") + $" |{(IsReleased ? " Released" : " ") + (IsUp ? " Up" : " ") + (IsPressed ? " Pressed" : "") + (IsDown ? " Down" : "")}]";
         }
 
         #endregion Public Methods
