@@ -57,6 +57,11 @@
 
             set {
                 _texture = value ?? throw new System.ArgumentNullException("Invalid texture");
+
+                if (SourceRegion == ClippingRegion) {
+                    _clippingRegion = Raccoon.Rectangle.Empty;
+                }
+
                 SourceRegion = _texture.Bounds;
                 if (ClippingRegion.IsEmpty) {
                     ClippingRegion = SourceRegion;
