@@ -4,7 +4,7 @@ using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Fonts {
-    internal class FontFaceRenderMap : System.IDisposable {
+    public class FontFaceRenderMap : System.IDisposable {
         #region Constructors
 
         public FontFaceRenderMap(SharpFont.Face face, Size glyphSlotSize, ushort nominalWidth, ushort nominalHeight) {
@@ -90,7 +90,15 @@ namespace Raccoon.Fonts {
 
                     #endregion Underrun
 
-                    textRenderData.AppendGlyph(penPosition + new Vector2(glyph.HorizontalBearingX, ascent - glyph.HorizontalBearingY), glyph.SourceArea);
+                    Text.RenderData.Glyph glyphData = textRenderData.AppendGlyph(
+                        penPosition + new Vector2(glyph.HorizontalBearingX, ascent - glyph.HorizontalBearingY), 
+                        glyph.SourceArea,
+                        charCode
+                    );
+
+                    if (glyphData.Position.Y + glyphData.SourceArea.Height >= textSize.Height) {
+                        textSize.Height = glyphData.Position.Y + glyphData.SourceArea.Height;
+                    }
 
                     #region Overrun
 
@@ -157,13 +165,17 @@ namespace Raccoon.Fonts {
                 }
             }
 
-            textSize.Height = penPosition.Y + lineHeight;
-            return textRenderData;
-        }
+            /*
+            foreach (Text.RenderData.Glyph glyph in textRenderData) {
+                if (glyph.Position.Y + glyph.SourceArea.Height >= textSize.Height) {
+                    textSize.Height = glyph.Position.Y + glyph.SourceArea.Height;
+                }
+            }
+            */
 
-        public Size MeasureString(string text) {
-            PrepareText(text, out Size textSize);
-            return textSize;
+            //textSize.Height = penPosition.Y + lineHeight;
+            
+            return textRenderData;
         }
 
         public void Dispose() {
