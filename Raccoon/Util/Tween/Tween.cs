@@ -20,6 +20,7 @@ namespace Raccoon.Util.Tween {
 
         private Dictionary<string, Lerper> _lerpers = new Dictionary<string, Lerper>();
         private bool _startReverse;
+        private int _duration;
 
         #endregion Private Members
 
@@ -69,7 +70,6 @@ namespace Raccoon.Util.Tween {
 
         public object Subject { get; set; }
         public uint Timer { get; private set; }
-        public int Duration { get; private set; }
         public int RepeatTimes { get; set; }
         public int TimesPlayed { get; private set; }
         public float Time { get; private set; }
@@ -82,6 +82,20 @@ namespace Raccoon.Util.Tween {
         public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
 
         public Lerper this[string name] { get { return _lerpers[name]; } }
+
+        public int Duration {
+            get {
+                return _duration;
+            }
+
+            set {
+                if (IsPlaying) {
+                    throw new System.InvalidOperationException("Can't change duration while is playing.");
+                }
+
+                _duration = value;
+            }
+        }
 
         #endregion Public Properties
 
