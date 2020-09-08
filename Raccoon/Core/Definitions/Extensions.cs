@@ -44,6 +44,10 @@ public static class Extensions {
     #region String
 
     public static int Count(this string str, string value) {
+        if (value == null) {
+            throw new System.ArgumentNullException(nameof(value));
+        }
+
         int count = 0,
             i = str.IndexOf(value);
 
