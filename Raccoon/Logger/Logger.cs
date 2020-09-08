@@ -180,10 +180,12 @@ namespace Raccoon {
                 throw new System.ArgumentNullException(nameof(subject));
             }
 
+            /*
             string lastSubject = LastSubject;
             if (lastSubject != null && subject == lastSubject) {
                 throw new System.InvalidOperationException($"Can't push subject '{subject}', it should not be equals as last subject '{lastSubject}'.");
             }
+            */
 
             Instance._subjects.Add(subject);
         }
