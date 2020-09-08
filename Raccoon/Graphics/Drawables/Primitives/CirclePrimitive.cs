@@ -34,7 +34,7 @@ namespace Raccoon.Graphics.Primitives {
 
             set {
                 _radius = value;
-                Size = new Size(_radius * _radius);
+                Size = new Size(_radius + _radius);
                 NeedsReload = true;
             }
         }
@@ -51,7 +51,7 @@ namespace Raccoon.Graphics.Primitives {
 
         public int Segments {
             get {
-                return _segments > 0 ? _segments : (int) (Radius <= 3 ? (Radius * Radius * Radius) : (Radius + Radius));
+                return _segments > 0 ? _segments : (int) (Radius <= 3 ? (3 * Radius) : (2 * Radius));
             }
 
             set {
@@ -79,7 +79,8 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
 
-        public override void Dispose() { }
+        public override void Dispose() { 
+        }
 
         #endregion Public Methods
 
