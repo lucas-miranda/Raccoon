@@ -211,6 +211,7 @@ Scene:
         public Vector2 Center { get; private set; }
         public Vector2 WindowCenter { get; private set; }
         public Vector2 DisplayCenter { get { return (DisplaySize / 2f).ToVector2(); } }
+        public Vector2 MainCanvasDrawPosition { get { return _gameCanvasPosition; } }
         public Scene PreviousScene { get; private set; }
         public Scene Scene { get; private set; }
         public Scene NextScene { get; private set; }
