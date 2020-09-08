@@ -284,6 +284,28 @@ namespace Raccoon.Graphics {
 
         #region Draw Text from String
 
+        public void DrawString(Font font, Text.RenderData glyphs, int glyphStartIndex, int glyphCount, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawString(font, glyphs, glyphStartIndex, glyphCount, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawString(font, glyphs, glyphStartIndex, glyphCount, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
+        public void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
+            if (Batch.BatchMode == BatchMode.Immediate) {
+                PrepareBeforeRender();
+                Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+                AfterRender();
+                return;
+            }
+
+            Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+        }
+
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
             if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
@@ -594,20 +616,5 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Private Methods
-
-        #region Internal Methods
-
-        internal void DrawString(Font font, Text.RenderData glyphs, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, IShaderParameters shaderParameters = null, float layerDepth = 1f) {
-            if (Batch.BatchMode == BatchMode.Immediate) {
-                PrepareBeforeRender();
-                Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
-                AfterRender();
-                return;
-            }
-
-            Batch.DrawString(font, glyphs, destinationRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
-        }
-
-        #endregion Internal Methods
     }
 }
