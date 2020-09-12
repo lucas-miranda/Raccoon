@@ -2,22 +2,45 @@
 
 namespace Raccoon.Graphics.Primitives {
     public class PolygonPrimitive : PrimitiveGraphic {
+        private Polygon _shape;
+
         #region Constructors
 
         public PolygonPrimitive(Polygon polygon, Color color) {
+            if (polygon == null) {
+                throw new System.ArgumentNullException(nameof(polygon));
+            }
+
             Shape = polygon;
             Color = color;
         }
 
         public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Polygon(points), color) { 
+            if (points == null) {
+                throw new System.ArgumentNullException(nameof(points));
+            }
         }
 
         #endregion Constructors
 
         #region Public Properties
 
-        public Polygon Shape { get; set; }
         public bool Filled { get; set; }
+
+        public Polygon Shape {
+            get {
+                return _shape;
+            }
+
+            set {
+                if (value == null) {
+                    throw new System.ArgumentNullException(nameof(value));
+                }
+
+                _shape = value;
+                Size = _shape.BoundingBox().Size;
+            }
+        }
 
         #endregion Public Properties
 
@@ -38,7 +61,7 @@ namespace Raccoon.Graphics.Primitives {
             if (Filled) {
                 Renderer.DrawFilledPolygon(
                     Shape,
-                    position,
+                    Position + position,
                     (Color * color) * Opacity,
                     Rotation + rotation,
                     Scale * scale,
@@ -51,7 +74,7 @@ namespace Raccoon.Graphics.Primitives {
             } else {
                 Renderer.DrawHollowPolygon(
                     Shape,
-                    position,
+                    Position + position,
                     (Color * color) * Opacity,
                     Rotation + rotation,
                     Scale * scale,
