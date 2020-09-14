@@ -171,7 +171,7 @@ namespace Raccoon {
             if (dropFromScene) {
                 if (transform.Entity.IsSceneFromTransformAncestor) {
                     // transform.Scene should be equals Scene (indirectly)
-                    if (transform.Scene != null) {
+                    if (transform.Scene == Scene) {
                         transform.Entity.SceneRemoved(allowWipe);
 
                         if (allowWipe && transform.IsDetached) {
