@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 using Raccoon.Graphics;
 
@@ -331,6 +332,45 @@ namespace Raccoon.Util {
             }
 
             return items[index];
+        }
+
+        public static int ChooseWeighted<T>(IList<T> items) where T : ITuple {
+            if (items.Count == 0) {
+                throw new System.ArgumentException("Items list is empty.");
+            }
+
+            if (items[0].Length < 2) {
+                throw new System.ArgumentException("At least two components are required. First component should always be the chance amount.");
+            }
+
+            if (items[0][0].GetType() != typeof(int)) {
+                throw new System.ArgumentException($"First component should be an integer chance amount. But '{items[0][0].GetType()}' was provided.");
+            }
+
+            int total = 0;
+
+            foreach (ITuple value in items) {
+                total += (int) value[0];
+            }
+
+            if (total <= 0) {
+                throw new System.ArgumentException("Chances values total sum must be greater than zero.");
+            }
+
+            int targetChance = Integer(1, total);
+            for (int i = 0; i < items.Count; i++) {
+                int chance = (int) items[i][0];
+                if (chance == 0) {
+                    continue;
+                }
+
+                targetChance -= chance;
+                if (targetChance <= 0) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public static T Retrieve<T>(IList<T> list) {
