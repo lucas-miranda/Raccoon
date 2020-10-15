@@ -134,7 +134,7 @@
                 Data,
                 StartIndex,
                 EndIndex < 0 ? (Data.GlyphCount + EndIndex + 1) : (EndIndex - StartIndex),
-                new Rectangle(position, _unscaledSize),
+                new Rectangle(Position + position, _unscaledSize),
                 Rotation + rotation,
                 Scale * scale,
                 Flipped ^ flip,
@@ -143,7 +143,6 @@
                 Scroll + scroll,
                 shader,
                 shaderParameters,
-                //origin,
                 layerDepth
             );
         }
