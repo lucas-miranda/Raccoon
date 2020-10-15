@@ -79,5 +79,17 @@ namespace Raccoon.Util {
         }
 
         #endregion TileMap
+
+        public static class Enum {
+            public static List<T> GetValues<T>() where T : System.Enum {
+                List<T> values = new List<T>();
+
+                foreach (object value in System.Enum.GetValues(typeof(T))) {
+                    values.Add((T) value);
+                }
+
+                return values;
+            }
+        }
     }
 }
