@@ -281,6 +281,13 @@ namespace Raccoon {
         }
 
         private void OnChildAdded(Transform child) {
+            if (Entity == null || child == null || child.Entity == null) {
+                return;
+            }
+
+            if (child.Entity.ShouldUseTransformParentRenderer) {
+                child.Entity.Renderer = Entity.Renderer;
+            }
         }
 
         private void OnChildRemoved(Transform child) {

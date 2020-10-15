@@ -49,6 +49,7 @@ namespace Raccoon {
         public bool Enabled { get { return Active || Visible; } set { Active = Visible = value; } }
         public bool AutoUpdate { get; set; } = true;
         public bool AutoRender { get; set; } = true;
+        public bool ShouldUseTransformParentRenderer { get; set; } = true;
         public bool IgnoreDebugRender { get; set; }
         public bool HasStarted { get; private set; }
         public bool WipeOnRemoved { get; set; } = true;
@@ -97,6 +98,18 @@ namespace Raccoon {
                 _renderer = value;
                 foreach (Graphic g in Graphics) {
                     g.Renderer = _renderer;
+                }
+
+                if (!(Transform == null || Transform.IsDetached)) {
+                    Transform.LockChildren();
+                    foreach (Transform child in Transform) {
+                        if (!child.Entity.ShouldUseTransformParentRenderer) {
+                            continue;
+                        }
+
+                        child.Entity.Renderer = _renderer;
+                    }
+                    Transform.UnlockChildren();
                 }
             }
         }

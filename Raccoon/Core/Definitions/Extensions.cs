@@ -39,6 +39,7 @@ public static class Extensions {
         return fieldInfo.GetCustomAttribute<T>();
     }
 
+
     #endregion Enums
 
     #region String
