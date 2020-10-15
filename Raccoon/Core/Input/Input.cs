@@ -430,7 +430,7 @@ namespace Raccoon.Input {
                     halfWindowHeight = Game.Instance.WindowHeight / 2;
 
                 _mouseAbsolutePosition = (halfWindowWidth, halfWindowHeight);
-                _mousePosition = new Vector2(halfWindowWidth, halfWindowHeight) / scale;
+                _mousePosition = Util.Math.Round(new Vector2(halfWindowWidth, halfWindowHeight) / scale);
             } else {
                 // ignore out of screen mouse interactions
                 if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
@@ -451,8 +451,8 @@ namespace Raccoon.Input {
 
                 _mouseAbsolutePosition = newMouseAbsolutePosition;
                 _mousePosition = new Vector2(
-                    newMouseAbsolutePosition.X / scale,
-                    newMouseAbsolutePosition.Y / scale 
+                    Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.X / scale), 0, Game.Instance.Width),
+                    Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.Y / scale), 0, Game.Instance.Height) 
                 );
             }
 
