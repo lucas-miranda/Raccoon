@@ -20,8 +20,8 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private Matrix _world, _view, _projection;
-        private Color _diffuseColor;
-        private float _alpha;
+        private Color _diffuseColor = Color.White;
+        private float _alpha = 1f;
         private bool _textureEnabled, _depthWriteEnabled;
         private Texture _texture;
 

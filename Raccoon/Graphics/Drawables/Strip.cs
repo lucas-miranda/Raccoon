@@ -236,7 +236,7 @@ namespace Raccoon.Graphics {
                 Position + position,
                 Rotation + rotation,
                 Scale * scale,
-                (Color * color) * Opacity,
+                (color * Color) * Opacity,
                 Origin + origin,
                 Scroll + scroll,
                 shader,
