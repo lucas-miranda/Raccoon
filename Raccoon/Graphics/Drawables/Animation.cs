@@ -84,6 +84,8 @@ namespace Raccoon.Graphics {
         public Track CurrentTrack { get; private set; }
         public int ElapsedTime { get; set; }
         public float PlaybackSpeed { get; set; } = 1f;
+        public Dictionary<KeyType, Track>.KeyCollection TracksKeys { get { return Tracks.Keys; } }
+        public int TrackCount { get { return Tracks.Count; } }
 
         public virtual Track this[KeyType key] {
             get {
@@ -340,6 +342,12 @@ namespace Raccoon.Graphics {
                 targetTrack.Reverse();
             }
 
+            return targetTrack;
+        }
+
+        public virtual Track CloneAdd(KeyType targetKey, Track originalTrack) {
+            Track targetTrack = new Track(originalTrack);
+            Add(targetKey, targetTrack);
             return targetTrack;
         }
 
