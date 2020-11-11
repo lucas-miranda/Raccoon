@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace Raccoon.Util {
-    public struct BitTag : System.IEquatable<BitTag>, IEnumerable<BitTag>, IEnumerable {
+    public struct BitTag : System.IEquatable<BitTag>, IEnumerable<BitTag>, IEnumerable, System.IConvertible {
         #region Public Members
 
         public static readonly BitTag None = new BitTag(0UL),
@@ -13,6 +13,16 @@ namespace Raccoon.Util {
         #endregion Public Members
 
         #region Constructors
+
+        public BitTag(System.IConvertible flags, System.Type enumType) {
+            LiteralValue = (ulong) flags.ToInt64(System.Globalization.CultureInfo.InvariantCulture);
+
+            if (enumType == null || !enumType.IsEnum) {
+                EnumType = null;
+            } else {
+                EnumType = enumType;
+            }
+        }
 
         public BitTag(System.IConvertible flags) {
             LiteralValue = (ulong) flags.ToInt64(System.Globalization.CultureInfo.InvariantCulture);
@@ -90,16 +100,20 @@ namespace Raccoon.Util {
             return (T) System.Enum.ToObject(typeof(T), LiteralValue);
         }
 
-        public object ToEnum() {
-            return System.Enum.ToObject(EnumType, LiteralValue);
+        public System.Enum ToEnum() {
+            if (EnumType == null) {
+                throw new System.InvalidOperationException("Can't cast BitTag to enum, registered EnumType is null.");
+            }
+
+            return (System.Enum) System.Enum.ToObject(EnumType, LiteralValue);
         }
 
         public override bool Equals(object obj) {
-            return obj is BitTag ? Equals((BitTag) obj) : base.Equals(obj);
+            return obj is BitTag otherBitTag && Equals(otherBitTag);
         }
 
         public bool Equals(BitTag other) {
-            return LiteralValue == other.LiteralValue;
+            return EnumType == other.EnumType && LiteralValue == other.LiteralValue;
         }
 
         public override int GetHashCode() {
@@ -138,6 +152,82 @@ namespace Raccoon.Util {
             return BinaryRepresentation;
         }
 
+        #region System.IConvertible Implementation
+
+        public System.TypeCode GetTypeCode() {
+            return System.TypeCode.Object;
+        }
+
+        public bool ToBoolean(System.IFormatProvider provider) {
+            throw new System.InvalidCastException();
+        }
+
+        public byte ToByte(System.IFormatProvider provider) {
+            return System.Convert.ToByte(LiteralValue, provider);
+        }
+
+        public char ToChar(System.IFormatProvider provider) {
+            return System.Convert.ToChar(LiteralValue, provider);
+        }
+
+        public System.DateTime ToDateTime(System.IFormatProvider provider) {
+            throw new System.InvalidCastException();
+        }
+
+        public decimal ToDecimal(System.IFormatProvider provider) {
+            return System.Convert.ToDecimal(LiteralValue, provider);
+        }
+
+        public double ToDouble(System.IFormatProvider provider) {
+            return System.Convert.ToDouble(LiteralValue, provider);
+        }
+
+        public short ToInt16(System.IFormatProvider provider) {
+            return System.Convert.ToInt16(LiteralValue, provider);
+        }
+
+        public int ToInt32(System.IFormatProvider provider) {
+            return System.Convert.ToInt32(LiteralValue, provider);
+        }
+
+        public long ToInt64(System.IFormatProvider provider) {
+            return System.Convert.ToInt64(LiteralValue, provider);
+        }
+
+        public sbyte ToSByte(System.IFormatProvider provider) {
+            return System.Convert.ToSByte(LiteralValue, provider);
+        }
+
+        public float ToSingle(System.IFormatProvider provider) {
+            return System.Convert.ToSingle(LiteralValue, provider);
+        }
+
+        public string ToString(System.IFormatProvider provider) {
+            return System.Convert.ToString(LiteralValue, provider);
+        }
+
+        public object ToType(System.Type conversionType, System.IFormatProvider provider) {
+            if (conversionType == typeof(System.Enum)) {
+                return System.Enum.ToObject(conversionType, LiteralValue);
+            }
+
+            throw new System.InvalidCastException($"Can't convert to '{conversionType}'");
+        }
+
+        public ushort ToUInt16(System.IFormatProvider provider) {
+            return System.Convert.ToUInt16(LiteralValue, provider);
+        }
+
+        public uint ToUInt32(System.IFormatProvider provider) {
+            return System.Convert.ToUInt32(LiteralValue, provider);
+        }
+
+        public ulong ToUInt64(System.IFormatProvider provider) {
+            return System.Convert.ToUInt64(LiteralValue, provider);
+        }
+
+        #endregion System.IConvertible Implementation
+
         #endregion Public Methods
 
         #region Private Methods
@@ -153,6 +243,12 @@ namespace Raccoon.Util {
         public static implicit operator BitTag(System.Enum flags) {
             return new BitTag(flags);
         }
+
+        /*
+        public static implicit operator System.Enum(BitTag bitTag) {
+            return (System.Enum) bitTag.ToEnum();
+        }
+        */
 
         public static implicit operator BitTag(ulong flags) {
             return new BitTag(flags);
