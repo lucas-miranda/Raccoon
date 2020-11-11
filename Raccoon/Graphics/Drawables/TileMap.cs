@@ -209,6 +209,16 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void SetData(uint[] data, int columns, int rows) {
+            Setup(columns, rows);
+
+            for (int y = 0; y < Rows; y++) {
+                for (int x = 0; x < Columns; x++) {
+                    SetTile(x, y, data[y * columns + x]);
+                }
+            }
+        }
+
         public void SetData(string csv, int columns, int rows) {
             uint[][] newData = new uint[rows][];
             for (int row = 0; row < newData.Length; row++) {
@@ -255,6 +265,14 @@ namespace Raccoon.Graphics {
         }
 
         public void SetTile(int x, int y, uint gid) {
+            if (Texture == null) {
+                throw new System.InvalidOperationException($"Can't set a tile. Texture is not set.");
+            } else if (_tileSetColumns == 0) {
+                throw new System.InvalidOperationException($"Can't set a tile. Tileset columns is zero.");
+            } else if (_tileSetRows == 0) {
+                throw new System.InvalidOperationException($"Can't set a tile. Tileset rows is zero.");
+            }
+
             if (!ExistsTileAt(x, y)) {
                 throw new System.ArgumentException($"x or y out of bounds [0 0 {Columns} {Rows}]");
             }
