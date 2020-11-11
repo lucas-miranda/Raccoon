@@ -668,6 +668,7 @@ namespace Raccoon {
             Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 GraphicRemoved(g);
+                g.Dispose();
             }
             Graphics.Unlock();
 
