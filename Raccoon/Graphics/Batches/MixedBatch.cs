@@ -782,13 +782,18 @@ namespace Raccoon.Graphics {
                     VertexPositionColorTexture vertex = vertexData[i];
                     Vector2 v = new Vector2(vertex.Position.X, vertex.Position.Y) * scale - origin;
 
-                    vertexData[i] = new VertexPositionColorTexture(
+                    vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
                             position.X + v.X * cos - v.Y * sin, 
                             position.Y + v.X * sin + v.Y * cos, 
                             layerDepth
                         ),
-                        new Color(vertex.Color) * color,
+                        new Microsoft.Xna.Framework.Color(
+                            (int) ((color.R * vertex.Color.R) / 255f),
+                            (int) ((color.G * vertex.Color.G) / 255f),
+                            (int) ((color.B * vertex.Color.B) / 255f),
+                            (int) ((color.A * vertex.Color.A) / 255f)
+                        ),
                         vertex.TextureCoordinate
                     );
                 }
@@ -797,13 +802,18 @@ namespace Raccoon.Graphics {
                     VertexPositionColorTexture vertex = vertexData[i];
                     Vector2 v = new Vector2(vertex.Position.X, vertex.Position.Y) * scale - origin;
 
-                    vertexData[i] = new VertexPositionColorTexture(
+                    vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
                             position.X + v.X, 
                             position.Y + v.Y, 
                             layerDepth
                         ),
-                        new Color(vertex.Color) * color,
+                        new Microsoft.Xna.Framework.Color(
+                            (int) ((color.R * vertex.Color.R) / 255f),
+                            (int) ((color.G * vertex.Color.G) / 255f),
+                            (int) ((color.B * vertex.Color.B) / 255f),
+                            (int) ((color.A * vertex.Color.A) / 255f)
+                        ),
                         vertex.TextureCoordinate
                     );
                 }
@@ -824,7 +834,7 @@ namespace Raccoon.Graphics {
 
             PrimitiveBatchItem batchItem = GetBatchItem<PrimitiveBatchItem>(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
             batchItem.Set(
-                vertexData,
+                vertices,
                 indexData,
                 isHollow,
                 shader,
