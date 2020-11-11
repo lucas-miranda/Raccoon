@@ -2,7 +2,7 @@
     public class FrameSet : Image {
         #region Private Members
 
-        private int _currentFrame;
+        private int _currentFrameColumn, _currentFrameRow;
 
         #endregion Private Members
 
@@ -55,13 +55,69 @@
 
         public int CurrentFrame {
             get {
-                return _currentFrame;
+                return Columns * CurrentFrameRow + CurrentFrameColumn;
             }
 
             set {
-                if (value < 0 || value >= FrameCount) throw new System.ArgumentOutOfRangeException("CurrentFrame", value, $"Frame Id must be inclusive between 0 and {FrameCount - 1} (FrameCount)");
+                if (value < 0 || value >= FrameCount) {
+                    throw new System.ArgumentOutOfRangeException("CurrentFrame", value, $"Frame Id must be in range  [0, {FrameCount - 1}]");
+                }
 
-                _currentFrame = value;
+                int column = value % Columns,
+                    row = value - column;
+
+                CurrentFrameColumn = column;
+                CurrentFrameRow = row;
+                UpdateClippingRegion();
+            }
+        }
+
+        public int CurrentFrameColumn {
+            get {
+                return _currentFrameColumn;
+            }
+
+            set {
+                if (value < 0 || value >= Columns) {
+                    throw new System.ArgumentOutOfRangeException("CurrentFrameColumn", value, $"Frame Column must be in range [0, {Columns - 1}]");
+                }
+
+                _currentFrameColumn = value;
+                UpdateClippingRegion();
+            }
+        }
+
+        public int CurrentFrameRow {
+            get {
+                return _currentFrameRow;
+            }
+
+            set {
+                if (value < 0 || value >= Rows) {
+                    throw new System.ArgumentOutOfRangeException("CurrentFrameRow", value, $"Frame Row must be in range [0, {Rows - 1}]");
+                }
+
+                _currentFrameColumn = value;
+                UpdateClippingRegion();
+            }
+        }
+
+        public (int Column, int Row) CurrentFrameCell {
+            get {
+                return (_currentFrameColumn, _currentFrameRow);
+            }
+
+            set {
+                if (value.Column < 0 || value.Column >= Columns) {
+                    throw new System.ArgumentOutOfRangeException("CurrentFrameCell.Column", value, $"Frame Column must be in range [0, {Columns - 1}]");
+                }
+
+                if (value.Row < 0 || value.Row >= Rows) {
+                    throw new System.ArgumentOutOfRangeException("CurrentFrameCell.Row", value, $"Frame Row must be in range [0, {Rows - 1}]");
+                }
+
+                _currentFrameColumn = value.Column;
+                _currentFrameRow = value.Row;
                 UpdateClippingRegion();
             }
         }
