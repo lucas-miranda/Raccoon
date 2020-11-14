@@ -8,7 +8,7 @@ namespace Raccoon.Graphics {
     /// An all-in-one provider, containing means to draw anything that Raccoon.Graphics can offer.
     /// Also aims to centralize the rendering setups to make everything looks consistently.
     /// </summary>
-    public class Renderer {
+    public class Renderer : System.IDisposable {
         #region Public Members
 
         public static readonly System.Func<Size> DefaultRecalculateProjectionSize = () => Game.Instance.WindowSize;
@@ -53,6 +53,7 @@ namespace Raccoon.Graphics {
         public Shader Shader { get; set; }
         public Matrix World { get; set; } = Matrix.Identity;
         public Matrix View { get; set; } = Matrix.Identity;
+        public bool IsDisposed { get; private set; }
 
         public Matrix Projection {
             get {
@@ -565,6 +566,20 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Others
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            IsDisposed = true;
+
+            RecalculateProjectionSize = null;
+            OnBeforeRender = null;
+            OnAfterRender = null;
+            Shader = null;
+            Batch = null;
+        }
 
         #endregion Public Methods
 
