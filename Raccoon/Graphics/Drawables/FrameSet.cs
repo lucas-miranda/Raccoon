@@ -63,11 +63,17 @@
                     throw new System.ArgumentOutOfRangeException("CurrentFrame", value, $"Frame Id must be in range  [0, {FrameCount - 1}]");
                 }
 
-                int column = value % Columns,
-                    row = value - column;
+                if (Columns == 0) {
+                    _currentFrameColumn = value;
+                    _currentFrameRow = 0;
+                } else {
+                    int column = value % Columns,
+                        row = value / Columns;
 
-                CurrentFrameColumn = column;
-                CurrentFrameRow = row;
+                    _currentFrameColumn = column;
+                    _currentFrameRow = row;
+                }
+
                 UpdateClippingRegion();
             }
         }
@@ -148,7 +154,7 @@
         #region Private Methods
 
         private void UpdateClippingRegion() {
-            ClippingRegion = new Rectangle((CurrentFrame % Columns) * FrameSize.Width, CurrentFrame / Columns * FrameSize.Height, FrameSize.Width, FrameSize.Height);
+            ClippingRegion = new Rectangle(CurrentFrameColumn * FrameSize.Width, CurrentFrameRow * FrameSize.Height, FrameSize.Width, FrameSize.Height);
         }
 
         #endregion Private Methods
