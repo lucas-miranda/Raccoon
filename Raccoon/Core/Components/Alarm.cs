@@ -35,5 +35,10 @@
             Timer = 0;
             NextActivationTimer = Interval;
         }
+
+        public override void Dispose() {
+            base.Dispose();
+            Action = null;
+        }
     }
 }
