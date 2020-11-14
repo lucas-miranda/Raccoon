@@ -5,7 +5,7 @@ using Raccoon.Graphics;
 namespace Raccoon.Util.Tween {
     #region Base Lerper
 
-    public abstract class Lerper {
+    public abstract class Lerper : System.IDisposable {
         #region Private Members
 
         private object _totalAdditionalValue;
@@ -55,6 +55,7 @@ namespace Raccoon.Util.Tween {
         public System.Func<float, float> Easing { get; set; }
         public object From { get; set; }
         public object To { get; set; }
+        public bool IsDisposed { get; private set; }
 
         public object Value {
             get {
@@ -100,12 +101,29 @@ namespace Raccoon.Util.Tween {
 
         public abstract void Interpolate(float t);
 
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            Disposed();
+            IsDisposed = true;
+
+            _totalAdditionalValue = null;
+            Owner = null;
+            MemberInfo = null;
+            DataType = null;
+            Easing = null;
+            From = To = null;
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
 
         protected abstract object Add(object a, object b);
         protected abstract object Subtract(object a, object b);
+        protected abstract void Disposed();
 
         #endregion Protected Methods
     }
@@ -133,6 +151,9 @@ namespace Raccoon.Util.Tween {
         protected override object Subtract(object a, object b) {
             return (float) a - (float) b;
         }
+
+        protected override void Disposed() {
+        }
     }
 
     #endregion Number Lerper
@@ -158,6 +179,9 @@ namespace Raccoon.Util.Tween {
         protected override object Subtract(object a, object b) {
             return (Vector2) a - (Vector2) b;
         }
+
+        protected override void Disposed() {
+        }
     }
 
     #endregion Vector2 Lerper
@@ -182,6 +206,9 @@ namespace Raccoon.Util.Tween {
 
         protected override object Subtract(object a, object b) {
             return (Size) a - (Size) b;
+        }
+
+        protected override void Disposed() {
         }
     }
 
@@ -215,6 +242,9 @@ namespace Raccoon.Util.Tween {
 
             return new Rectangle(rectA.Position - rectB.Position, rectA.Size - rectB.Size);
         }
+
+        protected override void Disposed() {
+        }
     }
 
     #endregion Rectangle Lerper
@@ -244,6 +274,9 @@ namespace Raccoon.Util.Tween {
 
         protected override object Subtract(object a, object b) {
             return (Color) a - (Color) b;
+        }
+
+        protected override void Disposed() {
         }
     }
 

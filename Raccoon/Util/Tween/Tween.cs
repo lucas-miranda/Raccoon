@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Raccoon.Graphics;
 
 namespace Raccoon.Util.Tween {
-    public class Tween {
+    public class Tween : System.IDisposable {
         #region Public Members
 
         public delegate void TweenUpdateDelegate(float t);
@@ -80,6 +80,7 @@ namespace Raccoon.Util.Tween {
         public bool IsPingPong { get; set; }
         public bool IsReverse { get; set; }
         public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
+        public bool IsDisposed { get; private set; }
 
         public Lerper this[string name] { get { return _lerpers[name]; } }
 
@@ -271,6 +272,24 @@ namespace Raccoon.Util.Tween {
         public Tween OnEnd(System.Action onEnd) {
             _onEnd += onEnd;
             return this;
+        }
+
+        public void Dispose() {
+            if (IsDisposed) {
+                return;
+            }
+
+            IsDisposed = true;
+            _onStart = null;
+            _onEnd = null;
+            _onUpdate = null;
+
+            foreach (Lerper lerper in _lerpers.Values) {
+                lerper.Dispose();
+            }
+            _lerpers.Clear();
+
+            Subject = null;
         }
 
         #endregion Public Methods
