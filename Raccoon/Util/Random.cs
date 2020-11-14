@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Raccoon.Graphics;
 
@@ -254,7 +254,7 @@ namespace Raccoon.Util {
         /// <returns>A random value in list or default T value, if list is empty.</returns>
         public static T Choose<T>(IList<T> list) {
             if (list.Count == 0) {
-                throw new System.ArgumentException($"Can't choose an element from a empty IList<{typeof(T)}>");
+                throw new System.ArgumentException($"Can't choose an element from an empty IList<{typeof(T)}>");
             }
 
             return list[Integer(0, list.Count - 1)];
