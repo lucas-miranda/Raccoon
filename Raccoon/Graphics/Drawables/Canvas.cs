@@ -130,9 +130,12 @@ namespace Raccoon.Graphics {
                 return;
             }
 
-            //InternalRenderer.Dispose();
-            InternalRenderer = null;
-
+            if (_internalRenderer != null) {
+                _internalRenderer.Dispose();
+                _internalRenderer = null;
+            }
+            
+            Texture?.Dispose();
             base.Dispose();
         }
 
