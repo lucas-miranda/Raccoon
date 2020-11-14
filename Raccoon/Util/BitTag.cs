@@ -207,7 +207,7 @@ namespace Raccoon.Util {
         }
 
         public object ToType(System.Type conversionType, System.IFormatProvider provider) {
-            if (conversionType.IsEnum) {
+            if (!conversionType.IsEnum) {
                 throw new System.InvalidCastException($"Can't convert to '{conversionType}', it must be an enum type.");
             }
 
