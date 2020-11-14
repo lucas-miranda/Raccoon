@@ -207,11 +207,11 @@ namespace Raccoon.Util {
         }
 
         public object ToType(System.Type conversionType, System.IFormatProvider provider) {
-            if (conversionType == typeof(System.Enum)) {
-                return System.Enum.ToObject(conversionType, LiteralValue);
+            if (conversionType.IsEnum) {
+                throw new System.InvalidCastException($"Can't convert to '{conversionType}', it must be an enum type.");
             }
 
-            throw new System.InvalidCastException($"Can't convert to '{conversionType}'");
+            return System.Enum.ToObject(conversionType, LiteralValue);
         }
 
         public ushort ToUInt16(System.IFormatProvider provider) {
