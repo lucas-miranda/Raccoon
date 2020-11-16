@@ -492,24 +492,25 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerator<T> GetEnumerator() {
-            using (IEnumerator<ItemBox> enumerator = _items.GetEnumerator()) {
-                while (enumerator.MoveNext()) {
-                    if (enumerator.Current.MarkedToRemove) {
-                        continue;
-                    }
-                    
-                    yield return enumerator.Current.Item;
+            for (int i = 0; i < _items.Count; i++) {
+                ItemBox box = _items[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
                 }
+
+                yield return box.Item;
             }
 
-            using (IEnumerator<ItemBox> enumerator = _toAdd.GetEnumerator()) {
-                while (enumerator.MoveNext()) {
-                    if (enumerator.Current.MarkedToRemove) {
-                        continue;
-                    }
 
-                    yield return enumerator.Current.Item;
+            for (int i = 0; i < _toAdd.Count; i++) {
+                ItemBox box = _toAdd[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
                 }
+
+                yield return box.Item;
             }
         }
 
