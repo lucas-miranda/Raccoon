@@ -421,12 +421,6 @@ namespace Raccoon {
             _updatables.Clear();
             _renderables.Clear();
 
-            if (_sceneObjects.IsLocked) {
-                foreach (ISceneObject sceneObject in _sceneObjects.ToAdd) {
-                    sceneObject.SceneRemoved(wipe);
-                }
-            }
-
             foreach (ISceneObject sceneObject in _sceneObjects) {
                 sceneObject.SceneRemoved(wipe);
             }

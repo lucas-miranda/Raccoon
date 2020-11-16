@@ -2,28 +2,29 @@
 using System.Collections.Generic;
 
 namespace Raccoon.Util.Collections {
-    public class Locker<T> : ICollection<T> {
+    public class Locker<T> : ICollection<T>, IList<T> {
         #region Private Members
 
-        private List<T> _toAdd      = new List<T>(),
-                        _toRemove   = new List<T>(),
-                        _items      = new List<T>();
+        private List<ItemBox> _toAdd      = new List<ItemBox>(),
+                              _items      = new List<ItemBox>();
 
-        private System.Comparison<T> _sortComparer;
-        private int _locks = 0;
+        private System.Comparison<ItemBox> _sortComparer;
+        private int _locks, _itemCount;
 
         #endregion Private Members
 
         #region Constructors
 
         public Locker() { 
+            /*
             ToAdd = new ReadOnlyList<T>(_toAdd);
             ToRemove = new ReadOnlyList<T>(_toRemove);
             Items = new ReadOnlyList<T>(_items);
+            */
         }
 
         public Locker(System.Comparison<T> sorter) : this() {
-            _sortComparer = sorter;
+            _sortComparer = (ItemBox a, ItemBox b) => sorter.Invoke(a.Item, b.Item);
         }
 
         #endregion Constructors
@@ -36,12 +37,13 @@ namespace Raccoon.Util.Collections {
         public bool IsLocked { get { return _locks > 0; } }
 
         /// <summary>
-        /// Items count.
-        /// Items marked to be add or to be removed are counted as well.
-        /// Count is as follow: items + items_to_add - items_to_remove
+        /// Current items count.
+        /// All items marked to be removed don't belongs to this count.
+        /// But items to be added, yes.
         /// </summary>
-        public int Count { get { return _items.Count + _toAdd.Count  - _toRemove.Count; } }
+        public int Count { get { return _itemCount; } }
 
+        /*
         /// <summary>
         /// An read only wrapper to access items to be added.
         /// </summary>
@@ -56,6 +58,7 @@ namespace Raccoon.Util.Collections {
         /// An read only wrapper to access current inserted items.
         /// </summary>
         public ReadOnlyList<T> Items { get; private set; }
+        */
 
         /// <summary>
         /// Locker itself isn't read only.
@@ -82,16 +85,19 @@ namespace Raccoon.Util.Collections {
 
         public T this[int i] {
             get {
-                return _items[i];
+                if (IsLocked) {
+                    throw new System.NotSupportedException($"Get element by index isn't available when locked.");
+                }
+
+                return _items[i].Item;
             }
 
             set {
                 if (IsLocked) {
-                    throw new System.InvalidOperationException($"Set element by index isn't available when locked.");
-
+                    throw new System.NotSupportedException($"Set element by index isn't available when locked.");
                 }
 
-                _items[i] = value;
+                _items[i].Item = value;
             }
         }
 
@@ -137,11 +143,13 @@ namespace Raccoon.Util.Collections {
         /// <param name="item">An item to be added.</param>
         public void Add(T item) {
             if (IsLocked) {
-                _toAdd.Add(item);
+                _toAdd.Add(new ItemBox(item));
+                _itemCount += 1;
                 return;
             }
 
-            AddItem(item);
+            AddItemBox(new ItemBox(item));
+            _itemCount += 1;
             Sort();
         }
 
@@ -157,15 +165,32 @@ namespace Raccoon.Util.Collections {
         /// <param name="items">Items to be added.</param>
         public void AddRange(IEnumerable<T> items) {
             if (IsLocked) {
-                _toAdd.AddRange(items);
-                return;
+                foreach (T item in items) {
+                    _toAdd.Add(new ItemBox(item));
+                    _itemCount += 1;
+                }
+            } else {
+                foreach (T item in items) {
+                    AddItemBox(new ItemBox(item));
+                    _itemCount += 1;
+                }
+
+                Sort();
+            }
+        }
+
+        public void Insert(int index, T item) {
+            if (IsLocked) {
+                throw new System.NotSupportedException($"Insert element at index isn't available when locked.");
             }
 
-            foreach (T item in items) {
-                AddItem(item);
+            if (index < 0) {
+                throw new System.ArgumentException("Index can't be negative.");
+            } else if (index > _items.Count) {
+                throw new System.ArgumentException($"Index {index} is out of valid range [0, {_items.Count}]");
             }
 
-            Sort();
+            _items.Insert(index, new ItemBox(item));
         }
 
         /// <summary>
@@ -175,20 +200,38 @@ namespace Raccoon.Util.Collections {
         /// <returns>True, if item was removed. False, if it's not.</returns>
         public bool Remove(T item) {
             if (IsLocked) {
-                if (_toRemove.Contains(item)) {
-                    return false;
+                foreach (ItemBox box in _items) {
+                    if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                        box.MarkedToRemove = true;
+                        _itemCount -= 1;
+                        return true;
+                    }
                 }
 
-                bool wasRemoved = _toAdd.Remove(item);
-                if (_items.Contains(item)) {
-                    _toRemove.Add(item);
-                    return true;
+                for (int i = 0; i < _toAdd.Count; i++) {
+                    ItemBox box = _toAdd[i];
+                    if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                        box.MarkedToRemove = true;
+                        _toAdd.RemoveAt(i);
+                        _itemCount -= 1;
+                        return true;
+                    }
                 }
 
-                return wasRemoved;
+                return false;
+            } else {
+                for (int i = 0; i < _items.Count; i++) {
+                    ItemBox box = _items[i];
+                    if (box.Item.Equals(item)) {
+                        box.MarkedToRemove = true;
+                        _items.RemoveAt(i);
+                        _itemCount -= 1;
+                        return true;
+                    }
+                }
             }
 
-            return RemoveItem(item);
+            return false;
         }
 
         /// <summary>
@@ -201,28 +244,64 @@ namespace Raccoon.Util.Collections {
 
             if (IsLocked) {
                 foreach (T item in items) {
-                    if (_toRemove.Contains(item)) {
-                        continue;
+                    foreach (ItemBox box in _items) {
+                        if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                            box.MarkedToRemove = true;
+                            removed.Add(item);
+                            _itemCount -= 1;
+                        }
                     }
 
-                    if (_toAdd.Remove(item)) {
-                        removed.Add(item);
-                    } else if (_items.Contains(item)) {
-                        _toRemove.Add(item);
-                        removed.Add(item);
+                    for (int i = 0; i < _toAdd.Count; i++) {
+                        ItemBox box = _toAdd[i];
+                        if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                            box.MarkedToRemove = true;
+                            _toAdd.RemoveAt(i);
+                            removed.Add(item);
+                            _itemCount -= 1;
+                        }
                     }
                 }
-
-                return removed;
-            }
-
-            foreach (T item in items) {
-                if (RemoveItem(item)) {
-                    removed.Add(item);
+            } else {
+                foreach (T item in items) {
+                    for (int i = 0; i < _items.Count; i++) {
+                        ItemBox box = _items[i];
+                        if (box.Item.Equals(item)) {
+                            box.MarkedToRemove = true;
+                            _items.RemoveAt(i);
+                            removed.Add(item);
+                            i -= 1;
+                            _itemCount -= 1;
+                        }
+                    }
                 }
             }
 
             return removed;
+        }
+
+        public void RemoveAt(int index) {
+            if (index < 0) {
+                throw new System.ArgumentException("Index can't be negative.");
+            }
+
+            if (IsLocked) {
+                if (index >= _items.Count + _toAdd.Count) {
+                    throw new System.ArgumentException($"Index {index} is out of valid range [0, {_items.Count + _toAdd.Count - 1}]");
+                }
+
+                if (index < _items.Count) {
+                    _items[index].MarkedToRemove = true;
+                } else if (index - _items.Count < _toAdd.Count) {
+                    _items[index - _items.Count].MarkedToRemove = true;
+                }
+            } else {
+                if (index >= _items.Count) {
+                    throw new System.ArgumentException($"Index {index} is out of valid range [0, {_items.Count - 1}]");
+                }
+
+                _items[index].MarkedToRemove = true;
+            }
         }
 
         /// <summary>
@@ -238,44 +317,83 @@ namespace Raccoon.Util.Collections {
             List<T> removed = new List<T>();
 
             if (IsLocked) {
-                List<T> remainingToRemove = new List<T>(_toRemove);
-
-                for (int i = 0; i < _toAdd.Count; i++) {
-                    T item = _toAdd[i];
-
-                    if (!match(item) || remainingToRemove.Remove(item)) {
-                        continue;
+                foreach (ItemBox box in _items) {
+                    if (!box.MarkedToRemove && match(box.Item)) {
+                        box.MarkedToRemove = true;
+                        removed.Add(box.Item);
+                        _itemCount -= 1;
                     }
-
-                    removed.Add(item);
-                    _toAdd.RemoveAt(i);
-                    i -= 1;
                 }
 
-                foreach (T item in _items) {
-                    if (!match(item) || remainingToRemove.Remove(item)) {
-                        continue;
+                for (int i = 0; i < _toAdd.Count; i++) {
+                    ItemBox box = _toAdd[i];
+                    if (!box.MarkedToRemove && match(box.Item)) {
+                        box.MarkedToRemove = true;
+                        _toAdd.RemoveAt(i);
+                        removed.Add(box.Item);
+                        _itemCount -= 1;
                     }
-
-                    _toRemove.Add(item);
-                    removed.Add(item);
                 }
 
                 return removed;
-            }
-
-            for (int i = 0; i < _items.Count; i++) {
-                T item = _items[i];
-                if (!match(item)) {
-                    continue;
+            } else {
+                for (int i = 0; i < _items.Count; i++) {
+                    ItemBox box = _items[i];
+                    if (!box.MarkedToRemove && match(box.Item)) {
+                        box.MarkedToRemove = true;
+                        _items.RemoveAt(i);
+                        removed.Add(box.Item);
+                        i -= 1;
+                        _itemCount -= 1;
+                    }
                 }
-
-                removed.Add(item);
-                _items.RemoveAt(i);
-                i -= 1;
             }
 
             return removed;
+        }
+
+        public int IndexOf(T item) {
+            if (IsLocked) {
+                int index = 0;
+
+                for (int i = 0; i < _items.Count; i++) {
+                    ItemBox box = _items[i];
+
+                    if (box.MarkedToRemove) {
+                        continue;
+                    }
+
+                    if (box.Item.Equals(item)) {
+                        return index;
+                    }
+
+                    index += 1;
+                }
+
+                for (int i = 0; i < _toAdd.Count; i++) {
+                    ItemBox box = _toAdd[i];
+
+                    if (box.MarkedToRemove) {
+                        continue;
+                    }
+
+                    if (box.Item.Equals(item)) {
+                        return index;
+                    }
+
+                    index += 1;
+                }
+            } else {
+                for (int i = 0; i < _items.Count; i++) {
+                    ItemBox box = _items[i];
+
+                    if (box.Item.Equals(item)) {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -284,13 +402,17 @@ namespace Raccoon.Util.Collections {
         public void Clear() {
             if (IsLocked) {
                 _toAdd.Clear();
-                _toRemove.AddRange(_items);
-                return;
-            }
 
-            _toAdd.Clear();
-            _items.Clear();
-            _toRemove.Clear();
+                foreach (ItemBox box in _items) {
+                    box.MarkedToRemove = true;
+                }
+
+                _itemCount = 0;
+            } else {
+                _toAdd.Clear();
+                _items.Clear();
+                _itemCount = 0;
+            }
         }
 
         /// <summary>
@@ -299,34 +421,46 @@ namespace Raccoon.Util.Collections {
         /// <param name="item">Item to check if Locker contains.</param>
         public bool Contains(T item) {
             if (IsLocked) {
-                return !_toRemove.Contains(item) && (_items.Contains(item) || _toAdd.Contains(item));
+                foreach (ItemBox box in _items) {
+                    if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                        return true;
+                    }
+                }
+
+                foreach (ItemBox box in _toAdd) {
+                    if (!box.MarkedToRemove && box.Item.Equals(item)) {
+                        return true;
+                    }
+                }
+            } else {
+                foreach (ItemBox box in _items) {
+                    if (box.Item.Equals(item)) {
+                        return true;
+                    }
+                }
             }
 
-            return _items.Contains(item);
+            return false;
         }
 
         public T Find(System.Predicate<T> match) {
             if (IsLocked) {
-                List<T> remainingToRemove = new List<T>(_toRemove);
-
-                foreach (T item in _toAdd) {
-                    if (match(item) && !remainingToRemove.Remove(item)) {
-                        return item;
+                foreach (ItemBox box in _items) {
+                    if (!box.MarkedToRemove && match(box.Item)) {
+                        return box.Item;
                     }
                 }
 
-                foreach (T item in _items) {
-                    if (match(item) && !remainingToRemove.Remove(item)) {
-                        return item;
+                foreach (ItemBox box in _toAdd) {
+                    if (!box.MarkedToRemove && match(box.Item)) {
+                        return box.Item;
                     }
                 }
-
-                return default(T);
-            }
-
-            foreach (T item in _items) {
-                if (match(item)) {
-                    return item;
+            } else {
+                foreach (ItemBox box in _items) {
+                    if (match(box.Item)) {
+                        return box.Item;
+                    }
                 }
             }
 
@@ -334,15 +468,47 @@ namespace Raccoon.Util.Collections {
         }
 
         public void CopyTo(T[] array, int arrayIndex) {
+            int index = 0;
+
             for (int i = 0; i < _items.Count; i++) {
-                array[arrayIndex + i] = _items[i];
+                ItemBox box = _items[i];
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                array[arrayIndex + index] = box.Item;
+                index += 1;
+            }
+
+            for (int i = 0; i < _toAdd.Count; i++) {
+                ItemBox box = _toAdd[i];
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                array[arrayIndex + index] = box.Item;
+                index += 1;
             }
         }
 
         public IEnumerator<T> GetEnumerator() {
-            using (IEnumerator<T> enumerator = _items.GetEnumerator()) {
+            using (IEnumerator<ItemBox> enumerator = _items.GetEnumerator()) {
                 while (enumerator.MoveNext()) {
-                    yield return enumerator.Current;
+                    if (enumerator.Current.MarkedToRemove) {
+                        continue;
+                    }
+                    
+                    yield return enumerator.Current.Item;
+                }
+            }
+
+            using (IEnumerator<ItemBox> enumerator = _toAdd.GetEnumerator()) {
+                while (enumerator.MoveNext()) {
+                    if (enumerator.Current.MarkedToRemove) {
+                        continue;
+                    }
+
+                    yield return enumerator.Current.Item;
                 }
             }
         }
@@ -352,13 +518,29 @@ namespace Raccoon.Util.Collections {
         }
 
         public IEnumerable<T> ReverseIterator() {
+            for (int i = _toAdd.Count - 1; i >= 0; i--) {
+                ItemBox box = _toAdd[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                yield return box.Item;
+            }
+
             for (int i = _items.Count - 1; i >= 0; i--) {
-                yield return _items[i];
+                ItemBox box = _items[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                yield return box.Item;
             }
         }
 
         public override string ToString() {
-            return $"Count: {Count} [A: {_toAdd.Count} R: {_toRemove.Count}]";
+            return $"Count: {Count} [To Add: {_toAdd.Count}], Locked? {IsLocked.ToPrettyString()}";
         }
 
         #endregion Public Methods
@@ -370,20 +552,25 @@ namespace Raccoon.Util.Collections {
 
             if (_toAdd.Count > 0) {
                 modified = true;
-                foreach (T item in _toAdd) {
-                    AddItem(item);
+                foreach (ItemBox item in _toAdd) {
+                    if (item.MarkedToRemove) {
+                        continue;
+                    }
+
+                    AddItemBox(item);
                 }
 
                 _toAdd.Clear();
             }
 
-            if (_toRemove.Count > 0) {
-                modified = true;
-                foreach (T item in _toRemove) {
-                    RemoveItem(item);
-                }
+            for (int i = 0; i < _items.Count; i++) {
+                ItemBox box = _items[i];
 
-                _toRemove.Clear();
+                if (box.MarkedToRemove) {
+                    modified = true;
+                    _items.RemoveAt(i);
+                    i -= 1;
+                }
             }
 
             if (modified) {
@@ -391,11 +578,11 @@ namespace Raccoon.Util.Collections {
             }
         }
 
-        private void AddItem(T item) {
+        private void AddItemBox(ItemBox item) {
             _items.Add(item);
         }
 
-        private bool RemoveItem(T item) {
+        private bool RemoveItemBox(ItemBox item) {
             return _items.Remove(item);
         }
 
@@ -408,5 +595,18 @@ namespace Raccoon.Util.Collections {
         }
 
         #endregion Private Methods
+
+        #region ItemBox Class
+
+        private class ItemBox {
+            public ItemBox(T item) {
+                Item = item;
+            }
+
+            public T Item;
+            public bool MarkedToRemove;
+        }
+
+        #endregion ItemBox Class
     }
 }

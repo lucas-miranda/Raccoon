@@ -680,23 +680,7 @@ namespace Raccoon {
                 return;
             }
 
-            if (Components.IsLocked) {
-                foreach (Component c in Components.ToAdd) {
-                    c.Enabled = false;
-                    ComponentRemoved(c);
-                    c.OnRemoved();
-                    c.OnSceneRemoved(wipe: true);
-                }
-
-                foreach (Component c in Components.ToRemove) {
-                    c.Enabled = false;
-                    ComponentRemoved(c);
-                    c.OnRemoved();
-                    c.OnSceneRemoved(wipe: true);
-                }
-            }
-
-            foreach (Component c in Components.Items) {
+            foreach (Component c in Components) {
                 c.Enabled = false;
                 ComponentRemoved(c);
                 c.OnRemoved();
