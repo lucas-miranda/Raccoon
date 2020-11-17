@@ -27,6 +27,7 @@ namespace Raccoon {
         #region Private Members
 
         private Renderer _renderer;
+        private int _layer;
 
         #endregion Private Members
 
@@ -34,7 +35,7 @@ namespace Raccoon {
 
         public Entity() {
             Name = "Entity";
-            Renderer = Game.Instance.MainRenderer;
+            _renderer = Game.Instance.MainRenderer;
             Transform = new Transform(this);
         }
 
@@ -55,7 +56,6 @@ namespace Raccoon {
         public bool WipeOnRemoved { get; set; } = true;
         public bool IsWiped { get; private set; }
         public int Order { get; set; }
-        public int Layer { get; set; }
         public int ControlGroup { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(Graphic.LayerComparer);
@@ -95,7 +95,9 @@ namespace Raccoon {
             }
 
             set {
+                bool changed = value != _renderer;
                 _renderer = value;
+
                 foreach (Graphic g in Graphics) {
                     g.Renderer = _renderer;
                 }
@@ -111,6 +113,20 @@ namespace Raccoon {
                     }
                     Transform.UnlockChildren();
                 }
+
+                if (changed) {
+                    RendererChanged(_renderer);
+                }
+            }
+        }
+
+        public int Layer {
+            get {
+                return Transform.Parent != null ? Transform.Parent.Entity.Layer + _layer : _layer;
+            }
+
+            set {
+                _layer = value;
             }
         }
 
@@ -718,6 +734,9 @@ namespace Raccoon {
         }
 
         protected virtual void ComponentRemoved(Component component) {
+        }
+
+        protected virtual void RendererChanged(Renderer renderer) {
         }
 
         #endregion Protected Methods
