@@ -80,12 +80,20 @@ namespace Raccoon {
 
                     AddGraphic(value);
                     return;
-                } else if (value == null) {
-                    RemoveGraphic(Graphics[0]);
+                } else if (value == Graphics[0]) {
                     return;
                 }
 
-                Graphics[0] = value;
+                RemoveGraphic(Graphics[0]);
+
+                if (value != null) {
+                    if (!GraphicAdded(value)) {
+                        return;
+                    }
+
+                    Graphics.Insert(0, value);
+                    value.Renderer = Renderer;
+                }
             }
         }
 
