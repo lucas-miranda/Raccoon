@@ -46,6 +46,7 @@ namespace Raccoon.Input {
         private Vector2 _mousePosition;
         private (int X, int Y) _mouseAbsolutePosition;
         private bool _lockMouseOnCenter;
+        private Rectangle? _customMouseAllowedArea;
 
         // gamepads
         private readonly Dictionary<PlayerIndex, GamePadState> _gamepadsState = new Dictionary<PlayerIndex, GamePadState>(),
@@ -127,10 +128,18 @@ namespace Raccoon.Input {
             }
 
             set {
-                Instance._mousePosition = new Vector2(
-                    Util.Math.Clamp(Util.Math.Floor(value.X), 0, Game.Instance.Width),
-                    Util.Math.Clamp(Util.Math.Floor(value.Y), 0, Game.Instance.Height)
-                );
+                if (CustomMouseAllowedArea.HasValue) {
+                    Instance._mousePosition = new Vector2(
+                        Util.Math.Clamp(Util.Math.Floor(value.X), Util.Math.Max(0, CustomMouseAllowedArea.Value.Left), Util.Math.Min(Game.Instance.Width, CustomMouseAllowedArea.Value.Right)),
+                        Util.Math.Clamp(Util.Math.Floor(value.Y), Util.Math.Max(0, CustomMouseAllowedArea.Value.Top),  Util.Math.Min(Game.Instance.Height, CustomMouseAllowedArea.Value.Bottom))
+                    );
+                } else {
+                    Instance._mousePosition = new Vector2(
+                        Util.Math.Clamp(Util.Math.Floor(value.X), 0, Game.Instance.Width),
+                        Util.Math.Clamp(Util.Math.Floor(value.Y), 0, Game.Instance.Height)
+                    );
+                }
+
 
                 float scale = Game.Instance.PixelScale * Game.Instance.KeepProportionsScale;
 
@@ -138,6 +147,21 @@ namespace Raccoon.Input {
                     (int) Util.Math.Clamp(Util.Math.Round(Instance._mousePosition.X * scale), 0, Game.Instance.WindowWidth),
                     (int) Util.Math.Clamp(Util.Math.Round(Instance._mousePosition.Y * scale), 0, Game.Instance.WindowHeight)
                 );
+            }
+        }
+
+        public static Rectangle? CustomMouseAllowedArea {
+            get {
+                return Instance._customMouseAllowedArea ?? new Rectangle(Game.Instance.Size);
+            }
+            
+            set {
+                Instance._customMouseAllowedArea = value;
+
+                if (!LockMouseOnCenter && LockMouseOnWindow 
+                 && Instance._customMouseAllowedArea.HasValue && !Instance._customMouseAllowedArea.Value.Contains(MousePosition)) {
+                    MousePosition = Util.Math.Clamp(MousePosition, Instance._customMouseAllowedArea.Value);
+                }
             }
         }
 
@@ -420,6 +444,7 @@ namespace Raccoon.Input {
             float scale = Game.Instance.PixelScale * Game.Instance.KeepProportionsScale;
             (int X, int Y) newMouseAbsolutePosition = (XNAMouseState.X, XNAMouseState.Y);
 
+            bool onlyAdjustMousePosition = false;
             if (LockMouseOnCenter) {
                 MouseMovement = new Vector2(
                     newMouseAbsolutePosition.X / scale,
@@ -432,16 +457,36 @@ namespace Raccoon.Input {
                 _mouseAbsolutePosition = (halfWindowWidth, halfWindowHeight);
                 _mousePosition = Util.Math.Round(new Vector2(halfWindowWidth, halfWindowHeight) / scale);
             } else {
-                // ignore out of screen mouse interactions
-                if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
-                    _mouseButtonsState[MouseButton.Left] = _mouseButtonsState[MouseButton.Middle] = _mouseButtonsState[MouseButton.Right] = _mouseButtonsState[MouseButton.M4] = _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
-                    MouseScrollWheelDelta = 0;
+                (int X, int Y) expectedMousePos = newMouseAbsolutePosition;
 
-                    if (LockMouseOnWindow) {
-                        Mouse.SetPosition(Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth), Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight));
+                if (LockMouseOnWindow) {
+                    if (CustomMouseAllowedArea.HasValue) {
+                        float s = Game.Instance.PixelScale * Game.Instance.KeepProportionsScale;
+                        Rectangle allowedArea = CustomMouseAllowedArea.Value;
+
+                        expectedMousePos = (
+                            Util.Math.Clamp(
+                                XNAMouseState.X, 
+                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Left * s)), 
+                                Util.Math.Min(Game.Instance.WindowWidth, (int) Util.Math.Round(allowedArea.Right * s))
+                            ), 
+                            Util.Math.Clamp(
+                                XNAMouseState.Y, 
+                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Top * s)), 
+                                Util.Math.Min(Game.Instance.WindowHeight, (int) Util.Math.Round(allowedArea.Bottom * s))
+                            )
+                        );
+                    } else {
+                        expectedMousePos = (
+                            Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth), 
+                            Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight)
+                        );
                     }
+                }
 
-                    return;
+                if (expectedMousePos != newMouseAbsolutePosition) {
+                    Mouse.SetPosition(expectedMousePos.X, expectedMousePos.Y);
+                    newMouseAbsolutePosition = expectedMousePos;
                 }
 
                 MouseMovement = new Vector2(
@@ -454,6 +499,20 @@ namespace Raccoon.Input {
                     Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.X / scale), 0, Game.Instance.Width),
                     Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.Y / scale), 0, Game.Instance.Height) 
                 );
+
+                // ignore out of screen mouse interactions
+                if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
+                    // mouse buttons and scroll was reset because went out of bounds, so it should stop at this phase
+
+                    _mouseButtonsState[MouseButton.Left] = 
+                        _mouseButtonsState[MouseButton.Middle] = 
+                        _mouseButtonsState[MouseButton.Right] = 
+                        _mouseButtonsState[MouseButton.M4] = 
+                        _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
+
+                    MouseScrollWheelDelta = 0;
+                    return;
+                }
             }
 
             _mouseButtonsState[MouseButton.Left] = XNAMouseState.LeftButton;
