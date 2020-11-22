@@ -152,7 +152,7 @@ namespace Raccoon.Input {
 
         public static Rectangle? CustomMouseAllowedArea {
             get {
-                return Instance._customMouseAllowedArea ?? new Rectangle(Game.Instance.Size);
+                return Instance._customMouseAllowedArea;
             }
             
             set {
