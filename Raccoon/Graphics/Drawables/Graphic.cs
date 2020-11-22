@@ -45,7 +45,7 @@ namespace Raccoon.Graphics {
         public Vector2 Center { get { return Position + Size / 2f; } set { Position = value - Size / 2f; } }
         public Vector2 Origin { get; set; }
         public Vector2 Scale { get; set; } = Vector2.One;
-        public float ScaleXY { get { return Scale.X; } set { Scale = new Vector2(value); } }
+        public float ScaleXY { get { return Math.Max(Scale.X, Scale.Y); } set { Scale = new Vector2(value); } }
         public int Order { get; set; }
         public int Layer { get; set; }
         public int ControlGroup { get; set; }
