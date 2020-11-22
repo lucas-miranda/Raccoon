@@ -86,11 +86,7 @@ namespace Raccoon {
 
                 RemoveGraphic(Graphics[0]);
 
-                if (value != null) {
-                    if (!GraphicAdded(value)) {
-                        return;
-                    }
-
+                if (value != null && GraphicAdded(value)) {
                     Graphics.Insert(0, value);
                     value.Renderer = Renderer;
                 }

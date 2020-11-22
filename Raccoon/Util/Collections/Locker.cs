@@ -191,6 +191,8 @@ namespace Raccoon.Util.Collections {
             }
 
             _items.Insert(index, new ItemBox(item));
+            _itemCount += 1;
+            Sort();
         }
 
         /// <summary>
