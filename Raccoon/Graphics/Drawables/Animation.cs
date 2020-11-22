@@ -321,6 +321,33 @@ namespace Raccoon.Graphics {
             return targetTrack;
         }
 
+        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, string frames, bool reverse = false) {
+            Track originalTrack = Tracks[originalKey];
+            ParseFrames(frames, out List<int> frameList);
+
+            Rectangle[] frameRegions = new Rectangle[frameList.Count],
+                        frameDestinations = new Rectangle[frameList.Count];
+
+            int[] durations = new int[frameList.Count];
+
+            for (int i = 0; i < frameList.Count; i++) {
+                int id = frameList[i];
+
+                frameRegions[i] = originalTrack.FramesRegions[id];
+                frameDestinations[i] = originalTrack.FramesDestinations[id];
+                durations[i] = originalTrack.Durations[id];
+            }
+
+            Track targetTrack = new Track(originalTrack, frameRegions, frameDestinations, durations);
+            Add(targetKey, targetTrack);
+
+            if (reverse) {
+                targetTrack.Reverse();
+            }
+
+            return targetTrack;
+        }
+
         public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, Rectangle[] replaceFrameRegions, Rectangle[] replaceFrameDestinations, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
             Track targetTrack = new Track(originalTrack, replaceFrameRegions, replaceFrameDestinations, replaceDurations: null);
