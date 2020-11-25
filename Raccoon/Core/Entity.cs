@@ -189,8 +189,9 @@ namespace Raccoon {
                         continue;
                     }
 
-                    c.OnSceneRemoved(wipe: true);
                     ComponentRemoved(c);
+                    c.Enabled = false;
+                    c.OnSceneRemoved(wipe: true);
                     c.OnRemoved();
                 }
                 Components.Unlock();
@@ -502,9 +503,9 @@ namespace Raccoon {
                 return false;
             }
 
+            ComponentRemoved(component);
             component.Enabled = false;
             component.OnSceneRemoved(wipe);
-            ComponentRemoved(component);
             component.OnRemoved();
             return true;
         }
@@ -558,10 +559,10 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if (c is T && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -573,10 +574,10 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if ((c is T || c is K) && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -589,10 +590,10 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if ((c is T || c is K || c is V) && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -606,10 +607,10 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if ((c is T || c is K || c is V || c is U) && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -620,10 +621,10 @@ namespace Raccoon {
             Components.Lock();
             foreach (Component c in Components) {
                 if (c.GetType().Equals(componentType) && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -634,10 +635,10 @@ namespace Raccoon {
             foreach (Component c in Components) {
                 if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType)) 
                  && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -648,10 +649,10 @@ namespace Raccoon {
             foreach (Component c in Components) {
                 if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType) || c.GetType().Equals(componentCType)) 
                  && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -671,10 +672,10 @@ namespace Raccoon {
                 }
 
                 if (canRemove && Components.Remove(c)) {
-                    c.Enabled = false;
                     ComponentRemoved(c);
-                    c.OnRemoved();
+                    c.Enabled = false;
                     c.OnSceneRemoved(wipe: true);
+                    c.OnRemoved();
                 }
             }
             Components.Unlock();
@@ -701,10 +702,10 @@ namespace Raccoon {
             }
 
             foreach (Component c in Components) {
-                c.Enabled = false;
                 ComponentRemoved(c);
-                c.OnRemoved();
+                c.Enabled = false;
                 c.OnSceneRemoved(wipe: true);
+                c.OnRemoved();
             }
 
             Components.Clear();
