@@ -92,13 +92,13 @@ namespace Raccoon.Components {
                 return;
             }
 
+            IsDisposed = true;
+            Renderer = null;
+
             if (Entity != null) {
                 Entity.RemoveComponent(this);
             }
 
-            Renderer = null;
-
-            IsDisposed = true;
         }
 
         #endregion Public Methods
