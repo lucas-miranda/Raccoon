@@ -261,7 +261,7 @@ namespace Raccoon {
         }
 
         public static Vector2 operator -(Vector2 l, Vector2 r) {
-            return l + (-r);
+            return new Vector2(l.X - r.X, l.Y - r.Y);
         }
 
         public static Vector2 operator -(Vector2 l, Size r) {
