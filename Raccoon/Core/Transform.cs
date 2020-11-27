@@ -248,7 +248,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"{Position}  Rot: {Rotation}  Origin: {Origin}  Parent? {_parent != null}  Childs: {_children.Count}";
+            return $"Pos: {Position}, LocPos: {LocalPosition}, Rot: {Rotation}  Origin: {Origin}  Parent? {_parent != null}  Childs: {_children.Count}";
         }
 
         public void LockChildren() {
