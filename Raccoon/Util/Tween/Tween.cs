@@ -69,7 +69,7 @@ namespace Raccoon.Util.Tween {
         #region Public Properties
 
         public object Subject { get; set; }
-        public uint Timer { get; private set; }
+        public uint Timer { get; set; }
         public int RepeatTimes { get; set; }
         public int TimesPlayed { get; private set; }
         public float Time { get; private set; }
@@ -149,14 +149,8 @@ namespace Raccoon.Util.Tween {
             Time = 0;
             IsReverse = _startReverse;
 
-            if (IsForward) {
-                foreach (Lerper lerp in _lerpers.Values) {
-                    lerp.Begin();
-                }
-            } else {
-                foreach (Lerper lerp in _lerpers.Values) {
-                    lerp.End();
-                }
+            foreach (Lerper lerp in _lerpers.Values) {
+                lerp.Reset();
             }
         }
 
@@ -176,6 +170,7 @@ namespace Raccoon.Util.Tween {
                 HasEnded = true;
             }
 
+            MoveLerpersToStart();
             return this;
         }
 
@@ -295,6 +290,18 @@ namespace Raccoon.Util.Tween {
         #endregion Public Methods
 
         #region Private Methods
+
+        private void MoveLerpersToStart() {
+            if (IsForward) {
+                foreach (Lerper lerp in _lerpers.Values) {
+                    lerp.Begin();
+                }
+            } else {
+                foreach (Lerper lerp in _lerpers.Values) {
+                    lerp.End();
+                }
+            }
+        }
 
         private MemberInfo FindSubjectMember(PropertyInfo property) {
             PropertyInfo subjectProperty = Subject.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

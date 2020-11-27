@@ -72,18 +72,12 @@ namespace Raccoon.Util.Tween {
                 object result;
 
                 if (IsAdditional) {
-                    result = Subtract(value, _totalAdditionalValue);
-                    _totalAdditionalValue = Add(_totalAdditionalValue, result);
-                    result = Add(Value, result);
+                    result = CalculateAdditionalValue(value);
                 } else {
                     result = value;
                 }
 
-                if (MemberInfo is PropertyInfo propertyInfo) {
-                    propertyInfo.SetValue(Owner, result);
-                } else if (MemberInfo is FieldInfo fieldInfo) {
-                    fieldInfo.SetValue(Owner, result);
-                }
+                ApplyValue(result);
             }
         }
 
@@ -92,11 +86,29 @@ namespace Raccoon.Util.Tween {
         #region Public Methods
 
         public virtual void Begin() {
-            Value = From;
+            if (IsAdditional) {
+                ApplyValue(CalculateAdditionalValue(From));
+            } else {
+                Value = From;
+            }
         }
 
         public virtual void End() {
-            Value = To;
+            if (IsAdditional) {
+                ApplyValue(CalculateAdditionalValue(To));
+            } else {
+                Value = To;
+            }
+        }
+
+        public void Reset() {
+            if (IsAdditional) {
+                // reapply base value
+                ApplyValue(Subtract(Value, _totalAdditionalValue));
+                _totalAdditionalValue = System.Activator.CreateInstance(DataType);
+            } else {
+                Value = From;
+            }
         }
 
         public abstract void Interpolate(float t);
@@ -126,6 +138,24 @@ namespace Raccoon.Util.Tween {
         protected abstract void Disposed();
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        private void ApplyValue(object value) {
+            if (MemberInfo is PropertyInfo propertyInfo) {
+                propertyInfo.SetValue(Owner, value);
+            } else if (MemberInfo is FieldInfo fieldInfo) {
+                fieldInfo.SetValue(Owner, value);
+            }
+        }
+
+        private object CalculateAdditionalValue(object value) {
+            object baseValue = Subtract(Value, _totalAdditionalValue);
+            _totalAdditionalValue = value;
+            return Add(baseValue, _totalAdditionalValue);
+        }
+
+        #endregion Private Methods
     }
 
     #endregion Base Lerper
