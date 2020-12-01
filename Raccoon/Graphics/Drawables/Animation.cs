@@ -174,6 +174,7 @@ namespace Raccoon.Graphics {
         public void Prepare(KeyType key, int frameIndex) {
             Play(key);
             Tracks[key].CurrentFrameIndex = frameIndex;
+            UpdateClippingRegion();
             Pause();
         }
 
