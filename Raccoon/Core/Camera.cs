@@ -12,7 +12,7 @@ namespace Raccoon {
 
         #region Private Members
 
-        private Vector2 _position;
+        private Vector2 _position, _displacement;
         private float _zoom = 1f;
         private bool _needViewRefresh, _isZoomViewingOutOfBounds;
         private Vector3 _cameraUpVector = Vector3.Up;
@@ -113,6 +113,21 @@ namespace Raccoon {
             }
         }
 
+        /// <summary>
+        /// A special value to apply some kind of motion effect at Camera without messing with Position value directly.
+        /// It doesn't respects Bounds or anything similar.
+        /// </summary>
+        public Vector2 Displacement {
+            get {
+                return _displacement;
+            }
+
+            set {
+                _displacement = value;
+                _needViewRefresh = true;
+            }
+        }
+
         public Matrix View { get; private set; }
         public Matrix Projection { get; private set; }
 
@@ -199,7 +214,7 @@ namespace Raccoon {
             Projection = Game.Instance.MainRenderer.RecalculateProjection();
             Game.Instance.DebugRenderer.RecalculateProjection();
 
-            Vector3 cameraPos = new Vector3(Position, 0f),
+            Vector3 cameraPos = new Vector3(Position + Displacement, 0f),
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
