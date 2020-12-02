@@ -28,10 +28,6 @@ namespace Raccoon.Graphics {
             Renderer = Game.Instance.MainRenderer;
         }
 
-        ~Graphic() {
-            Dispose();
-        }
-
         #endregion Constructors
 
         #region Public Properties

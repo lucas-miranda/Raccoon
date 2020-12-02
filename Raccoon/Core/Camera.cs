@@ -212,7 +212,10 @@ namespace Raccoon {
 
         private void Refresh() {
             Projection = Game.Instance.MainRenderer.RecalculateProjection();
+            Game.Instance.InterfaceRenderer.RecalculateProjection();
+#if DEBUG
             Game.Instance.DebugRenderer.RecalculateProjection();
+#endif
 
             Vector3 cameraPos = new Vector3(Position + Displacement, 0f),
                     cameraTarget = cameraPos + Vector3.Forward;

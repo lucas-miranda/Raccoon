@@ -218,9 +218,12 @@ Scene:
         public Font StdFont { get; private set; }
         public Color BackgroundColor { get; set; }
         public Color ScreenBackgroundColor { get; set; } = Color.Black;
-        public Renderer MainRenderer { get; private set; }
-        public Renderer DebugRenderer { get; private set; }
         public Renderer ScreenRenderer { get; private set; }
+        public Renderer MainRenderer { get; private set; }
+        public Renderer InterfaceRenderer { get; private set; }
+#if DEBUG
+        public Renderer DebugRenderer { get; private set; }
+#endif
         public System.TimeSpan Time { get; private set; }
         public PrimitiveBatch DebugPrimitiveBatch { get; private set; }
         public BasicShader BasicShader { get; private set; }
@@ -845,6 +848,12 @@ Scene:
                 RecalculateProjectionSize = () => Size
             };
 
+            InterfaceRenderer = new Renderer(autoHandleAlphaBlendedSprites: true) {
+                SpriteBatchMode = BatchMode.DepthBuffer,
+                DepthStencilState = DepthStencilState.Default,
+                RecalculateProjectionSize = () => Size
+            };
+
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
 
             MainCanvas = new Canvas(
@@ -861,6 +870,7 @@ Scene:
             };
 
             AddRenderer(MainRenderer);
+            AddRenderer(InterfaceRenderer);
 
 #if DEBUG
             DebugCanvas = new Canvas(
@@ -891,6 +901,7 @@ Scene:
             }
 
             MainRenderer.RecalculateProjection();
+            InterfaceRenderer.RecalculateProjection();
             DebugRenderer.RecalculateProjection();
             ScreenRenderer.RecalculateProjection();
 
