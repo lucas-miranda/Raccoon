@@ -3,6 +3,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using Raccoon.Util;
+
 namespace Raccoon.Graphics {
     /// <summary>
     /// An all-in-one provider, containing means to draw anything that Raccoon.Graphics can offer.
@@ -85,25 +87,63 @@ namespace Raccoon.Graphics {
         }
 
         public Vector2 ConvertScreenToWorld(Vector2 screenPosition) {
-            Vector3 worldPos = Game.Instance.GraphicsDevice.Viewport.Unproject(
-                new Vector3(screenPosition, 0f),
-                Projection,
-                View,
-                Matrix.Identity
+			Matrix inverseWVPMatrix = Matrix.Invert(
+                Matrix.Multiply(
+                    Matrix.Multiply(World, View),
+                    Projection
+                )
             );
 
-            return new Vector2(worldPos.X, worldPos.Y);
+			screenPosition.X = (2f * (screenPosition.X /  _previousProjectionSize.Width)) - 1f;
+			screenPosition.Y = 1f - (2f * (screenPosition.Y / _previousProjectionSize.Height));
+
+			float x = (screenPosition.X * inverseWVPMatrix.M11)
+                    + (screenPosition.Y * inverseWVPMatrix.M21)
+                    + inverseWVPMatrix.M41;
+
+			float y = (screenPosition.X * inverseWVPMatrix.M12)
+                    + (screenPosition.Y * inverseWVPMatrix.M22)
+                    + inverseWVPMatrix.M42;
+
+			float a = (screenPosition.X * inverseWVPMatrix.M14) 
+			        + (screenPosition.Y * inverseWVPMatrix.M24) 
+			        + inverseWVPMatrix.M44;
+
+			if (!Math.EqualsEstimate(a, 1.0f)) {
+                x /= a;
+				y /= a;
+			}
+
+            return new Vector2(x, y);
         }
 
         public Vector2 ConvertWorldToScreen(Vector2 worldPosition) {
-            Vector3 screenPos = Game.Instance.GraphicsDevice.Viewport.Project(
-                new Vector3(worldPosition, 0f),
-                Projection,
-                View,
-                Matrix.Identity
-            );
+			Matrix wvpMatrix = Matrix.Multiply(
+				Matrix.Multiply(World, View),
+				Projection
+			);
 
-            return new Vector2(screenPos.X, screenPos.Y);
+			float x = (worldPosition.X * wvpMatrix.M11)
+                    + (worldPosition.Y * wvpMatrix.M21)
+                    + wvpMatrix.M41;
+
+			float y = (worldPosition.X * wvpMatrix.M12)
+                    + (worldPosition.Y * wvpMatrix.M22)
+                    + wvpMatrix.M42;
+
+			float a = (worldPosition.X * wvpMatrix.M14) 
+			        + (worldPosition.Y * wvpMatrix.M24) 
+			        + wvpMatrix.M44;
+
+			if (!Math.EqualsEstimate(a, 1.0f)) {
+                x /= a;
+				y /= a;
+			}
+
+            return new Vector2(
+                (x + 1f) * .5f * _previousProjectionSize.Width,
+                (1f - y) * .5f * _previousProjectionSize.Height
+            );
         }
 
         public ref readonly Matrix RecalculateProjection() {
