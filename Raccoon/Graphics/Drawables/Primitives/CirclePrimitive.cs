@@ -8,7 +8,7 @@ namespace Raccoon.Graphics.Primitives {
         private int[] _indices;
 
         private int _segments;
-        private float _radius;
+        private float _radius, _arcFill = 1f;
         private bool _filled;
 
         #endregion Private Members
@@ -75,6 +75,16 @@ namespace Raccoon.Graphics.Primitives {
             }
         }
 
+        public float ArcFill {
+            get {
+                return _arcFill;
+            }
+
+            set {
+                _arcFill = Math.Clamp(value, 0f, 1f);
+            }
+        }
+
         #endregion Public Properties
 
         #region Public Methods
@@ -93,9 +103,9 @@ namespace Raccoon.Graphics.Primitives {
                 indicesCount;
 
             if (Filled) {
-                indicesCount = (segments + 1) * 3;
+                indicesCount = segments * 3 + 1;
             } else {
-                indicesCount = (segments + 1) * 2;
+                indicesCount = segments * 2 + 1;
             }
 
             if (_indices == null) {
@@ -124,7 +134,7 @@ namespace Raccoon.Graphics.Primitives {
             _vertices[centerIndex] = center;
 
             int i;
-            for (i = 0; i < _vertices.Length; i++) {
+            for (i = 0; i < _vertices.Length - 1; i++) {
                 _vertices[i] = new Vector2(center.X + x, center.Y + y);
 
                 // apply the rotation matrix
@@ -135,29 +145,33 @@ namespace Raccoon.Graphics.Primitives {
                 if (Filled) {
                     _indices[i * 3] = centerIndex; // circle center
                     _indices[i * 3 + 1] = i; // current vertex
-                    _indices[i * 3 + 2] = (i + 1) % _vertices.Length; // next vertex (cyclic)
+                    _indices[i * 3 + 2] = (i + 1) % (_vertices.Length - 1); // next vertex (cyclic)
                 } else {
                     _indices[i * 2] = i; // current vertex
-                    _indices[i * 2 + 1] = (i + 1) % _vertices.Length; // current vertex
+                    _indices[i * 2 + 1] = (i + 1) % (_vertices.Length - 1); // current vertex
                 }
             }
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
+            if (_arcFill <= 0.001f) {
+                return;
+            }
+             
             Renderer.DrawVertices(
                 _vertices,
                 minVertexIndex: 0,
                 _vertices.Length,
                 _indices,
                 minIndex: 0,
-                primitivesCount: Segments,
+                primitivesCount: Math.EqualsEstimate(_arcFill, 1f) ? Segments : (int) Math.Round(_arcFill * Segments),
                 isHollow: !Filled,
                 Position + position,
                 Rotation + rotation,
                 Scale * scale,
                 (Color * color) * Opacity,
                 Origin + origin,
-                Scroll + scroll,
+                Scroll * scroll,
                 shader,
                 shaderParameters,
                 layerDepth
