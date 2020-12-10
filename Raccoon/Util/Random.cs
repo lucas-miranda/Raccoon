@@ -10,32 +10,58 @@ namespace Raccoon.Util {
     public static class Random {
         #region Private Members
 
-        private static int _seedValue;
-        private static System.Random _rand = new System.Random();
+        private static System.Type _baseRandomType = typeof(System.Random);
+        private static int _seed;
 
         #endregion Private Members
 
         #region Constructors
 
         static Random() {
-            Seed = (int) System.DateTime.Now.Ticks;
+            _seed = (int) System.DateTime.Now.Ticks;
+            BaseRandom = new System.Random(_seed);
         }
 
         #endregion Constructors
 
         #region Public Properties
 
+        public static System.Random BaseRandom { get; private set; }
+
+        public static System.Type BaseRandomType {
+            get {
+                return _baseRandomType;
+            }
+            
+            set {
+                if (value == _baseRandomType) {
+                    return;
+                }
+
+                if (value == null) {
+                    throw new System.ArgumentNullException(nameof(value));
+                }
+
+                if (!typeof(System.Random).IsAssignableFrom(value)) {
+                    throw new System.ArgumentException($"Type '{value}' don't derive from {nameof(System.Random)}.");
+                }
+
+                _baseRandomType = value;
+                BaseRandom = (System.Random) System.Activator.CreateInstance(_baseRandomType, _seed);
+            }
+        }
+
         /// <summary>
         /// A number used to calculate values in the pseudo-random sequence.
         /// </summary>
         public static int Seed { 
             get { 
-                return _seedValue; 
+                return _seed; 
             } 
 
             set { 
-                _seedValue = value; 
-                _rand = new System.Random(_seedValue); 
+                _seed = value; 
+                BaseRandom = new System.Random(_seed); 
             } 
         }
 
@@ -56,7 +82,7 @@ namespace Raccoon.Util {
         /// </summary>
         /// <param name="buffer">An array of bytes to receive random numbers.</param>
         public static void Bytes(byte[] buffer) {
-            _rand.NextBytes(buffer);
+            BaseRandom.NextBytes(buffer);
         }
 
         /// <summary>
@@ -64,7 +90,7 @@ namespace Raccoon.Util {
         /// </summary>
         /// <returns>Number in range [0, int.MaxValue].</returns>
         public static int Integer() {
-            return _rand.Next();
+            return BaseRandom.Next();
         }
 
         /// <summary>
@@ -78,7 +104,7 @@ namespace Raccoon.Util {
                 throw new System.ArgumentException("Max should be greater or equals min.");
             }
 
-            return _rand.Next(min, max + 1);
+            return BaseRandom.Next(min, max + 1);
         }
 
         /// <summary>
@@ -87,7 +113,7 @@ namespace Raccoon.Util {
         /// <param name="min">Values range.</param>
         /// <returns>Number in range.</returns>
         public static int Integer(Range range) {
-            return _rand.Next((int) range.Min, ((int) range.Max) + 1);
+            return BaseRandom.Next((int) range.Min, ((int) range.Max) + 1);
         }
 
         /// <summary>
@@ -126,7 +152,7 @@ namespace Raccoon.Util {
         /// </summary>
         /// <returns>Number in range [0.0, 1.0[.</returns>
         public static double Double() {
-            return _rand.NextDouble();
+            return BaseRandom.NextDouble();
         }
 
         /// <summary>
