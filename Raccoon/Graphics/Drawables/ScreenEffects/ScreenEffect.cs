@@ -31,6 +31,7 @@ namespace Raccoon.Graphics.ScreenEffects {
         public float Time { get; protected set; }
         public float ElapsedTime { get; private set; }
         public bool IsPlaying { get; private set; }
+        public bool IsPaused { get; private set; }
         public bool HasEnded { get; private set; }
         public bool PingPong { get; private set; }
         public uint CycleDuration { get; private set; }
@@ -55,7 +56,7 @@ namespace Raccoon.Graphics.ScreenEffects {
         public override void Update(int delta) {
             base.Update(delta);
 
-            if (!IsPlaying) {
+            if (!IsPlaying || IsPaused) {
                 return;
             }
 
@@ -74,14 +75,34 @@ namespace Raccoon.Graphics.ScreenEffects {
         public void Play(bool forceReset = true) {
             if (forceReset) {
                 Reset();
+            } else if (IsPaused) {
+                Resume();
+                return;
             }
 
             IsPlaying = true;
+            IsPaused = false;
             OnStart?.Invoke();
         }
 
+        public void Resume() {
+            if (!IsPlaying || !IsPaused) {
+                return;
+            }
+
+            IsPaused = false;
+        }
+
+        public void Pause() {
+            if (!IsPlaying || IsPaused) {
+                return;
+            }
+
+            IsPaused = true;
+        }
+
         public void Reset() {
-            IsPlaying = false;
+            IsPlaying = IsPaused = false;
             HasEnded = false;
             Reverse = _startReversed;
             Timer = 0;
@@ -117,7 +138,7 @@ namespace Raccoon.Graphics.ScreenEffects {
             }
 
             HasEnded = true;
-            IsPlaying = false;
+            IsPlaying = IsPaused = false;
             Timer = CycleDuration;
             ElapsedTime = 1f;
             Reverse = RepeatTimes % 2 == 0 ? _startReversed : !_startReversed;
