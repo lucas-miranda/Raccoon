@@ -42,6 +42,7 @@
         #region Public Methods
 
         public override void Dispose() { 
+            base.Dispose();
         }
 
         public void Setup(Size size) {

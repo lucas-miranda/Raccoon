@@ -138,6 +138,7 @@ namespace Raccoon {
         public virtual void Start() {
             Current = this;
             _needViewRefresh = true;
+            Displacement = Vector2.Zero;
         }
 
         public virtual void Begin() {
@@ -181,6 +182,7 @@ namespace Raccoon {
 
         public virtual void Reset() {
             Position = Bounds.TopLeft;
+            Displacement = Vector2.Zero;
         }
 
         #endregion Public Methods
