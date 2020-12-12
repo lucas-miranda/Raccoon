@@ -414,6 +414,22 @@ namespace Raccoon.Components {
             base.Dispose();
         }
 
+        #region Direct Collision Test
+
+        public bool Collides(Body otherBody, out ContactList contacts) {
+            return Physics.Instance.Collides(Shape, Position, otherBody.Shape, otherBody.Position, out contacts);
+        }
+
+        public bool Collides(Body otherBody, Vector2 position, out ContactList contacts) {
+            return Physics.Instance.Collides(Shape, Position, otherBody.Shape, position, out contacts);
+        }
+
+        public bool Collides(Vector2 position, Body otherBody, Vector2 otherPosition, out ContactList contacts) {
+            return Physics.Instance.Collides(Shape, position, otherBody.Shape, otherPosition, out contacts);
+        }
+
+        #endregion Direct Collision Test
+
         #region Collides [Single Output]
 
         public bool Collides(Vector2 position, BitTag tags, out ContactList contacts) {

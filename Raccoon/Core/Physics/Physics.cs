@@ -308,6 +308,14 @@ namespace Raccoon {
             return info;
         }
 
+        #region Direct Collision Test
+
+        public bool Collides(IShape shapeA, Vector2 positionA, IShape shapeB, Vector2 positionB, out ContactList contacts) {
+            return CheckCollision(shapeA, positionA, shapeB, positionB, out contacts);
+        }
+
+        #endregion Direct Collision Test
+
         #region Queries [Single Output]
 
         public bool QueryCollision(IShape shape, Vector2 position, BitTag tags, out ContactList contacts) {
