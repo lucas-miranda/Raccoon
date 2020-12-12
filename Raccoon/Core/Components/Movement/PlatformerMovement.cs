@@ -343,6 +343,9 @@ namespace Raccoon.Components {
         /// </summary>
         protected bool IsStillJumping { get; set; }
 
+        protected bool IsJumpRequested { get { return _requestedJump; } }
+        protected bool IsTryingToFallThrough { get { return _isTryingToFallThrough; } }
+
         #endregion Protected Properties
 
         #region Public Methods
@@ -540,15 +543,24 @@ namespace Raccoon.Components {
                         }
 
                         return false;
-                    } else if (collisionInfo.Contacts.Contains(c => Vector2.Down.Projection(c.Normal) >= .6f && c.PenetrationDepth <= 1f)) {
-                        // check if we reached a platform top
-                        // so we should stop trying to pass through
-
-                        if (_isTryingToFallThrough) {
-                            _isTryingToFallThrough = false;
+                    } else {
+                        // fallthrough bodies on top each other will be treated as one
+                        // they must be at least 1px a part to be treated separetely
+                        foreach (Body collisionBody in Body.CollisionList) {
+                            if (collisionBody != collisionInfo.Subject && collisionInfo.Subject.Top - collisionBody.Bottom <= 1f) {
+                                return false;
+                            }
                         }
 
-                        return true;
+                        // check if we have reached a platform top
+                        // if yes, we should stop trying to pass through
+                        if (collisionInfo.Contacts.Contains(c => Vector2.Down.Projection(c.Normal) >= .6f && c.PenetrationDepth <= 1f)) {
+                            if (_isTryingToFallThrough) {
+                                _isTryingToFallThrough = false;
+                            }
+
+                            return true;
+                        }
                     }
 
                     // enable pass through
