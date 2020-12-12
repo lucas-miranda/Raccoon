@@ -547,7 +547,10 @@ namespace Raccoon.Components {
                         // fallthrough bodies on top each other will be treated as one
                         // they must be at least 1px a part to be treated separetely
                         foreach (Body collisionBody in Body.CollisionList) {
-                            if (collisionBody != collisionInfo.Subject && collisionInfo.Subject.Top - collisionBody.Bottom <= 1f) {
+                            if (collisionBody != collisionInfo.Subject 
+                             && collisionBody.Tags.HasAny(FallThroughTags)
+                             && collisionInfo.Subject.Top - collisionBody.Bottom <= 1f
+                            ) {
                                 return false;
                             }
                         }
