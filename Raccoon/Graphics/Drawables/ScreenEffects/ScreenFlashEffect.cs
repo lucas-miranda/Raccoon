@@ -1,5 +1,6 @@
 using Raccoon.Graphics.Primitives;
 using Raccoon.Util;
+using Raccoon.Util.Tween;
 
 namespace Raccoon.Graphics.ScreenEffects {
     public class ScreenFlashEffect : ScreenEffect {
@@ -16,9 +17,17 @@ namespace Raccoon.Graphics.ScreenEffects {
                 Renderer = Renderer,
                 Filled = true
             };
+
+            Easing = Ease.Linear;
         }
 
         #endregion Constructors
+
+        #region Public Properties
+
+        public System.Func<float, float> Easing { get; private set; }
+
+        #endregion Public Properties
 
         #region Protected Methods
 
@@ -36,7 +45,7 @@ namespace Raccoon.Graphics.ScreenEffects {
         }
 
         protected override void Reseted() {
-            _screenRectangleGraphic.Opacity = 1f;
+            _screenRectangleGraphic.Opacity = Easing(0f);
         }
 
         protected override void CycleBegin() {
@@ -44,8 +53,7 @@ namespace Raccoon.Graphics.ScreenEffects {
         }
 
         protected override void CycleUpdate(int delta) {
-            Time = Math.Max(1f - Time, 0f);
-            _screenRectangleGraphic.Opacity = Time;
+            _screenRectangleGraphic.Opacity = Math.Clamp(Easing(1f - Time), 0f, 1f);
             _screenRectangleGraphic.Update(delta);
         }
 
