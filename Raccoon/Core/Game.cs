@@ -517,7 +517,8 @@ Scene:
             pixelScale = pixelScale <= 0 ? 1 : pixelScale;
 
             if (windowWidth == WindowWidth && windowHeight == WindowHeight 
-             && fullscreen == IsFullscreen && pixelScale == PixelScale) {
+             && fullscreen == IsFullscreen && pixelScale == PixelScale
+             && ResizeMode == ResizeMode.ExpandView) {
                 return;
             }
 
@@ -759,17 +760,9 @@ Scene:
         private void InternalOnWindowResize(object sender, System.EventArgs e) {
             Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
 
-            // checks if preffered backbuffer size is the same as current window size
-            if (XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth == windowClientBounds.Width && XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight == windowClientBounds.Height) {
-                return;
+            if (InternalResize(windowClientBounds.Width, windowClientBounds.Height, IsFullscreen)) {
+                RefreshViewMode(ResizeMode, PixelScale);
             }
-
-            DisplayMode displayMode = XNAGameWrapper.GraphicsDevice.DisplayMode;
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth = (int) Math.Clamp(windowClientBounds.Width, WindowMinimumSize.Width, displayMode.Width);
-            XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight = (int) Math.Clamp(windowClientBounds.Height, WindowMinimumSize.Height, displayMode.Height);
-            XNAGameWrapper.GraphicsDeviceManager.ApplyChanges();
-
-            RefreshViewMode(ResizeMode, PixelScale);
         }
 
         private void RefreshViewMode(ResizeMode resizeMode, float pixelScale) {
@@ -1016,9 +1009,10 @@ Scene:
         }
 
         private bool InternalResize(int width, int height, bool fullscreen) {
-            Microsoft.Xna.Framework.Rectangle windowClientBounds = XNAGameWrapper.Window.ClientBounds;
-
-            if (width == windowClientBounds.Width && height == windowClientBounds.Height && fullscreen == XNAGameWrapper.GraphicsDeviceManager.IsFullScreen) {
+            if (width == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth 
+             && height == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight 
+             && fullscreen == XNAGameWrapper.GraphicsDeviceManager.IsFullScreen
+            ) {
                 return false;
             }
 
