@@ -79,6 +79,7 @@ namespace Raccoon.Graphics {
 
             set {
                 _projection = value;
+
                 DirtyFlags |= DirtyFlag.WorldViewProjection;
             }
         }

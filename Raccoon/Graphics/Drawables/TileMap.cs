@@ -495,8 +495,10 @@ namespace Raccoon.Graphics {
 
             BasicShader bs;
 
-            if (Shader != null && Shader is BasicShader) {
-                bs = (BasicShader) Shader;
+            if (Shader != null && Shader is BasicShader customBasicShader) {
+                bs = customBasicShader;
+            } else if (Renderer.Shader != null && Renderer.Shader is BasicShader rendererBasicShader) {
+                bs = rendererBasicShader;
             } else {
                 bs = Game.Instance.BasicShader;
             }

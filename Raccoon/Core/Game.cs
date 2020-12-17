@@ -186,6 +186,7 @@ Scene:
 
         #region Public Properties
 
+        public GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
         public bool IsDisposed { get; private set; }
         public bool IsRunning { get; private set; }
         public bool IsFixedTimeStep { get { return XNAGameWrapper.IsFixedTimeStep; } }
@@ -306,7 +307,6 @@ Scene:
         #region Internal Properties
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
-        internal GraphicsDevice GraphicsDevice { get { return XNAGameWrapper.GraphicsDevice; } }
         internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();

@@ -154,6 +154,7 @@ namespace Raccoon.Graphics {
             }
 
             Matrix.CreateOrthographicOffCenter(0f, size.Width, size.Height, 0f, 0f, 1f, out _projection);
+
             _previousProjectionSize = size;
 
             return ref _projection;

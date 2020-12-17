@@ -4,6 +4,11 @@
 Texture2D Texture;
 sampler2D TextureSampler = sampler_state {
     Texture = <Texture>;
+    MipFilter = NONE;
+    MinFilter = Point;
+    MagFilter = Point;
+    AddressU = Clamp;
+    AddressV = Clamp;
 };
 
 float4x4 WorldViewProj;
@@ -111,28 +116,28 @@ PSOut_ColorDepth PSVertexColorTextureDepth(PSIn_PosColorTextureDepth input) {
 
 technique Basic_PosColor {
 	pass {
-		VertexShader = compile vs_2_0 VSVertexColor();
-		PixelShader  = compile ps_2_0 PSVertexColor();
+		VertexShader = compile vs_3_0 VSVertexColor();
+		PixelShader  = compile ps_3_0 PSVertexColor();
 	}
 };
 
 technique Basic_PosColor_Texture {
 	pass {
-		VertexShader = compile vs_2_0 VSVertexColorTexture();
-		PixelShader  = compile ps_2_0 PSVertexColorTexture();
+		VertexShader = compile vs_3_0 VSVertexColorTexture();
+		PixelShader  = compile ps_3_0 PSVertexColorTexture();
 	}
 };
 
 technique Basic_PosColor_Depth {
 	pass {
-		VertexShader = compile vs_2_0 VSVertexColorDepth();
-		PixelShader  = compile ps_2_0 PSVertexColorDepth();
+		VertexShader = compile vs_3_0 VSVertexColorDepth();
+		PixelShader  = compile ps_3_0 PSVertexColorDepth();
 	}
 };
 
 technique Basic_PosColor_Texture_Depth {
 	pass {
-		VertexShader = compile vs_2_0 VSVertexColorTextureDepth();
-		PixelShader  = compile ps_2_0 PSVertexColorTextureDepth();
+		VertexShader = compile vs_3_0 VSVertexColorTextureDepth();
+		PixelShader  = compile ps_3_0 PSVertexColorTextureDepth();
 	}
 };
