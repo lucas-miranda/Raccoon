@@ -667,6 +667,98 @@ namespace Raccoon {
 
         #endregion Raycast [Multiple Output]
 
+        #region Boxcast [Single Output]
+
+        public bool Boxcast(Vector2 position, Vector2 direction, float width, BitTag tags, out CollisionInfo<Body> collisionInfo, float maxDistance = float.MaxValue) {
+            if (tags == BitTag.None) {
+                collisionInfo = null;
+                return false;
+            }
+
+            Body collidedCollider = null;
+
+            //Vector2 endPos = position + direction * maxDistance;
+            Contact? rayContact = null;
+            float closerContactDist = float.PositiveInfinity;
+
+            Polygon box;
+
+            {
+                Vector2 normal = direction.PerpendicularCCW();
+                float halfWidth = width / 2f;
+
+                box = new Polygon(
+                    position - normal * halfWidth,
+                    position + normal * halfWidth,
+                    position + direction * maxDistance + normal * halfWidth,
+                    position + direction * maxDistance - normal * halfWidth
+                );
+            }
+
+            foreach (BitTag tag in tags) {
+                ValidateTag(tag);
+
+                foreach (Body otherCollider in _collidersByTag[tag]) {
+                    if (otherCollider.Shape == null || !otherCollider.Active || otherCollider.Entity == null || !otherCollider.Entity.Active) {
+                        continue;
+                    }
+
+                    Contact? contact = null;
+
+                    switch (otherCollider.Shape) {
+                        case GridShape gridShape:
+                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, box.BoundingBox(),//new Rectangle(position, position + direction * maxDistance),
+                                (Polygon tilePolygon) => {
+                                    SAT.Test(box, tilePolygon, out Contact? tileContact);
+                                    return tileContact;
+                                }
+                            );
+
+                            if (gridContacts.Count <= 0) {
+                                continue;
+                            }
+
+                            // find closest contact
+                            float closestContactSqrDist = float.PositiveInfinity;
+                            foreach (Contact c in gridContacts) {
+                                float dist = Math.DistanceSquared(position, c.Position);
+                                if (dist < closestContactSqrDist) {
+                                    contact = c;
+                                    closestContactSqrDist = dist;
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            if (!SAT.Test(otherCollider.Shape, otherCollider.Position, box, out contact) || contact == null) {
+                                continue;
+                            }
+
+                            break;
+                    }
+
+                    //float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
+                    float distToContact = Math.DistanceSquared(position, contact.Value.Position);
+                    if (rayContact == null || distToContact < closerContactDist) {
+                        rayContact = contact;
+                        collidedCollider = otherCollider;
+                        closerContactDist = distToContact;
+                    }
+                }
+            }
+
+            if (rayContact != null) {
+                collisionInfo = new CollisionInfo<Body>(collidedCollider, rayContact.Value);
+                return true;
+            }
+
+            collisionInfo = null;
+            return false;
+        }
+
+        #endregion Boxcast [Single Output]
+
         #endregion Public Methods
 
         #region Private Methods
