@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 
 using Raccoon.Log;
 
@@ -12,6 +13,9 @@ namespace Raccoon {
         private List<string> _subjects = new List<string>();
         private string _indent = string.Empty,
                        _lastContext = string.Empty;
+
+        private HashSet<string> _ignoreTypes = new HashSet<string>();
+        private List<string> _ignoreAny = new List<string>();
 
         #endregion Private Members
 
@@ -95,6 +99,14 @@ namespace Raccoon {
             Instance._listeners.Clear();
         }
 
+        public static void RegisterIgnore(System.Type type) {
+            Instance._ignoreTypes.Add(type.FullName);
+        }
+
+        public static void RemoveIgnore(System.Type type) {
+            Instance._ignoreTypes.Remove(type.FullName);
+        }
+
         public static void Write(string message) {
             if (!CanWrite) {
                 return;
@@ -150,6 +162,10 @@ namespace Raccoon {
         }
 
         public static void WriteLine(string message) {
+            if (ShouldSkip()) {
+                return;
+            }
+
             WriteLine(string.Empty, message);
         }
 
@@ -171,6 +187,10 @@ namespace Raccoon {
 
         public static void Success(string message) {
             WriteLine("success", message);
+        }
+
+        public static void DisplayStackTrace(int skipFrames = 1) {
+            Info($"StackFrame:\n{new StackTrace(skipFrames, fNeedFileInfo: true)}");
         }
 
         public static void PushSubject(string subject) {
@@ -343,6 +363,22 @@ namespace Raccoon {
                     logWriter.WriteLine("  No 'report.log' file");
                 }
             }
+        }
+
+        private static bool ShouldSkip() {
+            if (Instance._ignoreTypes.Count == 0) {
+                return false;
+            }
+
+            StackFrame stackFrame = new StackFrame(skipFrames: 2);
+            var methodInfo = stackFrame.GetMethod();
+            string fullname = methodInfo.DeclaringType.FullName;
+
+            if (Instance._ignoreTypes.Contains(fullname)) {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion Private Methods
