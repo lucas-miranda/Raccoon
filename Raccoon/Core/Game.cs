@@ -779,8 +779,9 @@ Scene:
                     KeepProportionsScale = WindowHeight / (Height * _pixelScale);
 
                     // width correction
-                    float internalGameWidth = Width * _pixelScale * KeepProportionsScale;
-                    _gameCanvasPosition = new Vector2((WindowWidth - internalGameWidth) / 2f, 0f);
+                    float internalGameWidth = Math.Round(Width * _pixelScale * KeepProportionsScale);
+
+                    _gameCanvasPosition = Math.Round(new Vector2((WindowWidth - internalGameWidth) / 2f, 0f));
                     break;
 
                 case ResizeMode.ExpandView:

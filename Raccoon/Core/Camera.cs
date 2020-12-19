@@ -219,7 +219,7 @@ namespace Raccoon {
             Game.Instance.DebugRenderer.RecalculateProjection();
 #endif
 
-            Vector3 cameraPos = new Vector3(Position + Displacement, 0f),
+            Vector3 cameraPos = new Vector3(Math.Round(Position + Displacement), 0f),
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
