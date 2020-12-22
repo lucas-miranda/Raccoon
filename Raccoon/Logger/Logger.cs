@@ -48,7 +48,6 @@ namespace Raccoon {
         public static Logger Instance { get; private set; }
         public static bool IsInitialized { get { return Instance != null; } }
         public static bool CanWrite { get; set; }
-        public static bool CanFallbackToStdOnFail { get; set; } = true;
         public static string NewLine { get; set; }
         public static string LastSubject { get { return Instance._subjects.Count == 0 ? null : Instance._subjects[Instance._subjects.Count - 1]; } }
         public static int SubjectCount { get { return Instance._subjects.Count; } }
@@ -142,15 +141,7 @@ namespace Raccoon {
                 return;
             }
 
-            if (CanFallbackToStdOnFail) {
-                if (!IsInitialized) {
-                    // fallback to default console writer
-                    System.Console.WriteLine($"{category}: {message}");
-                    return;
-                }
-            } else {
-                CheckInitialization();
-            }
+            CheckInitialization();
 
             MessageLoggerTokenTree tokens = BuildTokens(
                 category,
