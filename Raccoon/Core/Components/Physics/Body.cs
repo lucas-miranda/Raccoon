@@ -82,7 +82,7 @@ namespace Raccoon.Components {
         public float Right { get { return Shape != null ? Position.X + Shape.BoundingBox.Right : Position.X; } }
         public float Bottom { get { return Shape != null ? Position.Y + Shape.BoundingBox.Bottom : Position.Y; } }
         public float Left { get { return Shape != null ? Position.X + Shape.BoundingBox.Left : Position.X; } }
-        public Rectangle Bounds { get { return Shape.BoundingBox + Position; } }
+        public Rectangle Bounds { get { return Shape != null ? Shape.BoundingBox + Position : new Rectangle(Position, Size.Empty); } }
         public ReadOnlyCollection<Body> CollisionList { get; private set; }
 
 #if DEBUG
