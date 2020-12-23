@@ -185,9 +185,53 @@ namespace Raccoon {
             Displacement = Vector2.Zero;
         }
 
+        public bool CanSee(Entity entity) {
+            if (entity == null) {
+                throw new System.ArgumentNullException(nameof(entity));
+            }
+
+            return new Rectangle(Position, VirtualSize)
+                       .Contains(entity.Transform.Position + CalculateEntityBounds(entity));
+        }
+
         #endregion Public Methods
 
         #region Protected Methods
+
+        /// <summary>
+        /// Calculate an Entity bounds (at local space) using it's Graphic or Body, at this exact order.
+        /// Has an optional fallback size, when everyelse fails.
+        /// </summary>
+        /// <param name="entity">Entity to calculate it's bounds.</param>
+        /// <param name="customBody">An optional custom body to use, instead using first entity's Body found.</param>
+        /// <param name="defaultSize">Default fallback size when there is no Graphic or Body to use.</param>
+        /// <returns>Entity bounds at local space.</returns>
+        protected Rectangle CalculateEntityBounds(Entity entity, Components.Body customBody = null, Size? defaultSize = null) {
+            if (customBody != null && customBody.Entity != entity) {
+                throw new System.ArgumentException($"Custom body must belongs to provided entity '{entity}'.");
+            }
+
+            if (entity.Graphic != null && entity.Graphic.Visible) {
+                Raccoon.Graphics.Graphic g = entity.Graphic;
+
+                if (g is Raccoon.Graphics.Animation animation) {
+                    return new Rectangle(-(g.Origin + (animation.CurrentTrack?.CurrentFrameDestination.Position ?? Vector2.Zero)) + g.Position, g.Size * g.ScaleXY);
+                }
+
+                return new Rectangle(-g.Origin + g.Position, g.Size * g.ScaleXY);
+            } else {
+                Raccoon.Components.Body body = customBody ?? entity.GetComponent<Raccoon.Components.Body>();
+                if (body != null && body.Active && body.Shape != null) {
+                    return body.Shape.BoundingBox;
+                }
+            }
+
+            if (defaultSize.HasValue) {
+                return new Rectangle(- (defaultSize.Value / 2f).ToVector2(), defaultSize.Value);
+            }
+
+            return new Rectangle(Vector2.Zero, Size.Unit);
+        }
 
         protected virtual void OnZoom(float previousZoom, float newZoom) {
 #if DEBUG
