@@ -139,8 +139,8 @@ namespace Raccoon.Graphics {
             _usingVerticesCount = vertices.Length;
             _usingIndicesCount = indices.Length;
 
-            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.None);
-            _indexBuffer.SetData(indices, 0, indices.Length, SetDataOptions.None);
+            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
+            _indexBuffer.SetData(indices, 0, indices.Length, SetDataOptions.Discard);
         }
 
         public void Setup(int columns, int rows) {

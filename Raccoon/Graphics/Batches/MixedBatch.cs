@@ -1047,29 +1047,9 @@ namespace Raccoon.Graphics {
 
                 batchItem.VertexData.CopyTo(_vertexPreBuffer, _vertexBufferEndOffset);
 
-                /*
-                _vertexBuffer.SetData(
-                    _vertexBufferEndOffset * VertexPositionColorTexture.VertexDeclaration.VertexStride,
-                    batchItem.VertexData,
-                    startIndex: 0,
-                    batchItem.VertexData.Length,
-                    VertexPositionColorTexture.VertexDeclaration.VertexStride,
-                    SetDataOptions.None
-                );
-                */
-
                 for (int j = 0; j < batchItem.IndexData.Length; j++) {
                     _indexPreBuffer[_indexBufferEndOffset + j] = _vertexBufferEndOffset + batchItem.IndexData[j];
                 }
-
-                /*
-                _indexBuffer.SetData(
-                    _indexBufferEndOffset * sizeof(int),
-                    preparedIndexData,
-                    startIndex: 0,
-                    batchItem.IndexData.Length
-                );
-                */
 
                 //
 
@@ -1092,7 +1072,7 @@ namespace Raccoon.Graphics {
                     startIndex: 0,
                     _vertexPreBuffer.Length,
                     VertexPositionColorTexture.VertexDeclaration.VertexStride,
-                    SetDataOptions.None
+                    SetDataOptions.Discard
                 );
 
                 _indexBuffer.SetData(
