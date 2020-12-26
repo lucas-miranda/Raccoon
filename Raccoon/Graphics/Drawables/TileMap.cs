@@ -106,8 +106,7 @@ namespace Raccoon.Graphics {
                                          newVertices = new VertexPositionColorTexture[columns * rows * 4];
 
             if (_vertexBuffer != null) {
-                previousVertices = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
-                _vertexBuffer.GetData(previousVertices, 0, _vertexBuffer.VertexCount);
+                previousVertices = _vertices;
             }
 
             if (_vertexBuffer == null || newVertices.Length > _vertexBuffer.VertexCount) {
@@ -289,7 +288,7 @@ namespace Raccoon.Graphics {
             // empty tile
             if (gid == 0) {
                 vertices.CopyTo(_vertices, vertexTileId);
-                _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
+                _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
                 return;
             }
 
@@ -383,7 +382,7 @@ namespace Raccoon.Graphics {
             }
 
             vertices.CopyTo(_vertices, vertexTileId);
-            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
+            _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
         }
 
         public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
@@ -550,16 +549,12 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateVerticesLayerDepth(float layerDepth) {
-            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[_vertexBuffer.VertexCount];
-            _vertexBuffer.GetData(vertices, 0, _vertexBuffer.VertexCount);
-
-            for (int i = 0; i < vertices.Length; i++) {
-                ref VertexPositionColorTexture vertex = ref vertices[i];
+            for (int i = 0; i < _vertices.Length; i++) {
+                ref VertexPositionColorTexture vertex = ref _vertices[i];
                 vertex.Position.Z = layerDepth;
             }
 
-            _vertexBuffer.SetData(vertices, 0, vertices.Length, SetDataOptions.Discard);
-
+            _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
             _lastAppliedLayerDepth = layerDepth;
         }
 
