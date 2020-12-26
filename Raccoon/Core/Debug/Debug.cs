@@ -210,7 +210,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -277,7 +277,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -323,7 +323,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -369,7 +369,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -413,7 +413,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -466,7 +466,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -536,7 +536,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -610,7 +610,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
@@ -706,7 +706,7 @@ namespace Raccoon {
             float zoom = 1f;
 
             if (camera != null) {
-                cameraPos = camera.Position;
+                cameraPos = camera.Position + camera.Displacement;
                 zoom = Game.Instance.PixelScale * camera.Zoom * Game.Instance.KeepProportionsScale;
             }
 
