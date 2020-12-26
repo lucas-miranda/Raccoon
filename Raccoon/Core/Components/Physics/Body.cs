@@ -38,6 +38,8 @@ namespace Raccoon.Components {
         /// </summary>
         private HashSet<Body> _currentUpdateCollisionList = new HashSet<Body>();
 
+        private List<Body> _notCollidingAnymoreList = new List<Body>();
+
 #if RENDER_COLLISION_CONTACT_POINTS
         private List<Contact> _contactsToRender = new List<Contact>();
 #endif
@@ -270,6 +272,7 @@ namespace Raccoon.Components {
             }
 
             _currentUpdateCollisionList.Clear();
+            _notCollidingAnymoreList.AddRange(_collisionList);
             Movement?.PhysicsUpdate(dt);
         }
 
@@ -294,19 +297,16 @@ namespace Raccoon.Components {
                 return;
             }
 
-            foreach (Body otherBody in _collisionList) {
-                if (_currentUpdateCollisionList.Contains(otherBody)) {
-                    continue;
-                }
-
-                EndCollision(otherBody);
-            }
-
             _collisionList.Clear();
             _collisionList.AddRange(_currentUpdateCollisionList);
+            _currentUpdateCollisionList.Clear();
+
+            foreach (Body notCollidingBody in _notCollidingAnymoreList) {
+                EndCollision(notCollidingBody);
+            }
+            _notCollidingAnymoreList.Clear();
 
             Movement?.PhysicsLateUpdate();
-
             IsResting = (Position - LastPosition).LengthSquared() == 0f;
         }
 
@@ -328,6 +328,7 @@ namespace Raccoon.Components {
             }
 
             _currentUpdateCollisionList.Add(otherBody);
+            _notCollidingAnymoreList.Remove(otherBody);
 
             if (!_collisionList.Contains(otherBody)) {
                 _collisionList.Add(otherBody);
