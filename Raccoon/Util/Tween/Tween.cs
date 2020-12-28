@@ -80,6 +80,7 @@ namespace Raccoon.Util.Tween {
         public bool IsPingPong { get; set; }
         public bool IsReverse { get; set; }
         public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
+        public bool CanDisposeWhenRemoved { get; set; } = true;
         public bool IsDisposed { get; private set; }
 
         public Lerper this[string name] { get { return _lerpers[name]; } }
@@ -266,6 +267,11 @@ namespace Raccoon.Util.Tween {
 
         public Tween OnEnd(System.Action onEnd) {
             _onEnd += onEnd;
+            return this;
+        }
+
+        public Tween DisposeWhenRemoved(bool canDispose = true) {
+            CanDisposeWhenRemoved = canDispose;
             return this;
         }
 

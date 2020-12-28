@@ -36,6 +36,11 @@ namespace Raccoon.Util.Tween {
         public static bool Remove(Tween tween) {
             if (Instance._tweens.Remove(tween)) {
                 tween.Pause();
+
+                if (tween.CanDisposeWhenRemoved) {
+                    tween.Dispose();
+                }
+
                 return true;
             }
 
@@ -51,6 +56,11 @@ namespace Raccoon.Util.Tween {
         }
 
         public static void Clear() {
+            foreach (Tween tween in Instance._tweens) {
+                if (tween.CanDisposeWhenRemoved) {
+                    tween.Dispose();
+                }
+            }
             Instance._tweens.Clear();
         }
 
@@ -75,6 +85,9 @@ namespace Raccoon.Util.Tween {
 
                 if (tween.HasEnded) {
                     _tweens.Remove(tween);
+                    if (tween.CanDisposeWhenRemoved) {
+                        tween.Dispose();
+                    }
                 }
             }
             _tweens.Unlock();
