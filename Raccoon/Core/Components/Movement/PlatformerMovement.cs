@@ -549,7 +549,8 @@ namespace Raccoon.Components {
                         foreach (Body collisionBody in Body.CollisionList) {
                             if (collisionBody != collisionInfo.Subject 
                              && collisionBody.Tags.HasAny(FallThroughTags)
-                             && collisionInfo.Subject.Top - collisionBody.Bottom <= 1f
+                             && collisionBody.Bottom - collisionInfo.Subject.Top >= -Math.Epsilon
+                             && collisionBody.Top < collisionInfo.Subject.Top
                             ) {
                                 return false;
                             }
