@@ -29,6 +29,7 @@ namespace Raccoon {
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public Vector2 Origin { get; set; }
+        public Vector2 Scale { get; set; } = Vector2.One;
         public float Rotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
         public bool IsDetached { get; private set; }

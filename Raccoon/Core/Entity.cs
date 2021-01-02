@@ -366,7 +366,16 @@ namespace Raccoon {
                     continue;
                 }
 
-                g.Render(Transform.Position, Transform.Rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.One, null, Layer);
+                g.Render(
+                    position:   Transform.Position + g.Position * Transform.Scale, 
+                    rotation:   Transform.Rotation + g.Rotation, 
+                    scale:      Transform.Scale * g.Scale, 
+                    flip:       g.Flipped,
+                    color:      g.Color, 
+                    scroll:     g.Scroll, 
+                    shader:     g.Shader, 
+                    layer:      Layer
+                );
             }
             Graphics.Unlock();
 

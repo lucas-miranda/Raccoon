@@ -505,17 +505,17 @@ namespace Raccoon.Graphics {
             }
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-(Origin.X + origin.X), -(Origin.Y + origin.Y), 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.X, scale.Y, 1f)
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
                 * Renderer.World;
 
             bs.View = Renderer.View;
             bs.Projection = Renderer.Projection;
 
             // material
-            bs.DiffuseColor = color * Color;
+            bs.DiffuseColor = color;
             bs.Alpha = Opacity;
 
             // texture

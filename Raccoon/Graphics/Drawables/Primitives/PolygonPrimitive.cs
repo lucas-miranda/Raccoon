@@ -61,12 +61,12 @@ namespace Raccoon.Graphics.Primitives {
             if (Filled) {
                 Renderer.DrawFilledPolygon(
                     Shape,
-                    Position + position,
-                    (Color * color) * Opacity,
-                    Rotation + rotation,
-                    Scale * scale,
-                    Origin + origin,
-                    Scroll + scroll,
+                    position,
+                    color * Opacity,
+                    rotation,
+                    scale,
+                    origin,
+                    scroll,
                     shader,
                     shaderParameters,
                     layerDepth
@@ -74,12 +74,12 @@ namespace Raccoon.Graphics.Primitives {
             } else {
                 Renderer.DrawHollowPolygon(
                     Shape,
-                    Position + position,
-                    (Color * color) * Opacity,
-                    Rotation + rotation,
-                    Scale * scale,
-                    Origin + origin,
-                    Scroll + scroll,
+                    position,
+                    color * Opacity,
+                    rotation,
+                    scale,
+                    origin,
+                    scroll,
                     shader,
                     shaderParameters,
                     layerDepth

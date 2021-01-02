@@ -25,14 +25,14 @@
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
             Graphic.Render(
-                Position + position, 
-                Rotation + rotation, 
-                Scale * scale, 
-                Flipped ^ flip, 
-                Color * color * Opacity,
-                Scroll * scroll, 
+                Graphic.Position + position, 
+                Graphic.Rotation + rotation, 
+                Graphic.Scale * scale, 
+                Graphic.Flipped ^ flip, 
+                Graphic.Color * color * Opacity,
+                Graphic.Scroll * scroll, 
                 shader, 
-                ConvertLayerDepthToLayer(layerDepth)
+                Graphic.Layer + ConvertLayerDepthToLayer(layerDepth)
             );
         }
 

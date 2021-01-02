@@ -211,14 +211,14 @@
             if (DestinationRegion.IsEmpty) {
                 Renderer.Draw(
                     Texture,
-                    Position + position,
+                    position,
                     SourceRegion.Position + ClippingRegion,
-                    Rotation + rotation,
-                    Scale * scale,
-                    Flipped ^ flip,
-                    (color * Color) * Opacity,
-                    Origin + origin,
-                    Scroll + scroll,
+                    rotation,
+                    scale,
+                    flip,
+                    color * Opacity,
+                    origin,
+                    scroll,
                     shader,
                     shaderParameters,
                     layerDepth
@@ -228,13 +228,13 @@
 
             Renderer.Draw(
                 Texture,
-                new Rectangle(Position + position, DestinationRegion.Size * Scale * scale),
+                new Rectangle(position, DestinationRegion.Size * scale),
                 SourceRegion.Position + ClippingRegion,
-                Rotation + rotation,
-                Flipped ^ flip,
-                (color * Color) * Opacity,
-                Origin + origin,
-                Scroll + scroll,
+                rotation,
+                flip,
+                color * Opacity,
+                origin,
+                scroll,
                 shader,
                 shaderParameters,
                 layerDepth

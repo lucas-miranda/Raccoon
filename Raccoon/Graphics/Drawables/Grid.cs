@@ -178,17 +178,17 @@ namespace Raccoon.Graphics {
             BasicShader bs = Game.Instance.BasicShader;
 
             // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(Scale.X * scale.X, Scale.Y * scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-(Origin.X + origin.X), -(Origin.Y + origin.Y), 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(Rotation + rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(Position.X + position.X, Position.Y + position.Y, 0f)
+            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.X, scale.Y, 1f)
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
+                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(rotation))
+                * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
                 * Renderer.World;
 
             bs.View = Renderer.View;
             bs.Projection = Renderer.Projection;
 
             // material
-            bs.SetMaterial(color * Color, Opacity);
+            bs.SetMaterial(color, Opacity);
 
             GraphicsDevice device = Game.Instance.GraphicsDevice;
 
@@ -212,7 +212,7 @@ namespace Raccoon.Graphics {
 
             // borders
             if (_useBorderColor) {
-                bs.DiffuseColor = color * BorderColor;
+                bs.SetMaterial(BorderColor, Opacity);
             }
 
             shaderParameters?.ApplyParameters(shader);

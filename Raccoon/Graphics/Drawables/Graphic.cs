@@ -134,47 +134,94 @@ namespace Raccoon.Graphics {
         }
 
         public void Render() {
-            Render(Vector2.Zero, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
+            InternalRender(
+                Position, 
+                Rotation, 
+                Scale, 
+                Flipped, 
+                Color, 
+                Scroll, 
+                Shader, 
+                Layer
+            );
         }
 
-        public void Render(Vector2 position) {
-            Render(position, 0, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
+        public void Render(Vector2 position, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                Rotation, 
+                Scale, 
+                Flipped, 
+                Color, 
+                Scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
-        public void Render(Vector2 position, float rotation) {
-            Render(position, rotation, Vector2.One, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
+        public void Render(Vector2 position, float rotation, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                rotation, 
+                Scale, 
+                Flipped, 
+                Color, 
+                Scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
-        public void Render(Vector2 position, float rotation, Vector2 scale) {
-            Render(position, rotation, scale, ImageFlip.None, Color.White, Vector2.Zero, Shader, 0);
+        public void Render(Vector2 position, float rotation, Vector2 scale, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                rotation, 
+                scale, 
+                Flipped, 
+                Color, 
+                Scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
-        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip) {
-            Render(position, rotation, scale, flip, Color.White, Vector2.Zero, Shader, 0);
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                rotation, 
+                scale, 
+                flip, 
+                Color, 
+                Scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
-        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color) {
-            Render(position, rotation, scale, flip, color, Vector2.Zero, Shader, 0);
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                rotation, 
+                scale, 
+                flip, 
+                color, 
+                Scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
-        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, int layer = 0) {
-#if DEBUG
-            _lastPosition = position;
-            _lastRotation = rotation;
-            _lastScale = scale;
-            _lastFlip = flip;
-            _lastColor = color;
-            _lastScroll = scroll;
-#endif
-
-            if (NeedsReload) {
-                Load();
-                NeedsReload = false;
-            }
-
-            BeforeDraw();
-            Draw(position, rotation, scale, flip, color, scroll, shader ?? Shader, ShaderParameters, origin: Vector2.Zero, ConvertLayerToLayerDepth(Layer + layer));
-            AfterDraw();
+        public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, int? layer = null) {
+            InternalRender(
+                position, 
+                rotation, 
+                scale, 
+                flip, 
+                color, 
+                scroll, 
+                shader ?? Shader, 
+                layer ?? Layer
+            );
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
@@ -213,5 +260,29 @@ namespace Raccoon.Graphics {
         }
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        private void InternalRender(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, int layer) {
+#if DEBUG
+            _lastPosition = position;
+            _lastRotation = rotation;
+            _lastScale = scale;
+            _lastFlip = flip;
+            _lastColor = color;
+            _lastScroll = scroll;
+#endif
+
+            if (NeedsReload) {
+                Load();
+                NeedsReload = false;
+            }
+
+            BeforeDraw();
+            Draw(position, rotation, scale, flip, color, scroll, shader, ShaderParameters, Origin, ConvertLayerToLayerDepth(layer));
+            AfterDraw();
+        }
+
+        #endregion Private Methods
     }
 }
