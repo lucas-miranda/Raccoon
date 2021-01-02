@@ -281,6 +281,7 @@ namespace Raccoon.Util.Tween {
             }
 
             IsDisposed = true;
+            HasEnded = true;
             _onStart = null;
             _onEnd = null;
             _onUpdate = null;

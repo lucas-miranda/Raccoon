@@ -29,11 +29,21 @@ namespace Raccoon.Util.Tween {
         }
 
         public static Tween Add(Tween tween) {
+            if (tween == null) {
+                throw new System.ArgumentNullException(nameof(tween));
+            } else if (tween.IsDisposed) {
+                throw new System.ArgumentException("Can't add a disposed tween.", nameof(tween));
+            }
+
             Instance._tweens.Add(tween);
             return tween;
         }
 
         public static bool Remove(Tween tween) {
+            if (tween == null) {
+                throw new System.ArgumentNullException(nameof(tween));
+            }
+
             if (Instance._tweens.Remove(tween)) {
                 tween.Pause();
 
@@ -48,6 +58,12 @@ namespace Raccoon.Util.Tween {
         }
 
         public static void Play(Tween tween, bool forceReset = true) {
+            if (tween == null) {
+                throw new System.ArgumentNullException(nameof(tween));
+            } else if (tween.IsDisposed) {
+                throw new System.ArgumentException("Can't play a disposed tween.", nameof(tween));
+            }
+
             if (!Instance._tweens.Contains(tween)) {
                 Instance._tweens.Add(tween);
             }
