@@ -264,11 +264,23 @@ namespace Raccoon.Graphics {
         }
 
         public bool Equals(Color c) {
-            return this == c;
+            return R == c.R 
+                && G == c.G 
+                && B == c.B 
+                && A == c.A;
         }
 
         public override int GetHashCode() {
-            return (R ^ G) + (B ^ A);
+            int hashCode = 486187739;
+            
+            unchecked {
+                hashCode = hashCode * 23 + R.GetHashCode();
+                hashCode = hashCode * 23 + G.GetHashCode();
+                hashCode = hashCode * 23 + B.GetHashCode();
+                hashCode = hashCode * 23 + A.GetHashCode();
+            }
+
+            return hashCode;
         }
 
         public override string ToString() {
@@ -292,7 +304,10 @@ namespace Raccoon.Graphics {
         #region Operators
 
         public static bool operator ==(Color l, Color r) {
-            return l.R == r.R && l.G == r.G && l.B == r.B && l.A == r.A;
+            return l.R == r.R 
+                && l.G == r.G 
+                && l.B == r.B 
+                && l.A == r.A;
         }
 
         public static bool operator !=(Color l, Color r) {
@@ -300,43 +315,47 @@ namespace Raccoon.Graphics {
         }
 
         public static Color operator +(Color l, Color r) {
-            return new Color((byte) (l.R + r.R), (byte) (l.G + r.G), (byte) (l.B + r.B), (byte) (l.A + r.A));
+            return new Color(
+                (byte) Math.Clamp(l.R + r.R, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.G + r.G, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.B + r.B, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.A + r.A, byte.MinValue, byte.MaxValue)
+            );
         }
 
         public static Color operator -(Color l, Color r) {
-            return new Color((byte) (l.R - r.R), (byte) (l.G - r.G), (byte) (l.B - r.B), (byte) (l.A - r.A));
+            return new Color(
+                (byte) Math.Clamp(l.R - r.R, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.G - r.G, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.B - r.B, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.A - r.A, byte.MinValue, byte.MaxValue)
+            );
         }
 
         public static Color operator *(Color l, Color r) {
-            float[] lNormalized = l.NormalizedRGBA,
-                    rNormalized = r.NormalizedRGBA;
             return new Color(
-                lNormalized[0] * rNormalized[0],
-                lNormalized[1] * rNormalized[1],
-                lNormalized[2] * rNormalized[2],
-                lNormalized[3] * rNormalized[3]
+                ((float) l.R * r.R) / (255f * 255f),
+                ((float) l.G * r.G) / (255f * 255f),
+                ((float) l.B * r.B) / (255f * 255f),
+                ((float) l.A * r.A) / (255f * 255f)
             );
         }
 
         public static Color operator *(Color l, float n) {
-            float[] normalized = l.NormalizedRGBA;
-
             return new Color(
-                normalized[0] * n,
-                normalized[1] * n,
-                normalized[2] * n,
-                normalized[3] * n
+                (l.R * n) / 255f,
+                (l.G * n) / 255f,
+                (l.B * n) / 255f,
+                (l.A * n) / 255f
             );
         }
 
         public static Color operator /(Color l, float n) {
-            float[] normalized = l.NormalizedRGBA;
-
             return new Color(
-                normalized[0] / n,
-                normalized[1] / n,
-                normalized[2] / n,
-                normalized[3] / n
+                l.R / (n * 255f),
+                l.G / (n * 255f),
+                l.B / (n * 255f),
+                l.A / (n * 255f)
             );
         }
 
