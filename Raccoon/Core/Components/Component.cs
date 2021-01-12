@@ -98,7 +98,6 @@ namespace Raccoon.Components {
             if (Entity != null) {
                 Entity.RemoveComponent(this);
             }
-
         }
 
         #endregion Public Methods

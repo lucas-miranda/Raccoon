@@ -394,7 +394,10 @@ namespace Raccoon.Components {
             if (IsDisposed) {
                 return;
             }
-        
+
+            OnBeginCollision = OnCollided = null;
+            OnEndCollision = null;
+
             if (Shape != null) {
                 if (Shape is GridShape gridShape) {
                     gridShape.Dispose();
@@ -411,6 +414,11 @@ namespace Raccoon.Components {
             //_constraints.Clear();
             _collisionList.Clear();
             _currentUpdateCollisionList.Clear();
+            _notCollidingAnymoreList.Clear();
+
+#if RENDER_COLLISION_CONTACT_POINTS
+            _contactsToRender.Clear();
+#endif
 
             base.Dispose();
         }
