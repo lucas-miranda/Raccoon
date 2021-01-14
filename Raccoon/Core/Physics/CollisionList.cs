@@ -12,15 +12,37 @@ namespace Raccoon {
         }
 
         public bool Contains(T subject) {
-            return FindIndex(p => p.Subject.Equals(subject)) > -1;
+            foreach (CollisionInfo<T> entry in this) {
+                if (entry.Subject.Equals(subject)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool Contains(object subject) {
-            return FindIndex(p => p.Subject.Equals(subject)) > -1;
+            foreach (CollisionInfo<T> entry in this) {
+                if (entry.Subject.Equals(subject)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool Contains(System.Predicate<CollisionInfo<T>> predicate) {
             return FindIndex(predicate) > -1;
+        }
+
+        public bool Collides(bool touchIsCollision = false) {
+            foreach (CollisionInfo<T> collisionInfo in this) {
+                if (collisionInfo.Contacts.Collides(touchIsCollision)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool CollidesButExcept(T exceptionSubject, bool touchIsCollision) {
