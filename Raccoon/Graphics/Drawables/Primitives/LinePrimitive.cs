@@ -65,7 +65,7 @@
             Renderer.DrawLines(
                 Points,
                 position,
-                color * Opacity,
+                new Color(color, (color.A / 255f) * Opacity),
                 rotation,
                 scale,
                 origin,

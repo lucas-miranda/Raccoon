@@ -169,7 +169,7 @@ namespace Raccoon.Graphics.Primitives {
                 position,
                 rotation,
                 scale,
-                color * Opacity,
+                new Color(color, (color.A / 255f) * Opacity),
                 origin,
                 scroll,
                 shader,

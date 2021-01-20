@@ -200,10 +200,10 @@ namespace Raccoon.Graphics {
 
             if (DirtyFlags.Has(DirtyFlag.MaterialColor)) {
                 Vector4 diffuseColor = new Vector4(
-                    DiffuseColor.R / 255f * Alpha,
-                    DiffuseColor.G / 255f * Alpha,
-                    DiffuseColor.B / 255f * Alpha,
-                    Alpha
+                    DiffuseColor.R / 255f,
+                    DiffuseColor.G / 255f,
+                    DiffuseColor.B / 255f,
+                    (DiffuseColor.A / 255f) * Alpha
                 );
 
                 DiffuseColorParameter.SetValue(diffuseColor);

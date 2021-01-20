@@ -31,7 +31,7 @@ float4 PSVertexColor(PSIn_PosColor input) : COLOR0 {
         discard;
     }
 
-    return input.Diffuse;
+    return float4(input.Diffuse.rgb, 1.0f) * input.Diffuse.a;
 }
 
 
@@ -49,7 +49,7 @@ VSOut_PosColorTexture VSVertexColorTexture(VSIn_PosColorTexture input) {
 }
 
 float4 PSVertexColorTexture(PSIn_PosColorTexture input) : COLOR0 {
-    float4 px = tex2D(TextureSampler, input.TextureCoord) * input.Diffuse;
+    float4 px = tex2D(TextureSampler, input.TextureCoord) * float4(input.Diffuse.rgb, 1.0f) * input.Diffuse.a;
 
     if (px.a < .01f) {
         discard;
@@ -74,7 +74,7 @@ VSOut_PosColorDepth VSVertexColorDepth(VSIn_PosColor input) {
 
 PSOut_ColorDepth PSVertexColorDepth(PSIn_PosColorDepth input) {
     PSOut_ColorDepth psOut;
-    psOut.Color = input.Diffuse;
+    psOut.Color = float4(input.Diffuse.rgb, 1.0f) * input.Diffuse.a;
     
     if (psOut.Color.a < .01f) {
         discard;
@@ -101,7 +101,7 @@ VSOut_PosColorTextureDepth VSVertexColorTextureDepth(VSIn_PosColorTexture input)
 
 PSOut_ColorDepth PSVertexColorTextureDepth(PSIn_PosColorTextureDepth input) {
     PSOut_ColorDepth psOut;
-    psOut.Color = tex2D(TextureSampler, input.TextureCoord) * input.Diffuse;
+    psOut.Color = tex2D(TextureSampler, input.TextureCoord) * float4(input.Diffuse.rgb, 1.0f) * input.Diffuse.a;
 
     if (psOut.Color.a < .01f) {
         discard;

@@ -62,7 +62,7 @@ namespace Raccoon.Graphics.Primitives {
                 Renderer.DrawFilledPolygon(
                     Shape,
                     position,
-                    color * Opacity,
+                    new Color(color, (color.A / 255f) * Opacity),
                     rotation,
                     scale,
                     origin,
@@ -75,7 +75,7 @@ namespace Raccoon.Graphics.Primitives {
                 Renderer.DrawHollowPolygon(
                     Shape,
                     position,
-                    color * Opacity,
+                    new Color(color, (color.A / 255f) * Opacity),
                     rotation,
                     scale,
                     origin,

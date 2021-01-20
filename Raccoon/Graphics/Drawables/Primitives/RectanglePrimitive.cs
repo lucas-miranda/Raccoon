@@ -66,7 +66,7 @@
                 Renderer.DrawFilledRectangle(
                     position,
                     Size,
-                    color * Opacity,
+                    new Color(color, (color.A / 255f) * Opacity),
                     rotation,
                     scale,
                     origin,
@@ -79,7 +79,7 @@
                 Renderer.DrawHollowRectangle(
                     position,
                     Size,
-                    color * Opacity,
+                    new Color(color, (color.A / 255f) * Opacity),
                     rotation,
                     scale,
                     origin,
