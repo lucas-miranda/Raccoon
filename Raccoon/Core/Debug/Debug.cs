@@ -471,7 +471,7 @@ namespace Raccoon {
             }
 
             if (segments <= 1) {
-                segments = (int) (radius <= 3 ? (radius * radius * radius) : (radius + radius));
+                segments = (int) (radius + radius);
             }
 
             float theta = Math.ToRadians(arcAngle) / (segments - 1); // theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
@@ -492,20 +492,29 @@ namespace Raccoon {
 
             // material
             bs.SetMaterial(color);
+            bs.TextureEnabled = false;
 
-            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[segments];
+            Microsoft.Xna.Framework.Graphics.VertexPositionColor[] vertices = new Microsoft.Xna.Framework.Graphics.VertexPositionColor[segments * 2];
 
             int i;
             for (i = 0; i < segments; i++) {
-                vertices[i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
+                if (i > 0) {
+                    vertices[i * 2] = vertices[i * 2 - 1];
+                }
+                
+                vertices[i * 2 + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
 
                 float tx = -y, ty = x;
                 x = (x + tx * tangentialFactor) * radialFactor;
                 y = (y + ty * tangentialFactor) * radialFactor;
             }
 
+            if (vertices.Length > 0) {
+                vertices[0] = vertices[1];
+            }
+
             foreach (var pass in bs) {
-                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip, vertices, 0, segments - 1);
+                Game.Instance.GraphicsDevice.DrawUserPrimitives(Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList, vertices, 0, segments);
             }
 
             bs.ResetParameters();
