@@ -530,6 +530,10 @@ namespace Raccoon {
             foreach (Component component in Components) {
                 if (component is T ct) {
                     Components.Remove(component);
+                    ComponentRemoved(component);
+                    component.Enabled = false;
+                    component.OnSceneRemoved(wipe);
+                    component.OnRemoved();
                     retComponent = ct;
                     break;
                 }
