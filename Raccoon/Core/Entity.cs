@@ -568,6 +568,48 @@ namespace Raccoon {
             return components;
         }
 
+        public bool TryGetComponent<T>(out T component) where T : Component {
+            if (Components == null) {
+                component = null;
+                return false;
+            }
+
+            foreach (Component c in Components) {
+                if (c is T ct) {
+                    component = ct;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
+        public bool TryGetComponents<T>(out List<T> components) where T : Component {
+            components = new List<T>();
+            foreach (Component c in Components) {
+                if (c is T ct) {
+                    components.Add(ct);
+                }
+            }
+
+            return components.Count > 0;
+        }
+
+        public bool HasComponent<T>() where T : Component {
+            if (Components == null) {
+                return false;
+            }
+
+            foreach (Component c in Components) {
+                if (c is T ct) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public void RemoveComponents<T>() where T : Component {
             Components.Lock();
             foreach (Component c in Components) {
