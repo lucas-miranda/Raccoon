@@ -70,26 +70,26 @@ namespace Raccoon.Components {
     IsFalling? {21}
 
     Jump
-      Jumps: {22}
-      Can Jump? {23}
-      Has Jumped? {24}
-      Is Jumping? {25}
-      Just Jumped? {26}
-      Is Still Jumping? {27}
-      Height: {28}
+      Jumps: {22}/{23}
+      Can Jump? {24}
+      Has Jumped? {25}
+      Is Jumping? {26}
+      Just Jumped? {27}
+      Is Still Jumping? {28}
+      Height: {29}
 
-      can keep current jump? {29}
-      jump max y: {30}
+      can keep current jump? {30}
+      jump max y: {31}
 
     Ramps
-      On Ramp? {31}
-      Ascd? {32} Descd? {33}
-      internal isGravityEnabled {34}
-      isEnteringRamp? {35}, isLeavingRamp? {36}
+      On Ramp? {32}
+      Ascd? {33} Descd? {34}
+      internal isGravityEnabled {35}
+      isEnteringRamp? {36}, isLeavingRamp? {37}
 
     Fall Through
-      Can Fall Through? {37}
-      is trying to fall through? {38}
+      Can Fall Through? {38}
+      is trying to fall through? {39}
     ";
 
         // general
@@ -102,10 +102,13 @@ namespace Raccoon.Components {
         private bool _touchedBottom, _touchedTop;
 
         // jump
+        private int _maxJumps = 1;
         private bool _canJump = true, 
                      _canKeepCurrentJump = true, 
                      _requestedJump,
-                     _canPerformEarlyJumpInput = true;
+                     _canPerformEarlyJumpInput = true,
+                     _canPerformLedgeJump = true,
+                     _canPerformAdditionalJump;
 
         private int _jumpMaxY, _ledgeJumpTime, _currentLedgeJumpMaxTime;
         private uint _lastTimeFirstRequestToJump;
@@ -192,7 +195,19 @@ namespace Raccoon.Components {
         /// <summary>
         /// How many jumps can happen until reaches ground again.
         /// </summary>
-        public int MaxJumps { get; set; } = 1;
+        public int MaxJumps {
+            get {
+                return _maxJumps;
+            }
+
+            set {
+                _maxJumps = Math.Max(0, value);
+
+                if (OnGround && Jumps != _maxJumps) {
+                    Jumps = _maxJumps;
+                }
+            }
+        }
 
         /// <summary>
         /// How many jumps are still left.
@@ -352,8 +367,12 @@ namespace Raccoon.Components {
 
         public override void BeforeUpdate() {
             base.BeforeUpdate();
-            if (!CanContinuousJump) {
-                if (!_requestedJump) {
+
+            if (!_requestedJump) {
+                // user keeps one entire frame without calling Jump()
+                // we can do some unlocks now
+
+                if (!CanContinuousJump) {
                     // reset permission to perform early jump input
                     // since jump button was released
                     if (!_canPerformEarlyJumpInput) {
@@ -372,9 +391,13 @@ namespace Raccoon.Components {
                     }
                 }
 
-                _requestedJump = false;
+                // allows to perform additional jump while still going up
+                if (Jumps > 0) {
+                    _canPerformAdditionalJump = true;
+                }
             }
 
+            _requestedJump = false;
             IsStillJumping = false;
             CanFallThrough = false;
         }
@@ -382,13 +405,14 @@ namespace Raccoon.Components {
         public override void Update(int delta) {
             base.Update(delta);
 
-            if (IsFalling) {
+            if (IsFalling && _canPerformLedgeJump) {
                 if (_ledgeJumpTime <= _currentLedgeJumpMaxTime) {
                     _ledgeJumpTime += delta;
                 } else if (Jumps > 0) {
-                    // ledge jump time has been missed, so all jumps are lost
-                    Jumps = 0;
+                    // ledge jump time missed, so jump has been lost
+                    Jumps -= 1;
                     _canKeepCurrentJump = false; // Body has just fallen
+                    _canPerformLedgeJump = false;
                 }
             }
         }
@@ -481,7 +505,11 @@ namespace Raccoon.Components {
                     IsJumping = _canKeepCurrentJump = false;
                     Velocity = new Vector2(Velocity.X, 0f);
                     IsFalling = true;
+
+                    // ledge jump
                     _ledgeJumpTime = 0;
+                    _canPerformLedgeJump = false;
+
                     OnFallingBegin();
                 }
             }
@@ -512,6 +540,7 @@ namespace Raccoon.Components {
                             HasJumped = false;
 
                         Jumps = MaxJumps;
+                        _canPerformLedgeJump = true;
                         _isTryingToFallThrough = false;
 
                         OnTouchGround();
@@ -807,17 +836,20 @@ namespace Raccoon.Components {
             }
 
             // keep going up, if you not reach the max jump height
-            if (IsJumping) {
+            // and don't have or can't perform an additional jump
+            if (IsJumping && (Jumps == 0 || !_canPerformAdditionalJump)) {
                 IsStillJumping = true;
                 return;
             }
 
             // checks if can jump and ledge jump time
-            if (!CanJump || (!OnGround && _ledgeJumpTime > _currentLedgeJumpMaxTime)) {
+            if (!CanJump || (!OnGround && Jumps == 0 && _ledgeJumpTime > _currentLedgeJumpMaxTime)) {
                 return;
             }
 
             IsStillJumping = true;
+            _canPerformAdditionalJump = false; // it'll need to be reevaluated later
+            _canPerformLedgeJump = false; // after any jump, can't perform ledge jump until reaches ground again
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
             Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
         }
@@ -854,7 +886,7 @@ namespace Raccoon.Components {
                 OnGround, IsFalling,
 
                 // jump
-                Jumps, CanJump, HasJumped, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
+                Jumps, MaxJumps, CanJump, HasJumped, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
 
                 // ramps
                 IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
