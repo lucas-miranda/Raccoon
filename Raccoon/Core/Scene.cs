@@ -653,7 +653,7 @@ namespace Raccoon {
 
         public void ResumeAll() {
             foreach (IUpdatable updatable in _updatables) {
-                if (_pausedGroups.Contains(updatable.ControlGroup)) {
+                if (!_pausedGroups.Contains(updatable.ControlGroup)) {
                     continue;
                 }
 
