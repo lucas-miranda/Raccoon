@@ -24,8 +24,7 @@ namespace Raccoon.Graphics {
         private Texture _texture;
         private int _tileSetRows, _tileSetColumns, _triangleCount;
         private VertexPositionColorTexture[] _vertices;
-        private DynamicVertexBuffer _vertexBuffer;
-        private DynamicIndexBuffer _indexBuffer;
+        private int[] _indices;
         private float _lastAppliedLayerDepth;
 
         #endregion Private Members
@@ -105,26 +104,12 @@ namespace Raccoon.Graphics {
             VertexPositionColorTexture[] previousVertices = null,
                                          newVertices = new VertexPositionColorTexture[columns * rows * 4];
 
-            if (_vertexBuffer != null) {
+            if (_vertices != null) {
                 previousVertices = _vertices;
             }
 
-            if (_vertexBuffer == null || newVertices.Length > _vertexBuffer.VertexCount) {
-                _vertexBuffer = new DynamicVertexBuffer(Game.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, newVertices.Length, BufferUsage.None);
-            }
-
             // prepare index buffer
-            int[] previousIndices = null,
-                  newIndices = new int[columns * rows * 6];
-
-            if (_indexBuffer != null)  {
-                previousIndices = new int[_indexBuffer.IndexCount];
-                _indexBuffer.GetData(previousIndices, 0, _indexBuffer.IndexCount);
-            }
-
-            if (_indexBuffer == null || newIndices.Length > _indexBuffer.IndexCount) {
-                _indexBuffer = new DynamicIndexBuffer(Game.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, newIndices.Length, BufferUsage.None);
-            }
+            int[] newIndices = new int[columns * rows * 6];
 
             uint[] newTilesIds = new uint[Columns * Rows];
             for (int y = 0; y < Rows; y++) {
@@ -160,15 +145,8 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            if (newVertices.Length != 0) {
-                _vertexBuffer.SetData(newVertices, 0, newVertices.Length, SetDataOptions.Discard);
-            }
-
-            if (newIndices.Length != 0) {
-                _indexBuffer.SetData(newIndices, 0, newIndices.Length, SetDataOptions.Discard);
-            }
-
             _vertices = newVertices;
+            _indices = newIndices;
             _triangleCount = Columns * Rows * 2;
             Data = newTilesIds;
 
@@ -288,7 +266,6 @@ namespace Raccoon.Graphics {
             // empty tile
             if (gid == 0) {
                 vertices.CopyTo(_vertices, vertexTileId);
-                _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
                 return;
             }
 
@@ -382,7 +359,6 @@ namespace Raccoon.Graphics {
             }
 
             vertices.CopyTo(_vertices, vertexTileId);
-            _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
         }
 
         public void SetTile(int x, int y, uint id, ImageFlip flipped, bool flippedDiagonally) {
@@ -444,16 +420,6 @@ namespace Raccoon.Graphics {
                 Grid = null;
             }
 
-            if (_vertexBuffer != null) {
-                _vertexBuffer.Dispose();
-                _vertexBuffer = null;
-            }
-
-            if (_indexBuffer != null) {
-                _indexBuffer.Dispose();
-                _indexBuffer = null;
-            }
-
             base.Dispose();
         }
 
@@ -475,89 +441,37 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            if (_vertexBuffer == null || Columns * Rows == 0 || Texture == null) {
+            if (_vertices == null 
+             || _vertices.Length == 0 
+             || _indices == null
+             || _indices.Length == 0
+             || Columns * Rows == 0 
+             || Texture == null
+            ) {
                 return;
             }
 
-            // only update vertices layer depth if parameter value is differente from last applied value (to avoid redundancy calls)
-            if (layerDepth != _lastAppliedLayerDepth) {
-                UpdateVerticesLayerDepth(layerDepth);
-            }
-
-            /*
-               Note about rendering here instead using Renderer to do the job:
-
-                 I decided to not use Renderer to draw this, since *almost* always the
-               texture used to store tiles will be different from atlases used to other
-               other things. The texture swapping at SpriteBatch will be the same as
-               drawing here and, maybe, drawing here is even better, since we don't need
-               to iterate through all tiles and pack them into SpriteBatchItem.
-            */
-
-            BasicShader bs;
-
-            if (Shader != null && Shader is BasicShader customBasicShader) {
-                bs = customBasicShader;
-            } else if (Renderer.Shader != null && Renderer.Shader is BasicShader rendererBasicShader) {
-                bs = rendererBasicShader;
-            } else {
-                bs = Game.Instance.BasicShader;
-            }
-
-            // transformations
-            bs.World = Microsoft.Xna.Framework.Matrix.CreateScale(scale.X, scale.Y, 1f)
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(-origin.X, -origin.Y, 0f)
-                * Microsoft.Xna.Framework.Matrix.CreateRotationZ(Math.ToRadians(rotation))
-                * Microsoft.Xna.Framework.Matrix.CreateTranslation(position.X, position.Y, 0f)
-                * Renderer.World;
-
-            bs.View = Renderer.View;
-            bs.Projection = Renderer.Projection;
-
-            // material
-            bs.DiffuseColor = color;
-            bs.Alpha = Opacity;
-
-            // texture
-            bs.TextureEnabled = true;
-            bs.Texture = Texture;
-
-            // depth write
-            bs.DepthWriteEnabled = true;
-
-            shaderParameters?.ApplyParameters(shader);
-
-            GraphicsDevice device = Game.Instance.GraphicsDevice;
-
-            // we need to manually update every GraphicsDevice states here
-            device.BlendState = Renderer.Batch.BlendState;
-            device.SamplerStates[0] = Renderer.Batch.SamplerState;
-            device.DepthStencilState = Renderer.Batch.DepthStencilState;
-            device.RasterizerState = Renderer.Batch.RasterizerState;
-
-            foreach (object pass in bs) {
-                device.Indices = _indexBuffer;
-                device.SetVertexBuffer(_vertexBuffer);
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vertexBuffer.VertexCount, 0, _triangleCount);
-            }
-
-            bs.ResetParameters();
+            Renderer.DrawVertices(
+                texture:            Texture,
+                vertexData:         _vertices,
+                minVertexIndex:     0,
+                verticesLength:     _vertices.Length,
+                indices:            _indices,
+                minIndex:           0,
+                primitivesCount:    _triangleCount,
+                isHollow:           false,
+                position:           position,
+                rotation:           rotation,
+                scale:              scale,
+                color:              new Color(color, (color.A / 255f) * Opacity),
+                origin:             origin,
+                scroll:             scroll,
+                shader:             shader,
+                shaderParameters:   shaderParameters,
+                layerDepth:         layerDepth
+            );
         }
 
         #endregion Protected Methods
-
-        #region Private Methods
-
-        private void UpdateVerticesLayerDepth(float layerDepth) {
-            for (int i = 0; i < _vertices.Length; i++) {
-                ref VertexPositionColorTexture vertex = ref _vertices[i];
-                vertex.Position.Z = layerDepth;
-            }
-
-            _vertexBuffer.SetData(_vertices, 0, _vertices.Length, SetDataOptions.Discard);
-            _lastAppliedLayerDepth = layerDepth;
-        }
-
-        #endregion Private Methods
     }
 }
