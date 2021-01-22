@@ -568,6 +568,14 @@ namespace Raccoon {
             return components;
         }
 
+        public IEnumerable<T> IterateComponents<T>() where T : Component {
+            foreach (Component c in Components) {
+                if (c is T ct) {
+                    yield return ct;
+                }
+            }
+        }
+
         public bool TryGetComponent<T>(out T component) where T : Component {
             if (Components == null) {
                 component = null;
