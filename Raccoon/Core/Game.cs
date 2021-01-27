@@ -13,6 +13,7 @@ namespace Raccoon {
         public delegate void GameEventDelegate();
         public event GameEventDelegate OnBeforeRender = delegate { },
                                        OnRender = delegate { },
+                                       OnRenderToMainCanvas,
                                        OnAfterMainCanvasRender,
                                        OnLateRender,
                                        OnDebugRender = delegate { },
@@ -219,6 +220,7 @@ Scene:
         public Font StdFont { get; private set; }
         public Color BackgroundColor { get; set; }
         public Color ScreenBackgroundColor { get; set; } = Color.Black;
+        public Canvas MainCanvas { get; private set; }
         public Renderer ScreenRenderer { get; private set; }
         public Renderer MainRenderer { get; private set; }
         public Renderer InterfaceRenderer { get; private set; }
@@ -307,7 +309,6 @@ Scene:
         #region Internal Properties
 
         internal XNAGameWrapper XNAGameWrapper { get; set; }
-        internal Canvas MainCanvas { get; private set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
 
@@ -938,6 +939,8 @@ Scene:
 
             MainCanvas.End();
 
+            OnRenderToMainCanvas?.Invoke();
+
 #if DEBUG
 
             // debug render
@@ -958,14 +961,16 @@ Scene:
 
             ScreenRenderer.Draw(
                 MainCanvas,
-                _gameCanvasPosition,
-                null,
-                0f,
-                new Vector2(PixelScale * KeepProportionsScale),
-                ImageFlip.None,
-                Color.White,
-                Vector2.Zero,
-                Vector2.One
+                MainCanvas.Position + _gameCanvasPosition,
+                sourceRectangle: null,
+                MainCanvas.Rotation,
+                MainCanvas.Scale * new Vector2(PixelScale * KeepProportionsScale),
+                MainCanvas.Flipped,
+                MainCanvas.Color,
+                MainCanvas.Origin,
+                MainCanvas.Scroll,
+                MainCanvas.Shader,
+                MainCanvas.ShaderParameters
             );
 
             OnAfterMainCanvasRender?.Invoke();
