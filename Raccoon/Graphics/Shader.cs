@@ -1,6 +1,7 @@
-﻿using System.IO;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
 using Microsoft.Xna.Framework.Graphics;
 
@@ -10,6 +11,8 @@ namespace Raccoon.Graphics {
 
         private static int NextId = 0;
         private static readonly Dictionary<string, int> ShaderIds = new Dictionary<string, int>();
+
+        private Dictionary<string, EffectParameter> _parameters = new Dictionary<string, EffectParameter>();
 
         #endregion Private Members
 
@@ -26,21 +29,25 @@ namespace Raccoon.Graphics {
             }
 
             Load();
+            RegisterParameters();
             UpdateId();
         }
 
         public Shader(byte[] shaderCode) {
             XNAEffect = new Effect(Game.Instance.GraphicsDevice, shaderCode);
+            RegisterParameters();
             UpdateId();
         }
 
         public Shader(Stream shaderStream) {
             Load(shaderStream);
+            RegisterParameters();
             UpdateId();
         }
 
         internal Shader(Effect effect) {
             XNAEffect = effect;
+            RegisterParameters();
             UpdateId();
         }
 
@@ -317,19 +324,18 @@ namespace Raccoon.Graphics {
         }
 
         protected EffectParameter RequestParameter(string paramName) {
-            return XNAEffect.Parameters[paramName] ?? throw new System.InvalidOperationException($"Requested parameter '{paramName}' was not found.");
+            return _parameters[paramName] ?? throw new System.InvalidOperationException($"Requested parameter '{paramName}' was not found.");
         }
 
         protected EffectParameter RequestParameter(int id) {
             return XNAEffect.Parameters[id] ?? throw new System.InvalidOperationException($"Requested parameter with index {id} was not found.");
         }
 
-        protected bool TryRequestParameter(string paramName, out EffectParameter parameter) {
-            parameter = XNAEffect.Parameters[paramName];
-            return parameter != null;
+        protected bool TryGetParameter(string paramName, out EffectParameter parameter) {
+            return _parameters.TryGetValue(paramName, out parameter);
         }
 
-        protected bool TryRequestParameter(int id, out EffectParameter parameter) {
+        protected bool TryGetParameter(int id, out EffectParameter parameter) {
             try {
                 parameter = XNAEffect.Parameters[id];
             } catch (System.ArgumentOutOfRangeException) {
@@ -356,6 +362,27 @@ namespace Raccoon.Graphics {
             }
 
             Id = id;
+        }
+
+        private void RegisterParameters() {
+            _parameters.Clear();
+
+            foreach (EffectParameter parameter in XNAEffect.Parameters) {
+                _parameters.Add(parameter.Name, parameter);
+            }
+
+            foreach (PropertyInfo propertyInfo in GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)) {
+                ShaderParameterAttribute shaderParameterAttribute = propertyInfo.GetCustomAttribute<ShaderParameterAttribute>(inherit: true);
+
+                if (shaderParameterAttribute == null) {
+                    continue;
+                }
+                
+                string paramName = shaderParameterAttribute.CustomName ?? propertyInfo.Name;
+                if (!_parameters.ContainsKey(paramName)) {
+                    throw new System.InvalidOperationException($"Requested parameter '{paramName}' (at property '{propertyInfo.Name}') was not found.");
+                }
+            }
         }
 
         #endregion Private Methods

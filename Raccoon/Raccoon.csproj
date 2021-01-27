@@ -181,6 +181,7 @@
     <Compile Include="Graphics\Fonts\FontService.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\Shader.cs" />
+    <Compile Include="Graphics\Shaders\Attributes\ShaderParameterAttribute.cs" />
     <Compile Include="Graphics\Shaders\BasicShader.cs" />
     <Compile Include="Graphics\Shaders\IShaderDepthWrite.cs" />
     <Compile Include="Graphics\Shaders\IShaderParameters.cs" />
@@ -247,6 +248,8 @@
     <Compile Include="Util\Tween\Lerper.cs" />
     <Compile Include="Util\Tween\Tween.cs" />
     <Compile Include="Util\Tween\Tweener.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
