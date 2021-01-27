@@ -847,6 +847,84 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void DrawVertices(VertexPositionColor[] vertexData, int minVertexIndex, int verticesLength, int[] indices, int minIndex, int primitivesCount, bool isHollow, Vector2 position, float rotation, Vector2 scale, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+            PreDrawItemCheck();
+
+            VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[verticesLength];
+
+            if (rotation != 0f) { 
+                float cos = Math.Cos(rotation),
+                      sin = Math.Sin(rotation);
+
+                for (int i = minVertexIndex; i < verticesLength; i++) {
+                    VertexPositionColor vertex = vertexData[i];
+                    Vector2 v = new Vector2(vertex.Position.X, vertex.Position.Y) * scale - origin;
+
+                    vertices[i] = new VertexPositionColorTexture(
+                        new Vector3(
+                            position.X + v.X * cos - v.Y * sin, 
+                            position.Y + v.X * sin + v.Y * cos, 
+                            layerDepth
+                        ),
+                        new Microsoft.Xna.Framework.Color(
+                            (int) ((color.R * vertex.Color.R) / 255f),
+                            (int) ((color.G * vertex.Color.G) / 255f),
+                            (int) ((color.B * vertex.Color.B) / 255f),
+                            (int) ((color.A * vertex.Color.A) / 255f)
+                        ),
+                        Vector2.Zero
+                    );
+                }
+            } else {
+                for (int i = minVertexIndex; i < verticesLength; i++) {
+                    VertexPositionColor vertex = vertexData[i];
+                    Vector2 v = new Vector2(vertex.Position.X, vertex.Position.Y) * scale - origin;
+
+                    vertices[i] = new VertexPositionColorTexture(
+                        new Vector3(
+                            position.X + v.X, 
+                            position.Y + v.Y, 
+                            layerDepth
+                        ),
+                        new Microsoft.Xna.Framework.Color(
+                            (int) ((color.R * vertex.Color.R) / 255f),
+                            (int) ((color.G * vertex.Color.G) / 255f),
+                            (int) ((color.B * vertex.Color.B) / 255f),
+                            (int) ((color.A * vertex.Color.A) / 255f)
+                        ),
+                        Vector2.Zero
+                    );
+                }
+            }
+
+            int indicesCount;
+
+            if (isHollow) {
+                // implemented as line list
+                indicesCount = primitivesCount * 2;
+            } else {
+                // implemented as triangle list
+                indicesCount = primitivesCount * 3;
+            }
+
+            int[] indexData = new int[indicesCount];
+            System.Array.Copy(indices, minIndex, indexData, 0, indicesCount);
+
+            PrimitiveBatchItem batchItem = GetBatchItem<PrimitiveBatchItem>(AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue);
+            batchItem.Set(
+                vertices,
+                indexData,
+                isHollow,
+                shader,
+                shaderParameters,
+                texture: null
+            );
+
+            if (BatchMode == BatchMode.Immediate) {
+                Flush();
+            }
+        }
+
         #endregion Others
 
         public void Flush(bool includeAlphaBlendedSprites = true) {
