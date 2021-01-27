@@ -87,6 +87,22 @@ namespace Raccoon.Graphics {
         public Dictionary<KeyType, Track>.KeyCollection TracksKeys { get { return Tracks.Keys; } }
         public int TrackCount { get { return Tracks.Count; } }
 
+        public virtual KeyType AllFramesTrackKey {
+            get {
+                return default(KeyType);
+            }
+        }
+
+        public Track AllFramesTrack {
+            get {
+                if (Tracks.TryGetValue(AllFramesTrackKey, out Track allFramesTrack)) {
+                    return allFramesTrack;
+                }
+
+                return null;
+            }
+        }
+
         public virtual Track this[KeyType key] {
             get {
                 try {
@@ -249,7 +265,11 @@ namespace Raccoon.Graphics {
             ValidateDurations(durations);
 
             ParseFramesDuration(frames, durations, out List<int> durationList, out List<int> frameList);
-            Rectangle[] framesRegions = GenerateFramesRegions(frameList.ToArray());
+
+            Rectangle[] framesRegions = null, 
+                        framesDestinations = null;
+
+            GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
 
             Track track = new Track(framesRegions, durationList.ToArray());
             Add(key, track);
@@ -264,7 +284,10 @@ namespace Raccoon.Graphics {
             ParseFrames(frames, out List<int> frameList);
             GenerateDurationsArray(frameList.Count, duration, out int[] durations);
 
-            Rectangle[] framesRegions = GenerateFramesRegions(frameList.ToArray());
+            Rectangle[] framesRegions = null, 
+                        framesDestinations = null;
+
+            GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
 
             Track track = new Track(framesRegions, durations);
             Add(key, track);
@@ -282,7 +305,10 @@ namespace Raccoon.Graphics {
             int[] durationList = new int[durations.Count];
             durations.CopyTo(durationList, 0);
 
-            Rectangle[] framesRegions = GenerateFramesRegions(frameList);
+            Rectangle[] framesRegions = null, 
+                        framesDestinations = null;
+
+            GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);
 
             Track track = new Track(framesRegions, durationList);
             Add(key, track);
@@ -297,9 +323,12 @@ namespace Raccoon.Graphics {
             frames.CopyTo(frameList, 0);
 
             GenerateDurationsArray(frameList.Length, duration, out int[] durations);
-            Rectangle[] framesRegions = GenerateFramesRegions(frameList);
+            Rectangle[] framesRegions = null, 
+                        framesDestinations = null;
 
-            Track track = new Track(framesRegions, durations);
+            GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);
+
+            Track track = new Track(framesRegions, framesDestinations, durations);
             Add(key, track);
 
             return track;
@@ -469,26 +498,35 @@ namespace Raccoon.Graphics {
             ClippingRegion = CurrentTrack.CurrentFrameRegion;
         }
 
-        private Rectangle[] GenerateFramesRegions(int[] frames) {
-            Rectangle[] framesRegions = new Rectangle[frames.Length];
+        private void GenerateFramesRegions(int[] frames, ref Rectangle[] framesRegions, ref Rectangle[] framesDestinations) {
+            framesRegions = new Rectangle[frames.Length];
+            framesDestinations = new Rectangle[frames.Length];
 
-            int columns = (int) (SourceRegion.Width / ClippingRegion.Width);
-            //int rows = (int) (SourceRegion.Height / ClippingRegion.Height);
+            Track allFramesTrack = AllFramesTrack;
+            if (allFramesTrack != null) {
+                for (int i = 0; i < frames.Length; i++) {
+                    int frameId = frames[i];
+                    framesRegions[i] = allFramesTrack.FramesRegions[frameId];
+                    framesDestinations[i] = allFramesTrack.FramesDestinations[frameId];
+                }
+            } else {
+                int columns = (int) (SourceRegion.Width / ClippingRegion.Width);
+                //int rows = (int) (SourceRegion.Height / ClippingRegion.Height);
 
-            for (int i = 0; i < frames.Length; i++) {
-                int frameId = frames[i];
+                for (int i = 0; i < frames.Length; i++) {
+                    int frameId = frames[i];
 
-                Rectangle frameRegion = new Rectangle(
-                    (frameId % columns) * ClippingRegion.Width,
-                    (frameId / columns) * ClippingRegion.Height,
-                    ClippingRegion.Width,
-                    ClippingRegion.Height
-                );
+                    Rectangle frameRegion = new Rectangle(
+                        (frameId % columns) * ClippingRegion.Width,
+                        (frameId / columns) * ClippingRegion.Height,
+                        ClippingRegion.Width,
+                        ClippingRegion.Height
+                    );
 
-                framesRegions[i] = frameRegion;
+                    framesRegions[i] = frameRegion;
+                    framesDestinations[i] = Raccoon.Rectangle.Empty;
+                }
             }
-
-            return framesRegions;
         }
 
         private void ParseFramesDuration(string frames, string durations, out List<int> durationList, out List<int> frameList) {
@@ -612,6 +650,12 @@ namespace Raccoon.Graphics {
         public Animation(Animation animation) : base(animation) { }
 
         #endregion Constructors
+
+        public override string AllFramesTrackKey {
+            get {
+                return "all";
+            }
+        }
 
         public override Track this[string key] {
             get {
