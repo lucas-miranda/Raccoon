@@ -90,6 +90,7 @@ namespace Raccoon.Graphics.Primitives {
         #region Public Methods
 
         public override void Dispose() { 
+            base.Dispose();
         }
 
         #endregion Public Methods

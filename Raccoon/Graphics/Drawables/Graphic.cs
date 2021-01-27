@@ -35,7 +35,9 @@ namespace Raccoon.Graphics {
         public string Name { get; set; }
         public bool Active { get; set; } = true;
         public bool Visible { get; set; } = true;
+#if DEBUG
         public bool IgnoreDebugRender { get; set; }
+#endif
         public bool IsDisposed { get; private set; }
         public Vector2 Position { get; set; }
         public Vector2 Center { get { return Position + Size / 2f; } set { Position = value - Size / 2f; } }

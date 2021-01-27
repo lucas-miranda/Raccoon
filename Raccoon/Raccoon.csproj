@@ -160,6 +160,7 @@
     <Compile Include="Graphics\Drawables\Grid.cs" />
     <Compile Include="Graphics\Drawables\Image.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
+    <Compile Include="Graphics\Drawables\Primitives\AnnulusPrimitive.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Primitives\LinePrimitive.cs" />
     <Compile Include="Graphics\Drawables\Primitives\PolygonPrimitive.cs" />
