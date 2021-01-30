@@ -16,13 +16,13 @@ namespace Raccoon {
             _writer = writer;
         }
 
-        public TextWriterLoggerListener(string filepath) : this(new StreamWriter(filepath, append: false, System.Text.Encoding.UTF8)) {
+        public TextWriterLoggerListener(string filepath) : this(new StreamWriter(filepath, false, System.Text.Encoding.UTF8)) {
         }
 
         public bool AutoFlush { get; set; } = true;
         public bool IsDisposed { get; private set; }
 
-        public void WriteTokens(in MessageLoggerTokenTree tokens) {
+        public void WriteTokens(MessageLoggerTokenTree tokens) {
             if (tokens == null) {
                 throw new System.ArgumentNullException(nameof(tokens));
             }
@@ -31,7 +31,7 @@ namespace Raccoon {
                 HeaderLoggerToken header = tokens.HeaderToken;
 
                 if (header.TimestampToken != null) {
-                    CalculateLeftPadding(sectionId: 0, header.TimestampToken.Timestamp);
+                    CalculateLeftPadding(0, header.TimestampToken.Timestamp);
                     Write(header.TimestampToken.Timestamp);
                     Write("  ");
                 } else {
@@ -39,7 +39,7 @@ namespace Raccoon {
                 }
 
                 if (header.CategoryToken != null) {
-                    CalculateLeftPadding(sectionId: 1, header.CategoryToken.CategoryName);
+                    CalculateLeftPadding(1, header.CategoryToken.CategoryName);
                     Write(header.CategoryToken.CategoryName);
                     Write("  ");
                 } else {

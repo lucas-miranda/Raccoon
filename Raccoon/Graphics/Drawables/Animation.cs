@@ -392,7 +392,7 @@ namespace Raccoon.Graphics {
 
         public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, int[] replaceDurations, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
-            Track targetTrack = new Track(originalTrack, replaceFrameRegions: null, replaceFrameDestinations: null, replaceDurations);
+            Track targetTrack = new Track(originalTrack, null, null, replaceDurations);
             Add(targetKey, targetTrack);
 
             if (reverse) {

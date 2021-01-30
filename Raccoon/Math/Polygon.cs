@@ -639,7 +639,14 @@ namespace Raccoon {
 
             int mergeTries = 0;
             while (components.Count >= 2 && mergeTries < components.Count - 1) {
-                (int poly1Index, int poly2Index) = FindGreatestSharedEdgePolygons(out Vector2[] component1, out Vector2[] component2);
+                (int poly1Index, int poly2Index) = FindGreatestSharedEdgePolygons(
+                    ref components,
+                    ref exclusionList,
+                    ref sharedVertexA,
+                    ref sharedVertexB,
+                    out Vector2[] component1, 
+                    out Vector2[] component2
+                );
 
                 // just ignore if no valid index has been found
                 if (poly1Index == -1 || poly2Index == -1) {
@@ -674,42 +681,40 @@ namespace Raccoon {
             }
 
             _convexComponents.AddRange(components);
+        }
 
-            return;
+        private (int p1Index, int p2Index) FindGreatestSharedEdgePolygons(ref List<Vector2[]> components, ref List<(int, int)> exclusionList, ref Vector2 sharedVertexA, ref Vector2 sharedVertexB,  out Vector2[] component1, out Vector2[] component2) {
+            (int A, int B) indexes = (-1, -1);
+            component1 = component2 = null;
+            float greatestEdgeLength = 0;
 
-            (int p1Index, int p2Index) FindGreatestSharedEdgePolygons(out Vector2[] component1, out Vector2[] component2) {
-                (int, int) indexes = (-1, -1);
-                component1 = component2 = null;
-                float greatestEdgeLength = 0;
+            for (int a = 0; a < components.Count; a++) {
+                Vector2[] componentA = components[a];
+                for (int b = a + 1; b < components.Count; b++) {
+                    Vector2[] componentB = components[b];
 
-                for (int a = 0; a < components.Count; a++) {
-                    Vector2[] componentA = components[a];
-                    for (int b = a + 1; b < components.Count; b++) {
-                        Vector2[] componentB = components[b];
+                    if (exclusionList.FindIndex(p => Helper.EqualsPermutation(p.Item1, p.Item2, a, b)) != -1) {
+                        continue;
+                    }
 
-                        if (exclusionList.FindIndex(p => Helper.EqualsPermutation(p.Item1, p.Item2, a, b)) != -1) {
+                    Line? sharedEdge = FindSharedEdge(componentA, componentB);
+                    if (sharedEdge != null) {
+                        float d = sharedEdge.Value.LengthSquared;
+                        if (d <= greatestEdgeLength) {
                             continue;
                         }
 
-                        Line? sharedEdge = FindSharedEdge(componentA, componentB);
-                        if (sharedEdge != null) {
-                            float d = sharedEdge.Value.LengthSquared;
-                            if (d <= greatestEdgeLength) {
-                                continue;
-                            }
-
-                            indexes = (a, b);
-                            greatestEdgeLength = d;
-                            component1 = componentA;
-                            component2 = componentB;
-                            sharedVertexA = sharedEdge.Value.PointA;
-                            sharedVertexB = sharedEdge.Value.PointB;
-                        }
+                        indexes = (a, b);
+                        greatestEdgeLength = d;
+                        component1 = componentA;
+                        component2 = componentB;
+                        sharedVertexA = sharedEdge.Value.PointA;
+                        sharedVertexB = sharedEdge.Value.PointB;
                     }
                 }
-
-                return indexes;
             }
+
+            return indexes;
         }
 
         #region Triangulate Helper

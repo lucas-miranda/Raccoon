@@ -146,7 +146,19 @@ namespace Raccoon.Graphics {
             );
         }
 
-        public ref readonly Matrix RecalculateProjection() {
+        public void RecalculateProjection() {
+            Size size = RecalculateProjectionSize();
+
+            if (size == _previousProjectionSize) {
+                return;
+            }
+
+            Matrix.CreateOrthographicOffCenter(0f, size.Width, size.Height, 0f, 0f, 1f, out _projection);
+
+            _previousProjectionSize = size;
+        }
+
+        public ref Matrix RecalculateProjectionWithRef() {
             Size size = RecalculateProjectionSize();
 
             if (size == _previousProjectionSize) {
@@ -435,13 +447,13 @@ namespace Raccoon.Graphics {
                 PrepareBeforeRender();
                 Batch.DrawVertices(
                     vertices, 
-                    minVertexIndex: 0,
-                    verticesLength: vertices.Count,
+                    0,
+                    vertices.Count,
                     indices,
-                    minIndex: 0,
-                    primitivesCount: 2,
-                    isHollow: false,
-                    position: Vector2.Zero, 
+                    0,
+                    2,
+                    false,
+                    Vector2.Zero, 
                     rotation, 
                     scale, 
                     color, 
@@ -457,13 +469,13 @@ namespace Raccoon.Graphics {
 
             Batch.DrawVertices(
                 vertices, 
-                minVertexIndex: 0,
-                verticesLength: vertices.Count,
+                0,
+                vertices.Count,
                 indices,
-                minIndex: 0,
-                primitivesCount: 2,
-                isHollow: false,
-                position: Vector2.Zero, 
+                0,
+                2,
+                false,
+                Vector2.Zero, 
                 rotation, 
                 scale, 
                 color, 

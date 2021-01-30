@@ -60,15 +60,15 @@ namespace Raccoon {
             //Debug.DrawGrid(TileSize, Columns, Rows, position, BackgroundGridColor);
 
             // collision tiles
-            foreach ((int column, int row, TileShape tile) in Tiles()) {
-                if (tile == null) {
+            foreach ((int Column, int Row, TileShape Shape) tile in Tiles()) {
+                if (tile.Shape == null) {
                     continue;
                 }
 
-                Vector2 tilePos = position - Origin + new Vector2(column * TileSize.Width, row * TileSize.Height);
-                if (tile is BoxTileShape boxTile) {
+                Vector2 tilePos = position - Origin + new Vector2(tile.Column * TileSize.Width, tile.Row * TileSize.Height);
+                if (tile.Shape is BoxTileShape) {
                     Debug.DrawRectangle(new Rectangle(tilePos, TileSize), CollisionTilesColor);
-                } else if (tile is PolygonTileShape polygonTile) {
+                } else if (tile.Shape is PolygonTileShape polygonTile) {
 #if !DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
                     if (polygonTile.Polygon.IsConvex) {
                         Polygon p = new Polygon(polygonTile.Polygon);
@@ -156,54 +156,47 @@ namespace Raccoon {
             }
 
             // extra processing
-            switch (originalTileShape) {
-                case BoxTileShape _:
-                    gridTile = _collisionShapes[id];
-                    break;
+            if (originalTileShape is BoxTileShape) {
+                gridTile = _collisionShapes[id];
+            } else if (originalTileShape is PolygonTileShape polygonTileShape) {
+                Polygon polygon = new Polygon(polygonTileShape.Polygon);
+                switch (flags) {
+                    case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
+                        polygon.RotateAround(270, TileSize.ToVector2() / 2f);
+                        polygon.ReflectHorizontal(TileSize.Width / 2f);
+                        break;
 
-                case PolygonTileShape polygonTileShape:
-                    Polygon polygon = new Polygon(polygonTileShape.Polygon);
-                    switch (flags) {
-                        case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
-                            polygon.RotateAround(270, TileSize.ToVector2() / 2f);
-                            polygon.ReflectHorizontal(TileSize.Width / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
+                        polygon.RotateAround(270, TileSize.ToVector2() / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedVerticallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
-                            polygon.RotateAround(270, TileSize.ToVector2() / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
+                        polygon.RotateAround(90, TileSize.ToVector2() / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedDiagonallyFlag:
-                            polygon.RotateAround(90, TileSize.ToVector2() / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedDiagonallyFlag:
+                        polygon.RotateAround(90, TileSize.ToVector2() / 2f);
+                        polygon.ReflectHorizontal(TileSize.Width / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedDiagonallyFlag:
-                            polygon.RotateAround(90, TileSize.ToVector2() / 2f);
-                            polygon.ReflectHorizontal(TileSize.Width / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag:
+                        polygon.RotateAround(180, TileSize.ToVector2() / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedHorizontallyFlag | Tiled.TiledTile.FlippedVerticallyFlag:
-                            polygon.RotateAround(180, TileSize.ToVector2() / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedVerticallyFlag:
+                        polygon.ReflectVertical(TileSize.Height / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedVerticallyFlag:
-                            polygon.ReflectVertical(TileSize.Height / 2f);
-                            break;
+                    case Tiled.TiledTile.FlippedHorizontallyFlag:
+                        polygon.ReflectHorizontal(TileSize.Width / 2f);
+                        break;
 
-                        case Tiled.TiledTile.FlippedHorizontallyFlag:
-                            polygon.ReflectHorizontal(TileSize.Width / 2f);
-                            break;
+                    default:
+                        break;
+                }
 
-                        default:
-                            break;
-                    }
-
-                    gridTile = new PolygonTileShape(gid, polygon);
-                    _collisionShapes[gid] = gridTile;
-                    break;
-
-                default:
-                    break;
+                gridTile = new PolygonTileShape(gid, polygon);
+                _collisionShapes[gid] = gridTile;
             }
         }
 

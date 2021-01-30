@@ -86,9 +86,9 @@ namespace Raccoon.Graphics {
             // update vertices
             _vertices = new VertexPositionColorTexture[(sectionsPoints.Count - 1) * 4];
             float upWidth = width * Alignment.Y,
-                  downWidth = width - upWidth,
-                  leftWidth = upWidth * Alignment.X,
-                  rightWidth = width - leftWidth;
+                  downWidth = width - upWidth;//,
+                  /*leftWidth = upWidth * Alignment.X;
+                  rightWidth = width - leftWidth;*/
 
             for (int s = 0; s < Sections; s++) {
                 Vector2 startPoint = SectionsPoints[s],
@@ -229,19 +229,19 @@ namespace Raccoon.Graphics {
                 _vertices,
                 minVertexIndex: 0,
                 verticesLength: _vertices.Length,
-                _indices,
+                indices: _indices,
                 minIndex: 0,
                 primitivesCount: Sections * 2,
                 isHollow: false,
-                position,
-                rotation,
-                scale,
-                color * Opacity,
-                origin,
-                scroll,
-                shader,
-                shaderParameters,
-                layerDepth
+                position: position,
+                rotation: rotation,
+                scale: scale,
+                color: new Color(color, (color.A / 255f) * Opacity),
+                origin: origin,
+                scroll: scroll,
+                shader: shader,
+                shaderParameters: shaderParameters,
+                layerDepth: layerDepth
             );
         }
 

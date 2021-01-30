@@ -444,7 +444,6 @@ namespace Raccoon.Input {
             float scale = Game.Instance.PixelScale * Game.Instance.KeepProportionsScale;
             (int X, int Y) newMouseAbsolutePosition = (XNAMouseState.X, XNAMouseState.Y);
 
-            bool onlyAdjustMousePosition = false;
             if (LockMouseOnCenter) {
                 MouseMovement = new Vector2(
                     newMouseAbsolutePosition.X / scale,
@@ -484,7 +483,7 @@ namespace Raccoon.Input {
                     }
                 }
 
-                if (expectedMousePos != newMouseAbsolutePosition) {
+                if (expectedMousePos.X != newMouseAbsolutePosition.X || expectedMousePos.Y != newMouseAbsolutePosition.Y) {
                     Mouse.SetPosition(expectedMousePos.X, expectedMousePos.Y);
                     newMouseAbsolutePosition = expectedMousePos;
                 }

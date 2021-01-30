@@ -97,74 +97,53 @@ namespace Raccoon {
                 }
             } else {
                 // special Current values
-                switch (enumerator.Current) {
-                    case null:
-                        break;
+                if (enumerator.Current != null) {
+                    if (enumerator.Current is CoroutineInstruction instruction) {
+                        if (instruction.MoveNext()) {
+                            IEnumerator instructionEnumerator = instruction.RetrieveRoutine();
 
-                    case CoroutineInstruction instruction:
-                        if (!instruction.MoveNext()) {
-                            break;
-                        }
+                            if (instructionEnumerator == null) {
+                                return true;
+                            }
 
-                        IEnumerator instructionEnumerator = instruction.RetrieveRoutine();
+                            bool isRunningInstruction = true;
 
-                        if (instructionEnumerator == null) {
-                            return true;
-                        }
+                            do {
+                                instructionEnumerator.MoveNext();
 
-                        bool isRunningInstruction = true;
-
-                        do {
-                            instructionEnumerator.MoveNext();
-
-                            switch (instructionEnumerator.Current) {
-                                case CoroutineInstruction.Signal signal:
+                                if (instructionEnumerator.Current is CoroutineInstruction.Signal signal) {
                                     if (signal == CoroutineInstruction.Signal.Continue) {
                                         isRunningInstruction = false;
                                     }
-
-                                    break;
-
-                                case IEnumerator instructionInternalEnumerator:
+                                } else if (instructionEnumerator.Current is IEnumerator instructionInternalEnumerator) {
                                     instruction.RoutineMoveNextCallback(MoveNext(instructionInternalEnumerator));
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        } while (isRunningInstruction);
-                        
-                        return true;
-
-                    case float seconds:
-                        if (_waitingDelay) {
-                            _waitingDelay = false;
-                            break;
+                                }
+                            } while (isRunningInstruction);
+                            
+                            return true;
+                        }
+                    } else if (enumerator.Current is float seconds) {
+                        if (!_waitingDelay) {
+                            Wait(seconds);
+                            return true;
                         }
 
-                        Wait(seconds);
-                        return true;
-
-                    case int miliI:
-                        if (_waitingDelay) {
-                            _waitingDelay = false;
-                            break;
+                        _waitingDelay = false;
+                    } else if (enumerator.Current is int miliI) {
+                        if (!_waitingDelay) {
+                            Wait(miliI);
+                            return true;
                         }
 
-                        Wait(miliI);
-                        return true;
-
-                    case uint miliU:
+                        _waitingDelay = false;
+                    } else if (enumerator.Current is uint miliU) {
                         if (_waitingDelay) {
-                            _waitingDelay = false;
-                            break;
+                            Wait(miliU);
+                            return true;
                         }
 
-                        Wait(miliU);
-                        return true;
-
-                    default:
-                        break;
+                        _waitingDelay = false;
+                    }
                 }
             }
 

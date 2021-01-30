@@ -73,7 +73,7 @@
                 shader,
                 shaderParameters,
                 cyclic: false,
-                layerDepth
+                layerDepth: layerDepth
             );
         }
 

@@ -14,7 +14,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
             return app.Equals("https://github.com/lucas-miranda/raven");
         }
 
-        public bool ProcessJson(JObject json, in Texture texture, ref Dictionary<string, AtlasSubTexture> subTextures) {
+        public bool ProcessJson(JObject json, Texture texture, ref Dictionary<string, AtlasSubTexture> subTextures) {
             //JToken texturesToken = json.SelectToken("textures");
             //JToken metaToken = json.SelectToken("meta");
 
@@ -53,13 +53,13 @@ namespace Raccoon.Graphics.AtlasProcessors {
 
                 // process tracks
                 if (frames.Count == 1) {
-                    (Rectangle source, uint duration, Rectangle originalFrame) = frames[0];
+                    (Rectangle Source, uint Duration, Rectangle OriginalFrame) frame = frames[0];
                     AtlasSubTexture subTexture = new AtlasSubTexture(
                         texture,
-                        source,
-                        new Rectangle(Vector2.Zero, source.Size)
+                        frame.Source,
+                        new Rectangle(Vector2.Zero, frame.Source.Size)
                     ) {
-                        OriginalFrame = originalFrame
+                        OriginalFrame = frame.OriginalFrame
                     };
 
                     subTextures.Add(subTextureName, subTexture);
@@ -70,8 +70,8 @@ namespace Raccoon.Graphics.AtlasProcessors {
 
                 // register all frames to "all" track
                 for (uint i = 0U; i < frames.Count; i++) {
-                    (Rectangle source, uint duration, Rectangle originalFrame) = frames[(int) i];
-                    animation.AddFrame(source, (int) duration, originalFrame, "all");
+                    (Rectangle Source, uint Duration, Rectangle OriginalFrame) frame = frames[(int) i];
+                    animation.AddFrame(frame.Source, (int) frame.Duration, frame.OriginalFrame, "all");
                 }
 
                 // process other tracks 
@@ -80,12 +80,11 @@ namespace Raccoon.Graphics.AtlasProcessors {
                     string name = trackToken.Value<string>("name");
                     uint from = trackToken.Value<uint>("from");
                     uint to = trackToken.Value<uint>("to");
-                    string direction = trackToken.Value<string>("direction"); //! unused yet
-
+                    //string direction = trackToken.Value<string>("direction"); //! unused yet
 
                     for (uint i = from; i <= to; i++) {
-                        (Rectangle source, uint duration, Rectangle originalFrame) = frames[(int) i];
-                        animation.AddFrame(source, (int) duration, originalFrame, name);
+                        (Rectangle Source, uint Duration, Rectangle OriginalFrame) frame = frames[(int) i];
+                        animation.AddFrame(frame.Source, (int) frame.Duration, frame.OriginalFrame, name);
                     }
                 }
 

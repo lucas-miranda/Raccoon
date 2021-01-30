@@ -25,7 +25,6 @@ namespace Raccoon.Graphics {
         private int _tileSetRows, _tileSetColumns, _triangleCount;
         private VertexPositionColorTexture[] _vertices;
         private int[] _indices;
-        private float _lastAppliedLayerDepth;
 
         #endregion Private Members
 
@@ -121,8 +120,8 @@ namespace Raccoon.Graphics {
                     if (y < oldRows && x < oldColumns) {
                         // copy from old data
                         int oldTileId = (y * oldColumns) + x,
-                            oldTileVertexStartId = oldTileId * 4,
-                            oldTileIndexStartId = oldTileId * 6;
+                            oldTileVertexStartId = oldTileId * 4//,
+                            /*oldTileIndexStartId = oldTileId * 6*/;
 
                         System.Array.Copy(previousVertices, oldTileVertexStartId, newVertices, newTileVertexStartId, 4);
 
@@ -294,25 +293,25 @@ namespace Raccoon.Graphics {
             //
 
             vertices[0] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, _lastAppliedLayerDepth),
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, (y + 1) * TileSize.Height, 0f),
                 Color.White,
                 new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
             );
 
             vertices[1] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, _lastAppliedLayerDepth),
+                new Microsoft.Xna.Framework.Vector3(x * TileSize.Width, y * TileSize.Height, 0f),
                 Color.White,
                 new Microsoft.Xna.Framework.Vector2(texLeft / Texture.Width, texTop / Texture.Height)
             );
 
             vertices[2] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, _lastAppliedLayerDepth),
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, (y + 1) * TileSize.Height, 0f),
                 Color.White,
                 new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, (texTop + TileSize.Height) / Texture.Height)
             );
 
             vertices[3] = new VertexPositionColorTexture(
-                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, _lastAppliedLayerDepth),
+                new Microsoft.Xna.Framework.Vector3((x + 1) * TileSize.Width, y * TileSize.Height, 0f),
                 Color.White,
                 new Microsoft.Xna.Framework.Vector2((texLeft + TileSize.Width) / Texture.Width, texTop / Texture.Height)
             );

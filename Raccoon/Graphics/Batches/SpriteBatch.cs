@@ -133,7 +133,7 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+            DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, null, layerDepth);
         }
 
         /// <summary>

@@ -610,7 +610,7 @@ namespace Raccoon {
             }
 
             foreach (Component c in Components) {
-                if (c is T ct) {
+                if (c is T) {
                     return true;
                 }
             }

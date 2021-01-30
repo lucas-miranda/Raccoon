@@ -81,10 +81,15 @@ namespace Raccoon.Util {
         #endregion TileMap
 
         public static class Enum {
-            public static List<T> GetValues<T>() where T : System.Enum {
+            public static List<T> GetValues<T>() {
+                System.Type t = typeof(T);
+                if (!t.IsEnum) {
+                    throw new System.ArgumentException($"Expecting a valid {nameof(System.Enum)}, but found '{t.Name}'.");
+                }
+
                 List<T> values = new List<T>();
 
-                foreach (object value in System.Enum.GetValues(typeof(T))) {
+                foreach (object value in System.Enum.GetValues(t)) {
                     values.Add((T) value);
                 }
 

@@ -151,8 +151,12 @@ namespace Raccoon {
             return false;
         }
 
-        public void RegisterTags<T>() where T : System.Enum {
+        public void RegisterTags<T>() {
             System.Type tagType = typeof(T);
+
+            if (!tagType.IsEnum) {
+                throw new System.ArgumentException($"Expecting a valid {nameof(System.Enum)}, but found '{tagType.Name}'.");
+            }
 
             if (!tagType.IsDefined(typeof(System.FlagsAttribute), false)) {
                 throw new System.ArgumentException("Tags Type must contains System.FlagsAttribute and all values declared as power of 2.");
@@ -241,8 +245,8 @@ namespace Raccoon {
         public void SetCollisions((BitTag, BitTag)[] collisions) {
             ClearCollisions();
 
-            foreach ((BitTag tag, BitTag collisionWith) in collisions) {
-                RegisterCollision(tag, collisionWith);
+            foreach ((BitTag Tag, BitTag With) collision in collisions) {
+                RegisterCollision(collision.Tag, collision.With);
             }
         }
 
@@ -484,37 +488,31 @@ namespace Raccoon {
 
                     Contact? contact = null;
 
-                    switch (otherCollider.Shape) {
-                        case GridShape gridShape:
-                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
-                                (Polygon tilePolygon) => {
-                                    SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
-                                    return tileContact;
-                                }
-                            );
-
-                            if (gridContacts.Count <= 0) {
-                                continue;
+                    if (otherCollider.Shape is GridShape gridShape) {
+                        List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
+                            (Polygon tilePolygon) => {
+                                SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
+                                return tileContact;
                             }
+                        );
 
-                            // find closest contact
-                            float closestContactSqrDist = float.PositiveInfinity;
-                            foreach (Contact c in gridContacts) {
-                                float dist = Math.DistanceSquared(position, c.Position);
-                                if (dist < closestContactSqrDist) {
-                                    contact = c;
-                                    closestContactSqrDist = dist;
-                                }
+                        if (gridContacts.Count <= 0) {
+                            continue;
+                        }
+
+                        // find closest contact
+                        float closestContactSqrDist = float.PositiveInfinity;
+                        foreach (Contact c in gridContacts) {
+                            float dist = Math.DistanceSquared(position, c.Position);
+                            if (dist < closestContactSqrDist) {
+                                contact = c;
+                                closestContactSqrDist = dist;
                             }
-
-                            break;
-
-                        default:
-                            if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
-                                continue;
-                            }
-
-                            break;
+                        }
+                    } else {
+                        if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
+                            continue;
+                        }
                     }
 
                     //float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
@@ -625,37 +623,31 @@ namespace Raccoon {
 
                     Contact? contact = null;
 
-                    switch (otherCollider.Shape) {
-                        case GridShape gridShape:
-                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
-                                (Polygon tilePolygon) => {
-                                    SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
-                                    return tileContact;
-                                }
-                            );
-
-                            if (gridContacts.Count <= 0) {
-                                continue;
+                    if (otherCollider.Shape is GridShape gridShape) {
+                        List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, new Rectangle(position, position + direction * maxDistance),
+                            (Polygon tilePolygon) => {
+                                SAT.Test(position, endPos, tilePolygon, out Contact? tileContact);
+                                return tileContact;
                             }
+                        );
 
-                            // find closest contact
-                            float closestContactSqrDist = float.PositiveInfinity;
-                            foreach (Contact c in gridContacts) {
-                                float dist = Math.DistanceSquared(position, c.Position);
-                                if (dist < closestContactSqrDist) {
-                                    contact = c;
-                                    closestContactSqrDist = dist;
-                                }
+                        if (gridContacts.Count <= 0) {
+                            continue;
+                        }
+
+                        // find closest contact
+                        float closestContactSqrDist = float.PositiveInfinity;
+                        foreach (Contact c in gridContacts) {
+                            float dist = Math.DistanceSquared(position, c.Position);
+                            if (dist < closestContactSqrDist) {
+                                contact = c;
+                                closestContactSqrDist = dist;
                             }
-
-                            break;
-
-                        default:
-                            if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
-                                continue;
-                            }
-
-                            break;
+                        }
+                    } else {
+                        if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out contact) || contact == null) {
+                            continue;
+                        }
                     }
 
                     collisionList.Add(entity, contact.Value);
@@ -705,37 +697,31 @@ namespace Raccoon {
 
                     Contact? contact = null;
 
-                    switch (otherCollider.Shape) {
-                        case GridShape gridShape:
-                            List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, box.BoundingBox(),//new Rectangle(position, position + direction * maxDistance),
-                                (Polygon tilePolygon) => {
-                                    SAT.Test(box, tilePolygon, out Contact? tileContact);
-                                    return tileContact;
-                                }
-                            );
-
-                            if (gridContacts.Count <= 0) {
-                                continue;
+                    if (otherCollider.Shape is GridShape gridShape) {
+                        List<Contact> gridContacts = TestGrid(gridShape, otherCollider.Position, box.BoundingBox(),//new Rectangle(position, position + direction * maxDistance),
+                            (Polygon tilePolygon) => {
+                                SAT.Test(box, tilePolygon, out Contact? tileContact);
+                                return tileContact;
                             }
+                        );
 
-                            // find closest contact
-                            float closestContactSqrDist = float.PositiveInfinity;
-                            foreach (Contact c in gridContacts) {
-                                float dist = Math.DistanceSquared(position, c.Position);
-                                if (dist < closestContactSqrDist) {
-                                    contact = c;
-                                    closestContactSqrDist = dist;
-                                }
+                        if (gridContacts.Count <= 0) {
+                            continue;
+                        }
+
+                        // find closest contact
+                        float closestContactSqrDist = float.PositiveInfinity;
+                        foreach (Contact c in gridContacts) {
+                            float dist = Math.DistanceSquared(position, c.Position);
+                            if (dist < closestContactSqrDist) {
+                                contact = c;
+                                closestContactSqrDist = dist;
                             }
-
-                            break;
-
-                        default:
-                            if (!SAT.Test(otherCollider.Shape, otherCollider.Position, box, out contact) || contact == null) {
-                                continue;
-                            }
-
-                            break;
+                        }
+                    } else {
+                        if (!SAT.Test(otherCollider.Shape, otherCollider.Position, box, out contact) || contact == null) {
+                            continue;
+                        }
                     }
 
                     //float distToContact = Vector2.Dot(direction, contact.Value.Position - position);
@@ -1100,21 +1086,21 @@ namespace Raccoon {
 #if DEBUG
             CollisionDetectionNarrowPhaseExecutionTime = Time.EndStopwatch();
 #endif
+        }
 
-            int PreciseConvertToInt32(float n) {
-                return (int) (Math.Sign(n) * Math.Floor(Math.Abs(n) + Math.Epsilon));
-            }
+        private int PreciseConvertToInt32(float n) {
+            return (int) (Math.Sign(n) * Math.Floor(Math.Abs(n) + Math.Epsilon));
+        }
 
-            bool FilterValidVerticalContact(Contact c) {
-                return Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f;
-            }
+        private bool FilterValidVerticalContact(Contact c) {
+            return Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f && c.PenetrationDepth > 0.5f;
+        }
 
-            bool FilterValidHorizontalContact(Contact c) {
-                return (
-                    Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f 
-                    || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f
-                ) && c.PenetrationDepth > 0.5f;
-            }
+        private bool FilterValidHorizontalContact(Contact c) {
+            return (
+                Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f 
+                || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f
+            ) && c.PenetrationDepth > 0.5f;
         }
 
         private void AddCollider(Body collider, BitTag tags) {

@@ -45,24 +45,17 @@ namespace Raccoon {
 
             List<Polygon> tilePolygons = new List<Polygon>();
 
-            foreach ((int column, int row, GridShape.TileShape shape) in grid.Tiles(start, end)) {
+            foreach ((int Column, int Row, GridShape.TileShape Shape) tile in grid.Tiles(start, end)) {
                 tilePolygons.Clear();
 
-                switch (shape) {
-                    case GridShape.BoxTileShape boxShape:
-                        tilePolygons.Add(boxShape.CreateCollisionPolygon(grid, gridPos, column, row));
-                        break;
-
-                    case GridShape.PolygonTileShape polygonShape:
-                        tilePolygons.AddRange(polygonShape.CreateCollisionPolygons(grid, gridPos, column, row));
-                        break;
-
-                    case null:
-                        continue;
-
-                    default:
-                        Debug.Assert(false, $"Unable to find shape '{shape.GetType().Name}'.");
-                        continue;
+                if (tile.Shape != null) {
+                    if (tile.Shape is GridShape.BoxTileShape boxShape) {
+                        tilePolygons.Add(boxShape.CreateCollisionPolygon(grid, gridPos, tile.Column, tile.Row));
+                    } else if (tile.Shape is GridShape.PolygonTileShape polygonShape) {
+                        tilePolygons.AddRange(polygonShape.CreateCollisionPolygons(grid, gridPos, tile.Column, tile.Row));
+                    } else {
+                        throw new System.InvalidOperationException($"Unable to find shape '{tile.Shape.GetType().Name}'.");
+                    }
                 }
 
                 foreach (Polygon tilePolygon in tilePolygons) {

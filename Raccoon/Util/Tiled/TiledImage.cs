@@ -21,7 +21,7 @@ namespace Raccoon.Tiled {
 
             XmlElement e = imageElement["data"];
             if (e != null) {
-                TiledData data = new TiledData(e);
+                //TiledData data = new TiledData(e);
                 // TODO: create image data (if exists)
             }
         }

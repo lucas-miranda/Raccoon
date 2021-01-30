@@ -183,7 +183,7 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 0f) {
-            DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+            DrawString(font, text, position, rotation, scale, flip, color, origin, scroll, shader, null, layerDepth);
         }
 
         public void DrawString(Font font, Text.RenderData glyphs, int glyphStartIndex, int glyphCount, Rectangle destinationRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
@@ -223,7 +223,22 @@ namespace Raccoon.Graphics {
             if (!applyRotation && flip == ImageFlip.None) {
                 for (int i = 0; i < glyphCount; i++) {
                     Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
-                    DrawGlyph(glyph, glyph.Position * scale - origin);
+                    //DrawGlyph(glyph, glyph.Position * scale - origin);
+                    SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
+                    batchItem.Set(
+                        font.RenderMap.Texture,
+                        destinationRectangle.Position + glyph.Position * scale - origin,
+                        glyph.SourceArea,
+                        rotation,
+                        scale,
+                        flip,
+                        color,
+                        Vector2.Zero,
+                        scroll,
+                        shader,
+                        shaderParameters,
+                        layerDepth
+                    );
                 }
             } else {
                 for (int i = 0; i < glyphCount; i++) {
@@ -244,32 +259,27 @@ namespace Raccoon.Graphics {
                         pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
                     }
 
-                    DrawGlyph(glyph, pos);
+                    //DrawGlyph(glyph, pos);
+                    SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
+                    batchItem.Set(
+                        font.RenderMap.Texture,
+                        destinationRectangle.Position + pos,
+                        glyph.SourceArea,
+                        rotation,
+                        scale,
+                        flip,
+                        color,
+                        Vector2.Zero,
+                        scroll,
+                        shader,
+                        shaderParameters,
+                        layerDepth
+                    );
                 }
             }
 
             if (BatchMode == BatchMode.Immediate) {
                 Flush();
-            }
-
-            return;
-
-            void DrawGlyph(Text.RenderData.Glyph glyph, Vector2 pos) {
-                SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
-                batchItem.Set(
-                    font.RenderMap.Texture,
-                    destinationRectangle.Position + pos,
-                    glyph.SourceArea,
-                    rotation,
-                    scale,
-                    flip,
-                    color,
-                    Vector2.Zero,
-                    scroll,
-                    shader,
-                    shaderParameters,
-                    layerDepth
-                );
             }
         }
 
@@ -277,8 +287,8 @@ namespace Raccoon.Graphics {
             DrawString(
                 font,
                 glyphs,
-                glyphStartIndex: 0,
-                glyphCount: glyphs.GlyphCount,
+                0,
+                glyphs.GlyphCount,
                 destinationRectangle,
                 rotation,
                 scale,
@@ -349,8 +359,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: true,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -425,8 +435,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: false,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -499,8 +509,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: true,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -565,8 +575,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: false,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -617,8 +627,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: true,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -685,8 +695,8 @@ namespace Raccoon.Graphics {
                 vertexData,
                 indexData,
                 isHollow: false,
-                shader,
-                shaderParameters,
+                shader: shader,
+                shaderParameters: shaderParameters,
                 texture: null
             );
 
@@ -696,11 +706,11 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawHollowPolygon(IList<Vector2> points, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic: true, layerDepth);
+            DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic: true, layerDepth: layerDepth);
         }
 
         public void DrawHollowPolygon(Polygon polygon, Vector2 position, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            DrawLines(polygon.Vertices, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic: true, layerDepth);
+            DrawLines(polygon.Vertices, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic: true, layerDepth: layerDepth);
         }
 
         #endregion Polygon
@@ -1080,7 +1090,17 @@ namespace Raccoon.Graphics {
                   || (batchItem.Shader != shader && (batchItem.Shader != null || shader != Shader))
                   || (batchItem.ShaderParameters == null && parameters != null) || (batchItem.ShaderParameters != null && !batchItem.ShaderParameters.Equals(parameters))
                   || (batchItem is PrimitiveBatchItem pbi && pbi.IsHollow != isHollow)) {
-                    Draw();
+                    Draw(
+                        ref batchItem,
+                        ref batchItemType,
+                        ref startIndex,
+                        ref endIndex,
+                        ref texture,
+                        ref isHollow,
+                        ref shader,
+                        ref parameters,
+                        ref depthStencilState
+                    );
 
                     batchItemType = batchItem.GetType();
                     texture = batchItem.Texture;
@@ -1138,58 +1158,68 @@ namespace Raccoon.Graphics {
                 endIndex++;
             }
 
-            Draw();
+            Draw(
+                ref batchItem,
+                ref batchItemType,
+                ref startIndex,
+                ref endIndex,
+                ref texture,
+                ref isHollow,
+                ref shader,
+                ref parameters,
+                ref depthStencilState
+            );
+
             _vertexBufferEndOffset = 0;
             _indexBufferEndOffset = 0;
-            return;
+        }
 
-            void Draw() {
-                _vertexBuffer.SetData(
-                    offsetInBytes: 0,
-                    _vertexPreBuffer,
-                    startIndex: 0,
-                    _vertexPreBuffer.Length,
-                    VertexPositionColorTexture.VertexDeclaration.VertexStride,
-                    SetDataOptions.Discard
+        private void Draw(ref IBatchItem batchItem, ref System.Type batchItemType, ref int startIndex, ref int endIndex, ref Texture texture, ref bool isHollow, ref Shader shader, ref IShaderParameters parameters, ref DepthStencilState depthStencilState) {
+            _vertexBuffer.SetData(
+                offsetInBytes: 0,
+                data: _vertexPreBuffer,
+                startIndex: 0,
+                elementCount: _vertexPreBuffer.Length,
+                vertexStride: VertexPositionColorTexture.VertexDeclaration.VertexStride,
+                options: SetDataOptions.Discard
+            );
+
+            _indexBuffer.SetData(
+                offsetInBytes: 0,
+                data: _indexPreBuffer,
+                startIndex: 0,
+                elementCount: _indexPreBuffer.Length
+            );
+
+            if (batchItemType == typeof(PrimitiveBatchItem)) {
+                DrawPrimitiveBatchItem(
+                    startIndex, 
+                    endIndex - 1, 
+                    texture, 
+                    shader, 
+                    parameters, 
+                    depthStencilState,
+                    isHollow
                 );
-
-                _indexBuffer.SetData(
-                    offsetInBytes: 0,
-                    _indexPreBuffer,
-                    startIndex: 0,
-                    _indexPreBuffer.Length
+            } else if (batchItemType == typeof(SpriteBatchItem)) {
+                DrawSpriteBatchItem(
+                    startIndex, 
+                    endIndex - 1, 
+                    texture, 
+                    shader, 
+                    parameters, 
+                    depthStencilState
                 );
+            } else {
+                    throw new System.NotImplementedException($"Batch item '{batchItem.GetType().Name}'");
+            }
 
-                if (batchItemType == typeof(PrimitiveBatchItem)) {
-                    DrawPrimitiveBatchItem(
-                        startIndex, 
-                        endIndex - 1, 
-                        texture, 
-                        shader, 
-                        parameters, 
-                        depthStencilState,
-                        isHollow
-                    );
-                } else if (batchItemType == typeof(SpriteBatchItem)) {
-                        DrawSpriteBatchItem(
-                            startIndex, 
-                            endIndex - 1, 
-                            texture, 
-                            shader, 
-                            parameters, 
-                            depthStencilState
-                        );
-                } else {
-                        throw new System.NotImplementedException($"Batch item '{batchItem.GetType().Name}'");
-                }
-
-                if (batchItem is PrimitiveBatchItem pbi) {
-                    isHollow = pbi.IsHollow;
-                }
+            if (batchItem is PrimitiveBatchItem pbi) {
+                isHollow = pbi.IsHollow;
             }
         }
 
-        private void PrepareDraw(Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState) {
+        private void PrepareBatchDraw(Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState) {
             if (shader is IShaderTexture currentShaderText) {
                 if (texture != null) {
                     currentShaderText.TextureEnabled = true;
@@ -1221,7 +1251,7 @@ namespace Raccoon.Graphics {
 
         private void DrawSpriteBatchItem(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState) {
             int batchCount = endBatchIndex - startBatchIndex + 1;
-            PrepareDraw(texture, shader, parameters, depthStencilState);
+            PrepareBatchDraw(texture, shader, parameters, depthStencilState);
 
             foreach (object pass in shader) {
                 GraphicsDevice.Indices = _indexBuffer;
@@ -1242,20 +1272,19 @@ namespace Raccoon.Graphics {
         }
 
         private void DrawPrimitiveBatchItem(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState, bool isHollow) {
-            int batchCount = endBatchIndex - startBatchIndex + 1;
-            PrepareDraw(texture, shader, parameters, depthStencilState);
+            PrepareBatchDraw(texture, shader, parameters, depthStencilState);
 
             if (isHollow) {
                 foreach (object pass in shader) {
                     GraphicsDevice.Indices = _indexBuffer;
                     GraphicsDevice.SetVertexBuffer(_vertexBuffer);
                     GraphicsDevice.DrawIndexedPrimitives(
-                        PrimitiveType.LineList,
+                        primitiveType: PrimitiveType.LineList,
                         baseVertex: 0,
-                        _vertexBufferBeginOffset,
-                        _vertexBufferEndOffset - _vertexBufferBeginOffset,
-                        _indexBufferBeginOffset,
-                        _indexBufferEndOffset / 2
+                        minVertexIndex: _vertexBufferBeginOffset,
+                        numVertices: _vertexBufferEndOffset - _vertexBufferBeginOffset,
+                        startIndex: _indexBufferBeginOffset,
+                        primitiveCount: _indexBufferEndOffset / 2
                     );
                 }
             } else {
@@ -1263,12 +1292,12 @@ namespace Raccoon.Graphics {
                     GraphicsDevice.Indices = _indexBuffer;
                     GraphicsDevice.SetVertexBuffer(_vertexBuffer);
                     GraphicsDevice.DrawIndexedPrimitives(
-                        PrimitiveType.TriangleList,
+                        primitiveType: PrimitiveType.TriangleList,
                         baseVertex: 0,
-                        _vertexBufferBeginOffset,
-                        _vertexBufferEndOffset - _vertexBufferBeginOffset,
-                        _indexBufferBeginOffset,
-                        _indexBufferEndOffset / 3
+                        minVertexIndex: _vertexBufferBeginOffset,
+                        numVertices: _vertexBufferEndOffset - _vertexBufferBeginOffset,
+                        startIndex: _indexBufferBeginOffset,
+                        primitiveCount: _indexBufferEndOffset / 3
                     );
                 }
             }
@@ -1283,6 +1312,26 @@ namespace Raccoon.Graphics {
                 throw new System.InvalidOperationException("Begin() must be called before any Draw() operation.");
             }
         }
+
+        /*
+        private void DrawGlyph(ref SpriteBatchItem batchItem, Texture texture, Text.RenderData.Glyph glyph, Vector2 position, ) {
+            //SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
+            batchItem.Set(
+                font.RenderMap.Texture,
+                destinationRectangle.Position + position,
+                glyph.SourceArea,
+                rotation,
+                scale,
+                flip,
+                color,
+                Vector2.Zero,
+                scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
+        }
+        */
 
         #endregion Private Methods
 

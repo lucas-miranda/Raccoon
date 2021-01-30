@@ -1011,14 +1011,13 @@ namespace Raccoon.Components {
                 }
 
                 Rectangle bodyBounds = Body.Bounds;
-                Size halfBodySize = bodyBounds.Size / 2f;
 
                 Vector2[] ascRampChecks = new Vector2[] {
                     new Vector2(0f, -1f),
                     new Vector2(1f, -1f)
                 };
 
-                if (HandleRamp(dX, ascRampChecks, ascdCollisionList, directionSameAsNormal: false, out rampDisplacement)) {
+                if (HandleRamp(dX, ascRampChecks, ascdCollisionList, false, out rampDisplacement)) {
                     Body.MoveBufferY = 0;
                     IsOnAscendingRamp = true;
                     IsOnDescendingRamp = false;
@@ -1061,7 +1060,7 @@ namespace Raccoon.Components {
                     new Vector2(-(bodyBounds.Width + 1f), 0f)
                 };
 
-                if (HandleRamp(dX, descRampChecks, descdCollisionList, directionSameAsNormal: true, out rampDisplacement)) {
+                if (HandleRamp(dX, descRampChecks, descdCollisionList, true, out rampDisplacement)) {
                     Body.MoveBufferY = 0;
                     IsOnAscendingRamp = false;
                     IsOnDescendingRamp = true;
@@ -1178,77 +1177,53 @@ namespace Raccoon.Components {
         /// <param name="rampNormal">Ramp normal, if a ramp was found.</param>
         /// <returns>True, if a ramp was found, False otherwise.</returns>
         private bool LookForRamp(CollisionInfo<Body> collisionInfo, Vector2[] positionsToCheck, out Vector2 rampNormal) {
-            switch (collisionInfo.Subject.Shape) {
-                case BoxShape boxShape:
-                    // not implemented yet
-                    break;
-
-                case CircleShape circleShape:
-                    // not implemented yet
-                    break;
-
-                case PolygonShape polygonShape:
-                    // not implemented yet
-                    break;
-
-                case GridShape gridShape:
+            if (collisionInfo.Subject.Shape != null) {
+                if (collisionInfo.Subject.Shape is GridShape gridShape) {
                     foreach (Vector2 rampPositionCheck in positionsToCheck) {
                         (int gridColumn, int gridRow) = gridShape.ConvertPosition(collisionInfo.Subject.Position, rampPositionCheck);
                         ref GridShape.TileShape tileShape = ref gridShape.GetTileInfo(gridColumn, gridRow);
 
-                        switch (tileShape) {
-                            case GridShape.BoxTileShape boxTileShape:
-                                //boxTileShape.CreateCollisionPolygon(gridShape, collInfo.Subject.Position, gridColumn, gridRow);
-                                // BoxTileShape will always be a straight wall or ground
-                                // in this case it'll be 90 degree wall
-                                break;
+                        if (tileShape is GridShape.BoxTileShape) {
+                            //boxTileShape.CreateCollisionPolygon(gridShape, collInfo.Subject.Position, gridColumn, gridRow);
+                            // BoxTileShape will always be a straight wall or ground
+                            // in this case it'll be 90 degree wall
+                        } else if (tileShape is GridShape.PolygonTileShape polygonTileShape) {
+                            Polygon tilePolygon = polygonTileShape.CreateCollisionPolygon(gridShape, collisionInfo.Subject.Position, gridColumn, gridRow);
 
-                            case GridShape.PolygonTileShape polygonTileShape:
-                                Polygon tilePolygon = polygonTileShape.CreateCollisionPolygon(gridShape, collisionInfo.Subject.Position, gridColumn, gridRow);
+                            // find closest edge
+                            (Line? Edge, float Distance, Vector2 Normal, float SlopeFactor) closestEdge = (null, float.PositiveInfinity, Vector2.Zero, 0f);
 
-                                // find closest edge
-                                (Line? Edge, float Distance, Vector2 Normal, float SlopeFactor) closestEdge = (null, float.PositiveInfinity, Vector2.Zero, 0f);
+                            int edgeIndex = 0;
+                            foreach (Line edge in tilePolygon.Edges()) {
+                                Vector2 edgeNormal = tilePolygon.Normals[edgeIndex];
+                                float slopeFactor = edgeNormal.Projection(Vector2.Up);
 
-                                int edgeIndex = 0;
-                                foreach (Line edge in tilePolygon.Edges()) {
-                                    Vector2 edgeNormal = tilePolygon.Normals[edgeIndex];
-                                    float slopeFactor = edgeNormal.Projection(Vector2.Up);
-
-                                    // ignore some edges by slope factor
-                                    if (!Helper.InRange(slopeFactor, AllowedSlopeFactorRange.Min, AllowedSlopeFactorRange.Max)) {
-                                        edgeIndex += 1;
-                                        continue;
-                                    }
-
-                                    float distanceToEdge = edge.DistanceSquared(rampPositionCheck);
-
-                                    if (distanceToEdge < closestEdge.Distance
-                                      || (distanceToEdge == closestEdge.Distance && slopeFactor > closestEdge.SlopeFactor)) { // always prefer an edge who owns a normal closer to Vector2.Up
-                                        closestEdge = (edge, distanceToEdge, edgeNormal, slopeFactor);
-                                    }
-
+                                // ignore some edges by slope factor
+                                if (!Helper.InRange(slopeFactor, AllowedSlopeFactorRange.Min, AllowedSlopeFactorRange.Max)) {
                                     edgeIndex += 1;
+                                    continue;
                                 }
 
-                                // tile doesn't contains a valid ramp
-                                if (closestEdge.Edge == null) {
-                                    break;
+                                float distanceToEdge = edge.DistanceSquared(rampPositionCheck);
+
+                                if (distanceToEdge < closestEdge.Distance
+                                  || (distanceToEdge == closestEdge.Distance && slopeFactor > closestEdge.SlopeFactor)) { // always prefer an edge who owns a normal closer to Vector2.Up
+                                    closestEdge = (edge, distanceToEdge, edgeNormal, slopeFactor);
                                 }
 
-                                rampNormal = closestEdge.Normal;
-                                return true;
+                                edgeIndex += 1;
+                            }
 
-                            case null:
-                            default:
+                            // tile doesn't contains a valid ramp
+                            if (closestEdge.Edge == null) {
                                 break;
+                            }
+
+                            rampNormal = closestEdge.Normal;
+                            return true;
                         }
                     }
-
-                    break;
-
-                case null:
-                default:
-                    break;
+                }
             }
 
             rampNormal = Vector2.Zero;

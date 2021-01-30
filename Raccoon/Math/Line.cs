@@ -109,10 +109,6 @@ namespace Raccoon {
 
             intersectionPoint = default(Vector2);
             return false;
-
-            float SignedTriangleArea(Vector2 a, Vector2 b, Vector2 c) {
-                return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
-            }
         }
 
         public bool Intersects(Line line) {
@@ -205,5 +201,13 @@ namespace Raccoon {
         }
 
         #endregion Public Methods
+
+        #region Private Methods
+
+        private float SignedTriangleArea(Vector2 a, Vector2 b, Vector2 c) {
+            return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
+        }
+
+        #endregion Private Methods
     }
 }

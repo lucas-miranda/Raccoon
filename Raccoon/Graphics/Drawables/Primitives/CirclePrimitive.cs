@@ -162,20 +162,20 @@ namespace Raccoon.Graphics.Primitives {
             Renderer.DrawVertices(
                 _vertices,
                 minVertexIndex: 0,
-                _vertices.Length,
-                _indices,
+                verticesLength: _vertices.Length,
+                indices: _indices,
                 minIndex: 0,
                 primitivesCount: Math.EqualsEstimate(_arcFill, 1f) ? Segments : (int) Math.Round(_arcFill * Segments),
                 isHollow: !Filled,
-                position,
-                rotation,
-                scale,
-                new Color(color, (color.A / 255f) * Opacity),
-                origin,
-                scroll,
-                shader,
-                shaderParameters,
-                layerDepth
+                position: position,
+                rotation: rotation,
+                scale: scale,
+                color: new Color(color, (color.A / 255f) * Opacity),
+                origin: origin,
+                scroll: scroll,
+                shader: shader,
+                shaderParameters: shaderParameters,
+                layerDepth: layerDepth
             );
         }
 

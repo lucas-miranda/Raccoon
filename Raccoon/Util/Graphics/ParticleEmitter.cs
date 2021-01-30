@@ -5,7 +5,7 @@ namespace Raccoon.Util.Graphics {
     public class ParticleEmitter : System.IDisposable {
         #region Private Members
 
-        private Dictionary<string, (Particle, EmissionOptions)> _particleModels = new Dictionary<string, (Particle, EmissionOptions)>();
+        private Dictionary<string, (Particle Model, EmissionOptions EmissionOptions)> _particleModels = new Dictionary<string, (Particle, EmissionOptions)>();
 
         private List<Particle> _aliveParticles = new List<Particle>();
 
@@ -42,24 +42,22 @@ namespace Raccoon.Util.Graphics {
         }
 
         public void Emit(string label, Vector2 position, float rotation = 0f, ImageFlip flip = ImageFlip.None, Vector2? movementDirection = null) {
-            InternalEmit(
-                label, 
-                position, 
-                rotation, 
-                flip, 
-                movementDirection, 
-                out List<Particle> particles
+            ParticlesEmit(
+                label,
+                position,
+                rotation,
+                flip,
+                movementDirection
             );
         }
 
         public void Emit(string label, Entity entity, float rotation = 0f, ImageFlip flip = ImageFlip.None, Vector2? movementDirection = null) {
-            InternalEmit(
-                label, 
-                Vector2.Zero, 
-                rotation, 
-                flip, 
-                movementDirection, 
-                out List<Particle> particles
+            List<Particle> particles = ParticlesEmit(
+                label,
+                Vector2.Zero,
+                rotation,
+                flip,
+                movementDirection
             );
 
             foreach (Particle particle in particles) {
@@ -95,29 +93,29 @@ namespace Raccoon.Util.Graphics {
 
         #region Private Methods
 
-        private void InternalEmit(string label, Vector2 position, float rotation, ImageFlip flip, Vector2? movementDirection, out List<Particle> particles) {
+        private List<Particle> ParticlesEmit(string label , Vector2 position, float rotation, ImageFlip flip, Vector2? movementDirection) {
             if (Scene == null) {
                 throw new System.InvalidOperationException($"Can't emit, ParticleEmitter.Scene is null.\nMaybe you forgot to set ParticleEmitter.Scene to current Scene?");
             }
 
-            if (!_particleModels.TryGetValue(label, out (Particle model, EmissionOptions emissionOptions) particle)) {
+            if (!_particleModels.TryGetValue(label, out var particle)) {
                 throw new System.ArgumentException($"Could not find particle model with label '{label}'.");
             }
 
-            int count = particle.emissionOptions.Count;
-            if (particle.emissionOptions.MinCount != particle.emissionOptions.MaxCount) {
-                count = Random.Integer(particle.emissionOptions.MinCount, particle.emissionOptions.MaxCount);
+            int count = particle.EmissionOptions.Count;
+            if (particle.EmissionOptions.MinCount != particle.EmissionOptions.MaxCount) {
+                count = Random.Integer(particle.EmissionOptions.MinCount, particle.EmissionOptions.MaxCount);
             }
 
             count = Math.Max(1, count);
-            particles = new List<Particle>(count);
+            List<Particle> particles = new List<Particle>(count);
 
             uint timeToStart = 0;
             for (int i = 0; i < count; i++) {
                 Particle p = new Particle() {
-                    Layer = particle.model.Layer,
-                    Animation = new Animation(particle.model.Animation) {
-                        Position = particle.model.Animation.Position,
+                    Layer = particle.Model.Layer,
+                    Animation = new Animation(particle.Model.Animation) {
+                        Position = particle.Model.Animation.Position,
                         Rotation = rotation,
                         Flipped = flip
                     }
@@ -127,35 +125,35 @@ namespace Raccoon.Util.Graphics {
                     _aliveParticles.Remove(p);
                 };
 
-                Vector2 displacement = particle.emissionOptions.DisplacementMin;
+                Vector2 displacement = particle.EmissionOptions.DisplacementMin;
 
-                if (particle.emissionOptions.DisplacementMin != particle.emissionOptions.DisplacementMax) {
-                    displacement = Random.Vector2(particle.emissionOptions.DisplacementMin, particle.emissionOptions.DisplacementMax);
+                if (particle.EmissionOptions.DisplacementMin != particle.EmissionOptions.DisplacementMax) {
+                    displacement = Random.Vector2(particle.EmissionOptions.DisplacementMin, particle.EmissionOptions.DisplacementMax);
                 }
 
                 p.Transform.Position = position + displacement;
 
-                uint duration = particle.emissionOptions.DurationMin;
+                uint duration = particle.EmissionOptions.DurationMin;
 
-                if (particle.emissionOptions.DurationMin != particle.emissionOptions.DurationMax) {
-                    duration = (uint) Random.Integer((int) particle.emissionOptions.DurationMin, (int) particle.emissionOptions.DurationMax);
+                if (particle.EmissionOptions.DurationMin != particle.EmissionOptions.DurationMax) {
+                    duration = (uint) Random.Integer((int) particle.EmissionOptions.DurationMin, (int) particle.EmissionOptions.DurationMax);
                 }
 
-                p.Prepare(duration, timeToStart, particle.emissionOptions.AnimationKey);
-                timeToStart += particle.emissionOptions.DelayBetweenEmissions;
+                p.Prepare(duration, timeToStart, particle.EmissionOptions.AnimationKey);
+                timeToStart += particle.EmissionOptions.DelayBetweenEmissions;
 
                 // movement
-                if (movementDirection != null && movementDirection.HasValue) {
+                if (movementDirection.HasValue) {
                     p.PrepareSimpleMovement(
                         movementDirection.Value,
-                        particle.emissionOptions.MaxVelocity,
-                        particle.emissionOptions.Acceleration
+                        particle.EmissionOptions.MaxVelocity,
+                        particle.EmissionOptions.Acceleration
                     );
-                } else if (particle.emissionOptions.MovementDirection != Vector2.Zero) {
+                } else if (particle.EmissionOptions.MovementDirection != Vector2.Zero) {
                     p.PrepareSimpleMovement(
-                        particle.emissionOptions.MovementDirection,
-                        particle.emissionOptions.MaxVelocity,
-                        particle.emissionOptions.Acceleration
+                        particle.EmissionOptions.MovementDirection,
+                        particle.EmissionOptions.MaxVelocity,
+                        particle.EmissionOptions.Acceleration
                     );
                 }
 
@@ -164,6 +162,7 @@ namespace Raccoon.Util.Graphics {
             }
 
             _aliveParticles.AddRange(particles);
+            return particles;
         }
 
         #endregion Private Methods

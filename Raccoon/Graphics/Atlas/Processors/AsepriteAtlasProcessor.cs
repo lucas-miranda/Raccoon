@@ -18,7 +18,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
             return app.Equals("http://www.aseprite.org/");
         }
 
-        public bool ProcessJson(JObject json, in Texture texture, ref Dictionary<string, AtlasSubTexture> subTextures) {
+        public bool ProcessJson(JObject json, Texture texture, ref Dictionary<string, AtlasSubTexture> subTextures) {
             // all frames organized as sprite/tag/frame
             Dictionary<string, Dictionary<string, List<JObject>>> animationsData = new Dictionary<string, Dictionary<string, List<JObject>>>();
 

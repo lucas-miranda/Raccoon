@@ -215,7 +215,13 @@ namespace Raccoon {
                 Raccoon.Graphics.Graphic g = entity.Graphic;
 
                 if (g is Raccoon.Graphics.Animation animation) {
-                    return new Rectangle(-(g.Origin + (animation.CurrentTrack?.CurrentFrameDestination.Position ?? Vector2.Zero)) + g.Position, g.Size * g.ScaleXY);
+                    Vector2 origin = g.Origin;
+
+                    if (animation.CurrentTrack != null) {
+                        origin += animation.CurrentTrack.CurrentFrameDestination.Position;
+                    }
+
+                    return new Rectangle(-origin + g.Position, g.Size * g.ScaleXY);
                 }
 
                 return new Rectangle(-g.Origin + g.Position, g.Size * g.ScaleXY);
@@ -257,7 +263,7 @@ namespace Raccoon {
         #region Private Members
 
         private void Refresh() {
-            Projection = Game.Instance.MainRenderer.RecalculateProjection();
+            Projection = Game.Instance.MainRenderer.RecalculateProjectionWithRef();
             Game.Instance.InterfaceRenderer.RecalculateProjection();
 #if DEBUG
             Game.Instance.DebugRenderer.RecalculateProjection();

@@ -30,7 +30,7 @@ namespace Raccoon {
         private Locker<Alarm> _alarms = new Locker<Alarm>();
 
         // compose message
-        private static StringBuilder _composeMessage = new StringBuilder();
+        //private static StringBuilder _composeMessage = new StringBuilder();
 #endif
 
         #endregion Private Members
@@ -169,8 +169,8 @@ namespace Raccoon {
         public static void Dump(params (string, object)[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
-            foreach ((string name, object value) in vars) {
-                str.AppendFormat("{0}: {1}, ", name, value.ToString());
+            foreach ((string Name, object Value) data in vars) {
+                str.AppendFormat("{0}: {1}, ", data.Name, data.Value.ToString());
             }
 
             Write(str.ToString());
@@ -192,8 +192,8 @@ namespace Raccoon {
         public static void DumpLine(params (string, object)[] vars) {
             StringBuilder str = new StringBuilder(vars.Length);
 
-            foreach ((string name, object value) in vars) {
-                str.AppendFormat("{0}: {1}", name, value.ToString());
+            foreach ((string Name, object Value) data in vars) {
+                str.AppendFormat("{0}: {1}", data.Name, data.Value.ToString());
                 str.AppendLine();
             }
 
@@ -743,7 +743,7 @@ namespace Raccoon {
             Game.Instance.DebugPrimitiveBatch.DrawLines(
                 pointList,
                 position: Vector2.Zero,
-                color,
+                color: color,
                 rotation: 0,
                 scale: Vector2.One,
                 origin: Vector2.Zero,
@@ -768,7 +768,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, float step = .1f) {
-            DrawBezierCurve(Camera.Current, points, position: Vector2.Zero, Color.White, step, origin: null);
+            DrawBezierCurve(Camera.Current, points, Vector2.Zero, Color.White, step, origin: null);
         }
 
         #endregion Bezier Curve

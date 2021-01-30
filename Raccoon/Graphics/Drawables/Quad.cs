@@ -262,20 +262,20 @@ namespace Raccoon.Graphics {
             Renderer.DrawVertices(
                 _vertices,
                 minVertexIndex: 0,
-                _vertices.Length,
-                _indices,
+                verticesLength: _vertices.Length,
+                indices: _indices,
                 minIndex: 0,
                 primitivesCount: Filled ? 2 : 4, // Filled ? triangles : lines
                 isHollow: !Filled,
-                position,
-                rotation,
-                scale,
-                color * Opacity,
-                origin,
-                scroll,
-                shader,
-                shaderParameters,
-                layerDepth
+                position: position,
+                rotation: rotation,
+                scale: scale,
+                color: new Color(color, (color.A / 255f) * Opacity),
+                origin: origin,
+                scroll: scroll,
+                shader: shader,
+                shaderParameters: shaderParameters,
+                layerDepth: layerDepth
             );
         }
 

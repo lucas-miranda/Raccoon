@@ -221,7 +221,7 @@ namespace Raccoon.Graphics {
         }
 
         public void Set(Texture texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+            Set(texture, destinationRectangle, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, null, layerDepth);
         }
 
         public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
@@ -234,7 +234,7 @@ namespace Raccoon.Graphics {
         }
 
         public void Set(Texture texture, Vector2 position, Rectangle? sourceRectangle, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
-            Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, shaderParameters: null, layerDepth);
+            Set(texture, position, sourceRectangle, rotation, scale, flip, color, origin, scroll, shader, null, layerDepth);
         }
 
         public void Clear() {

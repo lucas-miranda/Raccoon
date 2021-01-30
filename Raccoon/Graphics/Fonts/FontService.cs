@@ -207,22 +207,22 @@ namespace Raccoon {
             renderMap.Texture = texture;
 
             return renderMap;
+        }
 
-            void CopyBitmapToDestinationArea(Graphics.Color[] data, int dataRowSize, Vector2 destinationTopleft, FTBitmap ftBitmap) {
-                byte[] buffer = ftBitmap.BufferData;
-                int dataOffset,
-                    bufferOffset,
-                    pitch = Util.Math.Abs(ftBitmap.Pitch);
+        private static void CopyBitmapToDestinationArea(Graphics.Color[] data, int dataRowSize, Vector2 destinationTopleft, FTBitmap ftBitmap) {
+            byte[] buffer = ftBitmap.BufferData;
+            int dataOffset,
+                bufferOffset,
+                pitch = Util.Math.Abs(ftBitmap.Pitch);
 
-                for (int row = 0; row < ftBitmap.Rows; row++) {
-                    dataOffset = (int) ((destinationTopleft.Y + row) * dataRowSize + destinationTopleft.X);
-                    bufferOffset = row * pitch;
+            for (int row = 0; row < ftBitmap.Rows; row++) {
+                dataOffset = (int) ((destinationTopleft.Y + row) * dataRowSize + destinationTopleft.X);
+                bufferOffset = row * pitch;
 
-                    for (int column = 0; column < ftBitmap.Width; column++, dataOffset++) {
-                        byte px = buffer[bufferOffset + column];
+                for (int column = 0; column < ftBitmap.Width; column++, dataOffset++) {
+                    byte px = buffer[bufferOffset + column];
 
-                        data[dataOffset] = new Graphics.Color(px, px, px, px);
-                    }
+                    data[dataOffset] = new Graphics.Color(px, px, px, px);
                 }
             }
         }

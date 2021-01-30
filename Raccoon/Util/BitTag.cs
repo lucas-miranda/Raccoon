@@ -96,7 +96,12 @@ namespace Raccoon.Util {
             return HasAny((System.IConvertible) tag);
         }
 
-        public T ToEnum<T>() where T : System.Enum {
+        public T ToEnum<T>() {
+            System.Type t = typeof(T);
+            if (!t.IsEnum) {
+                throw new System.ArgumentException($"Expecting a valid {nameof(System.Enum)}, but found '{t.Name}'.");
+            }
+
             return (T) System.Enum.ToObject(typeof(T), LiteralValue);
         }
 

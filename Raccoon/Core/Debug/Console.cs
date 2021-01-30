@@ -139,7 +139,7 @@ namespace Raccoon {
             */
         }
 
-        public void WriteTokens(in MessageLoggerTokenTree tokens) {
+        public void WriteTokens(MessageLoggerTokenTree tokens) {
             if (tokens == null) {
                 throw new System.ArgumentNullException(nameof(tokens));
             }
@@ -340,8 +340,6 @@ namespace Raccoon {
             // messages
             float messagesY = _pageScroll.Y % Font.LineSpacing;
 
-            Color currentColor = Color.White;
-
             int lineStartIndex = (int) Math.Max(0, Math.Floor(Math.Abs(_pageScroll.Y) / Font.LineSpacing)),
                 lineEndIndex = lineStartIndex + (int) Math.Ceiling(Viewport.Height / Font.LineSpacing);
 
@@ -398,8 +396,8 @@ namespace Raccoon {
                         new Vector2(x, y), 
                         rotation: 0f,
                         scale: Vector2.One,
-                        ImageFlip.None,
-                        Color.White,
+                        flip: ImageFlip.None,
+                        color: Color.White,
                         origin: Vector2.Zero,
                         scroll: Vector2.One
                     );
@@ -509,8 +507,8 @@ namespace Raccoon {
                     topLeft + localPos, 
                     rotation: 0f,
                     scale: Vector2.One,
-                    ImageFlip.None,
-                    textColor,
+                    flip: ImageFlip.None,
+                    color: textColor,
                     origin: Vector2.Zero,
                     scroll: Vector2.One
                 );
@@ -682,21 +680,15 @@ namespace Raccoon {
                     ConsoleLoggerToken token = _tokens[i];
                     LoggerToken messageToken = tokens[i];
 
-                    switch (token.LoggerToken) {
-                        case TimestampLoggerToken timestampToken:
-                            if (!(messageToken is TimestampLoggerToken)) {
-                                return false;
-                            }
-
-                            break;
-
-                        default:
-                            if ((token.LoggerToken == null && messageToken != null) 
-                             || (token.LoggerToken != null && !token.LoggerToken.Equals(messageToken))) {
-                                return false;
-                            }
-
-                            break;
+                    if (token.LoggerToken is TimestampLoggerToken) {
+                        if (!(messageToken is TimestampLoggerToken)) {
+                            return false;
+                        }
+                    } else {
+                        if ((token.LoggerToken == null && messageToken != null) 
+                         || (token.LoggerToken != null && !token.LoggerToken.Equals(messageToken))) {
+                            return false;
+                        }
                     }
                 }
 
@@ -724,14 +716,10 @@ namespace Raccoon {
             private int CountLines(LoggerToken token) {
                 int newLines;
 
-                switch (token) {
-                    case TextLoggerToken textToken:
-                        newLines = textToken.Text.Count("\n");
-                        break;
-
-                    default:
-                        newLines = 0;
-                        break;
+                if (token is TextLoggerToken textToken) {
+                    newLines = textToken.Text.Count("\n");
+                } else {
+                    newLines = 0;
                 }
 
                 return newLines;
@@ -740,14 +728,10 @@ namespace Raccoon {
             private int CountLines(ConsoleLoggerToken token) {
                 int newLines;
 
-                switch (token.LoggerToken) {
-                    case TextLoggerToken textToken:
-                        newLines = textToken.Text.Count("\n");
-                        break;
-
-                    default:
-                        newLines = 0;
-                        break;
+                if (token.LoggerToken is TextLoggerToken textToken) {
+                    newLines = textToken.Text.Count("\n");
+                } else {
+                    newLines = 0;
                 }
 
                 return newLines;
@@ -773,33 +757,19 @@ namespace Raccoon {
 
                 string representation = string.Empty;
 
-                switch (token) {
-                    case TimestampLoggerToken timestampToken:
-                        representation = timestampToken.Timestamp;
-                        break;
-
-                    case CategoryLoggerToken categoryToken:
-                        representation = categoryToken.CategoryName;
-                        break;
-
-                    case SubjectsLoggerToken subjectsToken:
-                        if (subjectsToken.Subjects.Count == 0) {
-                            break;
-                        }
-
+                if (token is TimestampLoggerToken timestampToken) {
+                    representation = timestampToken.Timestamp;
+                } else if (token is CategoryLoggerToken categoryToken) {
+                    representation = categoryToken.CategoryName;
+                } else if (token is SubjectsLoggerToken subjectsToken) {
+                    if (subjectsToken.Subjects.Count > 0) {
                         representation = subjectsToken.Subjects[0];
                         for (int i = 1; i < subjectsToken.Subjects.Count; i++) {
                             representation += "->" + subjectsToken.Subjects[i];
                         }
-
-                        break;
-
-                    case TextLoggerToken textToken:
-                        representation = textToken.Text;
-                        break;
-
-                    default:
-                        break;
+                    }
+                } else if (token is TextLoggerToken textToken) {
+                    representation = textToken.Text;
                 }
 
                 return new ConsoleLoggerToken() {

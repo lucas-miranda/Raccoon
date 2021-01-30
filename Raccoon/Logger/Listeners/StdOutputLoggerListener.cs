@@ -88,7 +88,7 @@ namespace Raccoon {
 
         #region Public Methods
 
-        public void WriteTokens(in MessageLoggerTokenTree tokens) {
+        public void WriteTokens(MessageLoggerTokenTree tokens) {
             if (tokens == null) {
                 throw new System.ArgumentNullException(nameof(tokens));
             }
@@ -97,7 +97,7 @@ namespace Raccoon {
                 HeaderLoggerToken header = tokens.HeaderToken;
 
                 if (header.TimestampToken != null) {
-                    CalculateLeftPadding(sectionId: 0, header.TimestampToken.Timestamp);
+                    CalculateLeftPadding(0, header.TimestampToken.Timestamp);
                     WriteToken<TimestampLoggerToken>(header.TimestampToken.Timestamp);
                     WriteMessage("  ");
                 } else {
@@ -106,7 +106,7 @@ namespace Raccoon {
 
                 if (header.CategoryToken != null) {
                     string formatedCategoryName = string.Format($"{{0,{_categorySectionLength}}}", header.CategoryToken.CategoryName);
-                    CalculateLeftPadding(sectionId: 1, formatedCategoryName);
+                    CalculateLeftPadding(1, formatedCategoryName);
 
                     if (_categories.TryGetValue(header.CategoryToken.CategoryName, out TextFormatter categoryFormatter)) {
                         WriteFormattedMessage(formatedCategoryName, categoryFormatter);

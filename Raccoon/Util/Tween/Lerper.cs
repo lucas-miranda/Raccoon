@@ -20,8 +20,6 @@ namespace Raccoon.Util.Tween {
             Easing = easing;
             IsAdditional = additional;
 
-            System.Type ownerType = Owner.GetType();
-
             switch (memberType) {
                 case MemberTypes.Property:
                     PropertyInfo propertyInfo = Owner.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

@@ -855,10 +855,10 @@ Scene:
                 Width, 
                 Height, 
                 mipMap: false, 
-                SurfaceFormat.Color, 
-                DepthFormat.Depth24Stencil8, 
+                surfaceFormat: SurfaceFormat.Color, 
+                depthFormat: DepthFormat.Depth24Stencil8, 
                 multiSampleCount: 0, 
-                RenderTargetUsage.PreserveContents
+                usage: RenderTargetUsage.PreserveContents
             ) {
                 //InternalRenderer = MainRenderer
                 InternalRenderer = null
@@ -872,10 +872,10 @@ Scene:
                 WindowWidth, 
                 WindowHeight, 
                 mipMap: false, 
-                SurfaceFormat.Color, 
-                DepthFormat.None, 
+                surfaceFormat: SurfaceFormat.Color, 
+                depthFormat: DepthFormat.None, 
                 multiSampleCount: 0, 
-                RenderTargetUsage.PreserveContents
+                usage: RenderTargetUsage.PreserveContents
             ) {
                 InternalRenderer = DebugRenderer
             };
@@ -962,7 +962,7 @@ Scene:
             ScreenRenderer.Draw(
                 MainCanvas,
                 MainCanvas.Position + _gameCanvasPosition,
-                sourceRectangle: null,
+                null,
                 MainCanvas.Rotation,
                 MainCanvas.Scale * new Vector2(PixelScale * KeepProportionsScale),
                 MainCanvas.Flipped,

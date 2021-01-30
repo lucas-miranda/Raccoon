@@ -11,11 +11,9 @@ namespace Raccoon {
 
         private List<ILoggerListener> _listeners = new List<ILoggerListener>();
         private List<string> _subjects = new List<string>();
-        private string _indent = string.Empty,
-                       _lastContext = string.Empty;
+        private string _indent = string.Empty;
 
         private HashSet<string> _ignoreTypes = new HashSet<string>();
-        private List<string> _ignoreAny = new List<string>();
 
         #endregion Private Members
 
