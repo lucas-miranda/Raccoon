@@ -201,10 +201,20 @@ namespace Raccoon.Components {
             }
 
             set {
+                int previousMaxJumps = _maxJumps;
                 _maxJumps = Math.Max(0, value);
 
-                if (OnGround && Jumps != _maxJumps) {
-                    Jumps = _maxJumps;
+                // update current jumps amount
+                if (Jumps != _maxJumps) {
+                    if (OnGround) {
+                        Jumps = _maxJumps;
+                    } else {
+                        if (_maxJumps > previousMaxJumps) {
+                            Jumps += _maxJumps - previousMaxJumps;
+                        } else if (_maxJumps < previousMaxJumps) {
+                            Jumps = Math.Max(0, Jumps - (previousMaxJumps - _maxJumps));
+                        }
+                    }
                 }
             }
         }
