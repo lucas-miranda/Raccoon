@@ -137,7 +137,7 @@ namespace Raccoon {
 
                         _waitingDelay = false;
                     } else if (enumerator.Current is uint miliU) {
-                        if (_waitingDelay) {
+                        if (!_waitingDelay) {
                             Wait(miliU);
                             return true;
                         }
