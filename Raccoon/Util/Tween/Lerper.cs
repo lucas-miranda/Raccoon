@@ -169,7 +169,8 @@ namespace Raccoon.Util.Tween {
         public new float Value { get { return (float) base.Value; } set { base.Value = value; } }
 
         public override void Interpolate(float t) {
-            Value = From + (To - From) * Easing(t);
+            t = Easing(t);
+            Value = (1.0f - t) * From + To * t;
         }
 
         protected override object Add(object a, object b) {
@@ -197,7 +198,8 @@ namespace Raccoon.Util.Tween {
         public new Vector2 Value { get { return (Vector2) base.Value; } set { base.Value = value; } }
 
         public override void Interpolate(float t) {
-            Value = From + (To - From) * Easing(t);
+            t = Easing(t);
+            Value = (1.0f - t) * From + To * t;
         }
 
         protected override object Add(object a, object b) {
@@ -225,7 +227,8 @@ namespace Raccoon.Util.Tween {
         public new Size Value { get { return (Size) base.Value; } set { base.Value = value; } }
 
         public override void Interpolate(float t) {
-            Value = From + (To - From) * Easing(t);
+            t = Easing(t);
+            Value = (1.0f - t) * From + To * t;
         }
 
         protected override object Add(object a, object b) {
@@ -254,7 +257,10 @@ namespace Raccoon.Util.Tween {
 
         public override void Interpolate(float t) {
             t = Easing(t);
-            Value = new Rectangle(From.Position + (To.Position - From.Position) * t, From.Size + (To.Size - From.Size) * t);
+            Value = new Rectangle(
+                (1.0f - t) * From.Position + To.Position * t,
+                (1.0f - t) * From.Size + To.Size * t
+            );
         }
 
         protected override object Add(object a, object b) {
@@ -289,10 +295,12 @@ namespace Raccoon.Util.Tween {
 
         public override void Interpolate(float t) {
             t = Easing(t);
+            float invT = 1.0f - t;
+
             Value = new Color(
-                (byte) (From.R + (To.R - From.R) * t),
-                (byte) (From.G + (To.G - From.G) * t),
-                (byte) (From.B + (To.B - From.B) * t)
+                invT * (From.R / 255f) + (To.R / 255f) * t,
+                invT * (From.G / 255f) + (To.G / 255f) * t,
+                invT * (From.B / 255f) + (To.B / 255f) * t
             );
         }
 
