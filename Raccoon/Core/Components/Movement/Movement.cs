@@ -20,8 +20,10 @@ namespace Raccoon.Components {
         public delegate void PhysicsUpdateAction(float dt);
         public PhysicsUpdateAction OnPhysicsUpdate = delegate { };
 
+        // impulse
         public delegate void ImpulseMovementAction(Vector2 impulse);
         public ImpulseMovementAction OnReceiveImpulse = delegate { };
+        public PhysicsAction OnImpulseEnds;
 
         #endregion Public Members
 
@@ -182,7 +184,6 @@ namespace Raccoon.Components {
         }
 
         public virtual void PhysicsUpdate(float dt) {
-            //ResetTouch();
             OnPhysicsUpdate(dt);
         }
 
@@ -192,8 +193,18 @@ namespace Raccoon.Components {
         public virtual void PhysicsStepMove(int movementX, int movementY) {
         }
 
-        public virtual void PhysicsLateUpdate() {
+        public virtual void PhysicsLateUpdate(float dt) {
             OnPhysicsLateUpdate();
+
+            if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
+                ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
+                if (Math.EqualsEstimate(ImpulseTime, 0f)) {
+                    ImpulsePerSec = Vector2.Zero;
+                    JustReceiveImpulse = IsReceivingImpulse = false;
+                    ImpulseEnds();
+                    OnImpulseEnds?.Invoke();
+                }
+            }
 
             Vector2 posDiff = Body.Position - Body.LastPosition;
             if (posDiff.LengthSquared() > 0f) {
@@ -329,6 +340,9 @@ namespace Raccoon.Components {
 
 
         protected abstract void OnMoving(Vector2 distance);
+
+        protected virtual void ImpulseEnds() {
+        }
 
         #endregion Protected Methods
 

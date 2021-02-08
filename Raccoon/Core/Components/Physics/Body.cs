@@ -292,7 +292,7 @@ namespace Raccoon.Components {
             Movement?.PhysicsStepMove(movementX, movementY);
         }
 
-        public void PhysicsLateUpdate() {
+        public void PhysicsLateUpdate(float dt) {
             if (!Active || Entity == null || !Entity.Active) {
                 return;
             }
@@ -306,7 +306,7 @@ namespace Raccoon.Components {
             }
             _notCollidingAnymoreList.Clear();
 
-            Movement?.PhysicsLateUpdate();
+            Movement?.PhysicsLateUpdate(dt);
             IsResting = (Position - LastPosition).LengthSquared() == 0f;
         }
 

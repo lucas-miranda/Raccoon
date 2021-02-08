@@ -448,8 +448,8 @@ namespace Raccoon.Components {
             base.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
         }
 
-        public override void PhysicsLateUpdate() {
-            base.PhysicsLateUpdate();
+        public override void PhysicsLateUpdate(float dt) {
+            base.PhysicsLateUpdate(dt);
 
             bool isAboveSomething = false,
                  isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
@@ -813,18 +813,6 @@ namespace Raccoon.Components {
 
             displacement.Y += (velocity.Y + Body.Force.Y) * dt;
 
-            if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
-                ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
-                if (Math.EqualsEstimate(ImpulseTime, 0f)) {
-                    ImpulsePerSec = Vector2.Zero;
-
-                    JustReceiveImpulse = 
-                        IsReceivingImpulse = false;
-
-                    IsStoppingFromImpulse = true;
-                }
-            }
-
             Velocity = velocity;
             return displacement;
         }
@@ -960,6 +948,11 @@ namespace Raccoon.Components {
             }
 
             OnMove(new Vector2(distance.X, 0f));
+        }
+
+        protected override void ImpulseEnds() {
+            base.ImpulseEnds();
+            IsStoppingFromImpulse = true;
         }
 
         #endregion Protected Methods

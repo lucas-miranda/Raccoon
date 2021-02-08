@@ -1080,7 +1080,7 @@ namespace Raccoon {
 
             for (int j = 0; j < _narrowPhaseBodies.Count; j++) {
                 Body body = _narrowPhaseBodies[j];
-                body.PhysicsLateUpdate();
+                body.PhysicsLateUpdate(dt);
             }
 
 #if DEBUG
