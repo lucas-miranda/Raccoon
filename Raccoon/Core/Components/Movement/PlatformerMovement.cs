@@ -106,6 +106,7 @@ namespace Raccoon.Components {
         private bool _canJump = true, 
                      _canKeepCurrentJump = true, 
                      _requestedJump,
+                     _jumpStart,
                      _canPerformEarlyJumpInput = true,
                      _canPerformLedgeJump = true,
                      _canPerformAdditionalJump;
@@ -407,6 +408,7 @@ namespace Raccoon.Components {
                 }
             }
 
+            _jumpStart = false;
             _requestedJump = false;
             IsStillJumping = false;
             CanFallThrough = false;
@@ -846,6 +848,7 @@ namespace Raccoon.Components {
             }
 
             IsStillJumping = true;
+            _jumpStart = true;
             _canPerformAdditionalJump = false; // it'll need to be reevaluated later
             _canPerformLedgeJump = false; // after any jump, can't perform ledge jump until reaches ground again
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
@@ -916,7 +919,7 @@ namespace Raccoon.Components {
                     Fall();
                 }
             } else if (distance.Y < 0f && (IsStillJumping || JustReceiveImpulse)) {
-                if (!IsJumping) {
+                if (!IsJumping || _jumpStart) {
                     IsJumping = 
                         JustJumped = 
                         HasJumped = true;
