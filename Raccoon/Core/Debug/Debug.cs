@@ -159,7 +159,11 @@ namespace Raccoon {
             StringBuilder str = new StringBuilder(vars.Length);
 
             foreach (object var in vars) {
-                str.AppendFormat("{0}, ", var.ToString());
+                if (var == null) {
+                    str.AppendLine("null, ");
+                } else {
+                    str.AppendFormat("{0}, ", var.ToString());
+                }
             }
 
             Write(str.ToString());
@@ -170,7 +174,11 @@ namespace Raccoon {
             StringBuilder str = new StringBuilder(vars.Length);
 
             foreach ((string Name, object Value) data in vars) {
-                str.AppendFormat("{0}: {1}, ", data.Name, data.Value.ToString());
+                str.AppendFormat(
+                    "{0}: {1}, ", 
+                    data.Name, 
+                    data.Value == null ? "null" : data.Value.ToString()
+                );
             }
 
             Write(str.ToString());
@@ -181,7 +189,12 @@ namespace Raccoon {
             StringBuilder str = new StringBuilder(vars.Length);
 
             foreach (object var in vars) {
-                str.AppendFormat("{0}", var.ToString());
+                if (var == null) {
+                    str.AppendLine("null");
+                } else {
+                    str.AppendFormat("{0}", var.ToString());
+                }
+
                 str.AppendLine();
             }
 
@@ -193,7 +206,11 @@ namespace Raccoon {
             StringBuilder str = new StringBuilder(vars.Length);
 
             foreach ((string Name, object Value) data in vars) {
-                str.AppendFormat("{0}: {1}", data.Name, data.Value.ToString());
+                str.AppendFormat(
+                    "{0}: {1}", 
+                    data.Name, 
+                    data.Value == null ? "null" : data.Value.ToString()
+                );
                 str.AppendLine();
             }
 
