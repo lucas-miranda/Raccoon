@@ -74,6 +74,7 @@
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Components\Alarm.cs" />
     <Compile Include="Core\Components\Component.cs" />
+    <Compile Include="Core\Components\ComponentUsageAttribute.cs" />
     <Compile Include="Core\Components\CoroutineHandler.cs" />
     <Compile Include="Core\Components\CoroutinesHandler.cs" />
     <Compile Include="Core\Components\Movement\BasicMovement.cs" />

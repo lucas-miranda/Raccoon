@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
@@ -469,6 +470,26 @@ namespace Raccoon {
         public Component AddComponent(Component component) {
             if (component == null) {
                 throw new System.ArgumentNullException(nameof(component));
+            }
+
+            // validate component usage
+            System.Type componentType = component.GetType(),
+                        entityType = GetType();
+
+            foreach (object attrObj in component.GetType().GetCustomAttributes(typeof(ComponentUsageAttribute), inherit: true)) {
+                ComponentUsageAttribute usageAttribute = (ComponentUsageAttribute) attrObj;
+                
+                if (!usageAttribute.IsEntityTypeAllowed(entityType)) {
+                    throw new System.InvalidOperationException($"Entity with type '{entityType}' isn't allowed to add Component '{component.GetType()}'.");
+                }
+
+                if (usageAttribute.Unique) {
+                    foreach (Component c in Components) {
+                        if (c.GetType().Equals(componentType)) {
+                            throw new System.InvalidOperationException($"Can't add another Component with type '{componentType}', it should be unique.");
+                        }
+                    }
+                }
             }
 
             if (!ComponentAdded(component)) {
