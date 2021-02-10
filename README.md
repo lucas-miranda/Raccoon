@@ -4,11 +4,17 @@
 
 # About
 
-Raccoon is a framework focused in 2D game development, the idea is to provide tools to easily make games with minimal code, you should focus on building the game itself, not the tools to do that.
+Raccoon is a framework focused in 2D game development, the idea is to provide tools to easily make games with minimal code.
 
-It's originally designed for my personal use, but feel free to suggest or make a pull request anything you find relevant.
+*You should focus on building the game itself, not the tools to do that.*
 
-This is a work in progress to help me build an upcoming game title. Things can, and will, change drastically through development and as I learn more things.
+It's designed for my personal use, but feel free to use it as a whole or slices of it.
+As pull requests and suggestions are very appreaciated, I'm not accepting anything right now, as I can't review others code at this moment.
+
+This is a work in progress to help me build my upcoming game title. Things can, and will, change drastically through development and as I learn more and more things.
+Some parts of it are more stable than others.
+
+To a quick view, see [architecture.md](/architecture.md).
 
 # Attribution
 
