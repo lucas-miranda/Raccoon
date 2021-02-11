@@ -6,7 +6,7 @@ Set of utilities and helpers to diverse subjects.
 
 ### `Collections/`
 
-Contains some useful collections, that doesn't exists at `System.Collections`, and a reimplementation of `System.Collections.ObjectModel.ReadOnlyCollection` (for motivation disclaimer see commit 73d9f69f70b5a335223e19fbb74ef7200d8f3b1b).
+Contains some useful collections, that doesn't exists at `System.Collections`, and a reimplementation of `System.Collections.ObjectModel.ReadOnlyCollection` (for motivation disclaimer see [commit](https://github.com/lucas-miranda/Raccoon/commit/73d9f69f70b5a335223e19fbb74ef7200d8f3b1b)).
 
 ### `Graphics/`
 
