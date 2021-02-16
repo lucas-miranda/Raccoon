@@ -276,9 +276,11 @@ namespace Raccoon {
         #region Private Methods
 
         private void OnParentAdded() {
+            Entity?.TransformParentAdded();
         }
 
         private void OnParentRemoved() {
+            Entity?.TransformParentRemoved();
         }
 
         private void OnChildAdded(Transform child) {
@@ -289,9 +291,12 @@ namespace Raccoon {
             if (child.Entity.ShouldUseTransformParentRenderer) {
                 child.Entity.Renderer = Entity.Renderer;
             }
+
+            Entity.TransformChildAdded(child);
         }
 
         private void OnChildRemoved(Transform child) {
+            Entity?.TransformChildRemoved(child);
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

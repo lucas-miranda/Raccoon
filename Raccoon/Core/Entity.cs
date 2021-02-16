@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
@@ -375,7 +374,7 @@ namespace Raccoon {
                     color:      g.Color, 
                     scroll:     g.Scroll, 
                     shader:     g.Shader, 
-                    layer:      Layer
+                    layer:      Layer + g.Layer
                 );
             }
             Graphics.Unlock();
@@ -801,6 +800,18 @@ namespace Raccoon {
             }
 
             Scene.RemoveEntity(this);
+        }
+
+        public virtual void TransformChildAdded(Transform child) {
+        }
+
+        public virtual void TransformChildRemoved(Transform child) {
+        }
+
+        public virtual void TransformParentAdded() {
+        }
+
+        public virtual void TransformParentRemoved() {
         }
 
         public override string ToString() {
