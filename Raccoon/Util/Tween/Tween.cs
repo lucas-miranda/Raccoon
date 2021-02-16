@@ -180,6 +180,10 @@ namespace Raccoon.Util.Tween {
         }
 
         public void ClearLerpers() {
+            foreach (Lerper lerper in _lerpers.Values) {
+                lerper.Dispose();
+            }
+
             _lerpers.Clear();
         }
 
@@ -330,7 +334,7 @@ namespace Raccoon.Util.Tween {
             MemberInfo subjectMember = FindSubjectMember(property);
 
             if (subjectMember == null) {
-                throw new System.ArgumentException($"Subject does not contains a property nor field called '{property.Name}'.");
+                throw new System.ArgumentException($"Subject '{Subject.GetType()}' does not contains a property nor field called '{property.Name}'.");
             }
 
             // try to get
