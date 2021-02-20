@@ -133,6 +133,10 @@ namespace Raccoon.Graphics {
             XNATexture.GetData(level, rect, data, startIndex, elementCount);
         }
 
+        public void GetData<T>(Rectangle rect, T[] data) where T : struct {
+            XNATexture.GetData(0, rect, data, 0, data?.Length ?? 0);
+        }
+
         public void SetData<T>(T[] data) where T : struct {
             XNATexture.SetData(data);
         }
