@@ -1,6 +1,6 @@
 ﻿namespace Raccoon.Util {
     public static class Math { 
-        public const float Epsilon = 0.0001f;
+        public const float Epsilon = 0.000001f;
         public const double PI = Microsoft.Xna.Framework.MathHelper.Pi;
         public const double DoublePI = 2.0 * PI;
         public const double TriplePI = 3.0 * PI;
@@ -28,6 +28,14 @@
 
         public static Vector2 Abs(Vector2 vec) {
             return new Vector2(Abs(vec.X), Abs(vec.Y));
+        }
+
+        public static float Sqrt(float n) {
+            return (float) System.Math.Sqrt(n);
+        }
+
+        public static double Sqrt(double n) {
+            return System.Math.Sqrt(n);
         }
 
         public static float Approach(float start, float end, float amount) {
