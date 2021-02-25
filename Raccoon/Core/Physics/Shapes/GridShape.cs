@@ -210,7 +210,7 @@ namespace Raccoon {
 
         public (int column, int row) ConvertPosition(Vector2 shapePosition, Vector2 position) {
             position -= shapePosition;
-            return ((int) (position.X / TileSize.Width), (int) (position.Y / TileSize.Height));
+            return ((int) Math.Floor(position.X / TileSize.Width), (int) Math.Floor(position.Y / TileSize.Height));
         }
 
         public Vector2 ConvertTilePosition(Vector2 shapePosition, int column, int row) {

@@ -799,8 +799,7 @@ Scene:
             ResizeMode = resizeMode;
             Center = (Size / 2f).ToVector2();
 
-            // internal resize
-            // renderer
+            // renderers
             foreach (Renderer renderer in Renderers) {
                 renderer.RecalculateProjection();
             }

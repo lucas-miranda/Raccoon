@@ -9,13 +9,16 @@ namespace Raccoon {
             _entries = new Contact[capacity];
         }
 
-        public ContactList(params Contact[] contacts) {
-            if (contacts == null || contacts.Length == 0) {
+        public ContactList(IList<Contact> contacts) {
+            if (contacts == null || contacts.Count == 0) {
                 _entries = new Contact[0];
             } else {
-                _entries = new Contact[contacts.Length];
+                _entries = new Contact[contacts.Count];
                 contacts.CopyTo(_entries, 0);
             }
+        }
+
+        public ContactList(params Contact[] contacts) : this((IList<Contact>) contacts) {
         }
 
         public ContactList() : this(0) {

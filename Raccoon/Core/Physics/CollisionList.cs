@@ -11,6 +11,10 @@ namespace Raccoon {
             Add(new CollisionInfo<T>(subject, contacts));
         }
 
+        public void Add(T subject, IList<Contact> contacts) {
+            Add(new CollisionInfo<T>(subject, new ContactList(contacts)));
+        }
+
         public bool Contains(T subject) {
             foreach (CollisionInfo<T> entry in this) {
                 if (entry.Subject.Equals(subject)) {
