@@ -585,6 +585,28 @@ namespace Raccoon {
                         continue;
                     }
 
+                    if (otherCollider.Shape is GridShape gridShape) {
+                            List<Contact> gridContacts = TestGrid(
+                            gridShape, 
+                            otherCollider.Position, 
+                            new Rectangle(position, endPos),
+                            (Polygon tilePolygon) => {
+                                if (!SAT.Test(position, endPos, tilePolygon, out Contact? tileContact)) {
+                                    return null;
+                                }
+
+                                return tileContact;
+                            }
+                        );
+
+                        if (gridContacts.Count <= 0) {
+                            continue;
+                        }
+
+                        collisionList.Add(otherCollider, gridContacts);
+                        continue;
+                    }
+
                     if (!SAT.Test(position, endPos, otherCollider.Shape, otherCollider.Position, out Contact? contact) || contact == null) {
                         continue;
                     }
