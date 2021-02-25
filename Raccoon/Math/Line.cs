@@ -79,35 +79,93 @@ namespace Raccoon {
             return PointA + normal * normal.Projection(p - PointA);
         }
 
-        public bool IntersectionPoint(Line line, out Vector2 intersectionPoint) {
-            // reference:  https://gamedev.stackexchange.com/a/12246
-            float a1 = SignedTriangleArea(PointA, PointB, line.PointB),
-                  a2 = SignedTriangleArea(PointA, PointB, line.PointA);
+        public bool IntersectionPoints(Line line, out Vector2[] intersectionPoint) {
+            // ref: https://cp-algorithms.com/geometry/segments-intersection.html
+            //      https://github.com/e-maxx-eng/e-maxx-eng/blob/e1c68001df7a081e7f70cfc3afdd0b9d4ea75809/src/geometry/segments-intersection.md
 
-            if (a1 * a2 < .0f) {
-                float a3 = SignedTriangleArea(line.PointA, line.PointB, PointA);
-                float a4 = a3 + a2 - a1;
-
-                if (a3 * a4 < .0f) {
-                    float t = a3 / (a3 - a4);
-                    intersectionPoint = GetPointNormalized(t);
-                    return true;
-                }
+            if (!Intersect1D(PointA.X, PointB.X, line.PointA.X, line.PointB.X) || !Intersect1D(PointA.Y, PointB.Y, line.PointA.Y, line.PointB.Y)) {
+                intersectionPoint = null;
+                return false;
             }
 
-            // test for collinear intersection range
-            // reference: https://stackoverflow.com/a/565282
-            // BUG: not working well
-            /*Vector2 r = ToVector2(), s = line.ToVector2();
-            if (Vector2.Cross(r, s) == 0 && Vector2.Cross(line.PointA - PointA, r) == 0) {
-                float t0 = (line.PointA - PointA).Dot(r / (r.Dot(r)));
-                float t1 = t0 + s.Dot(r / r.Dot(r));
-                Range range = s.Dot(r) < 0 ? new Range(t1, t0) : new Range(t0, t1);
-                range.Overlaps(new Range(0, 1), out float t);
-                return PointA + t * r;
-            }*/
+            float d_a = PointA.Y - PointB.Y,
+                  d_b = PointB.X - PointA.X,
+                  d_c = -d_a * PointA.X - d_b * PointA.Y,
 
-            intersectionPoint = default(Vector2);
+                  d_A = line.PointA.Y - line.PointB.Y,
+                  d_B = line.PointB.X - line.PointA.X,
+                  d_C = -d_A * line.PointA.X - d_B * line.PointA.Y;
+
+            float d_z = (float) Math.Sqrt(d_a * d_a + d_b * d_b);
+            if (Math.Abs(d_z) > Math.Epsilon) {
+                d_a /= d_z;
+                d_b /= d_z;
+                d_c /= d_z;
+            }
+
+            float d_Z = (float) Math.Sqrt(d_A * d_A + d_B * d_B);
+            if (Math.Abs(d_Z) > Math.Epsilon) {
+                d_A /= d_Z;
+                d_B /= d_Z;
+                d_C /= d_Z;
+            }
+
+            float zn = d_a * d_B - d_b * d_A;
+
+            if (Math.Abs(zn) < Math.Epsilon) {
+                if (Math.Abs(d_a * line.PointA.X + d_b * line.PointA.Y + d_c) > Math.Epsilon
+                 || Math.Abs(d_A * PointA.X + d_B * PointA.Y + d_C) > Math.Epsilon
+                ) {
+                    intersectionPoint = null;
+                    return false;
+                }
+
+                Vector2 p_a = PointA,
+                        p_b = PointB,
+                        p_c = line.PointA,
+                        p_d = line.PointB,
+                        p_t;
+
+                if (PointIsSmaller(p_b, p_a)) {
+                    p_t = p_a;
+                    p_a = p_b;
+                    p_b = p_t;
+                }
+
+                if (PointIsSmaller(p_d, p_c)) {
+                    p_t = p_d;
+                    p_d = p_c;
+                    p_c = p_t;
+                }
+
+                intersectionPoint = new Vector2[] {
+                    MaxPoint(p_a, p_c),
+                    MinPoint(p_b, p_d)
+                };
+
+                return true;
+            }
+
+            intersectionPoint = new Vector2[] {
+                new Vector2(
+                    -(d_c * d_B - d_b * d_C) / zn,
+                    -(d_a * d_C - d_c * d_A) / zn
+                )
+            };
+
+            return Between(PointA.X, PointB.X, intersectionPoint[0].X)
+                && Between(PointA.Y, PointB.Y, intersectionPoint[0].Y)
+                && Between(line.PointA.X, line.PointB.X, intersectionPoint[0].X)
+                && Between(line.PointA.Y, line.PointB.Y, intersectionPoint[0].Y);
+        }
+
+        public bool IntersectionPoint(Line line, out Vector2 intersectionPoint) {
+            if (IntersectionPoints(line, out Vector2[] intersectionPoints)) {
+                intersectionPoint = intersectionPoints[0];
+                return true;
+            }
+
+            intersectionPoint = Vector2.Zero;
             return false;
         }
 
@@ -206,6 +264,40 @@ namespace Raccoon {
 
         private float SignedTriangleArea(Vector2 a, Vector2 b, Vector2 c) {
             return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
+        }
+
+        private bool Intersect1D(float a, float b, float c, float d) {
+            float t;
+            if (a > b) {
+                t = a;
+                a = b;
+                b = t;
+            }
+
+            if (c > d) {
+                t = c;
+                c = d;
+                d = t;
+            }
+
+            return Math.Max(a, c) <= Math.Min(b, d) + Math.Epsilon;
+        }
+
+        private Vector2 MaxPoint(Vector2 a, Vector2 b) {
+            return PointIsSmaller(a, b) ? b : a;
+        }
+
+        private Vector2 MinPoint(Vector2 a, Vector2 b) {
+            return PointIsSmaller(a, b) ? a : b;
+        }
+
+        private bool PointIsSmaller(Vector2 a, Vector2 b) {
+            return a.X < b.X - Math.Epsilon 
+                || (Math.Abs(a.X - b.X) < Math.Epsilon && a.Y < b.Y - Math.Epsilon);
+        }
+
+        private bool Between(float l, float r, float x) {
+            return Math.Min(l, r) <= x + Math.Epsilon && x <= Math.Max(l, r) + Math.Epsilon;
         }
 
         #endregion Private Methods
