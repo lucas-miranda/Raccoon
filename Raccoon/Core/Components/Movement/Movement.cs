@@ -11,8 +11,9 @@ namespace Raccoon.Components {
         public delegate void MovementAction(Vector2 distance);
         public MovementAction OnMove = delegate { };
 
-        public delegate void StopMovementAction();
-        public StopMovementAction OnStopMove = delegate { };
+        public delegate void MovementEventAction();
+        public MovementEventAction OnStartMove,
+                                   OnStopMove;
         
         public delegate void PhysicsAction();
         public PhysicsAction OnPhysicsLateUpdate = delegate { };
@@ -90,7 +91,7 @@ namespace Raccoon.Components {
         public float DragForce { get; set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
-        public bool IsMoving { get; protected set; } = false;
+        public bool IsMoving { get; private set; } = false;
         public bool IsDisposed { get; private set; }
         /*public bool TouchedTop { get; private set; }
         public bool TouchedRight { get; private set; }
@@ -208,11 +209,15 @@ namespace Raccoon.Components {
 
             Vector2 posDiff = Body.Position - Body.LastPosition;
             if (posDiff.LengthSquared() > 0f) {
+                if (!IsMoving) {
+                    OnStartMove?.Invoke();
+                }
+
                 IsMoving = true;
                 OnMoving(posDiff);
             } else if (IsMoving) {
                 IsMoving = false;
-                OnStopMove();
+                OnStopMove?.Invoke();
             }
         }
 

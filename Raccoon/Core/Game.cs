@@ -175,6 +175,9 @@ Scene:
 
                 UpdateCurrentScene();
             };
+
+            // systems
+            Input.Input.Initialize();
         }
 
         #endregion Constructors
@@ -199,7 +202,7 @@ Scene:
         public bool IsRunningSlowly { get; private set; }
         public string ContentDirectory { get { return XNAGameWrapper.Content.RootDirectory; } set { XNAGameWrapper.Content.RootDirectory = value; } }
         public string StartSceneName { get; private set; }
-        public int LastUpdateDeltaTime { get; private set; }
+        public int UpdateDeltaTime { get; private set; }
         public int Width { get { return (int) Size.Width; } }
         public int Height { get { return (int) Size.Height; } }
         public int WindowWidth { get { return (int) WindowSize.Width; } }
@@ -911,9 +914,8 @@ Scene:
         private void InternalUpdate(Microsoft.Xna.Framework.GameTime gameTime) {
             Time = gameTime.TotalGameTime;
             IsRunningSlowly = gameTime.IsRunningSlowly;
-            int delta = gameTime.ElapsedGameTime.Milliseconds;
-            LastUpdateDeltaTime = delta;
-            Update(delta);
+            UpdateDeltaTime = gameTime.ElapsedGameTime.Milliseconds;
+            Update(UpdateDeltaTime);
         }
 
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {

@@ -5,33 +5,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace Raccoon.Input {
-    public enum MouseButton {
-        None = 0,
-        Left,
-        Middle,
-        Right,
-        M4,
-        M5
-    }
-
-    public enum InputButtonState {
-        None,
-        Up,
-        Released,
-        Pressed,
-        Down
-    }
-
     public class Input {
         #region Public Members
 
-        public static System.Action<char> OnTextInput = delegate { };
+        public static System.Action<char> OnTextInput;
 
         #endregion Public Members
 
         #region Private Members
-
-        private static readonly System.Lazy<Input> _lazy = new System.Lazy<Input>(() => new Input());
 
         private bool _activated;
 
@@ -41,16 +22,17 @@ namespace Raccoon.Input {
         private readonly Dictionary<Key, char> _specialKeysToChar = new Dictionary<Key, char>();
 
         // mouse
-        private readonly Dictionary<MouseButton, ButtonState> _mouseButtonsState = new Dictionary<MouseButton, ButtonState>(),
-                                                              _mouseButtonsLastState = new Dictionary<MouseButton, ButtonState>();
+        private readonly Dictionary<MouseButton, Microsoft.Xna.Framework.Input.ButtonState> _mouseButtonsState = new Dictionary<MouseButton, Microsoft.Xna.Framework.Input.ButtonState>(),
+                                                              _mouseButtonsLastState = new Dictionary<MouseButton, Microsoft.Xna.Framework.Input.ButtonState>();
+
         private Vector2 _mousePosition;
         private (int X, int Y) _mouseAbsolutePosition;
         private bool _lockMouseOnCenter;
         private Rectangle? _customMouseAllowedArea;
 
         // gamepads
-        private readonly Dictionary<PlayerIndex, GamePadState> _gamepadsState = new Dictionary<PlayerIndex, GamePadState>(),
-                                                               _gamepadsPreviousState = new Dictionary<PlayerIndex, GamePadState>();
+        private readonly Dictionary<PlayerIndex, Microsoft.Xna.Framework.Input.GamePadState> _gamepadsState = new Dictionary<PlayerIndex, Microsoft.Xna.Framework.Input.GamePadState>(),
+                                                               _gamepadsPreviousState = new Dictionary<PlayerIndex, Microsoft.Xna.Framework.Input.GamePadState>();
 
         #endregion Private Members
 
@@ -59,8 +41,8 @@ namespace Raccoon.Input {
         private Input() {
             // mouse
             foreach (MouseButton id in System.Enum.GetValues(typeof(MouseButton))) {
-                _mouseButtonsState[id] = ButtonState.Released;
-                _mouseButtonsLastState[id] = ButtonState.Released;
+                _mouseButtonsState[id] = Microsoft.Xna.Framework.Input.ButtonState.Released;
+                _mouseButtonsLastState[id] = Microsoft.Xna.Framework.Input.ButtonState.Released;
             }
 
             PressedKeys = _pressedKeys.AsReadOnly();
@@ -81,7 +63,7 @@ namespace Raccoon.Input {
 
         #region Public Properties
 
-        public static Input Instance { get { return _lazy.Value; } }
+        public static Input Instance { get; private set; }
 
         #region Mouse
 
@@ -184,6 +166,22 @@ namespace Raccoon.Input {
 
         #region Public Methods
 
+        public static void Initialize() {
+            if (Instance != null) {
+                return;
+            }
+
+            Instance = new Input();
+        }
+
+        public static void Deinitialize() {
+            if (Instance == null) {
+                return;
+            }
+
+            Instance = null;
+        }
+
         #region Keyboard
 
         public static bool IsKeyPressed(Key key) {
@@ -210,23 +208,23 @@ namespace Raccoon.Input {
             return PressedKeys.Count > 0;
         }
 
-        public static InputButtonState KeyboardState(Key key) {
+        public static ButtonState KeyboardState(Key key) {
             KeyState previousState = Instance._keyboardPreviousState[(Keys) key],
                      currentState = Instance._keyboardState[(Keys) key];
 
             if (previousState == KeyState.Up) {
                 if (currentState == KeyState.Down) {
-                    return InputButtonState.Pressed;
+                    return ButtonState.Pressed;
                 }
 
-                return InputButtonState.Up;
+                return ButtonState.Up;
             }
 
             if (currentState == KeyState.Up) {
-                return InputButtonState.Released;
+                return ButtonState.Released;
             }
 
-            return InputButtonState.Down;
+            return ButtonState.Down;
         }
 
         public static void SetInputLocation(Rectangle rectangle) {
@@ -245,53 +243,31 @@ namespace Raccoon.Input {
 
         #region GamePad
 
-        public static bool IsGamePadButtonPressed(GamePadIndex gamepadIndex, Buttons buttonId) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return false;
-            }
-
+        public static bool IsGamePadButtonPressed(GamepadIndex gamepadIndex, Buttons buttonId) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
 
             return (!Instance._gamepadsPreviousState.ContainsKey(playerIndex) || Instance._gamepadsPreviousState[playerIndex].IsButtonUp(buttonId))
               && Instance._gamepadsState[playerIndex].IsButtonDown(buttonId);
         }
 
-        public static bool IsGamePadButtonDown(GamePadIndex gamepadIndex, Buttons buttonId) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return false;
-            }
-
+        public static bool IsGamePadButtonDown(GamepadIndex gamepadIndex, Buttons buttonId) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
-
             return Instance._gamepadsState[playerIndex].IsButtonDown(buttonId);
         }
 
-        public static bool IsGamePadButtonReleased(GamePadIndex gamepadIndex, Buttons buttonId) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return false;
-            }
-
+        public static bool IsGamePadButtonReleased(GamepadIndex gamepadIndex, Buttons buttonId) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
-
             return Instance._gamepadsPreviousState[playerIndex].IsButtonDown(buttonId)
               && (!Instance._gamepadsState.ContainsKey(playerIndex) || Instance._gamepadsState[playerIndex].IsButtonUp(buttonId));
         }
 
-        public static bool IsGamePadButtonUp(GamePadIndex gamepadIndex, Buttons buttonId) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return true;
-            }
-
+        public static bool IsGamePadButtonUp(GamepadIndex gamepadIndex, Buttons buttonId) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
 
             return Instance._gamepadsState[playerIndex].IsButtonUp(buttonId);
         }
 
-        public static InputButtonState GamePadButtonState(GamePadIndex gamepadIndex, Buttons buttonId) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return InputButtonState.Up;
-            }
-
+        public static ButtonState GamePadButtonState(GamepadIndex gamepadIndex, Buttons buttonId) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
 
             bool isPreviousStateDown = Instance._gamepadsState[playerIndex].IsButtonDown(buttonId),
@@ -299,46 +275,31 @@ namespace Raccoon.Input {
 
             if (!isPreviousStateDown) {
                 if (isCurrentStateDown) {
-                    return InputButtonState.Pressed;
+                    return ButtonState.Pressed;
                 }
 
-                return InputButtonState.Up;
+                return ButtonState.Up;
             }
 
             if (!isCurrentStateDown) {
-                return InputButtonState.Released;
+                return ButtonState.Released;
             }
 
-            return InputButtonState.Down;
+            return ButtonState.Down;
         }
 
-        public static Vector2 GamePadThumbStickValue(GamePadIndex gamepadIndex, GamePadThumbStick thumbStick) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return Vector2.Zero;
-            }
-
+        public static Vector2 GamePadThumbStickValue(GamepadIndex gamepadIndex, GamepadThumbStick thumbStick) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
-
-            return new Vector2(thumbStick == GamePadThumbStick.Left ? Instance._gamepadsState[playerIndex].ThumbSticks.Left : Instance._gamepadsState[playerIndex].ThumbSticks.Right);
+            return new Vector2(thumbStick == GamepadThumbStick.Left ? Instance._gamepadsState[playerIndex].ThumbSticks.Left : Instance._gamepadsState[playerIndex].ThumbSticks.Right);
         }
 
-        public static float GamePadTriggerValue(GamePadIndex gamepadIndex, GamePadTriggerButton triggerButton) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return 0f;
-            }
-
+        public static float GamePadTriggerValue(GamepadIndex gamepadIndex, GamepadTriggerButton triggerButton) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
-
-            return triggerButton == GamePadTriggerButton.Left ? Instance._gamepadsState[playerIndex].Triggers.Left : Instance._gamepadsState[playerIndex].Triggers.Right;
+            return triggerButton == GamepadTriggerButton.Left ? Instance._gamepadsState[playerIndex].Triggers.Left : Instance._gamepadsState[playerIndex].Triggers.Right;
         }
 
-        public static bool IsGamepadConnected(GamePadIndex gamepadIndex) {
-            if (gamepadIndex == GamePadIndex.None) {
-                return false;
-            }
-
+        public static bool IsGamepadConnected(GamepadIndex gamepadIndex) {
             PlayerIndex playerIndex = gamepadIndex.ToPlayerIndex();
-
             return Instance._gamepadsState.ContainsKey(playerIndex) && Instance._gamepadsState[playerIndex].IsConnected;
         }
 
@@ -347,38 +308,38 @@ namespace Raccoon.Input {
         #region Mouse
 
         public static bool IsMouseButtonPressed(MouseButton button) {
-            return Instance._mouseButtonsLastState[button] == ButtonState.Released && Instance._mouseButtonsState[button] == ButtonState.Pressed;
+            return Instance._mouseButtonsLastState[button] == Microsoft.Xna.Framework.Input.ButtonState.Released && Instance._mouseButtonsState[button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
         }
 
         public static bool IsMouseButtonDown(MouseButton button) {
-            return Instance._mouseButtonsState[button] == ButtonState.Pressed;
+            return Instance._mouseButtonsState[button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
         }
 
         public static bool IsMouseButtonReleased(MouseButton button) {
-            return Instance._mouseButtonsLastState[button] == ButtonState.Pressed && Instance._mouseButtonsState[button] == ButtonState.Released;
+            return Instance._mouseButtonsLastState[button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed && Instance._mouseButtonsState[button] == Microsoft.Xna.Framework.Input.ButtonState.Released;
         }
 
         public static bool IsMouseButtonUp(MouseButton button) {
-            return Instance._mouseButtonsState[button] == ButtonState.Released;
+            return Instance._mouseButtonsState[button] == Microsoft.Xna.Framework.Input.ButtonState.Released;
         }
 
-        public static InputButtonState MouseButtonState(MouseButton button) {
-            ButtonState previousState = Instance._mouseButtonsLastState[button],
-                        currentState = Instance._mouseButtonsState[button];
+        public static ButtonState MouseButtonState(MouseButton button) {
+            Microsoft.Xna.Framework.Input.ButtonState previousState = Instance._mouseButtonsLastState[button],
+                                                      currentState = Instance._mouseButtonsState[button];
 
-            if (previousState == ButtonState.Released) {
-                if (currentState == ButtonState.Pressed) {
-                    return InputButtonState.Pressed;
+            if (previousState == Microsoft.Xna.Framework.Input.ButtonState.Released) {
+                if (currentState == Microsoft.Xna.Framework.Input.ButtonState.Pressed) {
+                    return ButtonState.Pressed;
                 }
 
-                return InputButtonState.Up;
+                return ButtonState.Up;
             }
 
-            if (currentState == ButtonState.Released) {
-                return InputButtonState.Released;
+            if (currentState == Microsoft.Xna.Framework.Input.ButtonState.Released) {
+                return ButtonState.Released;
             }
 
-            return InputButtonState.Down;
+            return ButtonState.Down;
         }
 
         #endregion Mouse
@@ -436,7 +397,7 @@ namespace Raccoon.Input {
             MouseState XNAMouseState = Mouse.GetState();
 
             // buttons
-            foreach (KeyValuePair<MouseButton, ButtonState> button in _mouseButtonsState) {
+            foreach (KeyValuePair<MouseButton, Microsoft.Xna.Framework.Input.ButtonState> button in _mouseButtonsState) {
                 _mouseButtonsLastState[button.Key] = button.Value;
             }
 
@@ -507,7 +468,7 @@ namespace Raccoon.Input {
                         _mouseButtonsState[MouseButton.Middle] = 
                         _mouseButtonsState[MouseButton.Right] = 
                         _mouseButtonsState[MouseButton.M4] = 
-                        _mouseButtonsState[MouseButton.M5] = ButtonState.Released;
+                        _mouseButtonsState[MouseButton.M5] = Microsoft.Xna.Framework.Input.ButtonState.Released;
 
                     MouseScrollWheelDelta = 0;
                     return;
@@ -539,7 +500,7 @@ namespace Raccoon.Input {
         #region Private Methods
 
         private void ProcessTextInput(char charCode) {
-            OnTextInput(charCode);
+            OnTextInput?.Invoke(charCode);
         }
 
         #endregion Private Methods
@@ -558,6 +519,24 @@ namespace Raccoon.Input {
                 // temporary disable it
                 Mouse.IsRelativeMouseModeEXT = false;
             }
+        }
+
+        internal static bool HasGamepad(GamepadIndex index) {
+            return Instance._gamepadsState.ContainsKey(index.ToPlayerIndex());
+        }
+
+        internal static Microsoft.Xna.Framework.Input.GamePadState GetGamepadState(GamepadIndex index) {
+            PlayerIndex playerIndex = index.ToPlayerIndex();
+
+            if (!Instance._gamepadsState.TryGetValue(playerIndex, out Microsoft.Xna.Framework.Input.GamePadState xnaGamePadState)) {
+                throw new System.ArgumentException($"There is no gamepad state at XNA {nameof(PlayerIndex)} '{playerIndex}' (GamepadIndex: {index}).");
+            }
+
+            return xnaGamePadState;
+        }
+
+        internal static bool TryGetGamepadState(GamepadIndex index, out Microsoft.Xna.Framework.Input.GamePadState xnaGamePadState) {
+            return Instance._gamepadsState.TryGetValue(index.ToPlayerIndex(), out xnaGamePadState);
         }
 
         #endregion Internal Methods

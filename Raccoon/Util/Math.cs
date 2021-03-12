@@ -38,6 +38,14 @@
             return System.Math.Sqrt(n);
         }
 
+        public static float Pow(float n, float p) {
+            return (float) System.Math.Pow(n, p);
+        }
+
+        public static double Pow(double n, double p) {
+            return System.Math.Pow(n, p);
+        }
+
         public static float Approach(float start, float end, float amount) {
             return start < end ? Min(start + amount, end) : Max(start - amount, end);
         }

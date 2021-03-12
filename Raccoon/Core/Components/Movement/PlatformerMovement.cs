@@ -408,9 +408,7 @@ namespace Raccoon.Components {
                 }
             }
 
-            _jumpStart = false;
             _requestedJump = false;
-            IsStillJumping = false;
             CanFallThrough = false;
         }
 
@@ -920,6 +918,7 @@ namespace Raccoon.Components {
                 }
             } else if (distance.Y < 0f && (IsStillJumping || JustReceiveImpulse)) {
                 if (!IsJumping || _jumpStart) {
+                    _jumpStart = false;
                     IsJumping = 
                         JustJumped = 
                         HasJumped = true;

@@ -22,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LINUX PLATFORM_X86</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PLATFORM_X86</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.1</LangVersion>
@@ -33,7 +33,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;LINUX PLATFORM_X86</DefineConstants>
+    <DefineConstants>TRACE;PLATFORM_X86</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.1</LangVersion>
@@ -45,7 +45,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LINUX PLATFORM_X64</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PLATFORM_X64</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.1</LangVersion>
@@ -56,7 +56,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;LINUX PLATFORM_X64</DefineConstants>
+    <DefineConstants>TRACE;PLATFORM_X64</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.1</LangVersion>
@@ -103,16 +103,66 @@
     <Compile Include="Core\IRenderable.cs" />
     <Compile Include="Core\ISceneObject.cs" />
     <Compile Include="Core\IUpdatable.cs" />
-    <Compile Include="Core\Input\Axis.cs" />
-    <Compile Include="Core\Input\Button.cs" />
-    <Compile Include="Core\Input\Controller.cs" />
-    <Compile Include="Core\Input\GamePadIndex.cs" />
-    <Compile Include="Core\Input\GamePadThumbStick.cs" />
-    <Compile Include="Core\Input\GamePadTriggerButton.cs" />
+    <Compile Include="Core\Input\ButtonState.cs" />
+    <Compile Include="Core\Input\Controller\Command.cs" />
+    <Compile Include="Core\Input\Controller\Controller.cs" />
+    <Compile Include="Core\Input\Controller\ControllerInputScheme.cs" />
+    <Compile Include="Core\Input\Controller\ControllersManager.cs" />
+    <Compile Include="Core\Input\Controller\Devices\GamepadDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\GenericGamepadDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\InputDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\InputDeviceController.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Keyboard\KeyboardDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Keyboard\KeyboardDeviceController.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Mouse\MouseDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Mouse\MouseDeviceController.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Xbox\XboxGamepadButtons.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Xbox\XboxGamepadDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Xbox\XboxGamepadDeviceController.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Xbox\XboxGamepadThumbSticks.cs" />
+    <Compile Include="Core\Input\Controller\Devices\Xbox\XboxGamepadTriggers.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Axis\BackInterfaceAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Axis\IBackInterfaceAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Axis\KeyboardBackInterfaceAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Axis\MouseButtonBackInterfaceAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Axis\XboxGamepadBackInterfaceAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Button\BackInterfaceButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Button\IBackInterfaceButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Button\KeyboardBackInterfaceButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Button\MouseBackInterfaceButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Button\XboxGamepadBackInterfaceButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\InputBackInterface.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Trigger\BackInterfaceTrigger.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Trigger\IBackInterfaceTrigger.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Back\Trigger\XboxGamepadBackInterfaceTrigger.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\Axis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\Button.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\IInputAxis.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\IInputButton.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\IInputTrigger.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\InputInterface.cs" />
+    <Compile Include="Core\Input\Controller\Interfaces\Front\Trigger.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Axis\AxisInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Axis\ButtonAxisInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Axis\GamepadThumbStickInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Axis\XboxGamepadThumbStickInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Button\ButtonInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Button\GamepadButtonInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Button\KeyboardButtonInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Button\MouseButtonInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Button\XboxGamepadButtonInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\IInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Trigger\GamepadTriggerInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Trigger\TriggerInputSource.cs" />
+    <Compile Include="Core\Input\Controller\Sources\Trigger\XboxGamepadTriggerInputSource.cs" />
+    <Compile Include="Core\Input\GamepadIndex.cs" />
+    <Compile Include="Core\Input\GamepadInputLabel.cs" />
+    <Compile Include="Core\Input\GamepadThumbStick.cs" />
+    <Compile Include="Core\Input\GamepadTriggerButton.cs" />
     <Compile Include="Core\Input\Input.cs" />
     <Compile Include="Core\Input\Key.cs" />
-    <Compile Include="Core\Input\Trigger.cs" />
-    <Compile Include="Core\Input\XboxController.cs" />
+    <Compile Include="Core\Input\MouseButton.cs" />
+    <Compile Include="Core\Input\XboxInputLabel.cs" />
     <Compile Include="Core\Physics\CollisionInfo.cs" />
     <Compile Include="Core\Physics\CollisionList.cs" />
     <Compile Include="Core\Physics\Contact.cs" />

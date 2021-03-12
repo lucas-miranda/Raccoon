@@ -69,10 +69,10 @@ namespace Raccoon {
                 }
             };
 
-            PageUpButton = new Button(Key.NumPad9);
-            PageDownButton = new Button(Key.NumPad3);
-            PageHomeButton = new Button(Key.NumPad7);
-            PageEndButton = new Button(Key.NumPad1);
+            PageUpKey = Key.NumPad9;
+            PageDownKey = Key.NumPad3;
+            PageHomeKey = Key.NumPad7;
+            PageEndKey = Key.NumPad1;
         }
 
         #endregion Constructors
@@ -90,10 +90,10 @@ namespace Raccoon {
         public bool MergeIdenticalMessages { get; set; } = true;
         public bool AlwaysShowCategory { get; set; }
         public bool IsDisposed { get; private set; }
-        public Button PageUpButton { get; set; }
-        public Button PageDownButton { get; set; }
-        public Button PageHomeButton { get; set; }
-        public Button PageEndButton { get; set; }
+        public Key PageUpKey { get; set; }
+        public Key PageDownKey { get; set; }
+        public Key PageHomeKey { get; set; }
+        public Key PageEndKey { get; set; }
 
         public Message LastMessage { 
             get {
@@ -299,22 +299,19 @@ namespace Raccoon {
                 return;
             }
 
-            PageUpButton.Update(delta);
-            if (PageUpButton.IsPressed) {
+            if (Input.Input.IsKeyPressed(PageUpKey)) {
                 MoveVerticalScrollLines(-4);
-            } else if (PageUpButton.IsDown) {
+            } else if (Input.Input.IsKeyDown(PageUpKey)) {
                 MoveVerticalScrollLines(-2);
             }
 
-            PageDownButton.Update(delta);
-            if (PageDownButton.IsPressed) {
+            if (Input.Input.IsKeyPressed(PageDownKey)) {
                 MoveVerticalScrollLines(4);
-            } else if (PageDownButton.IsDown) {
+            } else if (Input.Input.IsKeyDown(PageDownKey)) {
                 MoveVerticalScrollLines(2);
             }
 
-            PageEndButton.Update(delta);
-            if (PageEndButton.IsPressed) {
+            if (Input.Input.IsKeyPressed(PageEndKey)) {
                 VerticalScrollTo(0f);
             }
         }

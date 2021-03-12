@@ -574,7 +574,7 @@ namespace Raccoon {
             }
             _updatables.Unlock();
 
-            Camera.Update(Game.Instance.LastUpdateDeltaTime);
+            Camera.Update(Game.Instance.UpdateDeltaTime);
         }
 
         /// <summary>

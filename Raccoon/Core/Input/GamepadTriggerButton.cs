@@ -1,5 +1,5 @@
 ﻿namespace Raccoon.Input {
-    public enum GamePadThumbStick {
+    public enum GamepadTriggerButton {
         Left = 0,
         Right
     }
