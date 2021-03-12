@@ -20,6 +20,7 @@ namespace Raccoon.Input {
             }
 
             IsConnected = true;
+            Logger.Info($"{GetType().Name} connected!");
             OnConnected?.Invoke();
         }
 
@@ -29,6 +30,7 @@ namespace Raccoon.Input {
             }
 
             IsConnected = false;
+            Logger.Info($"{GetType().Name} disconnected.");
             OnDisconnected?.Invoke();
         }
 

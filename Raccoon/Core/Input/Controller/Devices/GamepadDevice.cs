@@ -36,16 +36,12 @@ namespace Raccoon.Input {
                 RawState = null;
             }
 
-            if (!RawState.HasValue) {
-                return;
-            }
-
             if (IsConnected) {
-                if (!RawState.Value.IsConnected) {
+                if (!RawState.HasValue || !RawState.Value.IsConnected) {
                     Disconnect();
                 }
             } else {
-                if (RawState.Value.IsConnected) {
+                if (RawState.HasValue && RawState.Value.IsConnected) {
                     Connect();
                 }
             }

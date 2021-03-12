@@ -394,15 +394,11 @@ namespace Raccoon.Input {
                 Microsoft.Xna.Framework.Input.GamePadState gamepadState = GamePad.GetState((PlayerIndex) gamepadIndex);
 
                 if (!gamepadState.IsConnected) {
-                    if (_gamepadsState.Remove((int) gamepadIndex)) {
-                        Logger.Info($"Gamepad #{gamepadIndex} disconnected.");
-                    }
-
+                    _gamepadsState.Remove((int) gamepadIndex);
                     continue;
                 }
 
                 _gamepadsState[(int) gamepadIndex] = gamepadState;
-                Logger.Info($"Gamepad #{gamepadIndex} connected!");
                 GamePadsConnected++;
             }
             Logger.PopSubject();
