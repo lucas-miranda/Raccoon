@@ -28,7 +28,7 @@ namespace Raccoon.Input {
         }
 
         public override string ToString() {
-            return InputLabel.ToString();
+            return $"{InputLabel.ToString()} (#{Device.Id})";
         }
     }
 }

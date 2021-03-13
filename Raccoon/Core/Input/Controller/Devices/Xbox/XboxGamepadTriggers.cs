@@ -13,5 +13,9 @@ namespace Raccoon.Input {
             Left = xnaTriggers.Left;
             Right = xnaTriggers.Right;
         }
+
+        public override string ToString() {
+            return $"L: {Left}, R: {Right}";
+        }
     }
 }

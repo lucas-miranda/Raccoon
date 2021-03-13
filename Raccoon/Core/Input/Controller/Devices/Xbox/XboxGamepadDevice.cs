@@ -1,5 +1,3 @@
-using Raccoon.Util;
-
 namespace Raccoon.Input {
     public class XboxGamepadDevice : GamepadDevice {
         public XboxGamepadDevice(int id) : base(id) {
@@ -92,16 +90,8 @@ namespace Raccoon.Input {
                 // triggers
                 Triggers = new XboxGamepadTriggers(RawState.Value.Triggers);
 
-                if (!hasReceivedInput && (!Math.EqualsEstimate(Triggers.Left, 0f) || !Math.EqualsEstimate(Triggers.Right, 0f))) {
-                    hasReceivedInput = true;
-                }
-
                 // thumbsticks
                 ThumbSticks = new XboxGamepadThumbSticks(RawState.Value.ThumbSticks);
-
-                if (!hasReceivedInput && (!Vector2.EqualsEstimate(ThumbSticks.Left, Vector2.Zero) || !Vector2.EqualsEstimate(ThumbSticks.Right, Vector2.Zero))) {
-                    hasReceivedInput = true;
-                }
             } else {
                 // triggers
                 Triggers = new XboxGamepadTriggers();
@@ -131,6 +121,20 @@ namespace Raccoon.Input {
 
         public XboxGamepadTriggerInputSource CreateTriggerSource(XboxInputLabel.Triggers label) {
             return new XboxGamepadTriggerInputSource(this, label);
+        }
+
+        protected override void Connected() {
+            base.Connected();
+            Triggers = new XboxGamepadTriggers();
+            ThumbSticks = new XboxGamepadThumbSticks();
+            Buttons = new XboxGamepadButtons();
+        }
+
+        protected override void Disconnected() {
+            base.Disconnected();
+            Triggers = new XboxGamepadTriggers();
+            ThumbSticks = new XboxGamepadThumbSticks();
+            Buttons = new XboxGamepadButtons();
         }
     }
 }

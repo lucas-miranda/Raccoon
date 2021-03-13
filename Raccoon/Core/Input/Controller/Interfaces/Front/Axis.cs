@@ -1,3 +1,4 @@
+using System.Text;
 using System.Collections.Generic;
 
 using Raccoon.Util;
@@ -24,6 +25,16 @@ namespace Raccoon.Input {
         public Vector2 Value { get { return new Vector2(X, Y); } }
 
         #endregion Public Properties
+
+        public string SourcesInfo() {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (IBackInterfaceAxis source in _sources) {
+                sb.AppendLine($"{source.ToString()}: {source.Value}");
+            }
+
+            return sb.ToString();
+        }
 
         #region Internal Methods
 

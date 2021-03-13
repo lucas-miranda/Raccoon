@@ -37,5 +37,11 @@ namespace Raccoon.Input {
         protected void ReceiveAnyInput() {
             OnReceiveAnyInput?.Invoke();
         }
+
+        protected virtual void Connected() {
+        }
+
+        protected virtual void Disconnected() {
+        }
     }
 }

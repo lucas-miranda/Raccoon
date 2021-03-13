@@ -1,3 +1,4 @@
+using Raccoon.Util;
 
 namespace Raccoon.Input {
     public class MouseButtonBackInterfaceAxis : BackInterfaceAxis<MouseDevice> {
@@ -46,6 +47,8 @@ namespace Raccoon.Input {
 
         internal override void Update(int delta) {
             _source.Update(delta);
+            X = Math.Clamp(_source.X, -1f, 1f);
+            Y = Math.Clamp(_source.Y, -1f, 1f);
         }
 
         #endregion Internal Methods

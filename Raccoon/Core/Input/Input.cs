@@ -385,16 +385,23 @@ namespace Raccoon.Input {
             int lastPlayerIndex = Util.Math.Max(0, (MaxAllowedGamepads.HasValue ? MaxAllowedGamepads.Value : MaxGamePads) - 1);
 
             for (int gamepadIndex = (int) PlayerIndex.One; gamepadIndex <= lastPlayerIndex; gamepadIndex++) {
+                bool isRegistered;
+
                 if (_gamepadsState.ContainsKey((int) gamepadIndex)) {
+                    isRegistered = true;
                     _gamepadsPreviousState[(int) gamepadIndex] = _gamepadsState[(int) gamepadIndex];
                 } else {
+                    isRegistered = false;
                     _gamepadsPreviousState.Remove((int) gamepadIndex);
                 }
 
                 Microsoft.Xna.Framework.Input.GamePadState gamepadState = GamePad.GetState((PlayerIndex) gamepadIndex);
 
                 if (!gamepadState.IsConnected) {
-                    _gamepadsState.Remove((int) gamepadIndex);
+                    if (isRegistered) {
+                        _gamepadsState.Remove((int) gamepadIndex);
+                    }
+
                     continue;
                 }
 

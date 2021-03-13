@@ -210,6 +210,8 @@ namespace Raccoon.Input {
         public override string ToString() {
             StringBuilder sb = new StringBuilder();
 
+            sb.Append($"Button Axis ");
+
             // up
             sb.Append("[");
             if (_upButtonSources != null) {
@@ -252,7 +254,7 @@ namespace Raccoon.Input {
                 }
                 sb.Remove(sb.Length - 2, 2); // remove last separator
             }
-            sb.Append("], ");
+            sb.Append("]");
 
             return sb.ToString();
         }

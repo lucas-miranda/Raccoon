@@ -12,5 +12,9 @@ namespace Raccoon.Input {
             Left = new Vector2(xnaThumbSticks.Left);
             Right = new Vector2(xnaThumbSticks.Right);
         }
+        
+        public override string ToString() {
+            return $"L: {Left}, R: {Right}";
+        }
     }
 }
