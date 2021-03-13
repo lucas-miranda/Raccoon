@@ -120,6 +120,10 @@
             return new Size(Clamp(value.Width, min.Width, max.Width), Clamp(value.Height, min.Height, max.Height));
         }
 
+        public static float ClampNormalized(float value) {
+            return Clamp(value, 0f, 1f);
+        }
+
         public static Vector2 CircleClamp(Vector2 value, float radius = 1f) {
             return PolarToCartesian(new Vector2(Clamp(value.Length(), -radius, radius), Angle(value)));
         }
@@ -153,7 +157,7 @@
             return (1.0f - t) * start + end * t;
         }
 
-        public static float InverseLerp(float start, float end, float value) {
+        public static float Unlerp(float start, float end, float value) {
             if (Math.Abs(end - start) < Epsilon) {
                 return start;
             }
@@ -335,7 +339,7 @@
         }
 
         public static float Map(float value, float min, float max, float targetMin, float targetMax) {
-            return Lerp(targetMin, targetMax, InverseLerp(min, max, value));
+            return Lerp(targetMin, targetMax, Unlerp(min, max, value));
         }
 
         public static float Map(float value, Range range, Range targetRange) {

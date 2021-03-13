@@ -39,6 +39,12 @@ namespace Raccoon.Util {
         public float Length { get { return Max - Min; } }
         public float Center { get { return Min + Length / 2f; } }
 
+        public float this[float t] {
+            get {
+                return Lerp(t);
+            }
+        }
+
         #endregion Public Properties
 
         #region Public Methods
@@ -134,6 +140,31 @@ namespace Raccoon.Util {
 
         public bool ContainsExclusive(float value) {
             return value > Min && value < Max;
+        }
+
+        public float Lerp(float t) {
+            return (1.0f - t) * Min + Max * t;
+        }
+
+        public float LerpClamp(float t) {
+            t = Math.Clamp(t, 0f, 1f);
+            return (1.0f - t) * Min + Max * t;
+        }
+
+        public float Unlerp(float value) {
+            if (Math.Abs(Max - Min) < Math.Epsilon) {
+                return Min;
+            }
+
+            return (value - Min) / (Max - Min);
+        }
+
+        public float UnlerpClamp(float value) {
+            if (Math.Abs(Max - Min) < Math.Epsilon) {
+                return Min;
+            }
+
+            return (Clamp(value) - Min) / (Max - Min);
         }
 
         public override string ToString() {
