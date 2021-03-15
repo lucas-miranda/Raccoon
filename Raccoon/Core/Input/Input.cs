@@ -518,12 +518,6 @@ namespace Raccoon.Input {
             _mouseButtonsState[(int) MouseButton.M5] = XNAMouseState.XButton2;
 
             // scroll
-            if (_activated) { // reset scroll wheel values if mouse is coming out of game screen
-                MouseScrollWheelDelta = 0;
-                MouseScrollWheel = XNAMouseState.ScrollWheelValue;
-                return;
-            }
-
             MouseScrollWheelDelta = XNAMouseState.ScrollWheelValue - MouseScrollWheel;
             MouseScrollWheel = XNAMouseState.ScrollWheelValue;
 
@@ -544,10 +538,16 @@ namespace Raccoon.Input {
 
         internal void OnGameActivated() {
             _activated = true;
+
             if (LockMouseOnCenter) {
                 // reenable it
                 Mouse.IsRelativeMouseModeEXT = true;
             }
+
+            // ensure mouse state is correct when activating game again
+            MouseState XNAMouseState = Mouse.GetState();
+            MouseScrollWheelDelta = 0;
+            MouseScrollWheel = XNAMouseState.ScrollWheelValue;
         }
 
         internal void OnGameDeactivated() {
