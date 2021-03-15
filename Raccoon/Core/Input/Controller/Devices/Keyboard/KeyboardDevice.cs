@@ -5,6 +5,8 @@ namespace Raccoon.Input {
             Connect();
         }
 
+        public override string Name { get { return "Keyboard"; } }
+
         public override void Update(int delta) {
             base.Update(delta);
 

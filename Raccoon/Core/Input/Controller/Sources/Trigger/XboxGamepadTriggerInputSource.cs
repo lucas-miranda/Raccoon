@@ -12,6 +12,9 @@ namespace Raccoon.Input {
             base.Update(delta);
 
             switch (InputLabel) {
+                case XboxInputLabel.Triggers.None:
+                    break;
+
                 case XboxInputLabel.Triggers.LT:
                     Value = Device.Triggers.Left;
                     IsDown = Device.Triggers.Left > 0f;

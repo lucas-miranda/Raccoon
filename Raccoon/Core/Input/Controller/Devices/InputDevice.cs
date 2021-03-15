@@ -9,6 +9,7 @@ namespace Raccoon.Input {
         public InputDevice() {
         }
 
+        public abstract string Name { get; }
         public bool IsConnected { get; private set; }
 
         public virtual void Update(int delta) {
@@ -20,7 +21,9 @@ namespace Raccoon.Input {
             }
 
             IsConnected = true;
-            Logger.Info($"{GetType().Name} connected!");
+            Logger.PushSubject("Input Device");
+            Logger.Info($"{Name} connected!");
+            Logger.PopSubject();
             OnConnected?.Invoke();
         }
 
@@ -30,7 +33,9 @@ namespace Raccoon.Input {
             }
 
             IsConnected = false;
-            Logger.Info($"{GetType().Name} disconnected.");
+            Logger.PushSubject("Input Device");
+            Logger.Info($"{Name} disconnected.");
+            Logger.PopSubject();
             OnDisconnected?.Invoke();
         }
 

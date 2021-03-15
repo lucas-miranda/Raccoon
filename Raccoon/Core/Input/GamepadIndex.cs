@@ -10,6 +10,14 @@ namespace Raccoon.Input {
         Six,
         Seven,
         Eight,
+        Nine,
+        Ten,
+        Eleven,
+        Twelve,
+        Thirteen,
+        Fourteen,
+        Fifteen,
+        Sixteen,
         Other = 255
     }
 

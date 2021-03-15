@@ -108,7 +108,10 @@
     <Compile Include="Core\Input\Controller\Controller.cs" />
     <Compile Include="Core\Input\Controller\ControllerInputScheme.cs" />
     <Compile Include="Core\Input\Controller\ControllersManager.cs" />
+    <Compile Include="Core\Input\Controller\Devices\GamepadCapabilities.cs" />
     <Compile Include="Core\Input\Controller\Devices\GamepadDevice.cs" />
+    <Compile Include="Core\Input\Controller\Devices\GamepadFeature.cs" />
+    <Compile Include="Core\Input\Controller\Devices\GamepadKind.cs" />
     <Compile Include="Core\Input\Controller\Devices\GenericGamepadDevice.cs" />
     <Compile Include="Core\Input\Controller\Devices\InputDevice.cs" />
     <Compile Include="Core\Input\Controller\Devices\InputDeviceController.cs" />

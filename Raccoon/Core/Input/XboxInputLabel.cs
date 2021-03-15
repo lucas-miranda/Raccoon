@@ -21,14 +21,18 @@ namespace Raccoon.Input {
             BigButton   = 1 << 14
         }
 
+        [System.Flags]
         public enum Triggers {
-            LT = 0, 
-            RT
+            None    = 0, 
+            LT      = 1 << 0, 
+            RT      = 1 << 1
         }
 
+        [System.Flags]
         public enum ThumbSticks {
-            LeftStick = 0, 
-            RightStick
+            None       = 0,
+            LeftStick  = 1 << 0, 
+            RightStick = 1 << 1
         }
 
         [System.Flags]

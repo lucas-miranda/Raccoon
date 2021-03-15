@@ -12,6 +12,9 @@ namespace Raccoon.Input {
             base.Update(delta);
 
             switch (InputLabel) {
+                case XboxInputLabel.ThumbSticks.None:
+                    break;
+
                 case XboxInputLabel.ThumbSticks.LeftStick:
                     X = Device.ThumbSticks.Left.X;
                     Y = Device.ThumbSticks.Left.Y;

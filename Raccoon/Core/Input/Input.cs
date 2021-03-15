@@ -55,18 +55,6 @@ namespace Raccoon.Input {
             _specialKeysToChar[(int) Key.Comma] = ',';
 
             TextInputEXT.TextInput += ProcessTextInput;
-
-            int lastPlayerIndex = MaxGamePads - 1;
-
-            Logger.PushSubject("Input");
-            Logger.Info("Gamepads:");
-            Logger.Indent();
-            for (int gamepadIndex = (int) PlayerIndex.One; gamepadIndex <= lastPlayerIndex; gamepadIndex++) {
-                Microsoft.Xna.Framework.Input.GamePadState gamepadState = GamePad.GetState((PlayerIndex) gamepadIndex);
-                Logger.Info($"#{gamepadIndex}: {(gamepadState.IsConnected ? "Connected" : "Disconnected")}");
-            }
-            Logger.Unindent();
-            Logger.PopSubject();
         }
 
         #endregion Constructors
