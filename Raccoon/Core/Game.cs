@@ -20,6 +20,7 @@ namespace Raccoon {
                                        OnBegin = delegate { },
                                        OnBeforeUpdate = delegate { },
                                        OnLateUpdate = delegate { },
+                                       OnUnloadContent,
                                        OnWindowResize = delegate { },
                                        OnActivated,
                                        OnDeactivated,
@@ -907,6 +908,7 @@ Scene:
 
         private void InternalUnloadContent() {
             Scene?.UnloadContent();
+            OnUnloadContent?.Invoke();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();
         }
