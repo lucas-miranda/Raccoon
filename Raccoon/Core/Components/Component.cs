@@ -87,6 +87,10 @@ namespace Raccoon.Components {
         public abstract void DebugRender();
 #endif
 
+        public void RemoveSelf() {
+            Entity?.RemoveComponent(this);
+        }
+
         public virtual void Dispose() {
             if (IsDisposed) {
                 return;

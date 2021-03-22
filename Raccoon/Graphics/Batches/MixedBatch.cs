@@ -1175,6 +1175,7 @@ namespace Raccoon.Graphics {
         }
 
         private void Draw(ref IBatchItem batchItem, ref System.Type batchItemType, ref int startIndex, ref int endIndex, ref Texture texture, ref bool isHollow, ref Shader shader, ref IShaderParameters parameters, ref DepthStencilState depthStencilState) {
+
             _vertexBuffer.SetData(
                 offsetInBytes: 0,
                 data: _vertexPreBuffer,
@@ -1240,13 +1241,13 @@ namespace Raccoon.Graphics {
                 currentShaderDepthWrite.DepthWriteEnabled = depthStencilState.DepthBufferEnable;
             }
 
-            parameters?.ApplyParameters(shader);
-
             // prepare device
             GraphicsDevice.BlendState = BlendState;
             GraphicsDevice.SamplerStates[0] = SamplerState;
             GraphicsDevice.DepthStencilState = depthStencilState;
             GraphicsDevice.RasterizerState = RasterizerState;
+
+            parameters?.ApplyParameters(shader);
         }
 
         private void DrawSpriteBatchItem(int startBatchIndex, int endBatchIndex, Texture texture, Shader shader, IShaderParameters parameters, DepthStencilState depthStencilState) {
