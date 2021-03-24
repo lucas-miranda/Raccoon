@@ -17,6 +17,10 @@ namespace Raccoon.Util.Collections {
         #region Constructors
 
         public BinaryHeap(HeapType type, int startSize = 15) {
+            if (startSize < 0) {
+                throw new System.ArgumentException($"Invalid start size: {startSize}", nameof(startSize));
+            }
+
             _comparer = type == HeapType.Min ? (IComparer<T>) new Min() : new Max();
             _heap = new T[startSize];
             Count = 0;
@@ -58,6 +62,14 @@ namespace Raccoon.Util.Collections {
             Count--;
             HeapifyDown(1);
             return extracted;
+        }
+
+        public void Clear() {
+            for (int i = 0; i < Count; i++) {
+                _heap[i] = default;
+            }
+
+            Count = 0;
         }
 
         #endregion Public Methods

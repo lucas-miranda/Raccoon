@@ -35,6 +35,10 @@
             return _heap.Front.Value;
         }
 
+        public void Clear() {
+            _heap.Clear();
+        }
+
         #endregion Public Methods
     }
 
