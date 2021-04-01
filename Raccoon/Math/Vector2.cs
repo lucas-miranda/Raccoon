@@ -175,6 +175,14 @@ namespace Raccoon {
             return Dot(this, point);
         }
 
+        public Vector2 WithX(float x) {
+            return new Vector2(x, Y);
+        }
+
+        public Vector2 WithY(float y) {
+            return new Vector2(X, y);
+        }
+
         public override bool Equals(object obj) {
             return obj is Vector2 && Equals((Vector2) obj);
         }
