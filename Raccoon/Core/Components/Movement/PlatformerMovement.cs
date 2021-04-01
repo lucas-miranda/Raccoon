@@ -658,7 +658,7 @@ namespace Raccoon.Components {
                     velocity.X = 0f;
                 } else if (OnGround && !IsReceivingImpulse && !IsStoppingFromImpulse) {
                     // ground drag force
-                    velocity.X = Math.Approach(velocity.X, 0f, (DragForce + GroundDragForce) * MaxVelocity.X * dt);
+                    velocity.X = Math.Approach(velocity.X, 0f, ((DragForce + GroundDragForce) / dt) * MaxVelocity.X * dt);
                 } else {
                     // air drag force
                     float airDragForce = AirDragForce,
@@ -674,7 +674,7 @@ namespace Raccoon.Components {
                     }
 
                     // air drag force
-                    velocity.X = Math.Approach(velocity.X, 0f, (DragForce + airDragForce) * MaxVelocity.X * dt);
+                    velocity.X = Math.Approach(velocity.X, 0f, ((DragForce + airDragForce) / dt) * MaxVelocity.X * dt);
 
                     if (IsStoppingFromImpulse && Math.Abs(velocity.X) < impulseSpeedCutoff) {
                         IsStoppingFromImpulse = false;

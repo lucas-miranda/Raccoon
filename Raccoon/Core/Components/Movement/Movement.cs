@@ -181,22 +181,6 @@ namespace Raccoon.Components {
 
         #region Public Methods
 
-        public static float CalculateDragForce(float currentVelocity, float targetVelocity, float maxVelocity, float t) {
-            return (currentVelocity - targetVelocity) / (maxVelocity * t);
-        }
-
-        public static float CalculateDragForce(float currentVelocity, float targetVelocity, float maxVelocity) {
-            return CalculateDragForce(currentVelocity, targetVelocity, maxVelocity, Physics.FixedDeltaTimeSeconds);
-        }
-
-        public static float CalculateDragForceNormalized(float targetVelocityRatio, float t) {
-            return CalculateDragForce(1f, targetVelocityRatio, 1f, t);
-        }
-
-        public static float CalculateDragForceNormalized(float targetVelocityRatio) {
-            return CalculateDragForce(1f, targetVelocityRatio, 1f, Physics.FixedDeltaTimeSeconds);
-        }
-
         public virtual void OnAdded(Body body) {
             Body = body;
         }

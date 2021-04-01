@@ -7,9 +7,10 @@ namespace Raccoon {
     public sealed partial class Physics {
         #region Public Members
 
-        public static int FixedDeltaTime = 1000 / 60;
+        public static int FixedDeltaTime = 1000 / 60,
+                          ConstraintSolverAccuracy = 3;
+
         public static float FixedDeltaTimeSeconds = FixedDeltaTime / 1000f;
-        public static int ConstraintSolverAccuracy = 3;
 
         #endregion Public Members
 
