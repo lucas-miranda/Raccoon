@@ -91,7 +91,7 @@ namespace Raccoon {
 
         #endregion Public Static Properties
 
-        #region Internal Static Properties
+        #region Internal Properties
 
 #if DEBUG
         internal static long UpdatePositionExecutionTime { get; private set; }
@@ -102,24 +102,11 @@ namespace Raccoon {
         internal static int CollidersNarrowPhaseCount { get; private set; }
 #endif
 
-        #endregion Internal Static Properties
+        internal int Timesteps { get; private set; }
+
+        #endregion Internal Properties
 
         #region Public Methods
-
-        public void Update(int delta) {
-            if (!IsRunning) {
-                return;
-            }
-
-            // TODO: update using a float delta (increases precision)
-            int timesteps = (int) System.Math.Floor((delta + _leftOverDeltaTime) / (float) FixedDeltaTime);
-            timesteps = Math.Min(5, timesteps); // prevents freezing
-            _leftOverDeltaTime = Math.Max(0, delta - (timesteps * FixedDeltaTime));
-
-            for (int i = 0; i < timesteps; i++) {
-                Step(FixedDeltaTimeSeconds);
-            }
-        }
 
         /// <summary>
         /// Checks if one or more tag exists.
@@ -1163,6 +1150,21 @@ namespace Raccoon {
         #endregion Private Methods
 
         #region Internal Methods
+
+        internal void PrepareUpdate(int delta) {
+            // TODO: update using a float delta (increases precision)
+            Timesteps = (int) System.Math.Floor((delta + _leftOverDeltaTime) / (float) FixedDeltaTime);
+            Timesteps = Math.Min(5, Timesteps); // prevents freezing
+            _leftOverDeltaTime = Math.Max(0, delta - (Timesteps * FixedDeltaTime));
+        }
+
+        internal void Update() {
+            Step(FixedDeltaTimeSeconds);
+        }
+
+        internal void CompleteUpdate() {
+            Timesteps = 0;
+        }
 
         internal bool CheckCollision(IShape A, Vector2 APos, IShape B, Vector2 BPos, out ContactList contacts) {
             bool ret = _collisionFunctions[A.GetType()][B.GetType()](A, APos, B, BPos, out Contact[] c);

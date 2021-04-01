@@ -81,6 +81,15 @@ namespace Raccoon.Components {
             Debug.Assert(Entity != null);
         }
 
+        public virtual void BeforePhysicsStep() {
+        }
+
+        public virtual void PhysicsStep(int delta) {
+        }
+
+        public virtual void LatePhysicsStep() {
+        }
+
         public abstract void Render();
 
 #if DEBUG

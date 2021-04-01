@@ -359,6 +359,72 @@ namespace Raccoon {
             OnLateUpdate();
         }
 
+        public virtual void BeforePhysicsStep() {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.BeforePhysicsStep();
+            }
+            Components.Unlock();
+
+            Transform.LockChildren();
+            foreach (Transform child in Transform) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.BeforePhysicsStep();
+            }
+            Transform.UnlockChildren();
+        }
+
+        public virtual void PhysicsStep(int delta) {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.PhysicsStep(delta);
+            }
+            Components.Unlock();
+
+            Transform.LockChildren();
+            foreach (Transform child in Transform) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.PhysicsStep(delta);
+            }
+            Transform.UnlockChildren();
+        }
+
+        public virtual void LatePhysicsStep() {
+            Components.Lock();
+            foreach (Component c in Components) {
+                if (!c.Active) {
+                    continue;
+                }
+
+                c.LatePhysicsStep();
+            }
+            Components.Unlock();
+
+            Transform.LockChildren();
+            foreach (Transform child in Transform) {
+                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                    continue;
+                }
+
+                child.Entity.LatePhysicsStep();
+            }
+            Transform.UnlockChildren();
+        }
+
         public virtual void Render() {
             Graphics.Lock();
             foreach (Graphic g in Graphics) {

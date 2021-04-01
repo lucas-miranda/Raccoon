@@ -577,6 +577,60 @@ namespace Raccoon {
             Camera.Update(Game.Instance.UpdateDeltaTime);
         }
 
+        public virtual void BeforePhysicsStep() {
+            if (!IsRunning) {
+                return;
+            }
+
+            _updatables.Lock();
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                    continue;
+                }
+
+                extendedUpdatable.BeforePhysicsStep();
+            }
+            _updatables.Unlock();
+        }
+
+        public virtual void PhysicsStep(int delta) {
+            if (!IsRunning) {
+                return;
+            }
+
+            _updatables.Lock();
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                    continue;
+                }
+
+                extendedUpdatable.PhysicsStep(delta);
+            }
+            _updatables.Unlock();
+        }
+
+        public virtual void LatePhysicsStep() {
+            if (!IsRunning) {
+                return;
+            }
+
+            _updatables.Lock();
+            foreach (IUpdatable updatable in _updatables) {
+                if (!updatable.Active
+                  || !(updatable is IExtendedUpdatable extendedUpdatable)
+                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                    continue;
+                }
+
+                extendedUpdatable.LatePhysicsStep();
+            }
+            _updatables.Unlock();
+        }
+
         /// <summary>
         /// Render all IRenderables, sorted by Layer.
         /// </summary>

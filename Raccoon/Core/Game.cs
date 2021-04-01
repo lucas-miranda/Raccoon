@@ -628,7 +628,26 @@ Scene:
             Scene?.BeforeUpdate();
             OnUpdate(delta);
             Scene?.Update(delta);
-            Physics.Instance.Update(delta);
+
+            if (Physics.IsRunning) {
+                Physics.Instance.PrepareUpdate(delta);
+
+                if (Scene != null) {
+                    for (int i = 0; i < Physics.Instance.Timesteps; i++) {
+                        Scene.BeforePhysicsStep();
+                        Scene.PhysicsStep(delta);
+                        Physics.Instance.Update();
+                        Scene.LatePhysicsStep();
+                    }
+                } else {
+                    for (int i = 0; i < Physics.Instance.Timesteps; i++) {
+                        Physics.Instance.Update();
+                    }
+                }
+
+                Physics.Instance.CompleteUpdate();
+            }
+
             Coroutines.Instance.Update(delta);
             OnLateUpdate();
             Scene?.LateUpdate();
