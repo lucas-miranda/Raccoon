@@ -31,7 +31,8 @@ namespace Raccoon.Components {
         #region Private Members
 
         private uint _axesSnap;
-        private Vector2 _maxVelocity, _acceleration;
+        private Vector2 _axis,
+                        _maxVelocity, _acceleration;
 
         #endregion Private Members
 
@@ -75,20 +76,20 @@ namespace Raccoon.Components {
         public Body Body { get; private set; }
         public BitTag Tags { get { return CollisionTags | ExtraCollisionTags; } }
         public BitTag CollisionTags { get; set; } = BitTag.None;
-        public Vector2 Axis { get; set; }
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
         public Vector2 MaxVelocity { get { return _maxVelocity + ExtraMaxVelocity + BonusMaxVelocity; } set { _maxVelocity = value; } }
         public Vector2 BaseMaxVelocity { get { return _maxVelocity; } }
         public Vector2 BonusMaxVelocity { get; set; }
         public Vector2 ExtraMaxVelocity { get; protected set; }
-        public Vector2 TargetVelocity { get; protected set; }
         public Vector2 Acceleration { get { return _acceleration + ExtraAcceleration + BonusAcceleration; } set { _acceleration = value; } }
         public Vector2 BaseAcceleration { get { return _acceleration; } }
         public Vector2 BonusAcceleration { get; set; }
         public Vector2 ExtraAcceleration { get; protected set; }
+        public Vector2 TargetVelocity { get; protected set; }
         public Vector2 LastAxis { get; protected set; }
         //public Vector2 Impulse { get; protected set; }
-        public float DragForce { get; set; }
+        public float DragForce { get; set; } = 1f;
+        public Vector2? MoveTargetPosition { get; protected set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
         public bool IsMoving { get; private set; } = false;
@@ -101,6 +102,25 @@ namespace Raccoon.Components {
         public float ImpulseTime { get; protected set; }
         public bool JustReceiveImpulse { get; protected set; }
         public bool IsReceivingImpulse { get; protected set; }
+        public bool IsMovingToTargetPosition { get { return MoveTargetPosition.HasValue; } }
+        public bool UseSmoothStopWithMovingToTarget { get; private set; }
+
+        public Vector2 Axis {
+            get {
+                return _axis;
+            }
+
+            protected set {
+                _axis = value;
+
+                if (_axis != Vector2.Zero) {
+                    LastAxis = _axis;
+                }
+
+                TargetVelocity = _axis * MaxVelocity;
+            }
+        }
+
 
         public bool SnapHorizontalAxis {
             get {
@@ -161,6 +181,22 @@ namespace Raccoon.Components {
 
         #region Public Methods
 
+        public static float CalculateDragForce(float currentVelocity, float targetVelocity, float maxVelocity, float t) {
+            return (currentVelocity - targetVelocity) / (maxVelocity * t);
+        }
+
+        public static float CalculateDragForce(float currentVelocity, float targetVelocity, float maxVelocity) {
+            return CalculateDragForce(currentVelocity, targetVelocity, maxVelocity, Physics.FixedDeltaTimeSeconds);
+        }
+
+        public static float CalculateDragForceNormalized(float targetVelocityRatio, float t) {
+            return CalculateDragForce(1f, targetVelocityRatio, 1f, t);
+        }
+
+        public static float CalculateDragForceNormalized(float targetVelocityRatio) {
+            return CalculateDragForce(1f, targetVelocityRatio, 1f, Physics.FixedDeltaTimeSeconds);
+        }
+
         public virtual void OnAdded(Body body) {
             Body = body;
         }
@@ -171,7 +207,6 @@ namespace Raccoon.Components {
 
         public virtual void BeforeUpdate() {
             Axis = NextAxis;
-            TargetVelocity = Axis * MaxVelocity;
             NextAxis = Vector2.Zero;
         }
 
@@ -263,12 +298,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            axis = Util.Math.Clamp(axis, -Vector2.One, Vector2.One);
-            if (axis != Vector2.Zero) {
-                LastAxis = axis;
-            }
-
-            NextAxis = axis;
+            NextAxis = Util.Math.Clamp(axis, -Vector2.One, Vector2.One);
         }
 
         public void Move(float x, float y) {
@@ -281,6 +311,11 @@ namespace Raccoon.Components {
 
         public void MoveVertical(float y) {
             Move(new Vector2(LastAxis.X, y));
+        }
+
+        public virtual void MoveTo(Vector2 position, bool smoothStop = true) {
+            MoveTargetPosition = position;
+            UseSmoothStopWithMovingToTarget = smoothStop;
         }
 
         public void ApplyCustomImpulse(Vector2 distance, float duration) {
@@ -306,6 +341,10 @@ namespace Raccoon.Components {
             // impulse
             ImpulsePerSec = Vector2.Zero;
             ImpulseTime = 0f;
+        }
+
+        public void CancelMoveToTargetPosition() {
+            MoveTargetPosition = null;
         }
 
         public virtual void Dispose() {

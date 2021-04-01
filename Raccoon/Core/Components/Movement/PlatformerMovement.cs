@@ -136,6 +136,7 @@ namespace Raccoon.Components {
         /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
         /// <param name="horizontalAcceleration">Horizontal speed increase.</param>
         public PlatformerMovement(float maxHorizontalVelocity, float horizontalAcceleration, float jumpHeight, float jumpAcceleration) : base(new Vector2(maxHorizontalVelocity, 0), new Vector2(horizontalAcceleration, jumpAcceleration)) {
+            DragForce = 0f;
             SnapHorizontalAxis = true;
             JumpHeight = jumpHeight;
         }
@@ -146,6 +147,7 @@ namespace Raccoon.Components {
         /// <param name="maxHorizontalVelocity">Max horizontal velocity.</param>
         /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
         public PlatformerMovement(float maxHorizontalVelocity, int timeToAchieveMaxVelocity, float jumpHeight, float jumpAcceleration) : this(maxHorizontalVelocity, maxHorizontalVelocity / (Time.MiliToSec * timeToAchieveMaxVelocity), jumpHeight, jumpAcceleration) {
+            DragForce = 0f;
         }
 
         #endregion Constructors
@@ -243,12 +245,12 @@ namespace Raccoon.Components {
         /// <summary>
         /// Drag force applied when on ground.
         /// </summary>
-        public float GroundDragForce { get; set; }
+        public float GroundDragForce { get; set; } = 1f;
 
         /// <summary>
         /// Drag force applied when on air.
         /// </summary>
-        public float AirDragForce { get; set; }
+        public float AirDragForce { get; set; } = 1f;
 
         /// <summary>
         /// This modifier will be applied to ramp displacement (in px).
@@ -656,9 +658,7 @@ namespace Raccoon.Components {
                     velocity.X = 0f;
                 } else if (OnGround && !IsReceivingImpulse && !IsStoppingFromImpulse) {
                     // ground drag force
-                    float factor = (1f - DragForce) * (1f - GroundDragForce);
-
-                    velocity.X *= factor;
+                    velocity.X = Math.Approach(velocity.X, 0f, (DragForce + GroundDragForce) * MaxVelocity.X * dt);
                 } else {
                     // air drag force
                     float airDragForce = AirDragForce,
@@ -674,7 +674,7 @@ namespace Raccoon.Components {
                     }
 
                     // air drag force
-                    velocity.X *= (1f - DragForce) * (1f - airDragForce);
+                    velocity.X = Math.Approach(velocity.X, 0f, (DragForce + airDragForce) * MaxVelocity.X * dt);
 
                     if (IsStoppingFromImpulse && Math.Abs(velocity.X) < impulseSpeedCutoff) {
                         IsStoppingFromImpulse = false;
@@ -859,6 +859,10 @@ namespace Raccoon.Components {
             if (OnGround) {
                 Velocity = new Vector2(Velocity.X, Acceleration.Y * JumpExplosionRate);
             }
+        }
+
+        public override void MoveTo(Vector2 position, bool smoothStop = true) {
+            throw new System.NotSupportedException();
         }
 
         public string ToStringDetailed() {
