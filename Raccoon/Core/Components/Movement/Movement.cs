@@ -21,10 +21,14 @@ namespace Raccoon.Components {
         public delegate void PhysicsUpdateAction(float dt);
         public PhysicsUpdateAction OnPhysicsUpdate = delegate { };
 
+        // force
+        public delegate void ForceMovementAction(Vector2 force, float duration);
+        public ForceMovementAction OnReceiveForce;
+        public PhysicsAction OnForceEnds;
+
         // impulse
         public delegate void ImpulseMovementAction(Vector2 impulse);
-        public ImpulseMovementAction OnReceiveImpulse = delegate { };
-        public PhysicsAction OnImpulseEnds;
+        public ImpulseMovementAction OnReceiveImpulse;
 
         #endregion Public Members
 
@@ -98,10 +102,10 @@ namespace Raccoon.Components {
         public bool TouchedRight { get; private set; }
         public bool TouchedBottom { get; private set; }
         public bool TouchedLeft { get; private set; }*/
-        public Vector2 ImpulsePerSec { get; protected set; }
-        public float ImpulseTime { get; protected set; }
-        public bool JustReceiveImpulse { get; protected set; }
-        public bool IsReceivingImpulse { get; protected set; }
+        public Vector2 ForcePerSec { get; protected set; }
+        public float ForceDuration { get; protected set; }
+        public bool JustReceiveForce { get; protected set; }
+        public bool IsReceivingForce { get; protected set; }
         public bool IsMovingToTargetPosition { get { return MoveTargetPosition.HasValue; } }
         public bool UseSmoothStopWithMovingToTarget { get; private set; }
 
@@ -216,13 +220,13 @@ namespace Raccoon.Components {
         public virtual void PhysicsLateUpdate(float dt) {
             OnPhysicsLateUpdate();
 
-            if (!Math.EqualsEstimate(ImpulseTime, 0f)) {
-                ImpulseTime = Math.Approach(ImpulseTime, 0f, dt);
-                if (Math.EqualsEstimate(ImpulseTime, 0f)) {
-                    ImpulsePerSec = Vector2.Zero;
-                    JustReceiveImpulse = IsReceivingImpulse = false;
-                    ImpulseEnds();
-                    OnImpulseEnds?.Invoke();
+            if (!Math.EqualsEstimate(ForceDuration, 0f)) {
+                ForceDuration = Math.Approach(ForceDuration, 0f, dt);
+                if (Math.EqualsEstimate(ForceDuration, 0f)) {
+                    ForcePerSec = Vector2.Zero;
+                    JustReceiveForce = IsReceivingForce = false;
+                    ForceEnds();
+                    OnForceEnds?.Invoke();
                 }
             }
 
@@ -302,20 +306,75 @@ namespace Raccoon.Components {
             UseSmoothStopWithMovingToTarget = smoothStop;
         }
 
-        public void ApplyCustomImpulse(Vector2 distance, float duration) {
-            // a = 2d / t²
-
-            ImpulsePerSec = (2f * distance) / (duration * duration); // acceleration
-            ImpulseTime = duration;
-
-            JustReceiveImpulse =
-                IsReceivingImpulse = true;
-
-            OnReceiveImpulse(ImpulsePerSec);
+        public void ApplyImpulse(Vector2 impulse) {
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
         }
 
-        public void ApplyCustomImpulse(Vector2 normal, float distance, float duration) {
-            ApplyCustomImpulse(normal * distance, duration);
+        public void ApplyImpulse(Vector2 distance, float duration) {
+            if (Math.EqualsEstimate(duration, 0f)) {
+                return;
+            }
+
+            Vector2 impulse = distance / duration;
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyImpulse(Vector2 distance, float duration, out Vector2 impulse) {
+            if (Math.EqualsEstimate(duration, 0f)) {
+                impulse = default;
+                return;
+            }
+
+            impulse = distance / duration;
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyImpulse(float distance, Vector2 direction, float duration) {
+            if (Math.EqualsEstimate(duration, 0f)) {
+                return;
+            }
+
+            Vector2 impulse = direction * (distance / duration);
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyImpulse(float distance, Vector2 direction, float duration, out Vector2 impulse) {
+            if (Math.EqualsEstimate(duration, 0f)) {
+                impulse = default;
+                return;
+            }
+
+            impulse = direction * (distance / duration);
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyPreciseImpulse(float distance, Vector2 direction, float dragForce) {
+            Vector2 impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyPreciseImpulse(float distance, Vector2 direction, float dragForce, out Vector2 impulse) {
+            impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
+            Velocity += impulse;
+            OnReceiveImpulse?.Invoke(impulse);
+        }
+
+        public void ApplyForce(Vector2 force, float duration) {
+            ForcePerSec = ((2f * force) / (duration * duration)); // acceleration
+            ForceDuration = duration;
+
+            JustReceiveForce = IsReceivingForce = true;
+            OnReceiveForce?.Invoke(ForcePerSec, ForceDuration);
+        }
+
+        public void ApplyForce(Vector2 normal, float distance, float duration) {
+            ApplyForce(normal * distance, duration);
         }
 
         public void FullStop() {
@@ -323,8 +382,8 @@ namespace Raccoon.Components {
             Body.Velocity = Vector2.Zero;
 
             // impulse
-            ImpulsePerSec = Vector2.Zero;
-            ImpulseTime = 0f;
+            ForcePerSec = Vector2.Zero;
+            ForceDuration = 0f;
         }
 
         public void CancelMoveToTargetPosition() {
@@ -341,6 +400,7 @@ namespace Raccoon.Components {
             OnStopMove = null;
             OnPhysicsUpdate = null;
             OnPhysicsLateUpdate = null;
+            OnReceiveForce = null;
             OnReceiveImpulse = null;
 
             IsDisposed = true;
@@ -369,7 +429,25 @@ namespace Raccoon.Components {
 
         protected abstract void OnMoving(Vector2 distance);
 
-        protected virtual void ImpulseEnds() {
+        protected virtual void ForceEnds() {
+        }
+
+        protected float CalculateAcceleration(float speed, float targetSpeed, float dt, float acceleration) {
+            if (Math.EqualsEstimate(speed, targetSpeed)) {
+                return 0f;
+            }
+
+            if (targetSpeed > speed) {
+                if (speed + acceleration * dt <= targetSpeed) {
+                    return acceleration;
+                }
+            } else {
+                if (speed - acceleration * dt >= targetSpeed) {
+                    return -acceleration;
+                }
+            }
+
+            return (targetSpeed - speed) / dt;
         }
 
         #endregion Protected Methods

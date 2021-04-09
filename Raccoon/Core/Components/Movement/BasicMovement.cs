@@ -2,6 +2,12 @@
 
 namespace Raccoon.Components {
     public class BasicMovement : Movement {
+        #region Private Members
+
+        private Vector2 _currentAcceleration;
+
+        #endregion Private Members
+
         #region Constructors
 
         /// <summary>
@@ -107,34 +113,70 @@ namespace Raccoon.Components {
                 Axis = axis;
             }
 
+            Vector2 displacement = Vector2.Zero,
+                    velocity = Velocity,
+                    currentAcceleration = Vector2.Zero;
 
+            //
             // horizontal velocity
+            //
 
-            float horizontalVelocity = Velocity.X;
             if (axis.X == 0f) { // stopping from movement, drag force applies
-                horizontalVelocity = Math.Approach(horizontalVelocity, 0f, (DragForce / dt) * MaxVelocity.X * dt);
-            } else if (SnapHorizontalAxis && horizontalVelocity != 0f && Math.Sign(axis.X) != Math.Sign(horizontalVelocity)) { // snapping horizontal axis clears velocity
-                horizontalVelocity = 0f;
+                currentAcceleration.X += CalculateAcceleration(
+                    velocity.X, 
+                    0f, 
+                    dt, 
+                    (DragForce / dt) * MaxVelocity.X
+                );
+            } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(axis.X) != Math.Sign(velocity.X)) { // snapping horizontal axis clears velocity
+                //velocity.X = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
-                horizontalVelocity = Math.Approach(horizontalVelocity, TargetVelocity.X, Acceleration.X * dt);
+                currentAcceleration.X += CalculateAcceleration(
+                    velocity.X, 
+                    TargetVelocity.X, 
+                    dt, 
+                    Acceleration.X
+                );
             } else { // velocity increasing without a limit
-                horizontalVelocity += System.Math.Sign(axis.X) * Acceleration.X * dt;
+                currentAcceleration.X += System.Math.Sign(axis.X) * Acceleration.X;
             }
 
+            if (currentAcceleration.X != 0f 
+             && velocity.X != 0f 
+             && Math.Sign(currentAcceleration.X) != Math.Sign(velocity.X) 
+             && Math.Abs(currentAcceleration.X * dt) >= Math.Abs(velocity.X)
+            ) {
+                velocity.X = 0f;
+            } else {
+                velocity.X += currentAcceleration.X * dt;
+            }
+
+            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * _currentAcceleration.X * dt * dt;
+
+            //
             // vertical velocity
+            // 
 
-            float verticalVelocity = Velocity.Y;
             if (axis.Y == 0f) { // stopping from movement, drag force applies
-                verticalVelocity = Math.Approach(verticalVelocity, 0f, (DragForce / dt) * MaxVelocity.Y * dt);
-            } else if (SnapVerticalAxis && verticalVelocity != 0f && System.Math.Sign(axis.Y) != System.Math.Sign(verticalVelocity)) { // snapping horizontal axis clears velocity
-                verticalVelocity = 0f;
+                currentAcceleration.Y += CalculateAcceleration(
+                    velocity.Y, 
+                    0f, 
+                    dt, 
+                    (DragForce / dt) * MaxVelocity.Y
+                );
+            } else if (SnapVerticalAxis && velocity.Y != 0f && System.Math.Sign(axis.Y) != System.Math.Sign(velocity.Y)) { // snapping horizontal axis clears velocity
+                //velocity.Y = 0f;
             } else if (MaxVelocity.Y > 0f) { // velocity increasing until MaxVelocity.Y limit
-                verticalVelocity = Math.Approach(verticalVelocity, TargetVelocity.Y, Acceleration.Y * dt);
+                currentAcceleration.Y += CalculateAcceleration(
+                    velocity.Y, 
+                    TargetVelocity.Y, 
+                    dt, 
+                    Acceleration.Y
+                );
             } else { // velocity increasing without a limit
-                verticalVelocity += System.Math.Sign(axis.Y) * Acceleration.Y * dt;
+                currentAcceleration.Y += System.Math.Sign(axis.Y) * Acceleration.Y;
             }
 
-            Velocity = new Vector2(horizontalVelocity, verticalVelocity);
             Vector2 velocityDisplacement = Velocity * dt;
 
             if (IsMovingToTargetPosition) {
@@ -149,7 +191,23 @@ namespace Raccoon.Components {
                 }
             }
 
-            return velocityDisplacement + Body.Force * dt;
+            if (currentAcceleration.Y != 0f 
+             && velocity.Y != 0f 
+             && Math.Sign(currentAcceleration.Y) != Math.Sign(velocity.Y) 
+             && Math.Abs(currentAcceleration.Y * dt) >= Math.Abs(velocity.Y)
+            ) {
+                velocity.Y = 0f;
+            } else {
+                velocity.Y += currentAcceleration.Y * dt;
+            }
+
+            displacement.Y += velocityDisplacement.Y + Body.Force.Y * dt + .5f * _currentAcceleration.Y * dt * dt;
+
+            //
+
+            Velocity = velocity;
+            _currentAcceleration = currentAcceleration;
+            return displacement;
         }
 
         public override void DebugRender() {

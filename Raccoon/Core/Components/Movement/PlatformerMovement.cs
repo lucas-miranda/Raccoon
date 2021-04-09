@@ -101,6 +101,9 @@ namespace Raccoon.Components {
 
         private bool _touchedBottom, _touchedTop;
 
+        // integration
+        private Vector2 _currentAcceleration;
+
         // jump
         private int _maxJumps = 1;
         private bool _canJump = true, 
@@ -360,7 +363,7 @@ namespace Raccoon.Components {
         /// </summary>
         public bool GravityEnabled { get; set; } = true;
 
-        public bool IsStoppingFromImpulse { get; private set; }
+        public bool IsStoppingFromForce { get; private set; }
 
         #endregion Public Properties
 
@@ -641,30 +644,37 @@ namespace Raccoon.Components {
 
         public override Vector2 Integrate(float dt) {
             Vector2 displacement = Vector2.Zero, // in pixels
-                    velocity = Velocity;         // in pixels/second
+                    velocity = Velocity, // in pixels/second
+                    currentAcceleration = Vector2.Zero; // in pixels/second²
 
             /////////////////////////
             // Horizontal Velocity //
             /////////////////////////
 
 
-            if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.X != 0f) {
-                // handling impulse
-                velocity.X += ImpulsePerSec.X * dt;
+            if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.X != 0f) {
+                // handling force
+                currentAcceleration.X += ForcePerSec.X;
             } else if (Axis.X == 0f) {
                 // horizontal axis is resting
 
                 if (Math.EqualsEstimate(velocity.X, 0f)) {
-                    velocity.X = 0f;
-                } else if (OnGround && !IsReceivingImpulse && !IsStoppingFromImpulse) {
+                    //velocity.X = 0f;
+                } else if (OnGround && !IsReceivingForce && !IsStoppingFromForce) {
                     // ground drag force
-                    velocity.X = Math.Approach(velocity.X, 0f, ((DragForce + GroundDragForce) / dt) * MaxVelocity.X * dt);
+
+                    currentAcceleration.X += CalculateAcceleration(
+                        velocity.X, 
+                        0f, 
+                        dt, 
+                        ((DragForce + GroundDragForce) / dt) * MaxVelocity.X
+                    );
                 } else {
                     // air drag force
                     float airDragForce = AirDragForce,
                           impulseSpeedCutoff = 0f;
 
-                    if (IsReceivingImpulse || IsStoppingFromImpulse) {
+                    if (IsReceivingForce || IsStoppingFromForce) {
                         if (OnAir) {
                             impulseSpeedCutoff = 5f;
                             airDragForce /= 2f;
@@ -674,10 +684,12 @@ namespace Raccoon.Components {
                     }
 
                     // air drag force
-                    velocity.X = Math.Approach(velocity.X, 0f, ((DragForce + airDragForce) / dt) * MaxVelocity.X * dt);
+                    if (Math.Abs(velocity.X) > 0f) {
+                        currentAcceleration.X += -Math.Sign(velocity.X) * ((DragForce + airDragForce) / dt) * MaxVelocity.X;
+                    }
 
-                    if (IsStoppingFromImpulse && Math.Abs(velocity.X) < impulseSpeedCutoff) {
-                        IsStoppingFromImpulse = false;
+                    if (IsStoppingFromForce && Math.Abs(velocity.X) < impulseSpeedCutoff) {
+                        IsStoppingFromForce = false;
                     }
                 }
 
@@ -699,8 +711,8 @@ namespace Raccoon.Components {
                 // snaps horizontal velocity to zero, if horizontal axis is on opposite direction
                 velocity.X = 0f;
 
-                if (IsStoppingFromImpulse) {
-                    IsStoppingFromImpulse = false;
+                if (IsStoppingFromForce) {
+                    IsStoppingFromForce = false;
                 }
 
                 // resetting ramp leaving values
@@ -735,7 +747,7 @@ namespace Raccoon.Components {
                     } else {
                         // ensure we'll not fall from ramp at high speed
                         if (!OnGround && Math.Abs(velocity.X) > MaxVelocity.X) {
-                            velocity.X =  Math.Sign(TargetVelocity.X) * MaxVelocity.X;
+                            velocity.X = Math.Sign(TargetVelocity.X) * MaxVelocity.X;
                         }
 
                         OnLeavingRamp?.Invoke(_previousRampDirection);
@@ -768,21 +780,36 @@ namespace Raccoon.Components {
                     acceleration = _rampCurrentAcceleration;
                 }
 
-                velocity.X = Math.Approach(velocity.X, TargetVelocity.X, acceleration * dt);
+                currentAcceleration.X += CalculateAcceleration(
+                    velocity.X, 
+                    TargetVelocity.X, 
+                    dt, 
+                    acceleration
+                );
 
-                if (IsStoppingFromImpulse) {
-                    IsStoppingFromImpulse = false;
+                if (IsStoppingFromForce) {
+                    IsStoppingFromForce = false;
                 }
             } else {
                 // velocity increasing without a limit
-                velocity.X += Math.Sign(Axis.X) * Acceleration.X * dt;
+                currentAcceleration.X += Math.Sign(Axis.X) * Acceleration.X;
 
-                if (IsStoppingFromImpulse) {
-                    IsStoppingFromImpulse = false;
+                if (IsStoppingFromForce) {
+                    IsStoppingFromForce = false;
                 }
             }
 
-            displacement.X = (velocity.X + Body.Force.X) * dt;
+            if (currentAcceleration.X != 0f 
+             && velocity.X != 0f 
+             && Math.Sign(currentAcceleration.X) != Math.Sign(velocity.X) 
+             && Math.Abs(currentAcceleration.X * dt) >= Math.Abs(velocity.X)
+            ) {
+                velocity.X = 0f;
+            } else {
+                velocity.X += currentAcceleration.X * dt;
+            }
+
+            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * _currentAcceleration.X * dt * dt;
 
             ///////////////////////
             // Vertical Velocity //
@@ -796,24 +823,38 @@ namespace Raccoon.Components {
             }
 #endif
 
-            if (!Math.EqualsEstimate(ImpulseTime, 0f) && ImpulsePerSec.Y != 0f) {
-                // handling impulse
-                velocity.Y += ImpulsePerSec.Y * dt;
+
+            if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.Y != 0f) {
+                // handling force
+                currentAcceleration.Y += ForcePerSec.Y;
             }
 
             if (GravityEnabled && _internal_isGravityEnabled) {
                 // apply gravity force
-                velocity.Y += GravityScale * GravityForce.Y * dt;
+                currentAcceleration.Y += GravityScale * GravityForce.Y;
             }
 
             if (IsStillJumping) {
                 // apply jumping acceleration if it's jumping
-                velocity.Y -= Acceleration.Y * dt;
+                currentAcceleration.Y += -Acceleration.Y;
             }
 
-            displacement.Y += (velocity.Y + Body.Force.Y) * dt;
+            if (currentAcceleration.Y != 0f 
+             && velocity.Y != 0f 
+             && Math.Sign(currentAcceleration.Y) != Math.Sign(velocity.Y) 
+             && Math.Abs(currentAcceleration.Y * dt) >= Math.Abs(velocity.Y)
+            ) {
+                velocity.Y = 0f;
+            } else {
+                velocity.Y += currentAcceleration.Y * dt;
+            }
+
+            displacement.Y += (Velocity.Y + Body.Force.Y) * dt + .5f * _currentAcceleration.Y * dt * dt;
+
+            //
 
             Velocity = velocity;
+            _currentAcceleration = currentAcceleration;
             return displacement;
         }
 
@@ -879,10 +920,10 @@ namespace Raccoon.Components {
                 Acceleration, BonusAcceleration, ExtraAcceleration,
 
                 // impulse
-                ImpulsePerSec, 
-                ImpulseTime, 
-                JustReceiveImpulse, 
-                IsReceivingImpulse,
+                ForcePerSec, 
+                ForceDuration, 
+                JustReceiveForce, 
+                IsReceivingForce,
 
                 Body.Force, GravityForce * GravityScale,
                 Enabled, CanMove,
@@ -920,7 +961,7 @@ namespace Raccoon.Components {
                 if (IsJumping && !IsFalling) {
                     Fall();
                 }
-            } else if (distance.Y < 0f && (IsStillJumping || JustReceiveImpulse)) {
+            } else if (distance.Y < 0f && (IsStillJumping || JustReceiveForce)) {
                 if (!IsJumping || _jumpStart) {
                     _jumpStart = false;
                     IsJumping = 
@@ -943,8 +984,8 @@ namespace Raccoon.Components {
                         _canKeepCurrentJump = 
                             IsStillJumping = false;
                     }
-                } else if (JustReceiveImpulse) {
-                    JustReceiveImpulse = false;
+                } else if (JustReceiveForce) {
+                    JustReceiveForce = false;
                 }
             }
 
@@ -956,9 +997,9 @@ namespace Raccoon.Components {
             OnMove(new Vector2(distance.X, 0f));
         }
 
-        protected override void ImpulseEnds() {
-            base.ImpulseEnds();
-            IsStoppingFromImpulse = true;
+        protected override void ForceEnds() {
+            base.ForceEnds();
+            IsStoppingFromForce = true;
         }
 
         #endregion Protected Methods
