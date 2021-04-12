@@ -9,7 +9,7 @@ namespace Raccoon.Components {
         public const float MaxImpulsePerSecond = 60f * 5f;
 
         public delegate void MovementAction(Vector2 distance);
-        public MovementAction OnMove = delegate { };
+        public MovementAction OnMove;
 
         public delegate void MovementEventAction();
         public MovementEventAction OnStartMove,
@@ -105,6 +105,7 @@ namespace Raccoon.Components {
         public Vector2 ForcePerSec { get; protected set; }
         public float ForceDuration { get; protected set; }
         public bool JustReceiveForce { get; protected set; }
+        public bool JustReceiveImpulse { get; protected set; }
         public bool IsReceivingForce { get; protected set; }
         public bool IsMovingToTargetPosition { get { return MoveTargetPosition.HasValue; } }
         public bool UseSmoothStopWithMovingToTarget { get; private set; }
@@ -308,6 +309,7 @@ namespace Raccoon.Components {
 
         public void ApplyImpulse(Vector2 impulse) {
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -318,6 +320,7 @@ namespace Raccoon.Components {
 
             Vector2 impulse = distance / duration;
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -339,6 +342,7 @@ namespace Raccoon.Components {
 
             Vector2 impulse = direction * (distance / duration);
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -350,18 +354,21 @@ namespace Raccoon.Components {
 
             impulse = direction * (distance / duration);
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 
         public void ApplyPreciseImpulse(float distance, Vector2 direction, float dragForce) {
             Vector2 impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 
         public void ApplyPreciseImpulse(float distance, Vector2 direction, float dragForce, out Vector2 impulse) {
             impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
             Velocity += impulse;
+            JustReceiveImpulse = true;
             OnReceiveImpulse?.Invoke(impulse);
         }
 

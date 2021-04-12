@@ -28,6 +28,10 @@ namespace Raccoon.Components {
                                               OnTouchGround = delegate { },
                                               OnFallingBegin = delegate { };
 
+        public delegate void AxisMovementAction(float distance);
+        public event AxisMovementAction OnHorizontalMove,
+                                        OnVerticalMove;
+
         public delegate void RampEvent(int climbDirection);
         public event RampEvent OnTouchRamp, OnLeaveRamp, OnEnteringRamp, OnLeavingRamp;
 
@@ -961,7 +965,7 @@ namespace Raccoon.Components {
                 if (IsJumping && !IsFalling) {
                     Fall();
                 }
-            } else if (distance.Y < 0f && (IsStillJumping || JustReceiveForce)) {
+            } else if (distance.Y < 0f && (IsStillJumping || JustReceiveForce || JustReceiveImpulse)) {
                 if (!IsJumping || _jumpStart) {
                     _jumpStart = false;
                     IsJumping = 
@@ -984,17 +988,27 @@ namespace Raccoon.Components {
                         _canKeepCurrentJump = 
                             IsStillJumping = false;
                     }
-                } else if (JustReceiveForce) {
+                }
+
+                if (JustReceiveForce) {
                     JustReceiveForce = false;
+                }
+
+                if (JustReceiveImpulse) {
+                    JustReceiveImpulse = false;
                 }
             }
 
-            // platformer movement only triggers OnMove() on a horizontal movement
-            if (Axis.X == 0f) {
-                return;
+            OnMove(distance);
+
+            if (Axis.X != 0f) {
+                // only triggers OnHorizontalMove() on a intended horizontal movement
+                OnHorizontalMove(distance.X);
             }
 
-            OnMove(new Vector2(distance.X, 0f));
+            if (!Math.EqualsEstimate(distance.Y, 0f)) {
+                OnVerticalMove?.Invoke(distance.Y);
+            }
         }
 
         protected override void ForceEnds() {
