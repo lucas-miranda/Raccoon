@@ -183,6 +183,26 @@ namespace Raccoon {
             return new Vector2(X, y);
         }
 
+        public Vector2 NearestRightAngle() {
+            if (this == Vector2.Zero) {
+                return Vector2.Zero;
+            }
+
+            float verticalProjection = Vector2.Up.Projection(this);
+
+            if (verticalProjection >= .5f) {
+                return Vector2.Up;
+            } else if (verticalProjection <= -.5f) {
+                return Vector2.Down;
+            }
+
+            if (Vector2.Right.Projection(this) >= .5f) {
+                return Vector2.Right;
+            }
+
+            return Vector2.Left;
+        }
+
         public override bool Equals(object obj) {
             return obj is Vector2 && Equals((Vector2) obj);
         }
