@@ -13,32 +13,31 @@ namespace Raccoon {
             // AABB x AABB
             if (System.Math.Abs(boxA.Rotation) < Math.Epsilon && System.Math.Abs(shapeB.Rotation) < Math.Epsilon) {
                 Vector2 translation = BPos - APos;
-                Vector2 overlap = boxA.HalwidthExtents + shapeB.HalwidthExtents - Math.Abs(translation);
+                Vector2 overlap = (boxA.HalwidthExtents + shapeB.HalwidthExtents) - Math.Abs(translation);
 
                 if (overlap.X < 0f || overlap.Y < 0f) {
                     contacts = null;
                     return false;
                 }
 
-                contacts = new Contact[2];
-
-                Contact contact1 = new Contact {
-                    Position = Math.Max(APos - boxA.HalwidthExtents, BPos - shapeB.HalwidthExtents)
-                },
-                        contact2 = new Contact {
-                    Position = Math.Min(APos + boxA.HalwidthExtents, BPos + shapeB.HalwidthExtents)
-                };
+                contacts = new Contact[1];
 
                 if (overlap.X < overlap.Y) {
-                    contact1.Normal = contact2.Normal = translation.X < 0 ? Vector2.Left : Vector2.Right;
-                    contact1.PenetrationDepth = contact2.PenetrationDepth = overlap.X;
+                    float sign = Math.Sign(translation.X);
+                    contacts[0] = new Contact {
+                        Position = new Vector2(APos.X + boxA.HalwidthExtents.X * sign, BPos.Y),
+                        Normal = new Vector2(sign, 0f),
+                        PenetrationDepth = Math.Abs(overlap.X)
+                    };
                 } else {
-                    contact1.Normal = contact2.Normal = translation.Y < 0 ? Vector2.Up : Vector2.Down;
-                    contact1.PenetrationDepth = contact2.PenetrationDepth = overlap.Y;
+                    float sign = Math.Sign(translation.Y);
+                    contacts[0] = new Contact {
+                        Position = new Vector2(BPos.X, APos.Y + boxA.HalwidthExtents.Y * sign),
+                        Normal = new Vector2(0f, sign),
+                        PenetrationDepth = Math.Abs(overlap.Y)
+                    };
                 }
 
-                contacts[0] = contact1;
-                contacts[1] = contact2;
                 return true;
             }
 
