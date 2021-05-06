@@ -410,6 +410,52 @@ namespace Raccoon.Util {
             return value;
         }
 
+        public static T Retrieve<T>(ICollection<T> collection) {
+            if (collection.Count <= 0) {
+                throw new System.ArgumentException($"Can't retrieve an element from a empty ICollection<{typeof(T)}>");
+            }
+
+            int index = Integer(0, collection.Count - 1);
+            T value = default(T);
+
+            foreach (T item in collection) {
+                index -= 1;
+
+                if (index >= 0) {
+                    continue;
+                }
+
+                value = item;
+            }
+
+            collection.Remove(value);
+            return value;
+        }
+
+        public static KeyValuePair<K, V> Retrieve<K, V>(IDictionary<K, V> dictionary) {
+            if (dictionary.Count <= 0) {
+                throw new System.ArgumentException($"Can't retrieve an element from a empty IDictionary<{typeof(K)}, {typeof(V)}>");
+            }
+
+            int index = Integer(0, dictionary.Count - 1);
+            K key = default;
+            V value = default;
+
+            foreach (KeyValuePair<K, V> entry in dictionary) {
+                index -= 1;
+
+                if (index >= 0) {
+                    continue;
+                }
+
+                key = entry.Key;
+                value = entry.Value;
+            }
+
+            dictionary.Remove(key);
+            return new KeyValuePair<K, V>(key, value);
+        }
+
         #endregion Public Methods
     }
 }
