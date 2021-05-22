@@ -493,6 +493,34 @@ namespace Raccoon.Util.Collections {
             }
         }
 
+        /// <summary>
+        /// Removes and yields every item, including items added through iterator.
+        /// </summary>
+        public IEnumerable<T> Drain() {
+            for (int i = 0; i < _items.Count; i++) {
+                ItemBox box = _items[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                box.MarkedToRemove = true;
+                yield return box.Item;
+            }
+
+
+            for (int i = 0; i < _toAdd.Count; i++) {
+                ItemBox box = _toAdd[i];
+
+                if (box.MarkedToRemove) {
+                    continue;
+                }
+
+                box.MarkedToRemove = true;
+                yield return box.Item;
+            }
+        }
+
         public IEnumerator<T> GetEnumerator() {
             for (int i = 0; i < _items.Count; i++) {
                 ItemBox box = _items[i];
