@@ -81,6 +81,7 @@
             public ref Rectangle CurrentFrameDestination { get { return ref FramesDestinations[CurrentFrameIndex]; } }
             public int RepeatTimes { get; set; }
             public int TimesPlayed { get; private set; }
+            public int FrameCount { get { return FramesRegions?.Length ?? 0; } }
             public bool HasEnded { get; private set; }
             public bool IsLooping { get { return RepeatTimes < 0; } set { RepeatTimes = value ? -1 : 0; } }
             public bool IsPingPong { get; set; }

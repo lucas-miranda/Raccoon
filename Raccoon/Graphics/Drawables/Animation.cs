@@ -189,7 +189,22 @@ namespace Raccoon.Graphics {
 
         public void Prepare(KeyType key, int frameIndex) {
             Play(key);
-            Tracks[key].CurrentFrameIndex = frameIndex;
+
+            Track track = Tracks[key];
+            if (frameIndex < 0) {
+                if (track.FrameCount + frameIndex < -track.FrameCount) {
+                    throw new System.ArgumentOutOfRangeException($"Invalid frame reverse index value '{frameIndex}', allowed range is [{-track.FrameCount}, -1].");
+                }
+
+                track.CurrentFrameIndex = track.FrameCount + frameIndex;
+            } else {
+                if (frameIndex >= track.FrameCount) {
+                    throw new System.ArgumentOutOfRangeException($"Invalid frame index value '{frameIndex}', allowed range is [0, {track.FrameCount - 1}].");
+                }
+
+                track.CurrentFrameIndex = frameIndex;
+            }
+
             UpdateClippingRegion();
             Pause();
         }
