@@ -167,6 +167,10 @@ namespace Raccoon {
             WriteLine(string.Empty, message);
         }
 
+        public static void Trace(string message) {
+            WriteLine("trace", message);
+        }
+
         public static void Info(string message) {
             WriteLine("info", message);
         }

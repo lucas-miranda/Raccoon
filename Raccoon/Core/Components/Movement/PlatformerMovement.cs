@@ -103,7 +103,8 @@ namespace Raccoon.Components {
         /// </summary>
         private bool _internal_isGravityEnabled = true;
 
-        private bool _touchedBottom, _touchedTop;
+        private bool _wasTouchedBottom,
+                     _touchedBottom, _touchedTop;
 
         // integration
         private Vector2 _currentAcceleration;
@@ -450,7 +451,14 @@ namespace Raccoon.Components {
 
         public override void PhysicsUpdate(float dt) {
             base.PhysicsUpdate(dt);
+            _wasTouchedBottom = _touchedBottom;
             _touchedTop = _touchedBottom = false;
+
+            if (!(GravityEnabled && _internal_isGravityEnabled)) {
+                _touchedBottom = true;
+            }
+
+            //Logger.Info("------------");
         }
 
         public override void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
@@ -460,8 +468,8 @@ namespace Raccoon.Components {
         public override void PhysicsLateUpdate(float dt) {
             base.PhysicsLateUpdate(dt);
 
-            bool isAboveSomething = false,
-                 isBelowSomething = Body.CollidesMultiple(Body.Position + Vector2.Up, CollisionTags, out CollisionList<Body> contactsAbove);
+            /*
+            bool isAboveSomething = false;
 
             if (GravityEnabled && _internal_isGravityEnabled) {
                 CollisionList<Body> contactsBelow;
@@ -496,44 +504,12 @@ namespace Raccoon.Components {
             } else {
                 _touchedBottom = true;
             }
+            */
 
-            if (isBelowSomething) {
-                foreach (CollisionInfo<Body> collisionInfo in contactsAbove) {
-                    foreach (Contact contact in collisionInfo.Contacts) {
-                        if (Vector2.Dot(contact.Normal, Vector2.Up) <= .6f) {
-                            continue;
-                        }
+            if (_touchedBottom || !(GravityEnabled && _internal_isGravityEnabled)) {
+                _touchedBottom = true;
+                //Logger.Info("Touched bottom");
 
-                        if (Helper.InRangeLeftExclusive(contact.PenetrationDepth, 0f, 1f)
-                          && !collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
-                            _touchedTop = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // clear just leaved ramp
-            if (_justLeavedRamp) {
-                _justLeavedRamp = false;
-            }
-
-            if (_touchedTop) {
-                // moving up and reached a ceiling
-                if (Velocity.Y < 0f) {
-                    IsJumping = _canKeepCurrentJump = false;
-                    Velocity = new Vector2(Velocity.X, 0f);
-                    IsFalling = true;
-
-                    // ledge jump
-                    _ledgeJumpTime = 0;
-                    _canPerformLedgeJump = false;
-
-                    OnFallingBegin();
-                }
-            }
-
-            if (_touchedBottom) {
                 // falling and reached the ground
                 if (IsFalling || IsJumping) {
                     bool isNotJumpingAnymore = false;
@@ -571,13 +547,115 @@ namespace Raccoon.Components {
                 }
             }
 
+            if (_touchedTop) {
+                _touchedTop = true;
+
+                if (Velocity.Y < 0f) {
+                    // moving up and reached a ceiling
+                    IsJumping = _canKeepCurrentJump = false;
+                    Velocity = new Vector2(Velocity.X, 0f);
+
+                    // ledge jump
+                    _ledgeJumpTime = 0;
+                    _canPerformLedgeJump = false;
+
+                    if (!_touchedBottom) {
+                        IsFalling = true;
+                        OnFallingBegin?.Invoke();
+                    }
+                }
+            }
+
+            // clear just leaved ramp
+            if (_justLeavedRamp) {
+                _justLeavedRamp = false;
+            }
+
+            /*
+            if (_touchedBottom) {
+                // falling and reached the ground
+                if (IsFalling || IsJumping) {
+                    bool isNotJumpingAnymore = false;
+
+                    if (!IsFalling) {
+                        if (Velocity.Y >= 0) {
+                            _canKeepCurrentJump = false;
+                            isNotJumpingAnymore = true;
+                        }
+                    } else if (!CanContinuousJump && _canPerformEarlyJumpInput && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                        _canKeepCurrentJump = 
+                            isNotJumpingAnymore = true;
+                    } else {
+                        isNotJumpingAnymore = true;
+                    }
+
+                    if (isNotJumpingAnymore) {
+                        OnGround = true;
+
+                        IsStillJumping = 
+                            IsJumping = 
+                            IsFalling = 
+                            HasJumped = false;
+
+                        Jumps = MaxJumps;
+                        _canPerformLedgeJump = true;
+                        _isTryingToFallThrough = false;
+
+                        OnTouchGround();
+                    }
+                }
+
+                if (OnGround || IsFalling) {
+                    Velocity = new Vector2(Velocity.X, 0f);
+                }
+            }
+            */
+
             // Check if still is on ground
+            //Logger.Info($"V: {Velocity}");
             if (OnGround && !_touchedBottom && Velocity.Y >= 0f) {
+                //Logger.Info($"OnGround? {OnGround}, touchedBottom: {_touchedBottom}");
                 Fall();
             }
         }
 
         public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            /*
+            bool isAbove = !(GravityEnabled && _internal_isGravityEnabled),
+                 isBelow = false;
+            */
+
+
+            /*
+            Logger.Info($"CanCollideWith, axis: {collisionAxes}");
+            Logger.Info($"> {collisionInfo}");
+            */
+
+            if (!Math.EqualsEstimate(collisionAxes.Y, 0f) && collisionInfo.Subject.Tags.HasAny(Tags)) {
+                // verify if is below it
+                foreach (Contact c in collisionInfo.Contacts) {
+                    if (!_touchedBottom
+                     && Vector2.Down.Projection(c.Normal) > .6f
+                     && c.PenetrationDepth > Math.Epsilon && c.PenetrationDepth <= 1f + Math.Epsilon
+                    ) {
+                        if (collisionInfo.Subject.Tags.HasAny(FallThroughTags)
+                          && (_isTryingToFallThrough || c.PenetrationDepth > 1f)
+                        ) {
+                            // ignore collision due to falling through it
+                            continue;
+                        }
+
+                        _touchedBottom = true;
+                    } else if (!_touchedTop
+                     && Vector2.Up.Projection(c.Normal) >= .5f 
+                     && c.PenetrationDepth > Math.Epsilon && c.PenetrationDepth <= 1f + Math.Epsilon
+                     && !collisionInfo.Subject.Tags.HasAny(FallThroughTags)
+                    ) {
+                        _touchedTop = true;
+                    }
+                }
+            }
+
             if (collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
                 if (collisionAxes.Y > 0f || collisionAxes.X != 0f) {
                     // falling through the other body
@@ -588,7 +666,7 @@ namespace Raccoon.Components {
                         
                         if (!_isTryingToFallThrough) {
                             _isTryingToFallThrough = true;
-                        }
+                            }
 
                         return false;
                     } else {
@@ -638,12 +716,41 @@ namespace Raccoon.Components {
             return base.CanCollideWith(collisionAxes, collisionInfo);
         }
 
-        public override void BodyCollided(Body otherBody, Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
-            base.BodyCollided(otherBody, collisionAxes, hCollisionInfo, vCollisionInfo);
+        public override void BeginCollision(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
+            base.BeginCollision(collisionAxes, hCollisionInfo, vCollisionInfo);
+
+            /*
+            Logger.Info($"Begin BodyCollided, axis: {collisionAxes}");
+            Logger.Info($"> [h] {hCollisionInfo}");
+            Logger.Info($"> [v] {vCollisionInfo}");
+            */
         }
 
         public override void Collided(Vector2 collisionAxes, CollisionInfo<Body> hCollisionInfo, CollisionInfo<Body> vCollisionInfo) {
             base.Collided(collisionAxes, hCollisionInfo, vCollisionInfo);
+
+            /*
+            Logger.Info($"BodyCollided, axis: {collisionAxes}");
+            Logger.Info($"> [h] {hCollisionInfo}");
+            Logger.Info($"> [v] {vCollisionInfo}");
+
+            Logger.Info($"_touchedBottom: {_touchedBottom}; _wasTouchedBottom: {_wasTouchedBottom}");
+            */
+            if (!_touchedBottom && _wasTouchedBottom) {
+                foreach (Contact c in vCollisionInfo.Contacts) {
+                    if (Vector2.Down.Projection(c.Normal) > .6f
+                     && c.PenetrationDepth > -Math.Epsilon && c.PenetrationDepth <= 1f + Math.Epsilon
+                    ) {
+                        _touchedBottom = true;
+                        //Logger.Info("Keep touching bottom");
+                        break;
+                    }
+                }
+            }
+        }
+
+        public override void EndCollision() {
+            base.EndCollision();
         }
 
         public override Vector2 Integrate(float dt) {
@@ -976,7 +1083,7 @@ namespace Raccoon.Components {
                         IsFalling = false;
 
                     Jumps--;
-                    OnJumpBegin();
+                    OnJumpBegin?.Invoke();
                     ClearRampState();
                 } else if (JustJumped) {
                     JustJumped = false;
@@ -999,11 +1106,11 @@ namespace Raccoon.Components {
                 }
             }
 
-            OnMove(distance);
+            OnMove?.Invoke(distance);
 
             if (Axis.X != 0f) {
                 // only triggers OnHorizontalMove() on a intended horizontal movement
-                OnHorizontalMove(distance.X);
+                OnHorizontalMove?.Invoke(distance.X);
             }
 
             if (!Math.EqualsEstimate(distance.Y, 0f)) {

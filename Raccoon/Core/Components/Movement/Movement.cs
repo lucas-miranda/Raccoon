@@ -417,23 +417,6 @@ namespace Raccoon.Components {
 
         #region Protected Methods
 
-        /*public virtual Vector2 HandleForce(Vector2 force) {
-            if (!Enabled || !CanMove) {
-                return Vector2.Zero;
-            }
-
-            return force;
-        }
-
-        public virtual Vector2 HandleImpulse(Vector2 impulse) {
-            if (!Enabled || !CanMove) {
-                return Vector2.Zero;
-            }
-
-            return impulse;
-        }*/
-
-
         protected abstract void OnMoving(Vector2 distance);
 
         protected virtual void ForceEnds() {

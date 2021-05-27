@@ -8,15 +8,15 @@ namespace Raccoon {
     public class Entity : ISceneObject {
         #region Public Delegates
 
-        public event SceneObjectEvent OnSceneAdded      = delegate { },
-                                      OnSceneRemoved    = delegate { },
-                                      OnStart           = delegate { },
-                                      OnSceneBegin      = delegate { },
-                                      OnSceneEnd        = delegate { },
-                                      OnBeforeUpdate    = delegate { },
-                                      OnUpdate          = delegate { },
-                                      OnLateUpdate      = delegate { },
-                                      OnRender          = delegate { };
+        public event SceneObjectEvent OnSceneAdded          = delegate { },
+                                      OnSceneRemoved        = delegate { },
+                                      OnStart               = delegate { },
+                                      OnSceneBegin          = delegate { },
+                                      OnSceneEnd            = delegate { },
+                                      OnBeforeUpdate        = delegate { },
+                                      OnUpdate              = delegate { },
+                                      OnLateUpdate          = delegate { },
+                                      OnRender              = delegate { };
 
 #if DEBUG
         public event SceneObjectEvent OnDebugRender     = delegate { };
@@ -427,6 +427,7 @@ namespace Raccoon {
 
         public virtual void Render() {
             Graphics.Lock();
+            
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;

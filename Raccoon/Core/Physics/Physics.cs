@@ -831,7 +831,9 @@ namespace Raccoon {
                        directionY = Math.Sign(distanceY);
 
                 int movementX = 0,
-                    movementY = 0;
+                    movementY = 0,
+                    fixedMovementX = 0,
+                    fixedMovementY = 0;
 
                 double movementXBuffer = diffX - Math.Truncate(diffX),
                        movementYBuffer = diffY - Math.Truncate(diffY);
@@ -855,6 +857,20 @@ namespace Raccoon {
                     }
                 }
 
+                // try to attribute a movement value when distance will be zero
+                // very small velocities will be ignored otherwise
+                // and cause problems when trying to track continuous movement
+
+                /*
+                if (distanceX == 0 && !Math.EqualsEstimate(body.Velocity.X, 0f)) {
+                    fixedMovementX = Math.Sign(body.Velocity.X);
+                }
+
+                if (distanceY == 0 && !Math.EqualsEstimate(body.Velocity.Y, 0f)) {
+                    fixedMovementY = Math.Sign(body.Velocity.Y);
+                }
+                */
+
                 do {
                     if (canMoveH && Math.Abs(distanceX) >= 1) {
                         movementXBuffer += directionX;
@@ -876,18 +892,27 @@ namespace Raccoon {
 
                     // check collision with current movement
                     Vector2 moveHorizontalPos = new Vector2(
-                                                    currentX + movementX, 
-                                                    canMoveV ? (currentY + movementY) : currentY
+                                                    currentX + movementX + fixedMovementX, 
+                                                    (canMoveV ? (currentY + movementY) : currentY) + fixedMovementY
                                                 ),
                             moveVerticalPos   = new Vector2(
-                                                    currentX,
-                                                    currentY + movementY
+                                                    currentX + fixedMovementX,
+                                                    currentY + movementY + fixedMovementY
                                                 ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
 
+                    /*
                     Vector2 movement = new Vector2(
                         Math.Abs(body.Velocity.X) > 10f ? Math.Sign(body.Velocity.X) : 0f,
                         Math.Abs(body.Velocity.Y) > 10f ? Math.Sign(body.Velocity.Y) : 0f
                     );
+
+                    Vector2 movement = new Vector2(
+                        Math.Sign(body.Velocity.X),
+                        Math.Sign(body.Velocity.Y)
+                    );
+                    */
+
+                    Vector2 movement = new Vector2(movementX + fixedMovementX, movementY + fixedMovementY);
 
                     if (bodyCollidableTags != BitTag.None || movementCollidableTags != BitTag.None) {
                         for (int k = 1; k < _narrowPhaseBodies.Count; k++) {
