@@ -839,29 +839,12 @@ namespace Raccoon {
                        movementYBuffer = diffY - Math.Truncate(diffY);
 
                 bool canMoveH = true,
-                     canMoveV = true,
-                     singleCheck = distanceX == 0 && distanceY == 0;
-
-                if (singleCheck) {
-                    movementX = Math.Sign(movementXBuffer);
-                    movementY = Math.Sign(movementYBuffer);
-
-                    // last case, when no movement will occur this frame
-                    // but we still need to check for collision and stuff
-                    if (movementX == 0) {
-                        movementX = Math.Sign(body.Velocity.X);
-                    }
-
-                    if (movementY == 0) {
-                        movementY = Math.Sign(body.Velocity.Y);
-                    }
-                }
+                     canMoveV = true;
 
                 // try to attribute a movement value when distance will be zero
                 // very small velocities will be ignored otherwise
                 // and cause problems when trying to track continuous movement
 
-                /*
                 if (distanceX == 0 && !Math.EqualsEstimate(body.Velocity.X, 0f)) {
                     fixedMovementX = Math.Sign(body.Velocity.X);
                 }
@@ -869,7 +852,6 @@ namespace Raccoon {
                 if (distanceY == 0 && !Math.EqualsEstimate(body.Velocity.Y, 0f)) {
                     fixedMovementY = Math.Sign(body.Velocity.Y);
                 }
-                */
 
                 do {
                     if (canMoveH && Math.Abs(distanceX) >= 1) {
@@ -893,24 +875,18 @@ namespace Raccoon {
                     // check collision with current movement
                     Vector2 moveHorizontalPos = new Vector2(
                                                     currentX + movementX + fixedMovementX, 
-                                                    (canMoveV ? (currentY + movementY) : currentY) + fixedMovementY
-                                                ),
+                                                    canMoveV ? (currentY + movementY) : currentY // NOTE  fixedMovementY should not be included here
+                                                ),                                               //       it can cause undesired effects, since it'll
+                                                                                                 //       affect collision direction
+                                                                                                 //
+                                                                                                 //       e.g  straight horizontal movement could be
+                                                                                                 //       interpreted as down-side collision and 
+                                                                                                 //       make it stutter
+                                                
                             moveVerticalPos   = new Vector2(
                                                     currentX + fixedMovementX,
                                                     currentY + movementY + fixedMovementY
                                                 ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
-
-                    /*
-                    Vector2 movement = new Vector2(
-                        Math.Abs(body.Velocity.X) > 10f ? Math.Sign(body.Velocity.X) : 0f,
-                        Math.Abs(body.Velocity.Y) > 10f ? Math.Sign(body.Velocity.Y) : 0f
-                    );
-
-                    Vector2 movement = new Vector2(
-                        Math.Sign(body.Velocity.X),
-                        Math.Sign(body.Velocity.Y)
-                    );
-                    */
 
                     Vector2 movement = new Vector2(movementX + fixedMovementX, movementY + fixedMovementY);
 
@@ -1010,11 +986,6 @@ namespace Raccoon {
                         }
                     }
 
-                    // hack to force a collision verification even if not mean to move at all
-                    if (singleCheck) {
-                        break;
-                    }
-
                     // separated axis movement
                     if (canMoveH && movementX != 0) {
                         if (body.Movement.CanExecuteMove(movementX, 0)) {
@@ -1034,10 +1005,12 @@ namespace Raccoon {
                         }
                     }
 
-                    body.PhysicsStepMove(
-                        canMoveH ? movementX : 0, 
-                        canMoveV ? movementY : 0
-                    );
+                    if (movementX != 0 || movementY != 0) {
+                        body.PhysicsStepMove(
+                            canMoveH ? movementX : 0, 
+                            canMoveV ? movementY : 0
+                        );
+                    }
 
                     movementX = movementY = 0;
                 } while (
@@ -1064,10 +1037,7 @@ namespace Raccoon {
 
                 body.MoveBufferX = remainderMovementXBuffer;
                 body.MoveBufferY = remainderMovementYBuffer;
-
-                if (!singleCheck) {
-                    body.Position = new Vector2(currentX, currentY);
-                }
+                body.Position = new Vector2(currentX, currentY);
             }
 
             foreach (Body body in _collidedOnThisFrame) {
