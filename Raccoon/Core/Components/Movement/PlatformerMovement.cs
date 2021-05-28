@@ -24,9 +24,9 @@ namespace Raccoon.Components {
         public static Range AllowedRampElevation = new Range(1, 60); // in degrees
 
         public delegate void PlatformerMovementAction();
-        public event PlatformerMovementAction OnJumpBegin = delegate { },
-                                              OnTouchGround = delegate { },
-                                              OnFallingBegin = delegate { };
+        public event PlatformerMovementAction OnJumpBegin,
+                                              OnTouchGround,
+                                              OnFallingBegin;
 
         public delegate void AxisMovementAction(float distance);
         public event AxisMovementAction OnHorizontalMove,
@@ -493,7 +493,7 @@ namespace Raccoon.Components {
                         _canPerformLedgeJump = true;
                         _isTryingToFallThrough = false;
 
-                        OnTouchGround();
+                        OnTouchGround?.Invoke();
                     }
                 }
 
@@ -1281,7 +1281,7 @@ namespace Raccoon.Components {
             ClearRampState();
             IsFalling = true;
             OnGround = IsJumping = IsStillJumping = _canKeepCurrentJump = false;
-            OnFallingBegin();
+            OnFallingBegin?.Invoke();
         }
 
         private void ClearRampState() {
