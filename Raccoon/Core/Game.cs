@@ -41,20 +41,19 @@ namespace Raccoon {
         private static readonly string DiagnosticsTextFormat = @"Time: {0}
 
 Batches:
-  Total Draw Calls: {1}
+  Draw Calls: {1}
   Sprites: {2}, Primitives: {3}
   Textures: {4}
 
 Physics:
   Update Position: {5}ms
-  Solve Constraints: {6}ms
-  Coll Broad Phase: (C: {7}): {8}ms
-  Coll Narrow Phase: (C: {9}): {10}ms
+  Broad Phase: (C: {6}): {7}ms
+  Narrow Phase: (C: {8}): {9}ms
 
 Scene:
-  Updatables: {11}
-  Renderables: {12}
-  Objects: {13}";
+  Updatables: {10}
+  Renderables: {11}
+  Objects: {12}";
 
         private readonly string WindowTitleDetailed = "{0} | {1} FPS  {2:0.00} MB  GC: {3:0.00} MB";
         private const int FramerateMonitorValuesCount = 25;
@@ -687,7 +686,7 @@ Scene:
             if (Debug.ShowPerformanceDiagnostics) {
                 Debug.DrawString(
                     null,
-                    new Vector2(WindowWidth - 260, 15),
+                    new Vector2(WindowWidth - 310, 15),
                     string.Format(
                         DiagnosticsTextFormat,
 
@@ -702,7 +701,6 @@ Scene:
 
                         // physics
                         Physics.UpdatePositionExecutionTime,
-                        Physics.SolveConstraintsExecutionTime,
                         Physics.CollidersBroadPhaseCount, Physics.CollisionDetectionBroadPhaseExecutionTime,
                         Physics.CollidersNarrowPhaseCount, Physics.CollisionDetectionNarrowPhaseExecutionTime,
 
@@ -714,7 +712,7 @@ Scene:
                 );
 
                 // framerate monitor frame
-                Rectangle framerateMonitorRect = new Rectangle(new Vector2(WindowWidth - 260 - _framerateMonitorSize.Width - 32, 15), _framerateMonitorSize);
+                Rectangle framerateMonitorRect = new Rectangle(new Vector2(WindowWidth - 310 - _framerateMonitorSize.Width - 32, 15), _framerateMonitorSize);
                 Debug.DrawRectangle(null, framerateMonitorRect, Color.White);
 
                 // plot framerate values
