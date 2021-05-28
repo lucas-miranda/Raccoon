@@ -529,6 +529,69 @@ namespace Raccoon.Components {
         }
 
         public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
+            if (collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
+                if (collisionAxes.Y > 0f || collisionAxes.X != 0f) {
+                    // falling through the other body
+                    // or just passing horizontally through it
+                    bool canMoveOn = false;
+
+                    if (CanFallThrough) {
+                        // trying to actively force fall through
+                        
+                        if (!_isTryingToFallThrough) {
+                            _isTryingToFallThrough = true;
+                        }
+
+                        return false;
+                    } else {
+                        if (_isTryingToFallThrough) {
+                            // fallthrough bodies on top each other will be treated as one
+                            // they must be at least 1px a part to be treated separetely
+                            foreach (Body collisionBody in Body.CollisionList) {
+                                if (collisionBody != collisionInfo.Subject 
+                                 && collisionBody.Tags.HasAny(FallThroughTags)
+                                 && collisionBody.Bottom - collisionInfo.Subject.Top >= -Math.Epsilon
+                                 && collisionBody.Top < collisionInfo.Subject.Top
+                                ) {
+                                    return false;
+                                }
+                            }
+                        }
+
+                        // check if we have reached a platform top
+                        // if yes, we should stop trying to pass through
+                        if (collisionInfo.Contacts.Contains(c => Vector2.Down.Projection(c.Normal) >= .6f && c.PenetrationDepth <= 1f)) {
+                            if (_isTryingToFallThrough) {
+                                _isTryingToFallThrough = false;
+                                return true;
+                            } else {
+                                canMoveOn = true;
+                            }
+                        }
+                    }
+
+                    if (!canMoveOn) {
+                        // enable pass through
+                        if (!_isTryingToFallThrough) {
+                            _isTryingToFallThrough = true;
+                        }
+
+                        return false;
+                    }
+                } else if (collisionAxes.Y < 0f) {
+                    // pass through from below to above
+
+                    if (!_isTryingToFallThrough) {
+                        _isTryingToFallThrough = true;
+                    }
+
+                    return false;
+                } else if (_isTryingToFallThrough) {
+                    // default case to avoid being stuck
+                    return false;
+                }
+            }
+
             if (!Math.EqualsEstimate(collisionAxes.Y, 0f) && collisionInfo.Subject.Tags.HasAny(Tags)) {
                 // verify if is below it
                 foreach (Contact c in collisionInfo.Contacts) {
@@ -551,63 +614,6 @@ namespace Raccoon.Components {
                     ) {
                         _touchedTop = true;
                     }
-                }
-            }
-
-            if (collisionInfo.Subject.Tags.HasAny(FallThroughTags)) {
-                if (collisionAxes.Y > 0f || collisionAxes.X != 0f) {
-                    // falling through the other body
-                    // or just passing horizontally through it
-
-                    if (CanFallThrough) {
-                        // trying to actively force fall through
-                        
-                        if (!_isTryingToFallThrough) {
-                            _isTryingToFallThrough = true;
-                            }
-
-                        return false;
-                    } else {
-                        // fallthrough bodies on top each other will be treated as one
-                        // they must be at least 1px a part to be treated separetely
-                        foreach (Body collisionBody in Body.CollisionList) {
-                            if (collisionBody != collisionInfo.Subject 
-                             && collisionBody.Tags.HasAny(FallThroughTags)
-                             && collisionBody.Bottom - collisionInfo.Subject.Top >= -Math.Epsilon
-                             && collisionBody.Top < collisionInfo.Subject.Top
-                            ) {
-                                return false;
-                            }
-                        }
-
-                        // check if we have reached a platform top
-                        // if yes, we should stop trying to pass through
-                        if (collisionInfo.Contacts.Contains(c => Vector2.Down.Projection(c.Normal) >= .6f && c.PenetrationDepth <= 1f)) {
-                            if (_isTryingToFallThrough) {
-                                _isTryingToFallThrough = false;
-                            }
-
-                            return true;
-                        }
-                    }
-
-                    // enable pass through
-                    if (!_isTryingToFallThrough) {
-                        _isTryingToFallThrough = true;
-                    }
-
-                    return false;
-                } else if (collisionAxes.Y < 0f) {
-                    // pass through from below to above
-
-                    if (!_isTryingToFallThrough) {
-                        _isTryingToFallThrough = true;
-                    }
-
-                    return false;
-                } else if (_isTryingToFallThrough) {
-                    // default case to avoid being stuck
-                    return false;
                 }
             }
 
