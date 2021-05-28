@@ -1019,7 +1019,6 @@ namespace Raccoon.Components {
 
 #if !DISABLE_ASCENDING_RAMP
             if (Body.CollidesMultiple(Body.Position + new Vector2(Math.Sign(dX), 1f), CollisionTags, out CollisionList<Body> ascdCollisionList)) {
-
                 bool shouldMoveTowardsRamp = true;
                 Vector2 moveDir = new Vector2(Math.Sign(dX), 0f);
                 float greaterDist = 0f;
@@ -1152,13 +1151,21 @@ namespace Raccoon.Components {
                 rampPositionsToCheck[i] = Body.Position + new Vector2(direction * (boundingBox.Width / 2f + currentRampCheck.X), boundingBox.Height / 2f + currentRampCheck.Y) + realign;
             }
             
-            bool refreshRampState = false;
+            bool refreshRampState = false,
+                 hasFindValidRamp = false;
+
+            Body rampBody = null;
+            Vector2 rampNormal = Vector2.Zero;
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
-                bool isValidRamp = false,
-                     hasFindRamp = LookForRamp(collInfo, rampPositionsToCheck, out Vector2 rampNormal);
-
-                if (hasFindRamp) {
+                if (hasFindValidRamp) {
+                    if (collInfo.Subject != rampBody && collInfo.Contacts.Collides(false)) {
+                        // other body will cancel ramp movement
+                        hasFindValidRamp = false;
+                        rampBody = null;
+                        break;
+                    }
+                } else if (LookForRamp(collInfo, rampPositionsToCheck, out rampNormal)) {
                     /*
                         Ascending Ramp
 
@@ -1177,22 +1184,23 @@ namespace Raccoon.Components {
 
                     if (directionSameAsNormal) {
                         if (Math.Sign(rampNormal.X) == direction) {
-                            isValidRamp = true;
+                            hasFindValidRamp = true;
+                            rampBody = collInfo.Subject;
                         }
                     } else {
                         if (Math.Sign(rampNormal.X) != direction) {
-                            isValidRamp = true;
+                            hasFindValidRamp = true;
+                            rampBody = collInfo.Subject;
                         }
                     }
                 }
+            }
 
-                if (isValidRamp) {
-                    refreshRampState = true;
-                    IsOnRamp = true;
-                    _rampNormal = rampNormal;
-                    _internal_isGravityEnabled = false;
-                    break;
-                }
+            if (hasFindValidRamp) {
+                refreshRampState = true;
+                IsOnRamp = true;
+                _rampNormal = rampNormal;
+                _internal_isGravityEnabled = false;
             }
 
             if (!refreshRampState) {
