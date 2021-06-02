@@ -1165,10 +1165,18 @@ namespace Raccoon.Components {
 
             foreach (CollisionInfo<Body> collInfo in collisionList) {
                 if (hasFindValidRamp) {
-                    if (collInfo.Subject != rampBody && collInfo.Contacts.Collides(false)) {
-                        // other body will cancel ramp movement
-                        hasFindValidRamp = false;
-                        rampBody = null;
+                    if (collInfo.Subject != rampBody) {
+                        // check if it'll cancel ramp movement
+                        // only horizontal collision can do that
+                        foreach (Contact c in collInfo.Contacts) {
+                            if (c.PenetrationDepth > 0.1f && Math.Abs(Vector2.Right.Projection(c.Normal)) > .2f) {
+                                // other body will cancel ramp movement
+                                hasFindValidRamp = false;
+                                rampBody = null;
+                                break;
+                            }
+                        }
+
                         break;
                     }
                 } else if (LookForRamp(collInfo, rampPositionsToCheck, out rampNormal)) {
