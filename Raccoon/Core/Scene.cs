@@ -35,7 +35,6 @@ namespace Raccoon {
         /// Must be added via Game.AddScene()
         /// </summary>
         public Scene() {
-            Camera = new Camera();
         }
 
         #endregion
@@ -83,12 +82,9 @@ namespace Raccoon {
             }
 
             set {
-                if (_camera != null) {
-                    _camera.Dispose();
-                }
-
                 _camera = value;
-                if (HasStarted) {
+
+                if (_camera != null && HasStarted && !_camera.HasStarted) {
                     _camera.Start();
                 }
             }
@@ -455,7 +451,9 @@ namespace Raccoon {
             }
             _sceneObjects.Unlock();
 
-            Camera.Start();
+            if (Camera == null) {
+                Camera = Camera.Default;
+            }
         }
 
         /// <summary>
@@ -467,7 +465,7 @@ namespace Raccoon {
             }
 
             IsRunning = true;
-            Camera.Begin();
+            Camera?.SceneBegin(this);
 
             _sceneObjects.Lock();
             foreach (ISceneObject sceneObject in _sceneObjects) {
@@ -488,7 +486,7 @@ namespace Raccoon {
             }
             _sceneObjects.Unlock();
 
-            Camera.End();
+            Camera?.SceneEnd(this);
         }
 
         /// <summary>
@@ -574,7 +572,7 @@ namespace Raccoon {
             }
             _updatables.Unlock();
 
-            Camera.Update(Game.Instance.UpdateDeltaTime);
+            Camera?.Update(Game.Instance.UpdateDeltaTime);
         }
 
         public virtual void BeforePhysicsStep() {
@@ -635,7 +633,7 @@ namespace Raccoon {
         /// Render all IRenderables, sorted by Layer.
         /// </summary>
         public virtual void Render() {
-            Camera.PrepareRender();
+            Camera?.PrepareRender();
 
             _renderables.Lock();
             foreach (IRenderable renderable in _renderables) {
@@ -668,7 +666,7 @@ namespace Raccoon {
             }
             _renderables.Unlock();
 
-            Camera.DebugRender();
+            Camera?.DebugRender();
         }
 
 #endif

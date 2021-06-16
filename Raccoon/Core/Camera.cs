@@ -6,6 +6,8 @@ namespace Raccoon {
     public class Camera : System.IDisposable {
         #region Public Members
 
+        public static Camera Default = new Camera();
+
         public event System.Action OnUpdate;
 
         #endregion Public Members
@@ -28,7 +30,7 @@ namespace Raccoon {
 
         #region Public Properties
 
-        public static Camera Current { get; private set; }
+        public static Camera Current { get { return Game.Instance.Scene?.Camera; } }
 
         public float X { get { return Position.X; } set { Position = new Vector2(value, Position.Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
@@ -48,6 +50,7 @@ namespace Raccoon {
         public float Top { get { return Y; } }
         public float Right { get { return X + Width; } }
         public float Bottom { get { return Y + Height; } }
+        public bool HasStarted { get; private set; }
         public bool UseBounds { get; set; }
         public bool ClampValues { get; set; }
         public bool IsDisposed { get; private set; }
@@ -136,20 +139,16 @@ namespace Raccoon {
         #region Public Methods
 
         public virtual void Start() {
-            Current = this;
+            HasStarted = true;
             _needViewRefresh = true;
             Displacement = Vector2.Zero;
         }
 
-        public virtual void Begin() {
-            if (Current != this) {
-                Current = this;
-            }
-
+        public virtual void SceneBegin(Scene scene) {
             _needViewRefresh = true;
         }
 
-        public virtual void End() { 
+        public virtual void SceneEnd(Scene scene) { 
         }
 
         public virtual void Update(int delta) {
@@ -166,18 +165,14 @@ namespace Raccoon {
         public virtual void DebugRender() { 
         }
 
-        public virtual void Dispose() {
+        public void Dispose() {
             if (IsDisposed) {
                 return;
             }
 
-            OnUpdate = null;
-
             IsDisposed = true;
-        }
-
-        public void ClearEvents() {
             OnUpdate = null;
+            Disposed();
         }
 
         public virtual void Reset() {
@@ -256,6 +251,9 @@ namespace Raccoon {
                 }
             }
 #endif
+        }
+
+        protected virtual void Disposed() {
         }
 
         #endregion Protected Methods

@@ -212,7 +212,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            Debug.DrawString(Camera.Current, new Vector2(16, Game.Instance.Height / 2f), ToStringDetailed());
+            Debug.DrawString(new Vector2(16, Game.Instance.Height / 2f), ToStringDetailed());
         }
 
         public string ToStringDetailed() {

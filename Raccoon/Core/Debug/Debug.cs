@@ -252,7 +252,7 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawString(Vector2 position, string message, Color? color = null, float scale = 1f) {
-            DrawString(Camera.Current, position, message, color, scale);
+            DrawString(Game.Instance.Scene?.Camera, position, message, color, scale);
         }
 
         [Conditional("DEBUG")]
@@ -313,17 +313,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to, Color color) {
-            DrawLine(Camera.Current, from, to, color); ;
+            DrawLine(Game.Instance.Scene?.Camera, from, to, color); ;
         }
 
         [Conditional("DEBUG")]
         public static void DrawLine(Vector2 from, Vector2 to) {
-            DrawLine(Camera.Current, from, to, Color.White);
+            DrawLine(Game.Instance.Scene?.Camera, from, to, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLine(Line line, Color color) {
-            DrawLine(Camera.Current, line.PointA, line.PointB, color);
+            DrawLine(Game.Instance.Scene?.Camera, line.PointA, line.PointB, color);
         }
 
         #endregion Line
@@ -363,17 +363,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawLines(IList<Vector2> points, Vector2 position, Color color, Vector2? origin = null) {
-            DrawLines(Camera.Current, points, position, color, origin);
+            DrawLines(Game.Instance.Scene?.Camera, points, position, color, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLines(IList<Vector2> points, Vector2 position) {
-            DrawLines(Camera.Current, points, position, Color.White);
+            DrawLines(Game.Instance.Scene?.Camera, points, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawLines(IList<Vector2> points) {
-            DrawLines(Camera.Current, points, Vector2.Zero, Color.White);
+            DrawLines(Game.Instance.Scene?.Camera, points, Vector2.Zero, Color.White);
         }
 
         #endregion Line
@@ -410,12 +410,12 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(Camera.Current, rectangle, color, rotation, scale, origin);
+            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, color, rotation, scale, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawRectangle(Rectangle rectangle, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(Camera.Current, rectangle, Color.White, rotation, scale, origin);
+            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, Color.White, rotation, scale, origin);
         }
 
         #endregion Rectangle
@@ -453,22 +453,22 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawCircle(Vector2 center, float radius, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(Camera.Current, center, radius, color, segments, dashed, rotation);
+            DrawCircle(Game.Instance.Scene?.Camera, center, radius, color, segments, dashed, rotation);
         }
 
         [Conditional("DEBUG")]
         public static void DrawCircle(Vector2 center, float radius, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(Camera.Current, center, radius, Color.White, segments, dashed, rotation);
+            DrawCircle(Game.Instance.Scene?.Camera, center, radius, Color.White, segments, dashed, rotation);
         }
 
         [Conditional("DEBUG")]
         public static void DrawCircle(Circle circle, Color color, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(Camera.Current, circle.Center, circle.Radius, color, segments, dashed, rotation);
+            DrawCircle(Game.Instance.Scene?.Camera, circle.Center, circle.Radius, color, segments, dashed, rotation);
         }
 
         [Conditional("DEBUG")]
         public static void DrawCircle(Circle circle, int segments = 0, bool dashed = false, float rotation = 0) {
-            DrawCircle(Camera.Current, circle.Center, circle.Radius, Color.White, segments, dashed, rotation);
+            DrawCircle(Game.Instance.Scene?.Camera, circle.Center, circle.Radius, Color.White, segments, dashed, rotation);
         }
 
         #endregion Circle
@@ -544,12 +544,12 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, Color color, int segments = 0) {
-            DrawArc(Camera.Current, center, radius, startAngle, arcAngle, color, segments);
+            DrawArc(Game.Instance.Scene?.Camera, center, radius, startAngle, arcAngle, color, segments);
         }
 
         [Conditional("DEBUG")]
         public static void DrawArc(Vector2 center, float radius, float startAngle, float arcAngle, int segments = 0) {
-            DrawArc(Camera.Current, center, radius, startAngle, arcAngle, Color.White, segments);
+            DrawArc(Game.Instance.Scene?.Camera, center, radius, startAngle, arcAngle, Color.White, segments);
         }
 
         #endregion Arc
@@ -582,17 +582,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle, Vector2 position, Color color) {
-            DrawTriangle(Camera.Current, triangle, position, color);
+            DrawTriangle(Game.Instance.Scene?.Camera, triangle, position, color);
         }
 
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle, Vector2 position) {
-            DrawTriangle(Camera.Current, triangle, position, Color.White);
+            DrawTriangle(Game.Instance.Scene?.Camera, triangle, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawTriangle(Triangle triangle) {
-            DrawTriangle(Camera.Current, triangle, Vector2.Zero, Color.White);
+            DrawTriangle(Game.Instance.Scene?.Camera, triangle, Vector2.Zero, Color.White);
         }
 
         #endregion Triangle
@@ -611,17 +611,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawPolygon(Polygon polygon, Vector2 position, Color color, Vector2? origin = null) {
-            DrawPolygon(Camera.Current, polygon, position, color, origin);
+            DrawPolygon(Game.Instance.Scene?.Camera, polygon, position, color, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawPolygon(Polygon polygon, Vector2 position) {
-            DrawPolygon(Camera.Current, polygon, position, Color.White);
+            DrawPolygon(Game.Instance.Scene?.Camera, polygon, position, Color.White);
         }
 
         [Conditional("DEBUG")]
         public static void DrawPolygon(Polygon polygon) {
-            DrawPolygon(Camera.Current, polygon, Vector2.Zero, Color.White);
+            DrawPolygon(Game.Instance.Scene?.Camera, polygon, Vector2.Zero, Color.White);
         }
 
         #endregion Polygon
@@ -702,12 +702,12 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position, Color color) {
-            DrawGrid(Camera.Current, tileSize, columns, rows, position, color);
+            DrawGrid(Game.Instance.Scene?.Camera, tileSize, columns, rows, position, color);
         }
 
         [Conditional("DEBUG")]
         public static void DrawGrid(Size tileSize, int columns, int rows, Vector2 position) {
-            DrawGrid(Camera.Current, tileSize, columns, rows, position, Color.White);
+            DrawGrid(Game.Instance.Scene?.Camera, tileSize, columns, rows, position, Color.White);
         }
 
         #endregion Grid
@@ -775,17 +775,17 @@ namespace Raccoon {
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, Vector2 position, Color color, float step = .1f, Vector2? origin = null) {
-            DrawBezierCurve(Camera.Current, points, position, color, step, origin);
+            DrawBezierCurve(Game.Instance.Scene?.Camera, points, position, color, step, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, Vector2 position, float step = .1f, Vector2? origin = null) {
-            DrawBezierCurve(Camera.Current, points, position, Color.White, step, origin);
+            DrawBezierCurve(Game.Instance.Scene?.Camera, points, position, Color.White, step, origin);
         }
 
         [Conditional("DEBUG")]
         public static void DrawBezierCurve(Vector2[] points, float step = .1f) {
-            DrawBezierCurve(Camera.Current, points, Vector2.Zero, Color.White, step, origin: null);
+            DrawBezierCurve(Game.Instance.Scene?.Camera, points, Vector2.Zero, Color.White, step, origin: null);
         }
 
         #endregion Bezier Curve
@@ -973,7 +973,7 @@ namespace Raccoon {
 
                 if (PositionRelativeToCamera) {
                     if (AutoPosition) {
-                        DrawString(Camera.Current, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
+                        DrawString(Game.Instance.Scene?.Camera, Text + (ShowCount && Count > 1 ? $" [{Count}]" : ""), Color * Opacity);
                         return;
                     }
 

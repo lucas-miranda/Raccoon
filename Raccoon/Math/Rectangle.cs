@@ -159,6 +159,10 @@ namespace Raccoon {
             return false;
         }
 
+        public bool Touches(Rectangle r) {
+            return !(r.Right <= Left - 1 || r.Left >= Right + 1 || r.Bottom <= Top - 1 || r.Top >= Bottom + 1);
+        }
+
         public Vector2 ClosestPoint(Vector2 point) {
             return Util.Math.Clamp(point, this);
         }

@@ -605,6 +605,7 @@ Scene:
         #endregion
 
         #region Protected Methods
+
         protected virtual void Initialize() {
             // systems initialization
             Debug.Console.Start();
