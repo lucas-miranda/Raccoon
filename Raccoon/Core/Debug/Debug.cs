@@ -190,7 +190,7 @@ namespace Raccoon {
 
             foreach (object var in vars) {
                 if (var == null) {
-                    str.AppendLine("null");
+                    str.Append("null");
                 } else {
                     str.AppendFormat("{0}", var.ToString());
                 }
