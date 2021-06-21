@@ -502,9 +502,9 @@ namespace Raccoon.Graphics {
             BasicShader shader = Shader as BasicShader;
 
             // transformations
-            shader.World = Game.Instance.MainRenderer.World;
-            shader.View = Game.Instance.MainRenderer.View;
-            shader.Projection = Game.Instance.MainRenderer.Projection;
+            shader.World = world;
+            shader.View = view;
+            shader.Projection = projection;
 
             shader.DiffuseColor = Color.White;
             shader.Alpha = 1f;
