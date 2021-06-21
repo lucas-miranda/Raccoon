@@ -322,7 +322,7 @@ namespace Raccoon {
         internal void EntitySceneAdded(Scene scene) {
             _children.Lock();
             foreach (Transform child in _children) {
-                if (!child.Entity.IsSceneFromTransformAncestor) {
+                if (child.Entity == null || !child.Entity.IsSceneFromTransformAncestor) {
                     continue;
                 }
 
