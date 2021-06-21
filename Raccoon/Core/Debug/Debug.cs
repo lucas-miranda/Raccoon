@@ -381,7 +381,7 @@ namespace Raccoon {
         #region Rectangle
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null, bool filled = false) {
             Vector2 cameraPos = Vector2.Zero;
             float zoom = 1f;
 
@@ -400,22 +400,26 @@ namespace Raccoon {
                 scale = Vector2.One;
             }
 
-            Game.Instance.DebugPrimitiveBatch.DrawHollowRectangle((-cameraPos + rectangle.Position) * zoom, rectangle.Size, color, rotation, scale.Value * zoom, origin.Value);
+            if (filled) {
+                Game.Instance.DebugPrimitiveBatch.DrawFilledRectangle((-cameraPos + rectangle.Position) * zoom, rectangle.Size, color, rotation, scale.Value * zoom, origin.Value);
+            } else {
+                Game.Instance.DebugPrimitiveBatch.DrawHollowRectangle((-cameraPos + rectangle.Position) * zoom, rectangle.Size, color, rotation, scale.Value * zoom, origin.Value);
+            }
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Camera camera, Rectangle rectangle, float rotation, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(camera, rectangle, Color.White, rotation, scale, origin);
+        public static void DrawRectangle(Camera camera, Rectangle rectangle, float rotation, Vector2? scale = null, Vector2? origin = null, bool filled = false) {
+            DrawRectangle(camera, rectangle, Color.White, rotation, scale, origin, filled);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, color, rotation, scale, origin);
+        public static void DrawRectangle(Rectangle rectangle, Color color, float rotation = 0, Vector2? scale = null, Vector2? origin = null, bool filled = false) {
+            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, color, rotation, scale, origin, filled);
         }
 
         [Conditional("DEBUG")]
-        public static void DrawRectangle(Rectangle rectangle, float rotation = 0, Vector2? scale = null, Vector2? origin = null) {
-            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, Color.White, rotation, scale, origin);
+        public static void DrawRectangle(Rectangle rectangle, float rotation = 0, Vector2? scale = null, Vector2? origin = null, bool filled = false) {
+            DrawRectangle(Game.Instance.Scene?.Camera, rectangle, Color.White, rotation, scale, origin, filled);
         }
 
         #endregion Rectangle
