@@ -102,6 +102,10 @@ namespace Raccoon.Input {
                 throw new System.ArgumentException($"There is no scheme registered with label '{schemeLabel}'.", nameof(schemeLabel));
             }
 
+            if (schemeLabel.Equals(CurrentSchemeLabel)) {
+                return;
+            }
+
             if (CurrentScheme != null) {
                 CurrentScheme.End();
                 CurrentScheme = null;
