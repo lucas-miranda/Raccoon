@@ -1,6 +1,17 @@
-Raccoon/bin/
-Raccoon/obj/
-FNA/
-SharpFont/
-packages/
+/Raccoon/bin/
+/Raccoon/obj/
+/packages/
 
+# git
+.git/
+
+# dependencies
+/FNA/
+/SharpFont/
+
+# file types
+*.ttf
+*.fxc
+*.bmp
+*.ico
+*.png
