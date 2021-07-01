@@ -98,12 +98,6 @@ namespace Raccoon.Components {
 
         // general
 
-        /// <summary>
-        /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
-        /// </summary>
-        private int _internalDisableGravityAmount;
-        //private bool _internal_isGravityEnabled = true;
-
         private bool _touchedBottom, _touchedTop;
 
         // integration
@@ -133,7 +127,9 @@ namespace Raccoon.Components {
         // ramp movement
         private Vector2 _rampNormal;
         private int _previousRampDirection;
-        private bool _isEnteringRamp, _justLeavedRamp;
+        private bool _isEnteringRamp, 
+                     _justLeavedRamp,
+                     _internal_rampDisabledGravity;
 
         private float _rampCurrentAcceleration;
         private bool _isRampAccelerationApplied;
@@ -414,7 +410,21 @@ namespace Raccoon.Components {
 
         protected bool IsJumpRequested { get { return _requestedJump; } }
         protected bool IsTryingToFallThrough { get { return _isTryingToFallThrough; } }
-        protected bool IsInternalGravityEnabled { get { return _internalDisableGravityAmount <= 0; } }
+
+
+        /// <summary>
+        /// Is gravity acceleration allowed, internally.
+        ///
+        /// Some systems (sunch as ramp climbing) needs to temporarily disable gravity in order to work properly.
+        /// </summary>
+        /// <remarks>
+        /// It's safer to not mess with <see cref="GravityEnabled"/> directly, since it's public to set any value, an external interference may happen.
+        /// </remarks>
+        protected virtual bool IsInternalGravityEnabled {
+            get { 
+                return !_internal_rampDisabledGravity; 
+            }
+        }
 
         protected float JumpInitialY { get { return _jumpInitialY; } }
 
@@ -1123,22 +1133,6 @@ namespace Raccoon.Components {
             }
         }
 
-        protected void PushDisableGravity() {
-            _internalDisableGravityAmount += 1;
-        }
-
-        protected void PopDisableGravity() {
-            if (_internalDisableGravityAmount <= 0) {
-                return;
-            }
-
-            _internalDisableGravityAmount -= 1;
-        }
-
-        protected void ClearDisableGravity() {
-            _internalDisableGravityAmount = 0;
-        }
-
         #endregion Protected Methods
 
         #region Private Methods
@@ -1358,7 +1352,7 @@ namespace Raccoon.Components {
                 refreshRampState = true;
                 IsOnRamp = true;
                 _rampNormal = rampNormal;
-                PushDisableGravity();
+                _internal_rampDisabledGravity = true;
             }
 
             if (!refreshRampState) {
@@ -1457,7 +1451,7 @@ namespace Raccoon.Components {
 
             IsOnRamp = false;
             _rampNormal = Vector2.Zero;
-            PopDisableGravity();
+            _internal_rampDisabledGravity = false;
             _isRampAccelerationApplied = false;
 
             IsLeavingRamp = 
