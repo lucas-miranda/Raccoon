@@ -101,7 +101,8 @@ namespace Raccoon.Components {
         /// <summary>
         /// Some systems (sunch as ramp climbing) need to temporarily disable gravity in order to work properly.
         /// </summary>
-        private bool _internal_isGravityEnabled = true;
+        private int _internalDisableGravityAmount;
+        //private bool _internal_isGravityEnabled = true;
 
         private bool _touchedBottom, _touchedTop;
 
@@ -111,15 +112,23 @@ namespace Raccoon.Components {
         // jump
         private int _maxJumps = 1;
         private bool _canJump = true, 
-                     _canKeepCurrentJump = true, 
+                     _isAbleToJump = true,
+                     _canKeepCurrentJump, 
                      _requestedJump,
                      _jumpStart,
+                     _stopKeepingCurrentJump = true,
+                     _hasCompletedInitialJumpHeight,
                      _canPerformEarlyJumpInput = true,
-                     _canPerformLedgeJump = true,
-                     _canPerformAdditionalJump;
+                     _canPerformLedgeJump = true;
+                     //_canPerformAdditionalJump;
 
         private int _jumpMaxY, _ledgeJumpTime, _currentLedgeJumpMaxTime;
         private uint _lastTimeFirstRequestToJump;
+        //private float _jumpInitialHeight;
+
+#if DEBUG
+        private float _jumpInitialY;
+#endif
 
         // ramp movement
         private Vector2 _rampNormal;
@@ -136,6 +145,11 @@ namespace Raccoon.Components {
         #endregion Private Members
 
         #region Constructors
+
+        protected PlatformerMovement() {
+            DragForce = 0f;
+            SnapHorizontalAxis = true;
+        }
 
         /// <summary>
         /// A component that handles platformer movement.
@@ -237,12 +251,32 @@ namespace Raccoon.Components {
         /// <summary>
         /// Jump max height (in pixels).
         /// </summary>
-        public float JumpHeight { get; private set; }
+        public float JumpHeight { get; protected set; }
 
         /// <summary>
-        /// Rate of explosion velocity when jump, based on vertical acceleration.
+        /// Jump min height (in pixels).
         /// </summary>
-        public float JumpExplosionRate { get; set; } = .5f;
+        public float JumpMinHeight { get; set; }
+
+        /// <summary>
+        /// Current jump height.
+        /// </summary>
+        public float CurrentJumpHeight { 
+            get {
+                return !OnAir ? 0 : (Body.Bottom - JumpInitialY);
+            }
+        }
+
+        /// <summary>
+        /// Jump start velocity.
+        /// </summary>
+        public float JumpVelocity { get; set; }
+
+        /// <summary>
+        /// How much will be cutoff from vertical velocity when
+        /// jump wasn't requested anymore.
+        /// </summary>
+        public float JumpReleaseVelocityCutoff { get; set; } = .6f;
 
         /// <summary>
         /// Scale of gravity to apply.
@@ -380,6 +414,9 @@ namespace Raccoon.Components {
 
         protected bool IsJumpRequested { get { return _requestedJump; } }
         protected bool IsTryingToFallThrough { get { return _isTryingToFallThrough; } }
+        protected bool IsInternalGravityEnabled { get { return _internalDisableGravityAmount <= 0; } }
+
+        protected float JumpInitialY { get { return _jumpInitialY; } }
 
         #endregion Protected Properties
 
@@ -392,6 +429,22 @@ namespace Raccoon.Components {
                 // user keeps one entire frame without calling Jump()
                 // we can do some unlocks now
 
+                if (!_stopKeepingCurrentJump && IsJumping) {
+                    StoppedKeepingJump();
+                    _stopKeepingCurrentJump = true;
+                }
+
+                if (OnGround) {
+                    if (!_isAbleToJump) {
+                        // reinput was done correctly
+                        _isAbleToJump = true;
+                    }
+                } else if (_canKeepCurrentJump && !IsFalling && _hasCompletedInitialJumpHeight) {
+                    // cut current jump speed on air
+                    _canKeepCurrentJump = false;
+                    HandleJumpRelease();
+                }
+
                 if (!CanContinuousJump) {
                     // reset permission to perform early jump input
                     // since jump button was released
@@ -400,6 +453,7 @@ namespace Raccoon.Components {
                         _canPerformEarlyJumpInput = true;
                     }
 
+                    /*
                     if (!_canKeepCurrentJump) {
                         _lastTimeFirstRequestToJump = 0;
                         _canPerformEarlyJumpInput = true;
@@ -409,12 +463,19 @@ namespace Raccoon.Components {
                             _canKeepCurrentJump = true;
                         }
                     }
+                    */
                 }
 
                 // allows to perform additional jump while still going up
                 if (Jumps > 0) {
-                    _canPerformAdditionalJump = true;
+                    _isAbleToJump = true;
+                    //_canPerformAdditionalJump = true;
                 }
+            }
+
+            if (_hasCompletedInitialJumpHeight) {
+                // don't lose jumping while we don't reach initial height
+                IsStillJumping = false;
             }
 
             _requestedJump = false;
@@ -446,13 +507,20 @@ namespace Raccoon.Components {
             );
 
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
+
+            Rectangle bounds = Body.Bounds;
+            Debug.DrawLine(
+                new Vector2(bounds.Center.X - 8, _jumpInitialY - JumpMinHeight),
+                new Vector2(bounds.Center.X + 8, _jumpInitialY - JumpMinHeight),
+                Graphics.Color.Magenta
+            );
         }
 
         public override void PhysicsUpdate(float dt) {
             base.PhysicsUpdate(dt);
             _touchedTop = _touchedBottom = false;
 
-            if (!(GravityEnabled && _internal_isGravityEnabled)) {
+            if (!(GravityEnabled && IsInternalGravityEnabled)) {
                 _touchedBottom = true;
             }
         }
@@ -464,21 +532,35 @@ namespace Raccoon.Components {
         public override void PhysicsLateUpdate(float dt) {
             base.PhysicsLateUpdate(dt);
 
-            if (_touchedBottom || !(GravityEnabled && _internal_isGravityEnabled)) {
+            if (_touchedBottom || !(GravityEnabled && IsInternalGravityEnabled)) {
                 // falling and reached the ground
                 if (IsFalling || IsJumping) {
-                    bool isNotJumpingAnymore = false;
+                    bool isNotJumpingAnymore;
 
-                    if (!IsFalling) {
-                        if (Velocity.Y >= 0) {
-                            _canKeepCurrentJump = false;
-                            isNotJumpingAnymore = true;
+                    if (!IsFalling && Velocity.Y < 0) {
+                        // ensure it's really at ground
+                        // or just touched at something
+                        // which register as bottom
+                        //
+                        // coming from below of a platform
+                        // can register this case
+
+                        isNotJumpingAnymore = false;
+                    } else if (!CanContinuousJump && _requestedJump) {
+                        // check if jump input was made wihtin buffer time
+                        // as result, jump can be enabled as soon as possible
+
+                        if (_canPerformEarlyJumpInput && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
+                            /*_canKeepCurrentJump = true*/ 
+                            _isAbleToJump = true;
+                        } else {
+                            _isAbleToJump = false;
                         }
-                    } else if (!CanContinuousJump && _canPerformEarlyJumpInput && _requestedJump && Body.Entity.Timer - _lastTimeFirstRequestToJump <= JumpInputBufferTime) {
-                        _canKeepCurrentJump = 
-                            isNotJumpingAnymore = true;
+
+                        isNotJumpingAnymore = true;
                     } else {
                         isNotJumpingAnymore = true;
+                        _isAbleToJump = true;
                     }
 
                     if (isNotJumpingAnymore) {
@@ -811,14 +893,14 @@ namespace Raccoon.Components {
                 currentAcceleration.Y += ForcePerSec.Y;
             }
 
-            if (GravityEnabled && _internal_isGravityEnabled) {
+            if (GravityEnabled && IsInternalGravityEnabled) {
                 // apply gravity force
-                currentAcceleration.Y += GravityScale * GravityForce.Y;
+                currentAcceleration.Y += HandleGravityAcceleration();
             }
 
-            if (IsStillJumping) {
+            if (IsStillJumping && _hasCompletedInitialJumpHeight) {
                 // apply jumping acceleration if it's jumping
-                currentAcceleration.Y += -Acceleration.Y;
+                currentAcceleration.Y += HandleJumpAcceleration();
             }
 
             if (currentAcceleration.Y != 0f 
@@ -853,13 +935,16 @@ namespace Raccoon.Components {
                 }
             }
 
-            if (!_canKeepCurrentJump) {
+            if ((!_isAbleToJump && !_canKeepCurrentJump) || _touchedTop) {
+                // isn't able to jump and can't keep current jump
+                // and don't let player waste it's jump when touching
+                // a ceiling
                 return;
             }
 
             // keep going up, if you not reach the max jump height
             // and don't have or can't perform an additional jump
-            if (IsJumping && (Jumps == 0 || !_canPerformAdditionalJump)) {
+            if (IsJumping && (Jumps == 0 || !_isAbleToJump)) {
                 IsStillJumping = true;
                 return;
             }
@@ -869,19 +954,25 @@ namespace Raccoon.Components {
                 return;
             }
 
-            IsStillJumping = true;
-            _jumpStart = true;
-            _canPerformAdditionalJump = false; // it'll need to be reevaluated later
+            BeforeJumpStarted();
+            IsStillJumping = _jumpStart = _canKeepCurrentJump = true;
+            _isAbleToJump = _stopKeepingCurrentJump = false;
+            
+            //_canPerformAdditionalJump = false; // it'll need to be reevaluated later
             _canPerformLedgeJump = false; // after any jump, can't perform ledge jump until reaches ground again
             _jumpMaxY = (int) (Body.Position.Y - JumpHeight);
-            Velocity = new Vector2(Velocity.X, -(Acceleration.Y * JumpExplosionRate));
+            //_jumpInitialHeight = Math.Round((JumpInitialVelocity * JumpInitialVelocity) / (2f * GravityForce.Y));
+            _jumpInitialY = Body.Bottom;
+            _hasCompletedInitialJumpHeight = false;
+            Velocity = new Vector2(Velocity.X, -JumpVelocity);
+            JumpStarted();
         }
 
         public void FallThrough() {
             CanFallThrough = true;
 
             if (OnGround) {
-                Velocity = new Vector2(Velocity.X, Acceleration.Y * JumpExplosionRate);
+                Velocity = new Vector2(Velocity.X, Acceleration.Y /** JumpExplosionRate*/);
             }
         }
 
@@ -916,7 +1007,7 @@ namespace Raccoon.Components {
                 Jumps, MaxJumps, CanJump, HasJumped, IsJumping, JustJumped, IsStillJumping, JumpHeight, _canKeepCurrentJump, _jumpMaxY,
 
                 // ramps
-                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, _internal_isGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
+                IsOnRamp, IsOnAscendingRamp, IsOnDescendingRamp, IsInternalGravityEnabled, _isEnteringRamp, IsLeavingRamp, 
 
                 // fallthrough
                 CanFallThrough, _isTryingToFallThrough
@@ -962,10 +1053,17 @@ namespace Raccoon.Components {
                 }
 
                 if (IsStillJumping) {
+                    if (!_hasCompletedInitialJumpHeight && Math.Abs(Body.Bottom - _jumpInitialY) >= JumpMinHeight) {
+                        _hasCompletedInitialJumpHeight = true;
+                        CompletedInitialJumpHeight();
+                    }
+
                     // checks if jump max distance has been reached
                     if (OnAir && Body.Position.Y <= _jumpMaxY) {
                         _canKeepCurrentJump = 
                             IsStillJumping = false;
+
+                        ReachedMaxJumpHeight();
                     }
                 }
 
@@ -993,6 +1091,52 @@ namespace Raccoon.Components {
         protected override void ForceEnds() {
             base.ForceEnds();
             IsStoppingFromForce = true;
+        }
+
+        protected virtual float HandleGravityAcceleration() {
+            return GravityScale * GravityForce.Y;
+        }
+
+        protected virtual void BeforeJumpStarted() {
+        }
+
+        protected virtual void JumpStarted() {
+        }
+
+        protected virtual void CompletedInitialJumpHeight() {
+        }
+
+        protected virtual float HandleJumpAcceleration() {
+            return -Acceleration.Y;
+        }
+
+        protected virtual void ReachedMaxJumpHeight() {
+        }
+
+        protected virtual void StoppedKeepingJump() {
+        }
+
+        protected virtual void HandleJumpRelease() {
+            if (Velocity.Y < 0 && JumpReleaseVelocityCutoff > 0f) {
+                // cut off speed
+                Velocity = Velocity.WithY(Velocity.Y * (1f - Math.Min(JumpReleaseVelocityCutoff, 1f)));
+            }
+        }
+
+        protected void PushDisableGravity() {
+            _internalDisableGravityAmount += 1;
+        }
+
+        protected void PopDisableGravity() {
+            if (_internalDisableGravityAmount <= 0) {
+                return;
+            }
+
+            _internalDisableGravityAmount -= 1;
+        }
+
+        protected void ClearDisableGravity() {
+            _internalDisableGravityAmount = 0;
         }
 
         #endregion Protected Methods
@@ -1214,7 +1358,7 @@ namespace Raccoon.Components {
                 refreshRampState = true;
                 IsOnRamp = true;
                 _rampNormal = rampNormal;
-                _internal_isGravityEnabled = false;
+                PushDisableGravity();
             }
 
             if (!refreshRampState) {
@@ -1313,7 +1457,7 @@ namespace Raccoon.Components {
 
             IsOnRamp = false;
             _rampNormal = Vector2.Zero;
-            _internal_isGravityEnabled = true;
+            PopDisableGravity();
             _isRampAccelerationApplied = false;
 
             IsLeavingRamp = 

@@ -42,6 +42,9 @@ namespace Raccoon.Components {
 
         #region Constructors
 
+        protected Movement() {
+        }
+
         /// <summary>
         /// A component that handles movements, providing methods and properties to deal with speed.
         /// </summary>
@@ -65,7 +68,7 @@ namespace Raccoon.Components {
         /// </summary>
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
         /// <param name="timeToAchieveMaxVelocity">Time (in miliseconds) to reach max velocity.</param>
-        public Movement(Vector2 maxVelocity, int timeToAchieveMaxVelocity) {
+        public Movement(Vector2 maxVelocity, uint timeToAchieveMaxVelocity) {
             MaxVelocity = maxVelocity;
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
         }

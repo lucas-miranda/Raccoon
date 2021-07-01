@@ -34,7 +34,7 @@ namespace Raccoon.Components {
         /// </summary>
         /// <param name="maxVelocity">Max horizontal and vertical velocity.</param>
         /// <param name="timeToAchieveMaxSpeed">Time (in miliseconds) to reach max velocity.</param>
-        public BasicMovement(Vector2 maxVelocity, int timeToAchieveMaxSpeed) : base(maxVelocity, timeToAchieveMaxSpeed) {
+        public BasicMovement(Vector2 maxVelocity, uint timeToAchieveMaxSpeed) : base(maxVelocity, timeToAchieveMaxSpeed) {
             DragForce = .1f;
             SnapAxes = true;
         }
