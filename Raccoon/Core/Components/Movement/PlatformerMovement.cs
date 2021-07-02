@@ -7,7 +7,6 @@
 #define DISABLE_DESCENDING_RAMP
 #endif
 
-using System.Collections.ObjectModel;
 using Raccoon.Util;
 
 namespace Raccoon.Components {
@@ -540,10 +539,6 @@ namespace Raccoon.Components {
             }
         }
 
-        public override void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
-            base.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
-        }
-
         public override void PhysicsLateUpdate(float dt) {
             base.PhysicsLateUpdate(dt);
 
@@ -664,10 +659,6 @@ namespace Raccoon.Components {
             }
 
             return base.CanCollideWith(collisionAxes, collisionInfo);
-        }
-
-        public override void EndCollision() {
-            base.EndCollision();
         }
 
         public override Vector2 Integrate(float dt) {
@@ -936,7 +927,7 @@ namespace Raccoon.Components {
             CanFallThrough = true;
 
             if (OnGround) {
-                Velocity = new Vector2(Velocity.X, -FallthroughSpeed);
+                Velocity = new Vector2(Velocity.X, FallthroughSpeed);
             }
         }
 
