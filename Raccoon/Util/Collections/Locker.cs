@@ -85,8 +85,15 @@ namespace Raccoon.Util.Collections {
 
         public T this[int i] {
             get {
-                if (IsLocked) {
-                    throw new System.NotSupportedException($"Get element by index isn't available when locked.");
+                // TODO  maybe it should be an O(n) operation when IsLocked
+                //       to only retrieve indices which isn't marked to remove
+
+                if (IsLocked && i >= _items.Count && _toAdd.Count > 0) {
+                    if (i - _items.Count >= _toAdd.Count) {
+                        throw new System.ArgumentOutOfRangeException(nameof(i), $"Index {i} is out of range [0, {_items.Count + _toAdd.Count - 1}]");
+                    }
+
+                    return _toAdd[i - _items.Count].Item;
                 }
 
                 return _items[i].Item;
