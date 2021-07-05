@@ -1,8 +1,8 @@
 ﻿namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
         public class Track : System.IDisposable {
-            private event System.Action _onEnd = delegate { },
-                                        _onChangeFrame = delegate { };
+            private event System.Action _onEnd;
+            private event System.Action<int> _onChangeFrame;
 
             private int _currentFrameIndex;
 
@@ -68,8 +68,13 @@
                 IsPingPong = track.IsPingPong;
                 IsReverse = track.IsReverse;
 
-                _onEnd += track._onEnd;
-                _onChangeFrame += track._onChangeFrame;
+                if (track._onEnd != null) {
+                    _onEnd += track._onEnd;
+                }
+
+                if (track._onChangeFrame != null) {
+                    _onChangeFrame += track._onChangeFrame;
+                }
             }
 
             public Rectangle[] FramesRegions { get; private set; }
@@ -119,15 +124,15 @@
                     if (IsLooping || TimesPlayed < RepeatTimes) {
                         CurrentFrameIndex = IsReverse ? FramesRegions.Length - 1 : 0;
                         TimesPlayed++;
-                        _onEnd.Invoke();
+                        _onEnd?.Invoke();
                     } else {
                         HasEnded = true;
                         TimesPlayed++;
-                        _onEnd.Invoke();
+                        _onEnd?.Invoke();
                     }
                 } else {
                     CurrentFrameIndex = IsReverse ? CurrentFrameIndex - 1 : CurrentFrameIndex + 1;
-                    _onChangeFrame.Invoke();
+                    _onChangeFrame?.Invoke(CurrentFrameIndex);
                 }
             }
 
@@ -176,7 +181,7 @@
                 return this;
             }
 
-            public Track OnChangeFrame(System.Action onChangeFrame) {
+            public Track OnChangeFrame(System.Action<int> onChangeFrame) {
                 _onChangeFrame += onChangeFrame;
                 return this;
             }
@@ -186,7 +191,8 @@
                     return;
                 }
 
-                _onEnd = _onChangeFrame = null;
+                _onEnd = null;
+                _onChangeFrame = null;
                 FramesRegions = FramesDestinations = null;
                 Durations = null;
 
