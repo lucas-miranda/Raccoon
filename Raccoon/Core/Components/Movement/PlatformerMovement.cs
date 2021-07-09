@@ -279,6 +279,11 @@ namespace Raccoon.Components {
         public float GravityScale { get; set; } = 1f;
 
         /// <summary>
+        /// A custom falling speed restriction to better control it.
+        /// </summary>
+        public float? MaxFallingSpeed { get; set; }
+
+        /// <summary>
         /// Drag force applied when on ground.
         /// </summary>
         public float GroundDragForce { get; set; } = 1f;
@@ -866,20 +871,35 @@ namespace Raccoon.Components {
             }
 #endif
 
-
-            if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.Y != 0f) {
-                // handling force
-                currentAcceleration.Y += ForcePerSec.Y;
-            }
+            float verticalMovementAcceleration = 0f;
 
             if (GravityEnabled && IsInternalGravityEnabled) {
                 // apply gravity force
-                currentAcceleration.Y += HandleGravityAcceleration();
+                //currentAcceleration.Y += HandleGravityAcceleration();
+                verticalMovementAcceleration += HandleGravityAcceleration();
             }
 
             if (IsStillJumping && _hasCompletedInitialJumpHeight) {
                 // apply jumping acceleration if it's jumping
-                currentAcceleration.Y += HandleJumpAcceleration();
+                //currentAcceleration.Y += HandleJumpAcceleration();
+                verticalMovementAcceleration += HandleJumpAcceleration();
+            }
+
+            if (IsFalling && MaxFallingSpeed.HasValue) {
+                // ensure falling speed isn't greater than allowed max falling speed
+                currentAcceleration.Y += CalculateAcceleration(
+                    velocity.Y,
+                    MaxFallingSpeed.Value,
+                    dt,
+                    verticalMovementAcceleration
+                );
+            } else {
+                currentAcceleration.Y += verticalMovementAcceleration;
+            }
+            
+            if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.Y != 0f) {
+                // handling force
+                currentAcceleration.Y += ForcePerSec.Y;
             }
 
             if (currentAcceleration.Y != 0f 
