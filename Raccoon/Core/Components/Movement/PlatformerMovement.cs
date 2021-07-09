@@ -289,6 +289,11 @@ namespace Raccoon.Components {
         public float AirDragForce { get; set; } = 1f;
 
         /// <summary>
+        /// A custom horizontal speed may be used when on air.
+        /// </summary>
+        public float? AirMaxHorizontalSpeed { get; set; }
+
+        /// <summary>
         /// This modifier will be applied to ramp displacement (in px).
         /// </summary>
         public float RampSpeedModifier { get; set; } = 1f;
@@ -670,6 +675,19 @@ namespace Raccoon.Components {
             // Horizontal Velocity //
             /////////////////////////
 
+            // calculate target velocity
+            float targetVelocityX,
+                  maxVelocityX;
+
+            if (OnGround || !AirMaxHorizontalSpeed.HasValue) {
+                targetVelocityX = TargetVelocity.X;
+                maxVelocityX = MaxVelocity.X;
+            } else {
+                targetVelocityX = Axis.X * AirMaxHorizontalSpeed.Value;
+                maxVelocityX = AirMaxHorizontalSpeed.Value;
+            }
+
+            //
 
             if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.X != 0f) {
                 // handling force
@@ -698,13 +716,13 @@ namespace Raccoon.Components {
                             impulseSpeedCutoff = 5f;
                             airDragForce /= 2f;
                         } else { // on ground
-                            impulseSpeedCutoff = MaxVelocity.X / 2f;
+                            impulseSpeedCutoff = maxVelocityX / 2f;
                         }
                     }
 
                     // air drag force
                     if (Math.Abs(velocity.X) > 0f) {
-                        currentAcceleration.X += -Math.Sign(velocity.X) * ((DragForce + airDragForce) / dt) * MaxVelocity.X;
+                        currentAcceleration.X += -Math.Sign(velocity.X) * ((DragForce + airDragForce) / dt) * maxVelocityX;
                     }
 
                     if (IsStoppingFromForce && Math.Abs(velocity.X) < impulseSpeedCutoff) {
@@ -712,7 +730,7 @@ namespace Raccoon.Components {
                     }
                 }
 
-                if (Math.Abs(velocity.X) <= Math.Abs(MaxVelocity.X * .5f)) {
+                if (Math.Abs(velocity.X) <= Math.Abs(maxVelocityX * .5f)) {
                     // resetting ramp leaving values
                     if (IsLeavingRamp) {
                         ExtraAcceleration = Vector2.Zero;
@@ -746,7 +764,7 @@ namespace Raccoon.Components {
                 // reset ramp smooth control
                 _rampCurrentAcceleration = 0f;
                 _isRampAccelerationApplied = false;
-            } else if (MaxVelocity.X > 0f) {
+            } else if (MaxVelocity.X > 0f || (OnAir && AirMaxHorizontalSpeed.HasValue && AirMaxHorizontalSpeed.Value > 0f)) {
                 // velocity increasing until reach MaxVelocity.X limit
                 float acceleration = Acceleration.X;
 
@@ -765,8 +783,14 @@ namespace Raccoon.Components {
                         acceleration = _rampCurrentAcceleration;
                     } else {
                         // ensure we'll not fall from ramp at high speed
-                        if (!OnGround && Math.Abs(velocity.X) > MaxVelocity.X) {
-                            velocity.X = Math.Sign(TargetVelocity.X) * MaxVelocity.X;
+                        if (OnAir) {
+                            if (AirMaxHorizontalSpeed.HasValue) {
+                                if (Math.Abs(velocity.X) > AirMaxHorizontalSpeed.Value) {
+                                    velocity.X = Math.Sign(TargetVelocity.X) * AirMaxHorizontalSpeed.Value;
+                                }
+                            } else if (Math.Abs(velocity.X) > MaxVelocity.X) {
+                                velocity.X = Math.Sign(TargetVelocity.X) * MaxVelocity.X;
+                            }
                         }
 
                         OnLeavingRamp?.Invoke(_previousRampDirection);
@@ -801,7 +825,7 @@ namespace Raccoon.Components {
 
                 currentAcceleration.X += CalculateAcceleration(
                     velocity.X, 
-                    TargetVelocity.X, 
+                    targetVelocityX,
                     dt, 
                     acceleration
                 );
