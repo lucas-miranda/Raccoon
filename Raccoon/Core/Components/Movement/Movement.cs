@@ -313,6 +313,7 @@ namespace Raccoon.Components {
         public void ApplyImpulse(Vector2 impulse) {
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -324,6 +325,7 @@ namespace Raccoon.Components {
             Vector2 impulse = distance / duration;
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -335,6 +337,7 @@ namespace Raccoon.Components {
 
             impulse = distance / duration;
             Velocity += impulse;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -346,6 +349,7 @@ namespace Raccoon.Components {
             Vector2 impulse = direction * (distance / duration);
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -358,6 +362,7 @@ namespace Raccoon.Components {
             impulse = direction * (distance / duration);
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -365,6 +370,7 @@ namespace Raccoon.Components {
             Vector2 impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -372,6 +378,7 @@ namespace Raccoon.Components {
             impulse = direction * Math.Ceiling(Math.Sqrt(Math.Abs(2f * dragForce * distance)));
             Velocity += impulse;
             JustReceiveImpulse = true;
+            ReceiveImpulse();
             OnReceiveImpulse?.Invoke(impulse);
         }
 
@@ -380,6 +387,7 @@ namespace Raccoon.Components {
             ForceDuration = duration;
 
             JustReceiveForce = IsReceivingForce = true;
+            ReceiveForce();
             OnReceiveForce?.Invoke(ForcePerSec, ForceDuration);
         }
 
@@ -421,6 +429,12 @@ namespace Raccoon.Components {
         #region Protected Methods
 
         protected abstract void OnMoving(Vector2 distance);
+
+        protected virtual void ReceiveImpulse() {
+        }
+
+        protected virtual void ReceiveForce() {
+        }
 
         protected virtual void ForceEnds() {
         }
