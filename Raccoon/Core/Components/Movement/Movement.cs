@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using Raccoon.Util;
 
 namespace Raccoon.Components {
@@ -215,7 +215,7 @@ namespace Raccoon.Components {
             OnPhysicsUpdate(dt);
         }
 
-        public virtual void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
+        public virtual void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, List<Contact> horizontalContacts, List<Contact> verticalContacts) {
         }
 
         public virtual void PhysicsStepMove(int movementX, int movementY) {

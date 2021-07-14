@@ -276,7 +276,7 @@ namespace Raccoon.Components {
             Movement?.PhysicsUpdate(dt);
         }
 
-        public void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, ReadOnlyCollection<Contact> horizontalContacts, ReadOnlyCollection<Contact> verticalContacts) {
+        public void PhysicsCollisionSubmit(Body otherBody, Vector2 movement, List<Contact> horizontalContacts, List<Contact> verticalContacts) {
             if (!Active || Entity == null || !Entity.Active) {
                 return;
             }

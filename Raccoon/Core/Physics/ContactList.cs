@@ -54,6 +54,20 @@ namespace Raccoon {
             return false;
         }
 
+        public bool TouchesSurfaceOnly() {
+            if (_entries.Length == 0) {
+                return false;
+            }
+
+            foreach (Contact c in _entries) {
+                if (c.PenetrationDepth > 0f) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public void CopyTo(Contact[] contacts, int index) {
             _entries.CopyTo(contacts, index);
         }

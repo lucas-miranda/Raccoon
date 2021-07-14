@@ -977,7 +977,7 @@ namespace Raccoon {
                                     previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
                                 }
 
-                                body.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts.AsReadOnly(), verticalContacts.AsReadOnly());
+                                body.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
                                 //otherBody.PhysicsCollisionSubmit(body, new Vector2(- movementX, - movementY), hContacts, vContacts);
 
                                 _collidedOnThisFrame.Add(body);
@@ -1006,6 +1006,7 @@ namespace Raccoon {
                     }
 
                     if (movementX != 0 || movementY != 0) {
+                        body.Position = new Vector2(currentX, currentY);
                         body.PhysicsStepMove(
                             canMoveH ? movementX : 0, 
                             canMoveV ? movementY : 0
