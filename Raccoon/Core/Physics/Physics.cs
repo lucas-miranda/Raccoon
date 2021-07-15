@@ -958,23 +958,32 @@ namespace Raccoon {
                             // submiting to resolution
                             if (horizontalContacts.Count > 0 || verticalContacts.Count > 0) {
                                 // body.PhysicsCollisionCheck();
-                                //
-                                int collisionInfoIndex = _internalCollisionInfo.FindIndex(ci => Helper.EqualsPermutation(body, otherBody, ci.BodyA, ci.BodyB));
+                                InternalCollisionInfo previousCollisionInfo = null;
 
-                                if (collisionInfoIndex < 0) {
+                                foreach (InternalCollisionInfo ci in _internalCollisionInfo) {
+                                    if (Helper.EqualsPermutation(body, otherBody, ci.BodyA, ci.BodyB)) {
+                                        previousCollisionInfo = ci;
+                                        break;
+                                    }
+                                }
+
+                                if (previousCollisionInfo == null) {
                                     _internalCollisionInfo.Add(new InternalCollisionInfo(body, otherBody, movement, horizontalContacts, verticalContacts));
                                 } else {
-                                    InternalCollisionInfo previousCollisionInfo = _internalCollisionInfo[collisionInfoIndex];
+                                    if (body == previousCollisionInfo.BodyB) {
+                                        // we need to invert contact normals
 
-                                    // try to change to more meaningfull movement values
-                                    /*
-                                    if (previousCollisionInfo.Movement == Vector2.Zero) {
-                                        previousCollisionInfo.Movement = -movement;
+                                        foreach (Contact c in horizontalContacts) {
+                                            previousCollisionInfo.HorizontalContacts.Add(Contact.Invert(c));
+                                        }
+
+                                        foreach (Contact c in verticalContacts) {
+                                            previousCollisionInfo.VerticalContacts.Add(Contact.Invert(c));
+                                        }
+                                    } else {
+                                        previousCollisionInfo.HorizontalContacts.AddRange(horizontalContacts);
+                                        previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
                                     }
-                                    */
-
-                                    previousCollisionInfo.HorizontalContacts.AddRange(horizontalContacts);
-                                    previousCollisionInfo.VerticalContacts.AddRange(verticalContacts);
                                 }
 
                                 body.PhysicsCollisionSubmit(otherBody, movement, horizontalContacts, verticalContacts);
