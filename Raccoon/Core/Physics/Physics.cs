@@ -983,6 +983,15 @@ namespace Raccoon {
                                 _collidedOnThisFrame.Add(body);
                                 _collidedOnThisFrame.Add(otherBody);
                             }
+
+                            // body position could be manually changed
+                            if ((int) Math.Floor(body.Position.X) != currentX) {
+                                currentX = (int) Math.Floor(body.Position.X);
+                            }
+
+                            if ((int) Math.Floor(body.Position.Y) != currentY) {
+                                currentY = (int) Math.Floor(body.Position.Y);
+                            }
                         }
                     }
 
