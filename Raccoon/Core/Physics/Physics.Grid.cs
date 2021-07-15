@@ -58,13 +58,14 @@ namespace Raccoon {
                     }
                 }
 
+                Location cell = new Location(tile.Column, tile.Row);
                 foreach (Polygon tilePolygon in tilePolygons) {
                     Contact? contact = SAT(tilePolygon);
                     if (contact == null) {
                         continue;
                     }
 
-                    contacts.Add(contact.Value);
+                    contacts.Add(new Contact(contact.Value.Position, contact.Value.Normal, contact.Value.PenetrationDepth, cell));
                 }
             }
 

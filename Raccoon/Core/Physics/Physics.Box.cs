@@ -78,7 +78,7 @@ namespace Raccoon {
                     contacts = new Contact[0];
                 } else {
                     contacts = new Contact[] {
-                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
+                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth, null)
                     };
                 }
 

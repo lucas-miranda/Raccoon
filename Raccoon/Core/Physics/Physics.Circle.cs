@@ -17,10 +17,10 @@ namespace Raccoon {
 
             float dist = translation.Length();
             if (dist == 0) {
-                contacts = new Contact[] { new Contact(APos, Vector2.Right, circleA.Radius) };
+                contacts = new Contact[] { new Contact(APos, Vector2.Right, circleA.Radius, null) };
             } else {
                 Vector2 normal = translation / dist;
-                contacts = new Contact[] { new Contact(APos + normal * circleA.Radius, normal, radius - dist) };
+                contacts = new Contact[] { new Contact(APos + normal * circleA.Radius, normal, radius - dist, null) };
             }
 
             return true;
@@ -57,7 +57,7 @@ namespace Raccoon {
                     contacts = new Contact[0];
                 } else {
                     contacts = new Contact[] {
-                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth)
+                        new Contact(closestPoint, contact.Value.Normal, contact.Value.PenetrationDepth, null)
                     };
                 }
 
@@ -92,7 +92,7 @@ namespace Raccoon {
                         return null;
                     }
 
-                    return new Contact(closestPoint, tileContact.Value.Normal, tileContact.Value.PenetrationDepth);
+                    return new Contact(closestPoint, tileContact.Value.Normal, tileContact.Value.PenetrationDepth, null);
                 }
             );
 
