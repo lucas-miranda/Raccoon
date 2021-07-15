@@ -257,6 +257,7 @@
     <Compile Include="Math\BezierCurve.cs" />
     <Compile Include="Math\Circle.cs" />
     <Compile Include="Math\Line.cs" />
+    <Compile Include="Math\Location.cs" />
     <Compile Include="Math\Polygon.cs" />
     <Compile Include="Math\Rectangle.cs" />
     <Compile Include="Math\Size.cs" />
