@@ -1080,10 +1080,12 @@ namespace Raccoon.Components {
 
             if (Axis.X != 0f) {
                 // only triggers OnHorizontalMove() on a intended horizontal movement
+                HorizontalMove(distance.X);
                 OnHorizontalMove?.Invoke(distance.X);
             }
 
             if (!Math.EqualsEstimate(distance.Y, 0f)) {
+                VerticalMove(distance.Y);
                 OnVerticalMove?.Invoke(distance.Y);
             }
         }
@@ -1095,6 +1097,12 @@ namespace Raccoon.Components {
 
         protected virtual float HandleGravityAcceleration() {
             return GravityScale * GravityForce.Y;
+        }
+
+        protected virtual void HorizontalMove(float distance) {
+        }
+
+        protected virtual void VerticalMove(float distance) {
         }
 
         protected virtual void ReachedGround() {
