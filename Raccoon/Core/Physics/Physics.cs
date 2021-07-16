@@ -1005,26 +1005,27 @@ namespace Raccoon {
                     }
 
                     // separated axis movement
-                    if (canMoveH && movementX != 0) {
-                        if (body.Movement.CanExecuteMove(movementX, 0)) {
-                            distanceX -= movementX;
-                            currentX += movementX;
-                        } else {
-                            canMoveH = false;
-                        }
-                    }
-
                     if (canMoveV && movementY != 0) {
                         if (body.Movement.CanExecuteMove(0, movementY)) {
                             distanceY -= movementY;
                             currentY += movementY;
+                            body.Position = body.Position.WithY(currentY);
                         } else {
                             canMoveV = false;
                         }
                     }
 
+                    if (canMoveH && movementX != 0) {
+                        if (body.Movement.CanExecuteMove(movementX, 0)) {
+                            distanceX -= movementX;
+                            currentX += movementX;
+                            body.Position = body.Position.WithX(currentX);
+                        } else {
+                            canMoveH = false;
+                        }
+                    }
+
                     if (movementX != 0 || movementY != 0) {
-                        body.Position = new Vector2(currentX, currentY);
                         body.PhysicsStepMove(
                             canMoveH ? movementX : 0, 
                             canMoveV ? movementY : 0
