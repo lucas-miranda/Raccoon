@@ -886,7 +886,7 @@ namespace Raccoon {
                             moveVerticalPos   = new Vector2(
                                                     currentX + fixedMovementX,
                                                     currentY + movementY + fixedMovementY
-                                                ); // moveVerticalPos will do a diagonal move check, if canMoveH is true
+                                                );
 
                     Vector2 movement = new Vector2(movementX + fixedMovementX, movementY + fixedMovementY);
 
@@ -915,7 +915,7 @@ namespace Raccoon {
                                     verticalContacts.Add(c);
                                 }
 
-                                if (canMoveV) {
+                                if (canMoveV && !Math.EqualsEstimate(movement.Y, 0)) {
                                     if (isMovementCollidable 
                                      && contactsV.FindIndex(FilterValidVerticalContact) >= 0 
                                      && body.Movement.CanCollideWith(new Vector2(0f, movement.Y), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))
@@ -938,7 +938,7 @@ namespace Raccoon {
                                     horizontalContacts.Add(c);
                                 }
 
-                                if (canMoveH) {
+                                if (canMoveH && !Math.EqualsEstimate(movement.X, 0f)) {
                                     if (isMovementCollidable 
                                      && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 
                                      && body.Movement.CanCollideWith(new Vector2(movement.X, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))
