@@ -34,7 +34,7 @@ namespace Raccoon {
         #region Constructors
 
         public Entity() {
-            Name = "Entity";
+            Name = GetType().Name;
             _renderer = Game.Instance.MainRenderer;
             Transform = new Transform(this);
         }
@@ -568,6 +568,7 @@ namespace Raccoon {
 
             Components.Add(component);
             component.OnAdded(this);
+
             return component;
         }
 
@@ -901,6 +902,7 @@ namespace Raccoon {
         }
 
         protected virtual bool ComponentAdded(Component component) {
+
             return true;
         }
 
