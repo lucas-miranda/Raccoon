@@ -12,6 +12,13 @@ namespace Raccoon.Components {
 
         #endregion Private Members
 
+        #region Constructors
+
+        public Component() {
+        }
+
+        #endregion Constructors
+
         #region Public Properties
 
         public Entity Entity { get; private set; }
@@ -22,6 +29,7 @@ namespace Raccoon.Components {
         public int Order { get; set; }
         public int Layer { get; set; }
         public Renderer Renderer { get; set; }
+        public uint Timer { get { return Entity.Timer; } }
 
         // TODO  Properly enable/disable components using ControlGroup (at Scene)
         public int ControlGroup { get; set; }
