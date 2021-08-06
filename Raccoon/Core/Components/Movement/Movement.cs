@@ -73,9 +73,6 @@ namespace Raccoon.Components {
             Acceleration = MaxVelocity / (Util.Time.MiliToSec * timeToAchieveMaxVelocity);
         }
 
-        ~Movement() {
-        }
-
         #endregion Constructors
 
         #region Public Properties

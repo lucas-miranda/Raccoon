@@ -129,7 +129,7 @@ namespace Raccoon.Components {
                     (DragForce / dt) * MaxVelocity.X
                 );
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(axis.X) != Math.Sign(velocity.X)) { // snapping horizontal axis clears velocity
-                //velocity.X = 0f;
+                velocity.X = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
                 currentAcceleration.X += CalculateAcceleration(
                     velocity.X, 
@@ -165,7 +165,7 @@ namespace Raccoon.Components {
                     (DragForce / dt) * MaxVelocity.Y
                 );
             } else if (SnapVerticalAxis && velocity.Y != 0f && System.Math.Sign(axis.Y) != System.Math.Sign(velocity.Y)) { // snapping horizontal axis clears velocity
-                //velocity.Y = 0f;
+                velocity.Y = 0f;
             } else if (MaxVelocity.Y > 0f) { // velocity increasing until MaxVelocity.Y limit
                 currentAcceleration.Y += CalculateAcceleration(
                     velocity.Y, 
@@ -207,6 +207,7 @@ namespace Raccoon.Components {
 
             Velocity = velocity;
             _currentAcceleration = currentAcceleration;
+
             return displacement;
         }
 
