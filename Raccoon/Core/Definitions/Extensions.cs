@@ -90,6 +90,18 @@ public static class Extensions {
         return resultBuilder.ToString();
     }
 
+    public static string SeparateCapitalized(this string str, char separationChar = ' ') {
+        string separation = separationChar.ToString();
+
+        for (int i = 1; i < str.Length; i++) {
+            if (char.IsUpper(str[i]) && str[i - 1] != separationChar) {
+                str.Insert(i, separation);
+            }
+        }
+
+        return str;
+    }
+
     #endregion String
 
     #region Linked List
