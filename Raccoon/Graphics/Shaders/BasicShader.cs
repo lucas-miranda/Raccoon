@@ -236,7 +236,7 @@ namespace Raccoon.Graphics {
 
         protected override void BeforePassApply() {
             base.BeforePassApply();
-            XNAEffect.GraphicsDevice.Textures[0] = TextureEnabled ? Texture.XNATexture : null;
+            XNAEffect.GraphicsDevice.Textures[0] = TextureEnabled && Texture != null ? Texture.XNATexture : null;
         }
 
         protected virtual void OnUpdateTechniqueIndex() {
