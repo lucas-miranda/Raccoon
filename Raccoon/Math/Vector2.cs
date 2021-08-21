@@ -136,6 +136,18 @@ namespace Raccoon {
             return Normalize(this);
         }
 
+        public void Decompose(out Vector2 normal, out float length) {
+            if (Math.EqualsEstimate(X, 0f) && Math.EqualsEstimate(Y, 0f)) {
+                length = 0f;
+                normal = Zero;
+                return;
+            }
+
+            length = Length();
+            float invLength = 1.0f / length;
+            normal = new Vector2(X * invLength, Y * invLength);
+        }
+
         public Vector2 PerpendicularCCW() {
             return new Vector2(Y, -X);
         }
