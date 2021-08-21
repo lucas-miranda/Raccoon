@@ -1,4 +1,6 @@
-﻿namespace Raccoon {
+﻿using Raccoon.Util;
+
+namespace Raccoon {
     public struct Circle {
         #region Static Readonly
 
@@ -107,6 +109,41 @@
             }
 
             return new Vector2[] { p1, p2 };
+        }
+
+        public Vector2[] IntersectionPoints(Circle c) {
+            float centerDist = (c.Center - Center).Length();
+            if (Math.EqualsEstimate(centerDist, 0f) && Center == c.Center) {
+                throw new System.InvalidOperationException("Coincident circles, can't calculate a discrete number of intersection points.");
+            }
+
+            if (centerDist > Radius + c.Radius || centerDist < Math.Abs(Radius - c.Radius)) {
+                return new Vector2[0];
+            }
+
+            float a = (Radius * Radius - c.Radius * c.Radius + centerDist * centerDist) / (2.0f * centerDist), // radius length to touch intersection points segment base
+                  halfSegmentBaseChordLength = Math.Sqrt(Radius * Radius - a * a);
+
+            Vector2 segmentBaseCenter = Center + a * (c.Center - Center) / centerDist;
+
+            Vector2 firstPoint = new Vector2(
+                segmentBaseCenter.X + halfSegmentBaseChordLength * (c.Center.Y - Center.Y) / centerDist,
+                segmentBaseCenter.Y - halfSegmentBaseChordLength * (c.Center.X - Center.X) / centerDist
+            );
+
+            Vector2 secondPoint = new Vector2(
+                segmentBaseCenter.X - halfSegmentBaseChordLength * (c.Center.Y - Center.Y) / centerDist,
+                segmentBaseCenter.Y + halfSegmentBaseChordLength * (c.Center.X - Center.X) / centerDist
+            );
+
+            if (firstPoint == secondPoint) {
+                return new Vector2[] { firstPoint };
+            }
+
+            return new Vector2[] {
+                firstPoint,
+                secondPoint
+            };
         }
 
         public override bool Equals(object obj) {
