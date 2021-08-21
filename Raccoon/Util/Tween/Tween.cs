@@ -111,6 +111,14 @@ namespace Raccoon.Util.Tween {
             return from + (to - from) * easing(t);
         }
 
+        public static Vector2 Apply(Vector2 value, float t, System.Func<float, float> easing) {
+            return value * easing(t);
+        }
+
+        public static Vector2 Apply(Vector2 from, Vector2 to, float t, System.Func<float, float> easing) {
+            return from + (to - from) * easing(t);
+        }
+
         public void Update(int delta) {
             if (!IsPlaying) {
                 return;
