@@ -86,6 +86,14 @@ namespace Raccoon.Util {
         }
 
         /// <summary>
+        /// Returns a random number sign, which can be plus (+1) or minus (-1).
+        /// </summary>
+        /// <returns>1 or -1.</returns>
+        public static int Sign() {
+            return Boolean() ? 1 : -1;
+        }
+
+        /// <summary>
         /// Returns a random non-negative integer number.
         /// </summary>
         /// <returns>Number in range [0, int.MaxValue].</returns>
