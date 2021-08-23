@@ -61,7 +61,7 @@ namespace Raccoon.Components {
                 // horizontal
 
                 int i = 0;
-                float v = Velocity.X, 
+                float v = Velocity.X,
                       d = 0f;
 
                 if (UseSmoothStopWithMovingToTarget && !Math.EqualsEstimate((DragForce / dt) * MaxVelocity.X * dt, 0f, 1f)) {
@@ -123,27 +123,27 @@ namespace Raccoon.Components {
 
             if (axis.X == 0f) { // stopping from movement, drag force applies
                 currentAcceleration.X += CalculateAcceleration(
-                    velocity.X, 
-                    0f, 
-                    dt, 
+                    velocity.X,
+                    0f,
+                    dt,
                     (DragForce / dt) * MaxVelocity.X
                 );
             } else if (SnapHorizontalAxis && velocity.X != 0f && Math.Sign(axis.X) != Math.Sign(velocity.X)) { // snapping horizontal axis clears velocity
                 velocity.X = 0f;
             } else if (MaxVelocity.X > 0f) { // velocity increasing until MaxVelocity.X limit
                 currentAcceleration.X += CalculateAcceleration(
-                    velocity.X, 
-                    TargetVelocity.X, 
-                    dt, 
+                    velocity.X,
+                    TargetVelocity.X,
+                    dt,
                     Acceleration.X
                 );
             } else { // velocity increasing without a limit
                 currentAcceleration.X += System.Math.Sign(axis.X) * Acceleration.X;
             }
 
-            if (currentAcceleration.X != 0f 
-             && velocity.X != 0f 
-             && Math.Sign(currentAcceleration.X) != Math.Sign(velocity.X) 
+            if (currentAcceleration.X != 0f
+             && velocity.X != 0f
+             && Math.Sign(currentAcceleration.X) != Math.Sign(velocity.X)
              && Math.Abs(currentAcceleration.X * dt) >= Math.Abs(velocity.X)
             ) {
                 velocity.X = 0f;
@@ -155,22 +155,22 @@ namespace Raccoon.Components {
 
             //
             // vertical velocity
-            // 
+            //
 
             if (axis.Y == 0f) { // stopping from movement, drag force applies
                 currentAcceleration.Y += CalculateAcceleration(
-                    velocity.Y, 
-                    0f, 
-                    dt, 
+                    velocity.Y,
+                    0f,
+                    dt,
                     (DragForce / dt) * MaxVelocity.Y
                 );
             } else if (SnapVerticalAxis && velocity.Y != 0f && System.Math.Sign(axis.Y) != System.Math.Sign(velocity.Y)) { // snapping horizontal axis clears velocity
                 velocity.Y = 0f;
             } else if (MaxVelocity.Y > 0f) { // velocity increasing until MaxVelocity.Y limit
                 currentAcceleration.Y += CalculateAcceleration(
-                    velocity.Y, 
-                    TargetVelocity.Y, 
-                    dt, 
+                    velocity.Y,
+                    TargetVelocity.Y,
+                    dt,
                     Acceleration.Y
                 );
             } else { // velocity increasing without a limit
@@ -191,9 +191,9 @@ namespace Raccoon.Components {
                 }
             }
 
-            if (currentAcceleration.Y != 0f 
-             && velocity.Y != 0f 
-             && Math.Sign(currentAcceleration.Y) != Math.Sign(velocity.Y) 
+            if (currentAcceleration.Y != 0f
+             && velocity.Y != 0f
+             && Math.Sign(currentAcceleration.Y) != Math.Sign(velocity.Y)
              && Math.Abs(currentAcceleration.Y * dt) >= Math.Abs(velocity.Y)
             ) {
                 velocity.Y = 0f;

@@ -14,9 +14,11 @@ namespace Raccoon.Components {
         public delegate void MovementEventAction();
         public MovementEventAction OnStartMove,
                                    OnStopMove;
-        
+
         public delegate void PhysicsAction();
         public PhysicsAction OnPhysicsLateUpdate = delegate { };
+
+        public System.Func<Vector2, CollisionInfo<Body>, bool> OnCollideWith;
 
         public delegate void PhysicsUpdateAction(float dt);
         public PhysicsUpdateAction OnPhysicsUpdate = delegate { };
@@ -80,6 +82,7 @@ namespace Raccoon.Components {
         public Body Body { get; private set; }
         public BitTag Tags { get { return CollisionTags | ExtraCollisionTags; } }
         public BitTag CollisionTags { get; set; } = BitTag.None;
+        public BitTag IgnoreCollisionTags { get; set; } = BitTag.None;
         public Vector2 Velocity { get { return Body.Velocity; } set { Body.Velocity = value; } }
         public Vector2 MaxVelocity { get { return _maxVelocity + ExtraMaxVelocity + BonusMaxVelocity; } set { _maxVelocity = value; } }
         public Vector2 BaseMaxVelocity { get { return _maxVelocity; } }
@@ -250,7 +253,12 @@ namespace Raccoon.Components {
         }
 
         public virtual bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
-            return true;
+            if (OnCollideWith != null && !OnCollideWith.Invoke(collisionAxes, collisionInfo)) {
+                return false;
+            }
+
+            return IgnoreCollisionTags == BitTag.None
+                || !collisionInfo.Subject.Tags.HasAny(IgnoreCollisionTags);
         }
 
         public virtual void BeforeBodySolveCollisions() {
