@@ -10,7 +10,7 @@ namespace Raccoon.Util {
 
         #region Private Members
 
-        private static readonly Regex StringFormatRegex = new Regex(@"(\-?\d+(?:\.?\d+)?)\s*\-\s*(\-?\d+(?:\.?\d+)?)");
+        private static readonly Regex StringFormatRegex = new Regex(@"(\-?\d+(?:\.?\d+)?)\s*(?:\-|\~)\s*(\-?\d+(?:\.?\d+)?)");
 
         public float Min, Max;
 
