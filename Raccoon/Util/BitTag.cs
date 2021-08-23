@@ -61,7 +61,7 @@ namespace Raccoon.Util {
 
         public System.Type EnumType { get; private set; }
         public bool IsSingleValue { get { return Math.IsPowerOfTwo(LiteralValue); } }
-        public string BinaryRepresentation { 
+        public string BinaryRepresentation {
             get {
                 return System.Convert.ToString((long) LiteralValue, 2);
             }

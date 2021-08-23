@@ -575,8 +575,8 @@ namespace Raccoon {
 
                     if (otherCollider.Shape is GridShape gridShape) {
                             List<Contact> gridContacts = TestGrid(
-                            gridShape, 
-                            otherCollider.Position, 
+                            gridShape,
+                            otherCollider.Position,
                             new Rectangle(position, endPos),
                             (Polygon tilePolygon) => {
                                 if (!SAT.Test(position, endPos, tilePolygon, out Contact? tileContact)) {
@@ -874,15 +874,15 @@ namespace Raccoon {
 
                     // check collision with current movement
                     Vector2 moveHorizontalPos = new Vector2(
-                                                    currentX + movementX + fixedMovementX, 
+                                                    currentX + movementX + fixedMovementX,
                                                     canMoveV ? (currentY + movementY) : currentY // NOTE  fixedMovementY should not be included here
                                                 ),                                               //       it can cause undesired effects, since it'll
                                                                                                  //       affect collision direction
                                                                                                  //
                                                                                                  //       e.g  straight horizontal movement could be
-                                                                                                 //       interpreted as down-side collision and 
+                                                                                                 //       interpreted as down-side collision and
                                                                                                  //       make it stutter
-                                                
+
                             moveVerticalPos   = new Vector2(
                                                     currentX + fixedMovementX,
                                                     currentY + movementY + fixedMovementY
@@ -916,8 +916,8 @@ namespace Raccoon {
                                 }
 
                                 if (canMoveV && !Math.EqualsEstimate(movement.Y, 0)) {
-                                    if (isMovementCollidable 
-                                     && contactsV.FindIndex(FilterValidVerticalContact) >= 0 
+                                    if (isMovementCollidable
+                                     && contactsV.FindIndex(FilterValidVerticalContact) >= 0
                                      && body.Movement.CanCollideWith(new Vector2(0f, movement.Y), new CollisionInfo<Body>(otherBody, verticalContacts.ToArray()))
                                     ) {
                                         canMoveV = false;
@@ -939,8 +939,8 @@ namespace Raccoon {
                                 }
 
                                 if (canMoveH && !Math.EqualsEstimate(movement.X, 0f)) {
-                                    if (isMovementCollidable 
-                                     && contactsH.FindIndex(FilterValidHorizontalContact) >= 0 
+                                    if (isMovementCollidable
+                                     && contactsH.FindIndex(FilterValidHorizontalContact) >= 0
                                      && body.Movement.CanCollideWith(new Vector2(movement.X, 0f), new CollisionInfo<Body>(otherBody, horizontalContacts.ToArray()))
                                     ) {
                                         canMoveH = false;
@@ -1027,7 +1027,7 @@ namespace Raccoon {
 
                     if (movementX != 0 || movementY != 0) {
                         body.PhysicsStepMove(
-                            canMoveH ? movementX : 0, 
+                            canMoveH ? movementX : 0,
                             canMoveV ? movementY : 0
                         );
                     }
@@ -1070,9 +1070,9 @@ namespace Raccoon {
                           verticalContacts = collInfo.VerticalContacts.ToArray();
 
                 collInfo.BodyA.CollidedWith(
-                    collInfo.BodyB, 
-                    collInfo.Movement, 
-                    new CollisionInfo<Body>(collInfo.BodyB, horizontalContacts), 
+                    collInfo.BodyB,
+                    collInfo.Movement,
+                    new CollisionInfo<Body>(collInfo.BodyB, horizontalContacts),
                     new CollisionInfo<Body>(collInfo.BodyB, verticalContacts)
                 );
 
@@ -1088,9 +1088,9 @@ namespace Raccoon {
                 }
 
                 collInfo.BodyB.CollidedWith(
-                    collInfo.BodyA, 
-                    -collInfo.Movement, 
-                    new CollisionInfo<Body>(collInfo.BodyA, invertedHContacts), 
+                    collInfo.BodyA,
+                    -collInfo.Movement,
+                    new CollisionInfo<Body>(collInfo.BodyA, invertedHContacts),
                     new CollisionInfo<Body>(collInfo.BodyA, invertedVContacts)
                 );
             }
@@ -1123,7 +1123,7 @@ namespace Raccoon {
 
         private bool FilterValidHorizontalContact(Contact c) {
             return (
-                Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f 
+                Math.Abs(Vector2.Dot(c.Normal, Vector2.Right)) >= .6f
                 || Math.Abs(Vector2.Dot(c.Normal, Vector2.Down)) >= .6f
             ) && c.PenetrationDepth > 0.5f;
         }

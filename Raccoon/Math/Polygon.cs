@@ -644,7 +644,7 @@ namespace Raccoon {
                     ref exclusionList,
                     ref sharedVertexA,
                     ref sharedVertexB,
-                    out Vector2[] component1, 
+                    out Vector2[] component1,
                     out Vector2[] component2
                 );
 

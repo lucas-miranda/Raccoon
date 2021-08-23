@@ -32,7 +32,7 @@ namespace Raccoon.Util {
             get {
                 return _baseRandomType;
             }
-            
+
             set {
                 if (value == _baseRandomType) {
                     return;
@@ -54,15 +54,15 @@ namespace Raccoon.Util {
         /// <summary>
         /// A number used to calculate values in the pseudo-random sequence.
         /// </summary>
-        public static int Seed { 
-            get { 
-                return _seed; 
-            } 
+        public static int Seed {
+            get {
+                return _seed;
+            }
 
-            set { 
-                _seed = value; 
-                BaseRandom = new System.Random(_seed); 
-            } 
+            set {
+                _seed = value;
+                BaseRandom = new System.Random(_seed);
+            }
         }
 
         #endregion Public Properties
