@@ -78,8 +78,8 @@ namespace Raccoon {
         /// <param name="force">Indicates that scene change can be forced if necessary. When adding a child that already belongs to a Scene and the intention is to match the parent Scene.</param>
         public void AddChild(Transform transform, bool changeScene = true, bool force = false) {
             if (transform == this
-              || IsDetached || Entity.IsWiped 
-              || transform.IsDetached || transform.Entity.IsWiped 
+              || IsDetached || Entity.IsWiped
+              || transform.IsDetached || transform.Entity.IsWiped
               || _children.Contains(transform)) {
                 return;
             }
@@ -157,7 +157,7 @@ namespace Raccoon {
         /// <param name="force">It allows to force a drop from scene, in cases where parent transform doesn't have permission to modify the child Scene (when transform.Entity.IsSceneFromTransformAncestor is false).</param>
         public bool RemoveChild(Transform transform, bool dropFromScene = true, bool allowWipe = true, bool force = false) {
             if (transform == this
-              || IsDetached || Entity.IsWiped 
+              || IsDetached || Entity.IsWiped
               || transform.IsDetached || transform.Entity.IsWiped) {
                 return false;
             }

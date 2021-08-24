@@ -1,10 +1,10 @@
 ﻿namespace Raccoon.Util.Tween {
     public static class Ease {
-        private const double T1 = 1 / 2.75, 
-                             B1 = 1.5 / 2.75, 
-                             T2 = 2 / 2.75, 
-                             B2 = 2.25 / 2.75, 
-                             T3 = 2.5 / 2.75, 
+        private const double T1 = 1 / 2.75,
+                             B1 = 1.5 / 2.75,
+                             T2 = 2 / 2.75,
+                             B2 = 2.25 / 2.75,
+                             T3 = 2.5 / 2.75,
                              B3 = 2.625 / 2.75;
 
         public static float Linear(float t) {

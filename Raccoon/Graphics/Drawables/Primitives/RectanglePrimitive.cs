@@ -41,7 +41,7 @@
 
         #region Public Methods
 
-        public override void Dispose() { 
+        public override void Dispose() {
             base.Dispose();
         }
 

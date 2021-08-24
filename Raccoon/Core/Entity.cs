@@ -427,20 +427,20 @@ namespace Raccoon {
 
         public virtual void Render() {
             Graphics.Lock();
-            
+
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
                 }
 
                 g.Render(
-                    position:   Transform.Position + g.Position * Transform.Scale, 
-                    rotation:   Transform.Rotation + g.Rotation, 
-                    scale:      Transform.Scale * g.Scale, 
+                    position:   Transform.Position + g.Position * Transform.Scale,
+                    rotation:   Transform.Rotation + g.Rotation,
+                    scale:      Transform.Scale * g.Scale,
                     flip:       g.Flipped,
-                    color:      g.Color, 
-                    scroll:     g.Scroll, 
-                    shader:     g.Shader, 
+                    color:      g.Color,
+                    scroll:     g.Scroll,
+                    shader:     g.Shader,
                     layer:      Layer + g.Layer
                 );
             }
@@ -458,9 +458,9 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached 
-                 || !child.Entity.IsSceneFromTransformAncestor 
-                 || !child.Entity.Visible 
+                if (child.IsDetached
+                 || !child.Entity.IsSceneFromTransformAncestor
+                 || !child.Entity.Visible
                  || !child.Entity.AutoRender
                 ) {
                     continue;
@@ -548,7 +548,7 @@ namespace Raccoon {
 
             foreach (object attrObj in component.GetType().GetCustomAttributes(typeof(ComponentUsageAttribute), inherit: true)) {
                 ComponentUsageAttribute usageAttribute = (ComponentUsageAttribute) attrObj;
-                
+
                 if (!usageAttribute.IsEntityTypeAllowed(entityType)) {
                     throw new System.InvalidOperationException($"Entity with type '{entityType}' isn't allowed to add Component '{component.GetType()}'.");
                 }
@@ -723,8 +723,8 @@ namespace Raccoon {
             Components.Unlock();
         }
 
-        public void RemoveComponents<T, K>() 
-         where T : Component 
+        public void RemoveComponents<T, K>()
+         where T : Component
          where K : Component {
             Components.Lock();
             foreach (Component c in Components) {
@@ -738,8 +738,8 @@ namespace Raccoon {
             Components.Unlock();
         }
 
-        public void RemoveComponents<T, K, V>() 
-         where T : Component 
+        public void RemoveComponents<T, K, V>()
+         where T : Component
          where K : Component
          where V : Component {
             Components.Lock();
@@ -754,8 +754,8 @@ namespace Raccoon {
             Components.Unlock();
         }
 
-        public void RemoveComponents<T, K, V, U>() 
-         where T : Component 
+        public void RemoveComponents<T, K, V, U>()
+         where T : Component
          where K : Component
          where V : Component
          where U : Component {
@@ -788,7 +788,7 @@ namespace Raccoon {
         public void RemoveComponents(System.Type componentAType, System.Type componentBType) {
             Components.Lock();
             foreach (Component c in Components) {
-                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType)) 
+                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType))
                  && Components.Remove(c)) {
                     ComponentRemoved(c);
                     c.Enabled = false;
@@ -802,7 +802,7 @@ namespace Raccoon {
         public void RemoveComponents(System.Type componentAType, System.Type componentBType, System.Type componentCType) {
             Components.Lock();
             foreach (Component c in Components) {
-                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType) || c.GetType().Equals(componentCType)) 
+                if ((c.GetType().Equals(componentAType) || c.GetType().Equals(componentBType) || c.GetType().Equals(componentCType))
                  && Components.Remove(c)) {
                     ComponentRemoved(c);
                     c.Enabled = false;

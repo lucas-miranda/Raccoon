@@ -91,14 +91,14 @@ namespace Raccoon.Components {
         public Color Color { get; set; } = Color.White;
 #endif
 
-        public Vector2 Position { 
-            get { 
-                return Entity.Transform.Position - Shape.Origin; 
-            } 
+        public Vector2 Position {
+            get {
+                return Entity.Transform.Position - Shape.Origin;
+            }
 
-            set { 
-                Entity.Transform.Position = value + Shape.Origin; 
-            } 
+            set {
+                Entity.Transform.Position = value + Shape.Origin;
+            }
         }
 
         public BitTag Tags {
@@ -228,8 +228,8 @@ namespace Raccoon.Components {
                 foreach (Contact contact in _contactsToRender) {
                     Vector2 contactEndPos = contact.Position + contact.Normal * contact.PenetrationDepth;
                     Debug.DrawLine(
-                        contact.Position, 
-                        contactEndPos, 
+                        contact.Position,
+                        contactEndPos,
                         Color.Magenta
                     );
 

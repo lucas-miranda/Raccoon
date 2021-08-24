@@ -137,91 +137,91 @@ namespace Raccoon.Graphics {
 
         public void Render() {
             InternalRender(
-                Position, 
-                Rotation, 
-                Scale, 
-                Flipped, 
-                Color, 
-                Scroll, 
-                Shader, 
+                Position,
+                Rotation,
+                Scale,
+                Flipped,
+                Color,
+                Scroll,
+                Shader,
                 Layer
             );
         }
 
         public void Render(Vector2 position, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                Rotation, 
-                Scale, 
-                Flipped, 
-                Color, 
-                Scroll, 
-                shader ?? Shader, 
+                position,
+                Rotation,
+                Scale,
+                Flipped,
+                Color,
+                Scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
 
         public void Render(Vector2 position, float rotation, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                rotation, 
-                Scale, 
-                Flipped, 
-                Color, 
-                Scroll, 
-                shader ?? Shader, 
+                position,
+                rotation,
+                Scale,
+                Flipped,
+                Color,
+                Scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                rotation, 
-                scale, 
-                Flipped, 
-                Color, 
-                Scroll, 
-                shader ?? Shader, 
+                position,
+                rotation,
+                scale,
+                Flipped,
+                Color,
+                Scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                rotation, 
-                scale, 
-                flip, 
-                Color, 
-                Scroll, 
-                shader ?? Shader, 
+                position,
+                rotation,
+                scale,
+                flip,
+                Color,
+                Scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                rotation, 
-                scale, 
-                flip, 
-                color, 
-                Scroll, 
-                shader ?? Shader, 
+                position,
+                rotation,
+                scale,
+                flip,
+                color,
+                Scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
 
         public void Render(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader = null, int? layer = null) {
             InternalRender(
-                position, 
-                rotation, 
-                scale, 
-                flip, 
-                color, 
-                scroll, 
-                shader ?? Shader, 
+                position,
+                rotation,
+                scale,
+                flip,
+                color,
+                scroll,
+                shader ?? Shader,
                 layer ?? Layer
             );
         }
