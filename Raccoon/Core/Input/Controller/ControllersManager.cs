@@ -21,7 +21,7 @@ namespace Raccoon.Input {
         public int? MaxAllowedControllers { get; set; }
         public int RegisteredControllers { get { return _controllers.Count; } }
 
-        public int ConnectedControllers { 
+        public int ConnectedControllers {
             get {
                 int count = 0;
 
@@ -35,7 +35,7 @@ namespace Raccoon.Input {
             }
         }
 
-        public int DisconnectedControllers { 
+        public int DisconnectedControllers {
             get {
                 int count = 0;
 

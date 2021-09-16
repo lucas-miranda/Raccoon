@@ -183,6 +183,22 @@ namespace Raccoon.Input {
             _leftButtonSources.Add(source);
         }
 
+        public ButtonInputSource<D> FirstUpSource() {
+            return _upButtonSources.Count > 0 ? _upButtonSources[0] : null;
+        }
+
+        public ButtonInputSource<D> FirstRightSource() {
+            return _rightButtonSources.Count > 0 ? _rightButtonSources[0] : null;
+        }
+
+        public ButtonInputSource<D> FirstDownSource() {
+            return _downButtonSources.Count > 0 ? _downButtonSources[0] : null;
+        }
+
+        public ButtonInputSource<D> FirstLeftSource() {
+            return _leftButtonSources.Count > 0 ? _leftButtonSources[0] : null;
+        }
+
         public IEnumerable<ButtonInputSource<D>> UpSources() {
             foreach (ButtonInputSource<D> source in _upButtonSources) {
                 yield return source;

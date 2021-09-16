@@ -17,10 +17,10 @@ namespace Raccoon.Input {
     public class Controller<T, S> {
         #region Public Members
 
-        public event System.Action OnConnected, 
+        public event System.Action OnConnected,
                                    OnDisconnected;
 
-        public event System.Action<S> OnSchemeChanged; 
+        public event System.Action<S> OnSchemeChanged;
 
         #endregion Public Members
 

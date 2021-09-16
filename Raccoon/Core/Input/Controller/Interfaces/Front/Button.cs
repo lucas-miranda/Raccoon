@@ -47,7 +47,7 @@ namespace Raccoon.Input {
                     State = ButtonState.Pressed;
                 } else if (IsReleased) {
                     IsReleased = false;
-                    State = ButtonState.Down;
+                    State = ButtonState.Up;
                     HoldDuration = 0U;
                 }
             } else {
@@ -59,6 +59,7 @@ namespace Raccoon.Input {
 
                     HoldDuration += (uint) delta;
                 } else {
+                    IsPressed = false;
                     IsReleased = IsUp = true;
                     State = ButtonState.Released;
                 }

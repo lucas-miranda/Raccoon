@@ -16,6 +16,12 @@ namespace Raccoon.Input {
 
         #endregion Constructors
 
+        #region Public Properties
+
+        public ButtonAxisInputSource<KeyboardDevice> Source { get { return _source; } }
+
+        #endregion Public Properties
+
         #region Public Methods
 
         public KeyboardBackInterfaceAxis Bind(Key? up, Key? right, Key? down, Key? left) {
