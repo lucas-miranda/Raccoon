@@ -240,15 +240,15 @@ namespace Raccoon.Graphics {
         }
 
         public bool Equals(Color c) {
-            return R == c.R 
-                && G == c.G 
-                && B == c.B 
+            return R == c.R
+                && G == c.G
+                && B == c.B
                 && A == c.A;
         }
 
         public override int GetHashCode() {
             int hashCode = 486187739;
-            
+
             unchecked {
                 hashCode = hashCode * 23 + R.GetHashCode();
                 hashCode = hashCode * 23 + G.GetHashCode();
@@ -308,9 +308,9 @@ namespace Raccoon.Graphics {
         #region Operators
 
         public static bool operator ==(Color l, Color r) {
-            return l.R == r.R 
-                && l.G == r.G 
-                && l.B == r.B 
+            return l.R == r.R
+                && l.G == r.G
+                && l.B == r.B
                 && l.A == r.A;
         }
 
@@ -320,18 +320,18 @@ namespace Raccoon.Graphics {
 
         public static Color operator +(Color l, Color r) {
             return new Color(
-                (byte) Math.Clamp(l.R + r.R, byte.MinValue, byte.MaxValue), 
-                (byte) Math.Clamp(l.G + r.G, byte.MinValue, byte.MaxValue), 
-                (byte) Math.Clamp(l.B + r.B, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.R + r.R, byte.MinValue, byte.MaxValue),
+                (byte) Math.Clamp(l.G + r.G, byte.MinValue, byte.MaxValue),
+                (byte) Math.Clamp(l.B + r.B, byte.MinValue, byte.MaxValue),
                 (byte) Math.Clamp(l.A + r.A, byte.MinValue, byte.MaxValue)
             );
         }
 
         public static Color operator -(Color l, Color r) {
             return new Color(
-                (byte) Math.Clamp(l.R - r.R, byte.MinValue, byte.MaxValue), 
-                (byte) Math.Clamp(l.G - r.G, byte.MinValue, byte.MaxValue), 
-                (byte) Math.Clamp(l.B - r.B, byte.MinValue, byte.MaxValue), 
+                (byte) Math.Clamp(l.R - r.R, byte.MinValue, byte.MaxValue),
+                (byte) Math.Clamp(l.G - r.G, byte.MinValue, byte.MaxValue),
+                (byte) Math.Clamp(l.B - r.B, byte.MinValue, byte.MaxValue),
                 (byte) Math.Clamp(l.A - r.A, byte.MinValue, byte.MaxValue)
             );
         }

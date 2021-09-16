@@ -61,18 +61,18 @@ namespace Raccoon.Graphics {
         public int FaceIndex { get; private set; }
         public FontFaceRenderMap RenderMap { get; private set; }
 
-        public string Filename { 
-            get { 
-                return Filenames?[0] ?? ""; 
-            } 
+        public string Filename {
+            get {
+                return Filenames?[0] ?? "";
+            }
 
-            private set { 
+            private set {
                 if (Filenames == null) {
                     Filenames = new string[1];
                 }
 
-                Filenames[0] = value; 
-            } 
+                Filenames[0] = value;
+            }
         }
 
         public float Size {

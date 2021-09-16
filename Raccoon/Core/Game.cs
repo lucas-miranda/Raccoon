@@ -492,7 +492,7 @@ Scene:
 
             pixelScale = pixelScale <= 0 ? 1 : pixelScale;
 
-            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight
              && fullscreen == IsFullscreen && pixelScale == PixelScale) {
                 return;
             }
@@ -520,7 +520,7 @@ Scene:
 
             pixelScale = pixelScale <= 0 ? 1 : pixelScale;
 
-            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight
              && fullscreen == IsFullscreen && pixelScale == PixelScale
              && ResizeMode == ResizeMode.ExpandView) {
                 return;
@@ -549,9 +549,9 @@ Scene:
 
             pixelScale = pixelScale <= 0f ? 1 : pixelScale;
 
-            if (windowWidth == WindowWidth && windowHeight == WindowHeight 
+            if (windowWidth == WindowWidth && windowHeight == WindowHeight
              && gameWidth == Width && gameHeight == Height
-             && fullscreen == IsFullscreen 
+             && fullscreen == IsFullscreen
              && ResizeMode == ResizeMode.KeepProportions && pixelScale == PixelScale) {
                 return;
             }
@@ -873,12 +873,12 @@ Scene:
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
 
             MainCanvas = new Canvas(
-                Width, 
-                Height, 
-                mipMap: false, 
-                surfaceFormat: SurfaceFormat.Color, 
-                depthFormat: DepthFormat.Depth24Stencil8, 
-                multiSampleCount: 0, 
+                Width,
+                Height,
+                mipMap: false,
+                surfaceFormat: SurfaceFormat.Color,
+                depthFormat: DepthFormat.Depth24Stencil8,
+                multiSampleCount: 0,
                 usage: RenderTargetUsage.PreserveContents
             ) {
                 //InternalRenderer = MainRenderer
@@ -890,12 +890,12 @@ Scene:
 
 #if DEBUG
             DebugCanvas = new Canvas(
-                WindowWidth, 
-                WindowHeight, 
-                mipMap: false, 
-                surfaceFormat: SurfaceFormat.Color, 
-                depthFormat: DepthFormat.None, 
-                multiSampleCount: 0, 
+                WindowWidth,
+                WindowHeight,
+                mipMap: false,
+                surfaceFormat: SurfaceFormat.Color,
+                depthFormat: DepthFormat.None,
+                multiSampleCount: 0,
                 usage: RenderTargetUsage.PreserveContents
             ) {
                 InternalRenderer = DebugRenderer
@@ -1036,8 +1036,8 @@ Scene:
         }
 
         private bool InternalResize(int width, int height, bool fullscreen) {
-            if (width == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth 
-             && height == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight 
+            if (width == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferWidth
+             && height == XNAGameWrapper.GraphicsDeviceManager.PreferredBackBufferHeight
              && fullscreen == XNAGameWrapper.GraphicsDeviceManager.IsFullScreen
             ) {
                 return false;

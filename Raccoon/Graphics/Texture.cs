@@ -103,18 +103,18 @@ namespace Raccoon.Graphics {
         public Texture2D XNATexture { get; private set; }
         public bool IsDisposed { get; private set; }
 
-        public string Filename { 
-            get { 
-                return Filenames?[0] ?? ""; 
-            } 
+        public string Filename {
+            get {
+                return Filenames?[0] ?? "";
+            }
 
-            private set { 
+            private set {
                 if (Filenames == null) {
                     Filenames = new string[1];
                 }
 
-                Filenames[0] = value; 
-            } 
+                Filenames[0] = value;
+            }
         }
 
         #endregion Public Properties

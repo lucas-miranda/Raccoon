@@ -175,8 +175,8 @@ namespace Raccoon {
 
             foreach ((string Name, object Value) data in vars) {
                 str.AppendFormat(
-                    "{0}: {1}, ", 
-                    data.Name, 
+                    "{0}: {1}, ",
+                    data.Name,
                     data.Value == null ? "null" : data.Value.ToString()
                 );
             }
@@ -207,8 +207,8 @@ namespace Raccoon {
 
             foreach ((string Name, object Value) data in vars) {
                 str.AppendFormat(
-                    "{0}: {1}", 
-                    data.Name, 
+                    "{0}: {1}",
+                    data.Name,
                     data.Value == null ? "null" : data.Value.ToString()
                 );
                 str.AppendLine();
@@ -522,7 +522,7 @@ namespace Raccoon {
                 if (i > 0) {
                     vertices[i * 2] = vertices[i * 2 - 1];
                 }
-                
+
                 vertices[i * 2 + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(new Microsoft.Xna.Framework.Vector3(x, y, 0f), Color.White);
 
                 float tx = -y, ty = x;

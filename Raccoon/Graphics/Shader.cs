@@ -61,18 +61,18 @@ namespace Raccoon.Graphics {
         public string CurrentTechniqueName { get { return XNAEffect.CurrentTechnique.Name; } set { XNAEffect.CurrentTechnique = XNAEffect.Techniques[value]; } }
         public bool IsDisposed { get; private set; }
 
-        public string Filename { 
-            get { 
-                return Filenames?[0] ?? ""; 
-            } 
+        public string Filename {
+            get {
+                return Filenames?[0] ?? "";
+            }
 
-            private set { 
+            private set {
                 if (Filenames == null) {
                     Filenames = new string[1];
                 }
 
-                Filenames[0] = value; 
-            } 
+                Filenames[0] = value;
+            }
         }
 
         #endregion Public Properties
@@ -377,7 +377,7 @@ namespace Raccoon.Graphics {
                 if (shaderParameterAttribute == null) {
                     continue;
                 }
-                
+
                 string paramName = shaderParameterAttribute.CustomName ?? propertyInfo.Name;
                 if (!_parameters.ContainsKey(paramName)) {
                     throw new System.InvalidOperationException($"Requested parameter '{paramName}' (at property '{propertyInfo.Name}') was not found.");

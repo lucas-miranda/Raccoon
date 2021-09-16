@@ -77,7 +77,7 @@ public static class Extensions {
                 }
 
                 continue;
-            } 
+            }
 
             resultBuilder.Append(char.ToUpperInvariant(part[0]));
             resultBuilder.Append(part.Substring(startIndex: 1));

@@ -97,7 +97,7 @@ namespace Raccoon.Graphics {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3(Math.Rotate(((point + position) - origin) * scale, rotation), 0f), 
+                        new Vector3(Math.Rotate(((point + position) - origin) * scale, rotation), 0f),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -114,7 +114,7 @@ namespace Raccoon.Graphics {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3((point + position - origin) * scale, 0f), 
+                        new Vector3((point + position - origin) * scale, 0f),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -153,22 +153,22 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
                 new VertexPositionColorTexture(
-                    new Vector3(topLeft, 0f), 
+                    new Vector3(topLeft, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(topRight, 0f), 
+                    new Vector3(topRight, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomRight, 0f), 
+                    new Vector3(bottomRight, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomLeft, 0f), 
+                    new Vector3(bottomLeft, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 )
@@ -206,22 +206,22 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
                 new VertexPositionColorTexture(
-                    new Vector3(topLeft, 0f), 
+                    new Vector3(topLeft, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(topRight, 0f), 
+                    new Vector3(topRight, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomRight, 0f), 
+                    new Vector3(bottomRight, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomLeft, 0f), 
+                    new Vector3(bottomLeft, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 )
@@ -279,7 +279,7 @@ namespace Raccoon.Graphics {
             // center
             int centerIndex = vertexData.Length - 1;
             vertexData[centerIndex] = new VertexPositionColorTexture(
-                new Vector3(center.X, center.Y, 0f), 
+                new Vector3(center.X, center.Y, 0f),
                 color,
                 Microsoft.Xna.Framework.Vector2.Zero
             );
@@ -287,7 +287,7 @@ namespace Raccoon.Graphics {
             int i;
             for (i = 0; i < vertexData.Length; i++) {
                 vertexData[i] = new VertexPositionColorTexture(
-                    new Vector3(center.X + x, center.Y + y, 0f), 
+                    new Vector3(center.X + x, center.Y + y, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
@@ -342,7 +342,7 @@ namespace Raccoon.Graphics {
 
             for (int i = 0; i < vertexData.Length; i++) {
                 vertexData[i] = new VertexPositionColorTexture(
-                    new Vector3(center.X + x, center.Y + y, 0f), 
+                    new Vector3(center.X + x, center.Y + y, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
@@ -388,14 +388,14 @@ namespace Raccoon.Graphics {
             int i = 0;
             if (rotation % 360 != 0) {
                 vertexData[centerVertexId] = new VertexPositionColorTexture(
-                    new Vector3(Math.Rotate((polygon.Center - origin) * scale, rotation), 0f), 
+                    new Vector3(Math.Rotate((polygon.Center - origin) * scale, rotation), 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
 
                 foreach (Vector2 point in polygon) {
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f), 
+                        new Vector3(Math.Rotate((point - origin) * scale, rotation), 0f),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -407,14 +407,14 @@ namespace Raccoon.Graphics {
                 }
             } else {
                 vertexData[centerVertexId] = new VertexPositionColorTexture(
-                    new Vector3((polygon.Center - origin) * scale, 0f), 
+                    new Vector3((polygon.Center - origin) * scale, 0f),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
 
                 foreach (Vector2 point in polygon) {
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3((point - origin) * scale, 0f), 
+                        new Vector3((point - origin) * scale, 0f),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
