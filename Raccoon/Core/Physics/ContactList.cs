@@ -54,6 +54,24 @@ namespace Raccoon {
             return false;
         }
 
+        public bool Collides(Vector2 collisionDirection, float equalityFactor, bool touchIsCollision) {
+            if (touchIsCollision) {
+                foreach (Contact c in _entries) {
+                    if (c.PenetrationDepth >= 0f && collisionDirection.Projection(c.Normal) >= equalityFactor) {
+                        return true;
+                    }
+                }
+            } else {
+                foreach (Contact c in _entries) {
+                    if (c.PenetrationDepth > 0.1f && collisionDirection.Projection(c.Normal) >= equalityFactor) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public bool TouchesSurfaceOnly() {
             if (_entries.Length == 0) {
                 return false;
