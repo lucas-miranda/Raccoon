@@ -15,6 +15,9 @@ namespace Raccoon.Components {
         public MovementEventAction OnStartMove,
                                    OnStopMove;
 
+        public System.Action<Vector2, Vector2> OnAxisChanged;
+
+        // physics
         public delegate void PhysicsAction();
         public PhysicsAction OnPhysicsLateUpdate = delegate { };
 
@@ -38,7 +41,8 @@ namespace Raccoon.Components {
 
         private uint _axesSnap;
         private Vector2 _axis,
-                        _maxVelocity, _acceleration;
+                        _maxVelocity,
+                        _acceleration;
 
         #endregion Private Members
 
@@ -198,7 +202,12 @@ namespace Raccoon.Components {
         }
 
         public virtual void BeforeUpdate() {
-            Axis = NextAxis;
+            if (NextAxis != Axis) {
+                Vector2 previousAxis = Axis;
+                Axis = NextAxis;
+                OnAxisChanged?.Invoke(previousAxis, NextAxis);
+            }
+
             NextAxis = Vector2.Zero;
         }
 
