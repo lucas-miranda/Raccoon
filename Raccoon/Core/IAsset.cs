@@ -2,7 +2,7 @@ using System.IO;
 
 namespace Raccoon {
     public interface IAsset : System.IDisposable {
-        string Name { get; set; }
+        string Name { get; }
         //string Filename { get; }
         string[] Filenames { get; }
         bool IsDisposed { get; }
