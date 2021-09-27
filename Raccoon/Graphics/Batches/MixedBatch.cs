@@ -340,7 +340,7 @@ namespace Raccoon.Graphics {
                 for (int j = 0; j < points.Count; j++) {
                     Vector2 point = points[j];
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3(position + point * scale - origin, layerDepth), 
+                        new Vector3(position + point * scale - origin, layerDepth),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -404,23 +404,23 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
                 new VertexPositionColorTexture(
-                    new Vector3(topLeft, layerDepth), 
-                    color, 
+                    new Vector3(topLeft, layerDepth),
+                    color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(topRight, layerDepth), 
-                    color, 
+                    new Vector3(topRight, layerDepth),
+                    color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomRight, layerDepth), 
-                    color, 
+                    new Vector3(bottomRight, layerDepth),
+                    color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomLeft, layerDepth), 
-                    color, 
+                    new Vector3(bottomLeft, layerDepth),
+                    color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 )
             };
@@ -476,22 +476,22 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[] {
                 new VertexPositionColorTexture(
-                    new Vector3(topLeft, layerDepth), 
+                    new Vector3(topLeft, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(topRight, layerDepth), 
+                    new Vector3(topRight, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomRight, layerDepth), 
+                    new Vector3(bottomRight, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 ),
                 new VertexPositionColorTexture(
-                    new Vector3(bottomLeft, layerDepth), 
+                    new Vector3(bottomLeft, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 )
@@ -547,7 +547,7 @@ namespace Raccoon.Graphics {
             // center
             int centerIndex = vertexData.Length - 1;
             vertexData[centerIndex] = new VertexPositionColorTexture(
-                new Vector3(center.X, center.Y, layerDepth), 
+                new Vector3(center.X, center.Y, layerDepth),
                 color,
                 Microsoft.Xna.Framework.Vector2.Zero
             );
@@ -555,7 +555,7 @@ namespace Raccoon.Graphics {
             int i;
             for (i = 0; i < vertexData.Length; i++) {
                 vertexData[i] = new VertexPositionColorTexture(
-                    new Vector3(center.X + x, center.Y + y, layerDepth), 
+                    new Vector3(center.X + x, center.Y + y, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
@@ -608,7 +608,7 @@ namespace Raccoon.Graphics {
 
             for (int i = 0; i < vertexData.Length; i++) {
                 vertexData[i] = new VertexPositionColorTexture(
-                    new Vector3(center.X + x, center.Y + y, layerDepth), 
+                    new Vector3(center.X + x, center.Y + y, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
@@ -671,14 +671,14 @@ namespace Raccoon.Graphics {
                 }
             } else {
                 vertexData[centerVertexId] = new VertexPositionColorTexture(
-                    new Vector3(position + polygon.Center * scale - origin, layerDepth), 
+                    new Vector3(position + polygon.Center * scale - origin, layerDepth),
                     color,
                     Microsoft.Xna.Framework.Vector2.Zero
                 );
 
                 foreach (Vector2 point in polygon) {
                     vertexData[i] = new VertexPositionColorTexture(
-                        new Vector3(position + point * scale - origin, layerDepth), 
+                        new Vector3(position + point * scale - origin, layerDepth),
                         color,
                         Microsoft.Xna.Framework.Vector2.Zero
                     );
@@ -722,7 +722,7 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertexData = new VertexPositionColorTexture[verticesLength];
 
-            if (rotation != 0f) { 
+            if (rotation != 0f) {
                 float cos = Math.Cos(rotation),
                       sin = Math.Sin(rotation);
 
@@ -731,8 +731,8 @@ namespace Raccoon.Graphics {
 
                     vertexData[i] = new VertexPositionColorTexture(
                         new Vector3(
-                            position.X + v.X * cos - v.Y * sin, 
-                            position.Y + v.X * sin + v.Y * cos, 
+                            position.X + v.X * cos - v.Y * sin,
+                            position.Y + v.X * sin + v.Y * cos,
                             layerDepth
                         ),
                         color,
@@ -784,7 +784,7 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[verticesLength];
 
-            if (rotation != 0f) { 
+            if (rotation != 0f) {
                 float cos = Math.Cos(rotation),
                       sin = Math.Sin(rotation);
 
@@ -794,8 +794,8 @@ namespace Raccoon.Graphics {
 
                     vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
-                            position.X + v.X * cos - v.Y * sin, 
-                            position.Y + v.X * sin + v.Y * cos, 
+                            position.X + v.X * cos - v.Y * sin,
+                            position.Y + v.X * sin + v.Y * cos,
                             layerDepth
                         ),
                         new Microsoft.Xna.Framework.Color(
@@ -814,8 +814,8 @@ namespace Raccoon.Graphics {
 
                     vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
-                            position.X + v.X, 
-                            position.Y + v.Y, 
+                            position.X + v.X,
+                            position.Y + v.Y,
                             layerDepth
                         ),
                         new Microsoft.Xna.Framework.Color(
@@ -862,7 +862,7 @@ namespace Raccoon.Graphics {
 
             VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[verticesLength];
 
-            if (rotation != 0f) { 
+            if (rotation != 0f) {
                 float cos = Math.Cos(rotation),
                       sin = Math.Sin(rotation);
 
@@ -872,8 +872,8 @@ namespace Raccoon.Graphics {
 
                     vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
-                            position.X + v.X * cos - v.Y * sin, 
-                            position.Y + v.X * sin + v.Y * cos, 
+                            position.X + v.X * cos - v.Y * sin,
+                            position.Y + v.X * sin + v.Y * cos,
                             layerDepth
                         ),
                         new Microsoft.Xna.Framework.Color(
@@ -892,8 +892,8 @@ namespace Raccoon.Graphics {
 
                     vertices[i] = new VertexPositionColorTexture(
                         new Vector3(
-                            position.X + v.X, 
-                            position.Y + v.Y, 
+                            position.X + v.X,
+                            position.Y + v.Y,
                             layerDepth
                         ),
                         new Microsoft.Xna.Framework.Color(
@@ -1110,7 +1110,7 @@ namespace Raccoon.Graphics {
                     _vertexBufferEndOffset = 0;
                     _indexBufferEndOffset = 0;
                 }
-                
+
                 // check buffers and reallocate them if needed
                 bool needRecreateVertexBuffer = _vertexBuffer.VertexCount < _vertexBufferEndOffset + batchItem.VertexData.Length,
                      needRecreateIndexBuffer = _indexBuffer.IndexCount < _indexBufferEndOffset + batchItem.IndexData.Length;
@@ -1141,7 +1141,7 @@ namespace Raccoon.Graphics {
                     }
                 }
 
-                // buffers 
+                // buffers
 
                 batchItem.VertexData.CopyTo(_vertexPreBuffer, _vertexBufferEndOffset);
 
@@ -1194,21 +1194,21 @@ namespace Raccoon.Graphics {
 
             if (batchItemType == typeof(PrimitiveBatchItem)) {
                 DrawPrimitiveBatchItem(
-                    startIndex, 
-                    endIndex - 1, 
-                    texture, 
-                    shader, 
-                    parameters, 
+                    startIndex,
+                    endIndex - 1,
+                    texture,
+                    shader,
+                    parameters,
                     depthStencilState,
                     isHollow
                 );
             } else if (batchItemType == typeof(SpriteBatchItem)) {
                 DrawSpriteBatchItem(
-                    startIndex, 
-                    endIndex - 1, 
-                    texture, 
-                    shader, 
-                    parameters, 
+                    startIndex,
+                    endIndex - 1,
+                    texture,
+                    shader,
+                    parameters,
                     depthStencilState
                 );
             } else {

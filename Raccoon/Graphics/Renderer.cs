@@ -105,8 +105,8 @@ namespace Raccoon.Graphics {
                     + (screenPosition.Y * inverseWVPMatrix.M22)
                     + inverseWVPMatrix.M42;
 
-			float a = (screenPosition.X * inverseWVPMatrix.M14) 
-			        + (screenPosition.Y * inverseWVPMatrix.M24) 
+			float a = (screenPosition.X * inverseWVPMatrix.M14)
+			        + (screenPosition.Y * inverseWVPMatrix.M24)
 			        + inverseWVPMatrix.M44;
 
 			if (!Math.EqualsEstimate(a, 1.0f)) {
@@ -131,8 +131,8 @@ namespace Raccoon.Graphics {
                     + (worldPosition.Y * wvpMatrix.M22)
                     + wvpMatrix.M42;
 
-			float a = (worldPosition.X * wvpMatrix.M14) 
-			        + (worldPosition.Y * wvpMatrix.M24) 
+			float a = (worldPosition.X * wvpMatrix.M14)
+			        + (worldPosition.Y * wvpMatrix.M24)
 			        + wvpMatrix.M44;
 
 			if (!Math.EqualsEstimate(a, 1.0f)) {
@@ -185,11 +185,11 @@ namespace Raccoon.Graphics {
 
             if (reinitializeBatches) {
                 Begin(
-                    Batch.BatchMode, 
-                    Batch.BlendState, 
-                    Batch.SamplerState, 
-                    Batch.DepthStencilState, 
-                    Batch.RasterizerState, 
+                    Batch.BatchMode,
+                    Batch.BlendState,
+                    Batch.SamplerState,
+                    Batch.DepthStencilState,
+                    Batch.RasterizerState,
                     Batch.Transform
                 );
             }
@@ -419,7 +419,7 @@ namespace Raccoon.Graphics {
             Batch.DrawLines(points, position, color, rotation, scale, origin, scroll, shader, shaderParameters, cyclic, layerDepth);
         }
 
-        public void DrawLineStroke(Vector2 startPoint, Vector2 endPoint, float thickness, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
+        public void DrawLineStroke(Vector2 startPoint, Vector2 endPoint, float thickness, Color color, float rotation, Vector2 scale, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f, float lineAlignment = .5f) {
             if (thickness <= 0f) {
                 throw new System.ArgumentException("Thickness must be greater than zero.");
             }
@@ -429,13 +429,24 @@ namespace Raccoon.Graphics {
             Vector2 normal = direction.PerpendicularCCW(),
                     antiNormal = direction.PerpendicularCW();
 
-            float halfThickness = thickness / 2f;
+            float halfUpperThickness, halfLowerThickness;
+
+            if (Math.EqualsEstimate(lineAlignment, 1.0f)) {
+                halfUpperThickness = thickness;
+                halfLowerThickness = 0f;
+            } else if (Math.EqualsEstimate(lineAlignment, 0f)) {
+                halfUpperThickness = 0f;
+                halfLowerThickness = thickness;
+            } else {
+                halfUpperThickness = thickness * lineAlignment;
+                halfLowerThickness = thickness - halfUpperThickness;
+            }
 
             List<Vector2> vertices = new List<Vector2>(4) {
-                startPoint  + normal * halfThickness,
-                endPoint    + normal * halfThickness,
-                endPoint    + antiNormal * halfThickness,
-                startPoint  + antiNormal * halfThickness
+                startPoint  + normal * halfUpperThickness,
+                endPoint    + normal * halfUpperThickness,
+                endPoint    + antiNormal * halfLowerThickness,
+                startPoint  + antiNormal * halfLowerThickness
             };
 
             int[] indices = new int[] {
@@ -446,21 +457,21 @@ namespace Raccoon.Graphics {
             if (Batch.BatchMode == BatchMode.Immediate) {
                 PrepareBeforeRender();
                 Batch.DrawVertices(
-                    vertices, 
+                    vertices,
                     0,
                     vertices.Count,
                     indices,
                     0,
                     2,
                     false,
-                    Vector2.Zero, 
-                    rotation, 
-                    scale, 
-                    color, 
-                    origin, 
-                    scroll, 
-                    shader, 
-                    shaderParameters, 
+                    Vector2.Zero,
+                    rotation,
+                    scale,
+                    color,
+                    origin,
+                    scroll,
+                    shader,
+                    shaderParameters,
                     layerDepth
                 );
                 AfterRender();
@@ -468,21 +479,21 @@ namespace Raccoon.Graphics {
             }
 
             Batch.DrawVertices(
-                vertices, 
+                vertices,
                 0,
                 vertices.Count,
                 indices,
                 0,
                 2,
                 false,
-                Vector2.Zero, 
-                rotation, 
-                scale, 
-                color, 
-                origin, 
-                scroll, 
-                shader, 
-                shaderParameters, 
+                Vector2.Zero,
+                rotation,
+                scale,
+                color,
+                origin,
+                scroll,
+                shader,
+                shaderParameters,
                 layerDepth
             );
         }

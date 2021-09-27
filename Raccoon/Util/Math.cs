@@ -318,6 +318,10 @@
             return new Vector2(Round(value.X, midpointRounding), Round(value.Y, midpointRounding));
         }
 
+        public static Size Round(Size value, System.MidpointRounding midpointRounding = System.MidpointRounding.ToEven) {
+            return new Size(Round(value.Width, midpointRounding), Round(value.Height, midpointRounding));
+        }
+
         public static int Sign(float n) {
             return System.Math.Sign(n);
         }

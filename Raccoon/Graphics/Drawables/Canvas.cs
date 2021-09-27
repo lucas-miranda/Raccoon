@@ -134,7 +134,7 @@ namespace Raccoon.Graphics {
                 _internalRenderer.Dispose();
                 _internalRenderer = null;
             }
-            
+
             Texture?.Dispose();
             base.Dispose();
         }
