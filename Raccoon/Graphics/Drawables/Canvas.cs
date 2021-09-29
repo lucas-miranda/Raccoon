@@ -73,10 +73,7 @@ namespace Raccoon.Graphics {
         }
 
         public void End() {
-            if (InternalRenderer != null) {
-                InternalRenderer.End();
-            }
-
+            InternalRenderer?.End();
             Game.Instance.RenderTargetStack.Pop();
 
             if (Game.Instance.RenderTargetStack.Count == 0) {
@@ -97,26 +94,28 @@ namespace Raccoon.Graphics {
         }
 
         public void Resize(int width, int height, bool mipmap = false) {
-            if ((width == XNARenderTarget.Width && height == XNARenderTarget.Height) || XNARenderTarget == null) {
-                return;
+            if (XNARenderTarget == null) {
+                throw new System.InvalidOperationException("Can't resize. Canvas internal state is invalid.");
             }
 
-            SurfaceFormat format = XNARenderTarget.Format;
-            DepthFormat depthStencil = XNARenderTarget.DepthStencilFormat;
-            int multiSampleCount = XNARenderTarget.MultiSampleCount;
-            RenderTargetUsage renderTargetUsage = XNARenderTarget.RenderTargetUsage;
+            if (width != XNARenderTarget.Width || height != XNARenderTarget.Height) {
+                SurfaceFormat format = XNARenderTarget.Format;
+                DepthFormat depthStencil = XNARenderTarget.DepthStencilFormat;
+                int multiSampleCount = XNARenderTarget.MultiSampleCount;
+                RenderTargetUsage renderTargetUsage = XNARenderTarget.RenderTargetUsage;
 
-            Texture.Dispose();
-            Texture = new Texture(new RenderTarget2D(
-                Game.Instance.GraphicsDevice,
-                width,
-                height,
-                mipmap,
-                format,
-                depthStencil,
-                multiSampleCount,
-                renderTargetUsage
-            ));
+                Texture.Dispose();
+                Texture = new Texture(new RenderTarget2D(
+                    Game.Instance.GraphicsDevice,
+                    width,
+                    height,
+                    mipmap,
+                    format,
+                    depthStencil,
+                    multiSampleCount,
+                    renderTargetUsage
+                ));
+            }
 
             InternalRenderer?.RecalculateProjection();
         }
