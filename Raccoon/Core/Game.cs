@@ -21,7 +21,7 @@ namespace Raccoon {
                                        OnBeforeUpdate = delegate { },
                                        OnLateUpdate = delegate { },
                                        OnUnloadContent,
-                                       OnWindowResize = delegate { },
+                                       OnWindowResize,
                                        OnActivated,
                                        OnDeactivated,
                                        OnDisposed,
@@ -78,6 +78,7 @@ Scene:
         // resolution mode
         private Rectangle? _windowedModeBounds;
         private Vector2 _gameCanvasPosition;
+        private int _nextInternalWidth, _nextInternalHeight; // game internal screen size
         private bool _hasSwitchedFullscreen;
 
         // scenes
@@ -89,12 +90,12 @@ Scene:
         #region Constructors
 
         public Game(string title = "Raccoon Game", int windowWidth = 1280, int windowHeight = 720, float pixelScale = 1.0f, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
-            NextResizeMode = ResizeMode.KeepProportions;
+            ResizeMode = NextResizeMode = ResizeMode.KeepProportions;
             Setup(title, windowWidth, windowHeight, pixelScale, targetFramerate, fullscreen, vsync);
         }
 
         public Game(string title = "Raccoon Game", int windowWidth = 1280, int windowHeight = 720, int targetFramerate = 60, bool fullscreen = false, bool vsync = false) {
-            NextResizeMode = ResizeMode.ExpandView;
+            ResizeMode = NextResizeMode = ResizeMode.ExpandView;
             Setup(title, windowWidth, windowHeight, 1f, targetFramerate, fullscreen, vsync);
         }
 
@@ -151,7 +152,7 @@ Scene:
         public System.TimeSpan Time { get; private set; }
         public PrimitiveBatch DebugPrimitiveBatch { get; private set; }
         public BasicShader BasicShader { get; private set; }
-        public ResizeMode ResizeMode { get; private set; } = ResizeMode.ExpandView;
+        public ResizeMode ResizeMode { get; private set; }
 
         public string Title {
             get {
@@ -241,7 +242,7 @@ Scene:
         internal XNAGameWrapper XNAGameWrapper { get; set; }
         internal List<Renderer> Renderers { get; private set; } = new List<Renderer>();
         internal Stack<RenderTarget2D> RenderTargetStack { get; private set; } = new Stack<RenderTarget2D>();
-        internal ResizeMode NextResizeMode { get; private set; } = ResizeMode.ExpandView;
+        internal ResizeMode NextResizeMode { get; private set; }
 
 #if DEBUG
         internal Canvas DebugCanvas { get; private set; }
@@ -409,7 +410,7 @@ Scene:
             Renderers.Clear();
         }
 
-        public void SetupVideoSettings(int windowWidth, int windowHeight, bool? fullscreen = null, bool? vsync = null, float? pixelScale = null) {
+        public void SetupVideoSettings(int windowWidth, int windowHeight, bool? fullscreen = null, bool? vsync = null) {
             if (windowWidth <= 0) {
                 throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
             } else if (windowHeight <= 0) {
@@ -417,31 +418,32 @@ Scene:
             }
 
             NextResizeMode = ResizeMode.ExpandView;
-            InternalSetupVideoSettings(windowWidth, windowHeight, fullscreen, vsync, pixelScale);
+            InternalSetupVideoSettings(windowWidth, windowHeight, fullscreen, vsync, 1.0f);
         }
 
-        public void SetupVideoSettings(Size windowSize, bool? fullscreen = null, bool? vsync = null, float? pixelScale = null) {
-            SetupVideoSettings((int) windowSize.Width, (int) windowSize.Height, fullscreen, vsync, pixelScale);
+        public void SetupVideoSettings(Size windowSize, bool? fullscreen = null, bool? vsync = null) {
+            SetupVideoSettings((int) windowSize.Width, (int) windowSize.Height, fullscreen, vsync);
         }
 
-        public void SetupVideoSettings(int windowWidth, int windowHeight, int gameWidth, int gameHeight, bool? fullscreen = null, bool? vsync = null, float? pixelScale = null) {
+        public void SetupVideoSettings(int windowWidth, int windowHeight, int width, int height, float pixelScale, bool? fullscreen = null, bool? vsync = null) {
             if (windowWidth <= 0) {
                 throw new System.ArgumentException($"Invalid window width '{windowWidth}', must be greater than zero.");
             } else if (windowHeight <= 0) {
                 throw new System.ArgumentException($"Invalid window height '{windowHeight}', must be greater than zero.");
-            } else if (gameWidth <= 0) {
-                throw new System.ArgumentException($"Invalid game width '{gameWidth}', must be greater than zero.");
-            } else if (gameHeight <= 0) {
-                throw new System.ArgumentException($"Invalid game height '{gameHeight}', must be greater than zero.");
+            } else if (width <= 0) {
+                throw new System.ArgumentException($"Invalid width '{width}', must be greater than zero.");
+            } else if (height <= 0) {
+                throw new System.ArgumentException($"Invalid height '{height}', must be greater than zero.");
             }
 
             NextResizeMode = ResizeMode.KeepProportions;
-            Size = new Size(gameWidth, gameHeight);
+            _nextInternalWidth = width;
+            _nextInternalHeight = height;
             InternalSetupVideoSettings(windowWidth, windowHeight, fullscreen, vsync, pixelScale);
         }
 
-        public void SetupVideoSettings(Size windowSize, Size gameSize, bool? fullscreen = null, bool? vsync = null, float? pixelScale = null) {
-            SetupVideoSettings((int) windowSize.Width, (int) windowSize.Height, (int) gameSize.Width, (int) gameSize.Height, fullscreen, vsync, pixelScale);
+        public void SetupVideoSettings(Size windowSize, Size internalSize, float pixelScale, bool? fullscreen = null, bool? vsync = null) {
+            SetupVideoSettings((int) windowSize.Width, (int) windowSize.Height, (int) internalSize.Width, (int) internalSize.Height, pixelScale, fullscreen, vsync);
         }
 
         public void SetupVideoSettings(bool fullscreen, bool? vsync = null, float? pixelScale = null) {
@@ -461,8 +463,7 @@ Scene:
                         windowWidth,
                         windowHeight,
                         fullscreen,
-                        vsync,
-                        pixelScale
+                        vsync
                     );
                     break;
 
@@ -472,9 +473,9 @@ Scene:
                         windowHeight,
                         Width,
                         Height,
+                        pixelScale.GetValueOrDefault(PixelScale),
                         fullscreen,
-                        vsync,
-                        pixelScale
+                        vsync
                     );
                     break;
 
@@ -946,7 +947,6 @@ Scene:
         private void GraphicsDeviceReset(object sender, System.EventArgs e) {
             if (_hasSwitchedFullscreen) {
                 AfterSwitchingFullscreen(!IsFullscreen);
-
                 _hasSwitchedFullscreen = false;
             }
 
@@ -973,41 +973,67 @@ Scene:
         }
 
         private void InternalSetupVideoSettings(int windowWidth, int windowHeight, bool? fullscreen = null, bool? vsync = null, float? pixelScale = null) {
-            if (pixelScale.HasValue) {
-                _pixelScale = pixelScale.Value <= Math.Epsilon ? Math.Epsilon : pixelScale.Value;
-            }
+            bool hasPresentingSettingsChanged = false,
+                 hasViewSettingsChanged = false;
 
             Microsoft.Xna.Framework.GraphicsDeviceManager graphics = XNAGameWrapper.GraphicsDeviceManager;
 
-            if (fullscreen.HasValue) {
-                if (graphics.IsFullScreen != fullscreen.Value) {
-                    BeforeSwitchingFullscreen(fullscreen.Value);
-                }
-
+            if (fullscreen.HasValue && graphics.IsFullScreen != fullscreen.Value) {
+                BeforeSwitchingFullscreen(fullscreen.Value);
                 graphics.IsFullScreen = fullscreen.Value;
+                hasPresentingSettingsChanged = true;
             }
 
-            graphics.PreferredBackBufferWidth = (int) Math.Max(windowWidth, WindowMinimumSize.Width);
-            graphics.PreferredBackBufferHeight = (int) Math.Max(windowHeight, WindowMinimumSize.Height);
+            windowWidth = (int) Math.Max(windowWidth, WindowMinimumSize.Width);
+            windowHeight = (int) Math.Max(windowHeight, WindowMinimumSize.Height);
 
-            if (vsync.HasValue) {
+            if (graphics.PreferredBackBufferWidth != windowWidth) {
+                graphics.PreferredBackBufferWidth = windowWidth;
+                hasPresentingSettingsChanged = true;
+            }
+
+            if (graphics.PreferredBackBufferHeight != windowHeight) {
+                graphics.PreferredBackBufferHeight = windowHeight;
+                hasPresentingSettingsChanged = true;
+            }
+
+            if (vsync.HasValue && graphics.SynchronizeWithVerticalRetrace != vsync.Value) {
                 graphics.SynchronizeWithVerticalRetrace = vsync.Value;
+                hasPresentingSettingsChanged = true;
+            }
+
+            if (pixelScale.HasValue) {
+                float scale = pixelScale.Value <= Math.Epsilon ? Math.Epsilon : pixelScale.Value;
+
+                if (_pixelScale != scale) {
+                    _pixelScale = scale;
+                    hasViewSettingsChanged = true;
+                }
+            }
+
+            if (NextResizeMode == ResizeMode.KeepProportions && (_nextInternalWidth != Width || _nextInternalHeight != Height)) {
+                hasViewSettingsChanged = true;
+            }
+
+            if (!hasPresentingSettingsChanged) {
+                if (hasViewSettingsChanged || NextResizeMode != ResizeMode) {
+                    RefreshViewMode(NextResizeMode, PixelScale);
+                }
+
+                return;
             }
 
             graphics.ApplyChanges();
         }
 
         private void RefreshViewMode(ResizeMode resizeMode, float pixelScale) {
-            Size newWindowSize = new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height);
-
-            WindowSize = newWindowSize;
+            WindowSize = new Size(XNAGameWrapper.Window.ClientBounds.Width, XNAGameWrapper.Window.ClientBounds.Height);
             WindowCenter = (WindowSize / 2f).ToVector2();
-
-            ResizeMode previousResizeMode = ResizeMode;
             _pixelScale = pixelScale;
 
             switch (resizeMode) {
                 case ResizeMode.KeepProportions:
+                    Size = new Size(_nextInternalWidth, _nextInternalHeight);
                     KeepProportionsScale = WindowHeight / (Height * _pixelScale);
 
                     // width correction
@@ -1053,8 +1079,8 @@ Scene:
 
             ScreenRenderer.RecalculateProjection();
 
-            // user callback
-            OnWindowResize();
+            // window callback
+            OnWindowResize?.Invoke();
         }
 
         #endregion Private Methods
