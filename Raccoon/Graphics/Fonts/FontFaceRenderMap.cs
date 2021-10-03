@@ -7,11 +7,22 @@ namespace Raccoon.Fonts {
     public class FontFaceRenderMap : System.IDisposable {
         #region Constructors
 
-        public FontFaceRenderMap(SharpFont.Face face, Size glyphSlotSize, ushort nominalWidth, ushort nominalHeight) {
+        public FontFaceRenderMap(
+            SharpFont.Face face,
+            Size glyphSlotSize,
+            ushort nominalWidth,
+            ushort nominalHeight,
+            float lineSpacing,
+            float lineAscent,
+            float lineDescent
+        ) {
             Face = face;
             GlyphSlotSize = glyphSlotSize;
             NominalWidth = nominalWidth;
             NominalHeight = nominalHeight;
+            LineSpacing = lineSpacing;
+            LineAscent = lineAscent;
+            LineDescent = lineDescent;
         }
 
         #endregion Constructors
@@ -21,6 +32,9 @@ namespace Raccoon.Fonts {
         public SharpFont.Face Face { get; private set; }
         public ushort NominalWidth { get; }
         public ushort NominalHeight { get; }
+        public float LineSpacing { get; }
+        public float LineAscent { get; }
+        public float LineDescent { get; }
         public Texture Texture { get; set; }
         public Size GlyphSlotSize { get; }
         public Dictionary<uint, Glyph> Glyphs { get; private set; } = new Dictionary<uint, Glyph>();
@@ -31,8 +45,24 @@ namespace Raccoon.Fonts {
 
         #region Public Methods
 
-        public Glyph RegisterGlyph(uint charCode, Rectangle sourceArea, float horizontalBearingX, float horizontalBearingY, Vector2 advance) {
-            Glyph glyph = new Glyph(sourceArea, horizontalBearingX, horizontalBearingY, advance);
+        public Glyph RegisterGlyph(
+            uint charCode,
+            Rectangle sourceArea,
+            float horizontalBearingX,
+            float horizontalBearingY,
+            float width,
+            float height,
+            Vector2 advance
+        ) {
+            Glyph glyph = new Glyph(
+                sourceArea,
+                horizontalBearingX,
+                horizontalBearingY,
+                width,
+                height,
+                advance
+            );
+
             Glyphs.Add(charCode, glyph);
             return glyph;
         }
@@ -43,12 +73,10 @@ namespace Raccoon.Fonts {
 
             textSize = Size.Empty;
 
-            float ascent = FontService.ConvertEMToPx(Face.BBox.Top, NominalWidth, Face.UnitsPerEM),
-                  overrun = 0,
-                  kern,
-                  lineHeight = NominalHeight;
+            float overrun = 0,
+                  kern;
 
-            Vector2 penPosition = Vector2.Zero;
+            Vector2 penPosition = new Vector2(0f, LineAscent);
             bool isEndOfLine = false;
 
             int renderTimes;
@@ -58,13 +86,16 @@ namespace Raccoon.Fonts {
                 char charCode = text[i];
 
                 if (charCode == '\n') { // new line
-                    penPosition.Y += lineHeight;
+                    penPosition.Y += LineSpacing;
                     continue;
                 } else if (charCode == '\r') { // carriage return
                     // do nothing, just ignore
                     // TODO: maybe add an option to detect when carriage return handling is needed (MAC OS 9 or older, maybe?)
                     continue;
-                } else if (i + 1 == text.Length || text[i + 1] == '\n' || (i + 2 < text.Length && text[i + 1] == '\r' && text[i + 2] == '\n')) {
+                } else if (i + 1 == text.Length
+                    || text[i + 1] == '\n'
+                    || (i + 2 < text.Length && text[i + 1] == '\r' && text[i + 2] == '\n')
+                ) {
                     isEndOfLine = true;
                 }
 
@@ -91,14 +122,11 @@ namespace Raccoon.Fonts {
                     #endregion Underrun
 
                     Text.RenderData.Glyph glyphData = textRenderData.AppendGlyph(
-                        penPosition + new Vector2(glyph.HorizontalBearingX, ascent - glyph.HorizontalBearingY), 
+                        penPosition + new Vector2(glyph.HorizontalBearingX, -glyph.HorizontalBearingY),
                         glyph.SourceArea,
-                        charCode
+                        charCode,
+                        glyph
                     );
-
-                    if (glyphData.Position.Y + glyphData.SourceArea.Height >= textSize.Height) {
-                        textSize.Height = glyphData.Position.Y + glyphData.SourceArea.Height;
-                    }
 
                     #region Overrun
 
@@ -155,26 +183,17 @@ namespace Raccoon.Fonts {
 
                 if (isEndOfLine) {
                     isEndOfLine = false;
-                    //lines++;
 
                     if (penPosition.X > textSize.Width) {
                         textSize.Width = penPosition.X;
                     }
 
-                    /*underrun =*/ overrun = penPosition.X = 0;
+                    overrun = penPosition.X = 0;
                 }
             }
 
-            /*
-            foreach (Text.RenderData.Glyph glyph in textRenderData) {
-                if (glyph.Position.Y + glyph.SourceArea.Height >= textSize.Height) {
-                    textSize.Height = glyph.Position.Y + glyph.SourceArea.Height;
-                }
-            }
-            */
+            textSize.Height = penPosition.Y + Math.Abs(LineDescent);
 
-            //textSize.Height = penPosition.Y + lineHeight;
-            
             return textRenderData;
         }
 
@@ -199,16 +218,27 @@ namespace Raccoon.Fonts {
         #region Class Glyph
 
         public class Glyph {
-            public Glyph(Rectangle sourceArea, float horizontalBearingX, float horizontalBearingY, Vector2 advance) {
+            public Glyph(
+                Rectangle sourceArea,
+                float horizontalBearingX,
+                float horizontalBearingY,
+                float width,
+                float height,
+                Vector2 advance
+            ) {
                 SourceArea = sourceArea;
                 HorizontalBearingX = horizontalBearingX;
                 HorizontalBearingY = horizontalBearingY;
+                Width = width;
+                Height = height;
                 Advance = advance;
             }
 
             public Rectangle SourceArea { get; }
             public float HorizontalBearingX { get; }
             public float HorizontalBearingY { get; }
+            public float Width { get; }
+            public float Height { get; }
             public Vector2 Advance { get; }
         }
 

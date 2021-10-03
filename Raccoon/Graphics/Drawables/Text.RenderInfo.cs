@@ -53,8 +53,8 @@ namespace Raccoon.Graphics {
                 return glyph;
             }
 
-            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation) {
-                Glyph glyph = new Glyph(position, sourceArea, representation);
+            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
+                Glyph glyph = new Glyph(position, sourceArea, representation, data);
                 AppendGlyph(glyph);
                 return glyph;
             }
@@ -80,18 +80,20 @@ namespace Raccoon.Graphics {
             #region Glyph Struct
 
             public struct Glyph {
-                public Glyph(Vector2 position, Rectangle sourceArea, char representation) {
+                public Glyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
                     Position = position;
                     SourceArea = sourceArea;
                     Representation = representation;
+                    Data = data;
                 }
 
                 public Vector2 Position { get; set; }
                 public Rectangle SourceArea { get; set; }
                 public char Representation { get; set; }
+                public Fonts.FontFaceRenderMap.Glyph Data { get; set; }
 
                 public override string ToString() {
-                    return $"Position: {Position}; SourceArea: {SourceArea}; Representation: {Representation};";
+                    return $"Position: {Position}; SourceArea: {SourceArea}; Representation: {Representation}; Has Data? {(Data != null).ToPrettyString()}";
                 }
             }
 

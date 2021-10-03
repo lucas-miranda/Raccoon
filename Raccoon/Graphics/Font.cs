@@ -55,8 +55,27 @@ namespace Raccoon.Graphics {
         public string[] Filenames { get; private set; }
         public SharpFont.Face Face { get; private set; }
         public Texture Texture { get { return RenderMap?.Texture; } }
-        public float LineSpacing { get { return RenderMap.NominalHeight; } }
-        public float MaxGlyphWidth { get { return FontService.ConvertEMToPx(Face.BBox.Right - Face.BBox.Left, RenderMap.NominalWidth, Face.UnitsPerEM); } }
+
+        /// <summary>
+        /// Distance from a baseline to the next one.
+        /// </summary>
+        public float LineSpacing { get { return RenderMap.LineSpacing; } }
+
+        /// <summary>
+        /// Distance to the upmost point.
+        /// </summary>
+        public float LineAscent { get { return RenderMap.LineAscent; } }
+
+        /// <summary>
+        /// Distance to the downmost point.
+        /// </summary>
+        public float LineDescent { get { return RenderMap.LineDescent; } }
+
+        /// <summary>
+        /// Max size which a glyph can occupy.
+        /// </summary>
+        public Size MaxGlyphSize { get { return RenderMap.GlyphSlotSize; } }
+
         public bool IsDisposed { get; private set; }
         public int FaceIndex { get; private set; }
         public FontFaceRenderMap RenderMap { get; private set; }

@@ -124,17 +124,19 @@ namespace Raccoon {
         #region Private Methods
 
         public static FontFaceRenderMap CreateFaceRenderMap(Face face) {
-#if TIGHT_PACK_FACE_RENDER_MAP
             FTSize fontSize = face.Size;
             SizeMetrics fontSizeMetrics = fontSize.Metrics;
-            ushort nominalWidth = fontSizeMetrics.NominalWidth,
-                   nominalHeight = fontSizeMetrics.NominalHeight;
-            Size glyphSlotSize = new Size(ConvertEMToPx(face.BBox.Right - face.BBox.Left, nominalWidth, face.UnitsPerEM), nominalHeight);
-#else
-            Size glyphSlotSize = new Size(face.Size.Metrics.NominalWidth, face.Size.Metrics.NominalHeight);
-#endif
+            Size glyphSlotSize = new Size(fontSizeMetrics.NominalWidth, fontSizeMetrics.Height.ToSingle());
 
-            FontFaceRenderMap renderMap = new FontFaceRenderMap(face, glyphSlotSize, nominalWidth, nominalHeight);
+            FontFaceRenderMap renderMap = new FontFaceRenderMap(
+                face,
+                glyphSlotSize,
+                fontSizeMetrics.NominalWidth,
+                fontSizeMetrics.NominalHeight,
+                fontSizeMetrics.Height.ToSingle(),
+                fontSizeMetrics.Ascender.ToSingle(),
+                fontSizeMetrics.Descender.ToSingle()
+            );
 
             // prepare texture
             int sideSize = (int) (Util.Math.Ceiling(System.Math.Sqrt(face.GlyphCount)) * glyphSlotSize.Width);
@@ -180,8 +182,11 @@ namespace Raccoon {
                         new Rectangle(glyphPosition, new Size(ftBitmap.Width, ftBitmap.Rows)),
                         face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
                         face.Glyph.Metrics.HorizontalBearingY.ToSingle(),
+                        face.Glyph.Metrics.Width.ToSingle(),
+                        face.Glyph.Metrics.Height.ToSingle(),
                         new Vector2(face.Glyph.Advance.X.ToSingle(), face.Glyph.Advance.Y.ToSingle())
                     );
+
 
                     // advance to next glyph area
 #if TIGHT_PACK_FACE_RENDER_MAP
@@ -195,6 +200,8 @@ namespace Raccoon {
                         Rectangle.Empty,
                         face.Glyph.Metrics.HorizontalBearingX.ToSingle(),
                         face.Glyph.Metrics.HorizontalBearingY.ToSingle(),
+                        face.Glyph.Metrics.Width.ToSingle(),
+                        face.Glyph.Metrics.Height.ToSingle(),
                         new Vector2(face.Glyph.Advance.X.ToSingle(), face.Glyph.Advance.Y.ToSingle())
                     );
                 }
