@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Raccoon.Graphics {
     public partial class Text {
@@ -69,11 +68,17 @@ namespace Raccoon.Graphics {
                 }
             }
 
-            /*
-            IEnumerator IEnumerable.GetEnumerator() {
-                return GetEnumerator();
+            public Text.RenderData Clone() {
+                Text.RenderData renderData = new Text.RenderData(GlyphCount);
+
+                for (int i = 0; i < GlyphCount; i++) {
+                    Glyph glyph = _glyphs[i];
+                    renderData._glyphs[i] = glyph;
+                }
+
+                renderData.GlyphCount = GlyphCount;
+                return renderData;
             }
-            */
 
             #endregion Public Methods
 
