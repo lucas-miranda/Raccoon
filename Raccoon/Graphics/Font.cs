@@ -68,8 +68,15 @@ namespace Raccoon.Graphics {
 
         /// <summary>
         /// Distance to the downmost point.
+        /// It may be negative by implementation.
         /// </summary>
         public float LineDescent { get { return RenderMap.LineDescent; } }
+
+        /// <summary>
+        /// Distance from the upmost point to the downmost point.
+        /// It doesn't includes spacing between lines, to include it, use LineSpacing.
+        /// </summary>
+        public float LineHeight { get { return RenderMap.LineAscent + Util.Math.Abs(RenderMap.LineDescent); } }
 
         /// <summary>
         /// Max size which a glyph can occupy.
