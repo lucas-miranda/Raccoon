@@ -49,6 +49,18 @@
             }
         }
 
+        public Image(Animation animation, string tag, int frameIndex) {
+            Texture = animation.Texture;
+            SourceRegion = animation.SourceRegion;
+            Animation.Track track = animation[tag];
+            ClippingRegion = track.FramesRegions[frameIndex];
+            Origin = track.FramesDestinations[frameIndex].Position;
+
+            if (!animation.DestinationRegion.IsEmpty) {
+                DestinationRegion = animation.DestinationRegion;
+            }
+        }
+
         #endregion Constructors
 
         #region Public Properties
