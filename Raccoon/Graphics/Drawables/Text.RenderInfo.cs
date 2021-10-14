@@ -79,14 +79,15 @@ namespace Raccoon.Graphics {
 
             #region Glyph Struct
 
-            public struct Glyph {
-                public Glyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
-                    Position = position;
+            public class Glyph {
+                public Glyph(Vector2 position,  Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
+                    OriginalPosition = Position = position;
                     SourceArea = sourceArea;
                     Representation = representation;
                     Data = data;
                 }
 
+                public Vector2 OriginalPosition { get; }
                 public Vector2 Position { get; set; }
                 public Rectangle SourceArea { get; set; }
                 public char Representation { get; set; }
