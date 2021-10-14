@@ -14,7 +14,7 @@ namespace Raccoon.Graphics {
 
         #region Constructors
 
-        public Animation() { 
+        public Animation() {
         }
 
         public Animation(Texture texture, Size frameSize) {
@@ -163,7 +163,7 @@ namespace Raccoon.Graphics {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
                 ElapsedTime = 0;
-                
+
                 if (forceReset) {
                     CurrentTrack.Reset();
                 }
@@ -281,7 +281,7 @@ namespace Raccoon.Graphics {
 
             ParseFramesDuration(frames, durations, out List<int> durationList, out List<int> frameList);
 
-            Rectangle[] framesRegions = null, 
+            Rectangle[] framesRegions = null,
                         framesDestinations = null;
 
             GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
@@ -299,7 +299,7 @@ namespace Raccoon.Graphics {
             ParseFrames(frames, out List<int> frameList);
             GenerateDurationsArray(frameList.Count, duration, out int[] durations);
 
-            Rectangle[] framesRegions = null, 
+            Rectangle[] framesRegions = null,
                         framesDestinations = null;
 
             GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
@@ -320,7 +320,7 @@ namespace Raccoon.Graphics {
             int[] durationList = new int[durations.Count];
             durations.CopyTo(durationList, 0);
 
-            Rectangle[] framesRegions = null, 
+            Rectangle[] framesRegions = null,
                         framesDestinations = null;
 
             GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);
@@ -338,7 +338,7 @@ namespace Raccoon.Graphics {
             frames.CopyTo(frameList, 0);
 
             GenerateDurationsArray(frameList.Length, duration, out int[] durations);
-            Rectangle[] framesRegions = null, 
+            Rectangle[] framesRegions = null,
                         framesDestinations = null;
 
             GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Raccoon.Util.Collections {
-    public class ReadOnlyList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, 
+    public class ReadOnlyList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable,
                                    IList, ICollection, IReadOnlyList<T>, IReadOnlyCollection<T> {
         #region Private Members
 
