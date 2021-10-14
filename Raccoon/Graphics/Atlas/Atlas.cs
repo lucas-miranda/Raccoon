@@ -66,32 +66,32 @@ namespace Raccoon.Graphics {
         public Size Size { get { return Texture.Size; } }
         public bool IsDisposed { get; private set; }
 
-        public string Filename { 
-            get { 
-                return Filenames?[0] ?? ""; 
-            } 
+        public string Filename {
+            get {
+                return Filenames?[0] ?? "";
+            }
 
-            private set { 
+            private set {
                 if (Filenames == null) {
                     Filenames = new string[2];
                 }
 
-                Filenames[0] = value; 
-            } 
+                Filenames[0] = value;
+            }
         }
 
-        public string DataFilename { 
-            get { 
-                return Filenames?[1] ?? ""; 
-            } 
+        public string DataFilename {
+            get {
+                return Filenames?[1] ?? "";
+            }
 
-            private set { 
+            private set {
                 if (Filenames == null) {
                     Filenames = new string[2];
                 }
 
-                Filenames[1] = value; 
-            } 
+                Filenames[1] = value;
+            }
         }
 
         public AtlasSubTexture this[string name] {
@@ -132,6 +132,20 @@ namespace Raccoon.Graphics {
             }
 
             return animation;
+        }
+
+        public bool TryRetrieveSubTexture(string name, out AtlasSubTexture atlasSubTexture) {
+            return _subTextures.TryGetValue(name.ToLowerInvariant(), out atlasSubTexture);
+        }
+
+        public bool TryRetrieveAnimation(string name, out AtlasAnimation atlasAnimation) {
+            if (!TryRetrieveSubTexture(name, out AtlasSubTexture subTexture) || !(subTexture is AtlasAnimation animation)) {
+                atlasAnimation = null;
+                return false;
+            }
+
+            atlasAnimation = animation;
+            return true;
         }
 
         public void Reload() {
