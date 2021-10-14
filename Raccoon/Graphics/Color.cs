@@ -235,6 +235,22 @@ namespace Raccoon.Graphics {
 
         #region Public Methods
 
+        public Color WithAlpha(float alpha) {
+            return new Color(R, G, B, (byte) Math.Clamp(alpha * byte.MaxValue, 0, 255));
+        }
+
+        public Color WithAlpha(byte alpha) {
+            return new Color(R, G, B, alpha);
+        }
+
+        public Color MultiplyAlpha(float alpha) {
+            return new Color(R, G, B, (byte) Math.Clamp((alpha * (A / 255f)) * byte.MaxValue, 0, 255));
+        }
+
+        public Color MultiplyAlpha(byte alpha) {
+            return new Color(R, G, B, (byte) Math.Clamp(alpha * A, 0, 255));
+        }
+
         public override bool Equals(object obj) {
             return obj is Color && Equals((Color) obj);
         }
