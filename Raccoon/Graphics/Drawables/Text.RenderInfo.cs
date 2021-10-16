@@ -42,19 +42,15 @@ namespace Raccoon.Graphics {
                 return _glyphs[index];
             }
 
-            public Glyph AppendGlyph(Glyph glyph) {
+            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
                 if (GlyphCount == _glyphs.Length) {
                     throw new System.InvalidOperationException($"Trying to append a glyph where is no glyph slot left.");
                 }
 
+                Glyph glyph = new Glyph(position, sourceArea, representation, data);
                 _glyphs[GlyphCount] = glyph;
                 GlyphCount++;
-                return glyph;
-            }
 
-            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
-                Glyph glyph = new Glyph(position, sourceArea, representation, data);
-                AppendGlyph(glyph);
                 return glyph;
             }
 
@@ -72,8 +68,7 @@ namespace Raccoon.Graphics {
                 Text.RenderData renderData = new Text.RenderData(GlyphCount);
 
                 for (int i = 0; i < GlyphCount; i++) {
-                    Glyph glyph = _glyphs[i];
-                    renderData._glyphs[i] = glyph;
+                    renderData._glyphs[i] = _glyphs[i].Clone();
                 }
 
                 renderData.GlyphCount = GlyphCount;
@@ -97,6 +92,12 @@ namespace Raccoon.Graphics {
                 public Rectangle SourceArea { get; set; }
                 public char Representation { get; set; }
                 public Fonts.FontFaceRenderMap.Glyph Data { get; set; }
+
+                public Glyph Clone() {
+                    return new Glyph(OriginalPosition, SourceArea, Representation, Data) {
+                        Position = Position
+                    };
+                }
 
                 public override string ToString() {
                     return $"Position: {Position}; SourceArea: {SourceArea}; Representation: {Representation}; Has Data? {(Data != null).ToPrettyString()}";

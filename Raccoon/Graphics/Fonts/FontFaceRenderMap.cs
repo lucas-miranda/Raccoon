@@ -121,7 +121,7 @@ namespace Raccoon.Fonts {
 
                     #endregion Underrun
 
-                    Text.RenderData.Glyph glyphData = textRenderData.AppendGlyph(
+                    textRenderData.AppendGlyph(
                         penPosition + new Vector2(glyph.HorizontalBearingX, -glyph.HorizontalBearingY),
                         glyph.SourceArea,
                         charCode,
