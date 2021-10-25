@@ -198,7 +198,7 @@ namespace Raccoon.Graphics {
             }
 
             if (glyphStartIndex < 0 || glyphStartIndex >= glyphs.GlyphCount) {
-                throw new System.ArgumentOutOfRangeException(nameof(glyphStartIndex), $"Glyph should be zero or a positive integer in range [0, {glyphs.GlyphCount - 1}]");
+                throw new System.ArgumentOutOfRangeException(nameof(glyphStartIndex), $"Glyph start index should be zero or a positive integer in range [0, {glyphs.GlyphCount - 1}], but {glyphStartIndex} was given.");
             }
 
             if (glyphStartIndex + glyphCount > glyphs.GlyphCount) {
