@@ -78,6 +78,12 @@ namespace Raccoon.Graphics {
         /// </summary>
         public float LineHeight { get { return RenderMap.LineAscent + Util.Math.Abs(RenderMap.LineDescent); } }
 
+        public float SpaceBetweenLines {
+            get {
+                return (LineAscent + LineSpacing) - (LineHeight + LineAscent);
+            }
+        }
+
         /// <summary>
         /// Max size which a glyph can occupy.
         /// </summary>
