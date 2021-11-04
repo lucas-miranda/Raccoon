@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using Raccoon.Fonts;
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
@@ -223,7 +224,9 @@ namespace Raccoon.Graphics {
             }
 
             bool applyRotation = false,
-                 needsTransparency = AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue;
+
+                 // fonts almost always uses transparency
+                 needsTransparency = AutoHandleAlphaBlendedSprites;
 
             float cos = 0f,
                   sin = 0f;
@@ -234,6 +237,12 @@ namespace Raccoon.Graphics {
                 sin = Util.Math.Sin(rotation);
             }
 
+            float fontSizeRatio = font.SizeRatio;
+
+            if (shaderParameters is IFontSizeShaderParameter fontSizeShaderParameter) {
+                fontSizeShaderParameter.SafeSetFontScale(scale.X);
+            }
+
             if (!applyRotation && flip == ImageFlip.None) {
                 for (int i = 0; i < glyphCount; i++) {
                     Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
@@ -242,11 +251,14 @@ namespace Raccoon.Graphics {
                     batchItem.Set(
                         font.RenderMap.Texture,
                         destinationRectangle.Position
-                            + new Vector2(glyph.X * scale.X * font.Size, glyph.Y * scale.Y * font.Size)
+                            + new Vector2(
+                                glyph.X * scale.X * font.Size,
+                                glyph.Y * scale.Y * font.Size
+                            )
                             - origin,
                         glyph.SourceArea,
                         rotation,
-                        scale * font.SizeRatio,
+                        scale * fontSizeRatio,
                         flip,
                         color,
                         Vector2.Zero,
@@ -257,11 +269,14 @@ namespace Raccoon.Graphics {
                     );
                 }
             } else {
-                Size textSize = destinationRectangle.Size;
+                Size textSize = destinationRectangle.Size * scale;
 
                 for (int i = 0; i < glyphCount; i++) {
                     Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
-                    Vector2 pos = new Vector2(glyph.X, glyph.Y);
+                    Vector2 pos = new Vector2(
+                        glyph.X * scale.X * font.Size,
+                        glyph.Y * scale.Y * font.Size
+                    );
 
                     if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
                         pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
@@ -271,7 +286,7 @@ namespace Raccoon.Graphics {
                         pos.Y = textSize.Height - pos.Y - glyph.SourceArea.Height;
                     }
 
-                    pos = pos * scale - origin;
+                    pos -= origin;
 
                     if (applyRotation) {
                         pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
@@ -283,7 +298,7 @@ namespace Raccoon.Graphics {
                         destinationRectangle.Position + pos,
                         glyph.SourceArea,
                         rotation,
-                        scale * font.SizeRatio,
+                        scale * fontSizeRatio,
                         flip,
                         color,
                         Vector2.Zero,
@@ -996,6 +1011,10 @@ namespace Raccoon.Graphics {
 
         private T GetBatchItem<T>(bool needsTransparency) where T : IBatchItem {
             if (needsTransparency) {
+                if (_transparencyBatchItems == null) {
+                    throw new System.ArgumentException("Transparency handle isn't available.");
+                }
+
                 if (_nextItemWithTransparencyIndex >= _transparencyBatchItems.Length) {
                     SetTransparencyBuffersCapacity(_transparencyBatchItems.Length + _transparencyBatchItems.Length / 2);
                 }

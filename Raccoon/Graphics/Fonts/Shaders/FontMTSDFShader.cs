@@ -3,6 +3,9 @@ using Raccoon.Graphics;
 
 namespace Raccoon.Fonts {
     public class FontMTSDFShader : BasicShader {
+        public static float SafeMinScreenPixelRange = 2f,
+                            MinScreenPixelRange = 1f;
+
         private float _screenPixelRange;
 
         public FontMTSDFShader(string filename) : base(filename) {

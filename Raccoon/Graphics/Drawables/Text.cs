@@ -1,4 +1,5 @@
-﻿using Raccoon.Util;
+﻿using Raccoon.Fonts;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public partial class Text : Graphic, System.IDisposable {
@@ -221,12 +222,24 @@ namespace Raccoon.Graphics {
                 return;
             }
 
+            if (shaderParameters == ShaderParameters) {
+                if (ShaderParameters == null) {
+                    if (Font.ShaderParameters != null) {
+                        shaderParameters = ShaderParameters = new TextShaderParameters(Font);
+                    }
+                } else if (ShaderParameters is TextShaderParameters textShaderParameters
+                    && textShaderParameters.Font != Font
+                ) {
+                    textShaderParameters.Font = Font;
+                }
+            }
+
             Renderer.DrawString(
                 Font,
                 Data,
                 StartIndex,
                 EndIndex < 0 ? (Data.GlyphCount + EndIndex + 1) : (EndIndex - StartIndex + 1),
-                new Rectangle(position, Size),
+                new Rectangle(position, UnscaledSize),
                 rotation,
                 scale,
                 flip,
@@ -234,7 +247,7 @@ namespace Raccoon.Graphics {
                 origin,
                 scroll,
                 shader ?? Font.Shader,
-                shaderParameters ?? Font.ShaderParameters,
+                shaderParameters,
                 layerDepth
             );
         }

@@ -20,6 +20,13 @@ namespace Raccoon.Fonts {
         public float PixelDistanceRange { get; }
         public float FontBaseSize { get; }
         public float FontSize { get; set; }
+        public float FontScale { get; set; } = 1.0f;
+
+        public float ScreenPixelRange {
+            get {
+                return ((FontScale * FontSize) / FontBaseSize) * PixelDistanceRange;
+            }
+        }
 
         #endregion Public Properties
 
@@ -34,13 +41,28 @@ namespace Raccoon.Fonts {
                 throw new System.ArgumentException($"Expected '{nameof(FontMTSDFShader)}', but got '{shader.GetType().Name}' instead.");
             }
 
-            fontMTSDFShader.ScreenPixelRange = (FontSize / FontBaseSize) * PixelDistanceRange;
+            fontMTSDFShader.ScreenPixelRange = ScreenPixelRange;
         }
 
         public IShaderParameters Clone() {
             return new FontMTSDFShaderParameters(FontBaseSize, PixelDistanceRange) {
-                FontSize = FontSize
+                FontSize = FontSize,
+                FontScale = FontScale
             };
+        }
+
+        public float CalculateScreenPixelRange(float fontSize, float fontScale) {
+            return ((fontScale * fontSize) / FontBaseSize) * PixelDistanceRange;
+        }
+
+        public bool IsSafeFontScale(float fontSize, float fontScale) {
+            return CalculateScreenPixelRange(fontSize, fontScale) >= FontMTSDFShader.SafeMinScreenPixelRange;
+        }
+
+        public void SafeSetFontScale(float fontScale) {
+            if (IsSafeFontScale(FontSize, fontScale)) {
+                FontScale = fontScale;
+            }
         }
 
         public bool Equals(IShaderParameters other) {
@@ -48,7 +70,8 @@ namespace Raccoon.Fonts {
                 && other is FontMTSDFShaderParameters otherFontMTSDFShaderParameters
                 && otherFontMTSDFShaderParameters.PixelDistanceRange == PixelDistanceRange
                 && otherFontMTSDFShaderParameters.FontBaseSize == FontBaseSize
-                && otherFontMTSDFShaderParameters.FontSize == FontSize;
+                && otherFontMTSDFShaderParameters.FontSize == FontSize
+                && otherFontMTSDFShaderParameters.FontScale == FontScale;
         }
 
         #endregion Public Methods
