@@ -128,8 +128,8 @@ namespace Raccoon.Graphics {
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            Text.RenderData glyphs = font.RenderMap.PrepareText(text, out Size textSize);
-            DrawString(font, glyphs, new Rectangle(position, textSize), rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Text.RenderData glyphs = font.RenderMap.PrepareTextRenderData(text, out double textEmWidth, out double textEmHeight);
+            DrawString(font, glyphs, new Rectangle(position, new Size((float) font.ConvertEmToPx(textEmWidth), (float) font.ConvertEmToPx(textEmHeight))), rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 1f) {
@@ -370,7 +370,7 @@ namespace Raccoon.Graphics {
             Size textSize = destinationRectangle.Size;
 
             foreach (Text.RenderData.Glyph glyph in glyphs) {
-                Vector2 pos = glyph.Position;
+                Vector2 pos = new Vector2(glyph.X, glyph.Y);
 
                 if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
                     pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;

@@ -200,6 +200,7 @@ FILES := \
 RESOURCES_DIR := ./
 RESOURCES_NAMESPACE := Raccoon.Resource
 RESOURCES := \
+	-resource:$(RESOURCES_DIR)/fontMTSDFShader.fxc,$(RESOURCES_NAMESPACE).FontMTSDFShader \
 	-resource:$(RESOURCES_DIR)/basicShader.fxc,$(RESOURCES_NAMESPACE).BasicShader \
 	-resource:$(RESOURCES_DIR)/04b03.ttf,$(RESOURCES_NAMESPACE)._04b03
 

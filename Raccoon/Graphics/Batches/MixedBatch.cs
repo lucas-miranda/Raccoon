@@ -178,8 +178,25 @@ namespace Raccoon.Graphics {
         #region Draw String
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, float layerDepth = 1f) {
-            Text.RenderData glyphs = font.RenderMap.PrepareText(text, out Size textSize);
-            DrawString(font, glyphs, new Rectangle(position, textSize), rotation, scale, flip, color, origin, scroll, shader, shaderParameters, layerDepth);
+            Text.RenderData glyphs = font.RenderMap.PrepareTextRenderData(text, out double textEmWidth, out double textEmHeight);
+
+            DrawString(
+                font,
+                glyphs,
+                new Rectangle(
+                    position,
+                    new Size((float) font.ConvertEmToPx(textEmWidth), (float) font.ConvertEmToPx(textEmHeight))
+                ),
+                rotation,
+                scale,
+                flip,
+                color,
+                origin,
+                scroll,
+                shader,
+                shaderParameters,
+                layerDepth
+            );
         }
 
         public void DrawString(Font font, string text, Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 origin, Vector2 scroll, Shader shader = null, float layerDepth = 0f) {
@@ -217,20 +234,19 @@ namespace Raccoon.Graphics {
                 sin = Util.Math.Sin(rotation);
             }
 
-            Size textSize = destinationRectangle.Size;
-
-
             if (!applyRotation && flip == ImageFlip.None) {
                 for (int i = 0; i < glyphCount; i++) {
                     Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
-                    //DrawGlyph(glyph, glyph.Position * scale - origin);
+
                     SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
                     batchItem.Set(
                         font.RenderMap.Texture,
-                        destinationRectangle.Position + glyph.Position * scale - origin,
+                        destinationRectangle.Position
+                            + new Vector2(glyph.X * scale.X * font.Size, glyph.Y * scale.Y * font.Size)
+                            - origin,
                         glyph.SourceArea,
                         rotation,
-                        scale,
+                        scale * font.SizeRatio,
                         flip,
                         color,
                         Vector2.Zero,
@@ -241,9 +257,11 @@ namespace Raccoon.Graphics {
                     );
                 }
             } else {
+                Size textSize = destinationRectangle.Size;
+
                 for (int i = 0; i < glyphCount; i++) {
                     Text.RenderData.Glyph glyph = glyphs[glyphStartIndex + i];
-                    Vector2 pos = glyph.Position;
+                    Vector2 pos = new Vector2(glyph.X, glyph.Y);
 
                     if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
                         pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
@@ -259,14 +277,13 @@ namespace Raccoon.Graphics {
                         pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
                     }
 
-                    //DrawGlyph(glyph, pos);
                     SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
                     batchItem.Set(
                         font.RenderMap.Texture,
                         destinationRectangle.Position + pos,
                         glyph.SourceArea,
                         rotation,
-                        scale,
+                        scale * font.SizeRatio,
                         flip,
                         color,
                         Vector2.Zero,

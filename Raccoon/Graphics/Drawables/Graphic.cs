@@ -57,7 +57,7 @@ namespace Raccoon.Graphics {
         /// </summary>
         public float Rotation { get; set; }
 
-        public Size Size { get; protected set; }
+        public virtual Size Size { get; protected set; }
         public Renderer Renderer { get; set; }
         public Vector2 Scroll { get; set; } = Vector2.One;
         public Shader Shader { get; set; }

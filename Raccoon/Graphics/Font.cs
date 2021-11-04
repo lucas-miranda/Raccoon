@@ -1,5 +1,7 @@
 ﻿using System.IO;
+
 using Raccoon.Fonts;
+using Raccoon.Util;
 
 namespace Raccoon.Graphics {
     public class Font : IAsset {
@@ -12,7 +14,15 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         static Font() {
-            Service = new FontService();
+        }
+
+        private Font() {
+        }
+
+        public Font(Texture texture, string dataFilepath, float size = 12f) {
+            RenderMap = new FontTextureRenderMap(texture, dataFilepath, size);
+            ShaderParameters = RenderMap.CreateShaderParameters();
+            Size = size;
         }
 
         public Font(string filename, float size = 12f) {
@@ -25,73 +35,94 @@ namespace Raccoon.Graphics {
                 Filename = Path.Combine(Game.Instance.ContentDirectory, Filename);
             }
 
-            Load();
+            RenderMap = new FontFaceRenderMap(Filename, size);
+            ShaderParameters = RenderMap.CreateShaderParameters();
             Size = size;
         }
 
         public Font(byte[] file, int faceIndex, float size = 12f) {
-            FaceIndex = faceIndex;
-            Face = new SharpFont.Face(Service.Library, file, faceIndex);
+            RenderMap = new FontFaceRenderMap(file, faceIndex, size);
+            ShaderParameters = RenderMap.CreateShaderParameters();
             Size = size;
         }
 
-        public Font(SharpFont.Face fontFace) {
-            Face = fontFace;
-            FaceIndex = fontFace.FaceIndex;
-            PrepareRenderMap();
+        public Font(SharpFont.Face fontFace, float size = 12f) {
+            RenderMap = new FontFaceRenderMap(fontFace, size);
+            ShaderParameters = RenderMap.CreateShaderParameters();
+            Size = size;
         }
 
-        public Font(Stream fontStream, int faceIndex) {
-            Load(fontStream, faceIndex);
-            PrepareRenderMap();
+        public Font(Stream fontStream, int faceIndex, float size = 12f) {
+            Load(fontStream, faceIndex, size);
+            Size = size;
         }
 
         #endregion Constructors
 
         #region Public Properties
 
+        public static int TabulationWhitespacesSize { get; set; } = 4;
+
         public string Name { get; set; } = "Font";
-        public string FamilyName { get { return Face.FamilyName; } }
+        //public string FamilyName { get { return Face.FamilyName; } }
         public string[] Filenames { get; private set; }
-        public SharpFont.Face Face { get; private set; }
         public Texture Texture { get { return RenderMap?.Texture; } }
 
         /// <summary>
         /// Distance from a baseline to the next one.
         /// </summary>
-        public float LineSpacing { get { return RenderMap.LineSpacing; } }
+        public float BaselinesDistance { get { return Math.Floor(ConvertEmToPx(RenderMap.LineHeight)); } }
 
         /// <summary>
-        /// Distance to the upmost point.
+        /// Distance to the upmost point relative to baseline.
+        /// It should be negative, to respect Raccoon y-origin top-bottom direction.
         /// </summary>
-        public float LineAscent { get { return RenderMap.LineAscent; } }
+        public float Ascender { get { return ConvertEmToPx(RenderMap.Ascender); } } //Math.Floor(ConvertEmToPx(RenderMap.Ascender)); } }
 
         /// <summary>
-        /// Distance to the downmost point.
-        /// It may be negative by implementation.
+        /// Distance to the downmost point relative to baseline.
         /// </summary>
-        public float LineDescent { get { return RenderMap.LineDescent; } }
+        public float Descender { get { return ConvertEmToPx(RenderMap.Descender); } } //Math.Ceiling(ConvertEmToPx(RenderMap.Descender)); } }
 
         /// <summary>
         /// Distance from the upmost point to the downmost point.
         /// It doesn't includes spacing between lines, to include it, use LineSpacing.
         /// </summary>
-        public float LineHeight { get { return RenderMap.LineAscent + Util.Math.Abs(RenderMap.LineDescent); } }
+        public float LineHeight { get { return ConvertEmToPx(RenderMap.LineHeight); } }//Math.Floor(ConvertEmToPx(RenderMap.LineHeight)); } }
 
         public float SpaceBetweenLines {
             get {
-                return (LineAscent + LineSpacing) - (LineHeight + LineAscent);
+                return BaselinesDistance - (Descender + Math.Abs(Ascender));
             }
         }
 
         /// <summary>
+        /// Size ratio compared to render map nominal.
+        /// </summary>
+        public float SizeRatio { get { return Size / RenderMap.NominalWidth; } }
+
+        /// <summary>
         /// Max size which a glyph can occupy.
         /// </summary>
-        public Size MaxGlyphSize { get { return RenderMap.GlyphSlotSize; } }
+        public Size MaxGlyphSize {
+            get {
+                return new Size(
+                    Math.Floor(SizeRatio * RenderMap.GlyphSlotSize.Width),
+                    Math.Floor(SizeRatio * RenderMap.GlyphSlotSize.Height)
+                );
+            }
+        }
 
         public bool IsDisposed { get; private set; }
-        public int FaceIndex { get; private set; }
-        public FontFaceRenderMap RenderMap { get; private set; }
+
+        /// <summary>
+        /// A shareable render map.
+        /// Multiple fonts instance can reference and use it to render glyphs at different settings.
+        /// </summary>
+        public FontRenderMap RenderMap { get; private set; }
+
+        public Shader Shader { get { return RenderMap?.Shader; } }
+        public IShaderParameters ShaderParameters { get; private set; }
 
         public string Filename {
             get {
@@ -114,48 +145,64 @@ namespace Raccoon.Graphics {
 
             set {
                 _size = value;
-                Face.SetCharSize(0, _size, 0, 96);
-                PrepareRenderMap();
+
+                if (ShaderParameters != null) {
+                    if (ShaderParameters is IFontSizeShaderParameter fontSizeShaderParameter) {
+                        fontSizeShaderParameter.FontSize = _size;
+                    }
+                }
             }
         }
 
         #endregion Public Properties
 
-        #region Internal Properties
-
-        internal static FontService Service { get; }
-
-        #endregion Internal Properties
-
         #region Public Methods
 
-        public Text.RenderData GetRenderData(string text, out Size textSize) {
-            return RenderMap.PrepareText(text, out textSize);
+        public float ConvertEmToPx(float em) {
+            return em * Size;
+        }
+
+        public double ConvertEmToPx(double em) {
+            return em * Size;
+        }
+
+        public float ConvertPxToEm(float px) {
+            return px / Size;
+        }
+
+        public double ConvertPxToEm(double px) {
+            return px / Size;
+        }
+
+        public Text.RenderData PrepareTextRenderData(string text, out double textEmWidth, out double textEmHeight) {
+            return RenderMap.PrepareTextRenderData(text, out textEmWidth, out textEmHeight);
+        }
+
+        public Text.RenderData PrepareTextRenderData(string text) {
+            return RenderMap.PrepareTextRenderData(text, out _, out _);
         }
 
         public Vector2 MeasureText(string text) {
-            RenderMap.PrepareText(text, out Size textSize);
-            return textSize.ToVector2();
+            RenderMap.PrepareTextRenderData(text, out double textEmWidth, out double textEmHeight);
+            return new Vector2(textEmWidth, textEmHeight);
         }
 
-        public bool CanRenderCharacter(char c) {
+        public bool CanRenderCharacter(uint c) {
             return RenderMap.Glyphs.ContainsKey(c);
         }
 
         public void Reload() {
             try {
-                SharpFont.Face currentFace = Face;
-                Load();
-
-                if (currentFace != null) {
-                    currentFace.Dispose();
-                }
+                RenderMap?.Reload();
             } catch(System.Exception e) {
                 throw e;
             }
         }
 
         public void Reload(Stream fontStream) {
+            throw new System.NotImplementedException();
+
+            /*
             try {
                 SharpFont.Face currentFace = Face;
                 Load(fontStream, FaceIndex);
@@ -166,8 +213,10 @@ namespace Raccoon.Graphics {
             } catch(System.Exception e) {
                 throw e;
             }
+            */
         }
 
+        /*
         public void Reload(Stream fontStream, int faceIndex) {
             try {
                 SharpFont.Face currentFace = Face;
@@ -180,18 +229,42 @@ namespace Raccoon.Graphics {
                 throw e;
             }
         }
+        */
+
+        public Font Clone(float? size = null) {
+            string[] filenames;
+
+            if (Filenames != null) {
+                filenames = new string[Filenames.Length];
+                Filenames.CopyTo(filenames, 0);
+            } else {
+                filenames = null;
+            }
+
+            RenderMap?.AddReferenceCount();
+
+            Font font = new Font() {
+                Name = Name,
+                Filenames = filenames,
+                RenderMap = RenderMap,
+                ShaderParameters = ShaderParameters?.Clone()
+            };
+
+            if (size.HasValue) {
+                font.Size = size.Value;
+            } else {
+                font.Size = _size;
+            }
+
+            return font;
+        }
 
         public void Dispose() {
-            if (Face == null || IsDisposed) {
+            if (IsDisposed) {
                 return;
             }
 
-            if (Face != null && !Face.IsDisposed) {
-                Face.Dispose();
-                Face = null;
-            }
-
-            if (RenderMap != null && !RenderMap.IsDisposed) {
+            if (RenderMap != null) {
                 RenderMap.Dispose();
                 RenderMap = null;
             }
@@ -203,19 +276,7 @@ namespace Raccoon.Graphics {
 
         #region Private Methods
 
-        private void PrepareRenderMap() {
-            if (RenderMap != null) {
-                RenderMap.Dispose();
-            }
-
-            RenderMap = FontService.CreateFaceRenderMap(Face);
-        }
-
-        private void Load() {
-            Face = new SharpFont.Face(Service.Library, Filename);
-        }
-
-        private void Load(Stream fontStream, int faceIndex) {
+        private void Load(Stream fontStream, int faceIndex, float size) {
             if (fontStream is FileStream fileStream) {
                 Filename = fileStream.Name;
             }
@@ -246,8 +307,8 @@ namespace Raccoon.Graphics {
                 fontStream.Read(file, 0, (int) streamSize);
             }
 
-            FaceIndex = faceIndex;
-            Face = new SharpFont.Face(Service.Library, file, faceIndex);
+            RenderMap = new FontFaceRenderMap(file, faceIndex, (uint) Math.Round(size));
+            ShaderParameters = RenderMap.CreateShaderParameters();
         }
 
         #endregion Private Methods

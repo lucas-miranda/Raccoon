@@ -36,34 +36,34 @@ namespace Raccoon {
 
         internal Console() {
             _contexts = new Dictionary<System.Type, TextFormatter> {
-                { 
+                {
                     typeof(TimestampLoggerToken),
                     new TextFormatter(new Color(0xA3A3A3FF))
                 },
-                { 
+                {
                     typeof(SubjectsLoggerToken),
                     new TextFormatter(new Color(0xA3A3A3FF))
                 }
             };
 
             _categories = new Dictionary<string, TextFormatter> {
-                { 
+                {
                     "error",
                     new TextFormatter(Color.Red)
                 },
-                { 
+                {
                     "info",
                     new TextFormatter(new Color(0x00D4FFFF))
                 },
-                { 
+                {
                     "warning",
                     new TextFormatter(new Color(0xFFEE00FF))
                 },
-                { 
+                {
                     "critical",
                     new TextFormatter(new Color(0xFF6A00FF))
                 },
-                { 
+                {
                     "success",
                     new TextFormatter(Color.Green)
                 }
@@ -84,7 +84,7 @@ namespace Raccoon {
         public Rectangle Viewport { get; set; }
         public int Lines { get; private set; }
         public int MessagesCount { get { return _messages.Count; } }
-        public float TotalHeight { get { return Lines * (Font?.LineSpacing ?? 0); } } 
+        public float TotalHeight { get { return Lines * (Font?.LineHeight ?? 0); } }
         public bool Visible { get; private set; }
         public bool ShowTimestamp { get; set; } = true;
         public bool MergeIdenticalMessages { get; set; } = true;
@@ -95,7 +95,7 @@ namespace Raccoon {
         public Key PageHomeKey { get; set; }
         public Key PageEndKey { get; set; }
 
-        public Message LastMessage { 
+        public Message LastMessage {
             get {
                 if (_messages.Count == 0) {
                     return null;
@@ -335,10 +335,10 @@ namespace Raccoon {
             );
 
             // messages
-            float messagesY = _pageScroll.Y % Font.LineSpacing;
+            float messagesY = _pageScroll.Y % Font.LineHeight;
 
-            int lineStartIndex = (int) Math.Max(0, Math.Floor(Math.Abs(_pageScroll.Y) / Font.LineSpacing)),
-                lineEndIndex = lineStartIndex + (int) Math.Ceiling(Viewport.Height / Font.LineSpacing);
+            int lineStartIndex = (int) Math.Max(0, Math.Floor(Math.Abs(_pageScroll.Y) / Font.LineHeight)),
+                lineEndIndex = lineStartIndex + (int) Math.Ceiling(Viewport.Height / Font.LineHeight);
 
             int linesToSkip = lineStartIndex,
                 linesToProcess = lineEndIndex - lineStartIndex;
@@ -355,11 +355,11 @@ namespace Raccoon {
                 if (linesToSkip - message.Lines > 0) {
                     linesToSkip -= message.Lines;
                     continue;
-                } 
+                }
 
                 int lines = message.Lines - linesToSkip;
                 linesToProcess -= lines;
-                y -= lines * Font.LineSpacing;
+                y -= lines * Font.LineHeight;
 
                 if (linesToSkip > 0) {
                     linesToSkip = 0;
@@ -379,7 +379,7 @@ namespace Raccoon {
             for (int i = startIndex; i >= endIndex; i--) {
                 Message message = _messages[i];
                 x = Viewport.X + 60f;
-                
+
                 RenderMessage(new Vector2(x, y), message);
 
                 // message repeat count
@@ -390,7 +390,7 @@ namespace Raccoon {
                     Renderer.DrawString(
                         Font,
                         countText,
-                        new Vector2(x, y), 
+                        new Vector2(x, y),
                         rotation: 0f,
                         scale: Vector2.One,
                         flip: ImageFlip.None,
@@ -400,7 +400,7 @@ namespace Raccoon {
                     );
                 }
 
-                y += message.Lines * Font.LineSpacing;
+                y += message.Lines * Font.LineHeight;
             }
 
             _previousTokens.Clear();
@@ -419,7 +419,7 @@ namespace Raccoon {
         }
 
         private void MoveVerticalScrollLines(int lines) {
-            MoveVerticalScroll(Font.LineSpacing * lines);
+            MoveVerticalScroll(Font.LineHeight * lines);
         }
 
         private Message PushEmptyMessage() {
@@ -501,7 +501,7 @@ namespace Raccoon {
                 Renderer.DrawString(
                     Font,
                     representation,
-                    topLeft + localPos, 
+                    topLeft + localPos,
                     rotation: 0f,
                     scale: Vector2.One,
                     flip: ImageFlip.None,
@@ -682,7 +682,7 @@ namespace Raccoon {
                             return false;
                         }
                     } else {
-                        if ((token.LoggerToken == null && messageToken != null) 
+                        if ((token.LoggerToken == null && messageToken != null)
                          || (token.LoggerToken != null && !token.LoggerToken.Equals(messageToken))) {
                             return false;
                         }
@@ -784,8 +784,8 @@ namespace Raccoon {
             }
 
             public bool IsLoggerType(LoggerToken token) {
-                return token != null 
-                    && LoggerToken != null 
+                return token != null
+                    && LoggerToken != null
                     && LoggerToken.GetType().Equals(token.GetType());
             }
         }

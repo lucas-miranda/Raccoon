@@ -74,7 +74,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
                     animation.AddFrame(frame.Source, (int) frame.Duration, frame.OriginalFrame, "all");
                 }
 
-                // process other tracks 
+                // process other tracks
                 IJEnumerable<JToken> tracksTokens = animationToken["tracks"].Children();
                 foreach (JToken trackToken in tracksTokens) {
                     string name = trackToken.Value<string>("name");

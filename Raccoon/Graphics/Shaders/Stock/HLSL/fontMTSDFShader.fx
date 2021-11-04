@@ -14,6 +14,14 @@ sampler2D TextureSampler = sampler_state {
 float4x4 WorldViewProj;
 float4 DiffuseColor;
 
+float ScreenPixelRange;
+
+//
+
+float median(float r, float g, float b) {
+    return max(min(r, g), min(max(r, g), b));
+}
+
 // Vertex Color
 
 VSOut_PosColor VSVertexColor(VSIn_PosColor input) {
@@ -102,8 +110,12 @@ VSOut_PosColorTextureDepth VSVertexColorTextureDepth(VSIn_PosColorTexture input)
 
 PSOut_ColorDepth PSVertexColorTextureDepth(PSIn_PosColorTextureDepth input) {
     PSOut_ColorDepth psOut;
-    psOut.Color = tex2D(TextureSampler, input.TextureCoord);
-    psOut.Color = float4(psOut.Color.rgb * input.Diffuse.rgb, 1.0f) * input.Diffuse.a * psOut.Color.a;
+
+    float4 px = tex2D(TextureSampler, input.TextureCoord);
+    float screenPxDistance = ScreenPixelRange * (median(px.r, px.g, px.b) - 0.5);
+    float alpha = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+
+    psOut.Color = input.Diffuse * alpha;
 
     if (psOut.Color.a < .01f) {
         discard;
@@ -112,7 +124,6 @@ PSOut_ColorDepth PSVertexColorTextureDepth(PSIn_PosColorTextureDepth input) {
     psOut.Depth = input.Depth;
     return psOut;
 }
-
 
 // Techniques
 

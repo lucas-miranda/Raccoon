@@ -8,7 +8,7 @@ BUILD_TYPE := mcs
 
 # shaders build options
 SHADERS_FOLDER := Raccoon/Graphics/Shaders/Stock/HLSL
-SHADERS_TARGET_FOLDER := Raccoon/
+SHADERS_TARGET_FOLDER := Raccoon
 
 ifeq ($(BUILD_TYPE), mcs)
 

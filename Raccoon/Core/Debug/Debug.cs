@@ -247,7 +247,10 @@ namespace Raccoon {
         [Conditional("DEBUG")]
         public static void DrawString(Camera camera, string message, Color? color = null) {
             DrawString(camera, Game.Instance.MainRenderer.ConvertScreenToWorld(Instance._screenMessagePosition), message, color);
-            Instance._screenMessagePosition -= new Vector2(0, Game.Instance.StdFont.LineSpacing + MessagesSpacing);
+            Instance._screenMessagePosition -= new Vector2(
+                0,
+                Game.Instance.StdFont.LineHeight + MessagesSpacing
+            );
         }
 
         [Conditional("DEBUG")]

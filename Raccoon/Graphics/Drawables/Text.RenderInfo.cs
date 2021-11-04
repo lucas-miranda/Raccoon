@@ -14,6 +14,7 @@ namespace Raccoon.Graphics {
             #region Constructors
 
             public RenderData(int glyphCount) {
+                //NominalSize = nominalSize;
                 _glyphs = new Glyph[glyphCount];
             }
 
@@ -21,16 +22,39 @@ namespace Raccoon.Graphics {
 
             #region Public Properties
 
+            //public float FontSize { get { return NominalSize * Scale; } }
+            //public float NominalSize { get; }
             public int GlyphCount { get; private set; }
             public int Capacity { get { return _glyphs.Length; } }
+            //public float Scale { get; set; } = 1.0f;
 
             public Glyph this[int index] {
                 get {
+                    if (index < 0 || index >= GlyphCount) {
+                        if (GlyphCount == 0) {
+                            throw new System.ArgumentOutOfRangeException(
+                                nameof(index),
+                                $"Glyphs is empty"
+                            );
+                        }
+
+                        throw new System.ArgumentOutOfRangeException(
+                            nameof(index),
+                            $"Supplied index {index} is out of valid range [0, {GlyphCount - 1}]"
+                        );
+                    }
+
                     return _glyphs[index];
                 }
 
                 set {
                     _glyphs[index] = value;
+                }
+            }
+
+            public Glyph LastGlyph {
+                get {
+                    return this[GlyphCount - 1];
                 }
             }
 
@@ -42,12 +66,24 @@ namespace Raccoon.Graphics {
                 return _glyphs[index];
             }
 
-            public Glyph AppendGlyph(Vector2 position, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
+            public Glyph AppendGlyph(
+                double x,
+                double y,
+                Rectangle sourceArea,
+                char representation,
+                Fonts.FontFaceRenderMap.Glyph data
+            ) {
                 if (GlyphCount == _glyphs.Length) {
                     throw new System.InvalidOperationException($"Trying to append a glyph where is no glyph slot left.");
                 }
 
-                Glyph glyph = new Glyph(position, sourceArea, representation, data);
+                if (data == null) {
+                    throw new System.ArgumentNullException(
+                        nameof(data), $"Missing '{nameof(Fonts.FontFaceRenderMap.Glyph)}'"
+                    );
+                }
+
+                Glyph glyph = new Glyph(x, y, sourceArea, representation, data);
                 _glyphs[GlyphCount] = glyph;
                 GlyphCount++;
 
@@ -80,27 +116,31 @@ namespace Raccoon.Graphics {
             #region Glyph Struct
 
             public class Glyph {
-                public Glyph(Vector2 position,  Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
-                    OriginalPosition = Position = position;
+                public Glyph(double x, double y, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
+                    OriginalX = X = x;
+                    OriginalY = Y = y;
                     SourceArea = sourceArea;
                     Representation = representation;
                     Data = data;
                 }
 
-                public Vector2 OriginalPosition { get; }
-                public Vector2 Position { get; set; }
+                public double X { get; set; }
+                public double Y { get; set; }
+                public double OriginalX { get; }
+                public double OriginalY { get; }
                 public Rectangle SourceArea { get; set; }
                 public char Representation { get; set; }
                 public Fonts.FontFaceRenderMap.Glyph Data { get; set; }
 
                 public Glyph Clone() {
-                    return new Glyph(OriginalPosition, SourceArea, Representation, Data) {
-                        Position = Position
+                    return new Glyph(OriginalX, OriginalY, SourceArea, Representation, Data) {
+                        X = X,
+                        Y = Y,
                     };
                 }
 
                 public override string ToString() {
-                    return $"Position: {Position}; SourceArea: {SourceArea}; Representation: {Representation}; Has Data? {(Data != null).ToPrettyString()}";
+                    return $"X: {X}, Y: {Y}; SourceArea: {SourceArea}; Representation: {Representation}; Has Data? {(Data != null).ToPrettyString()}";
                 }
             }
 

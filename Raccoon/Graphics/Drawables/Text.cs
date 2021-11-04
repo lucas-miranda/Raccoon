@@ -6,7 +6,7 @@ namespace Raccoon.Graphics {
 
         private Font _font;
         private string _value;
-        private Size _unscaledSize;
+        private double _emWidth, _emHeight;
         private int _startIndex, _endIndex = -1;
 
         #endregion Private Members
@@ -14,8 +14,8 @@ namespace Raccoon.Graphics {
         #region Constructors
 
         public Text(string value, Font font, Color color) {
-            if (font == null || font.Face == null) {
-                throw new System.ArgumentException("Invalid Font value.");
+            if (font == null || font.RenderMap == null) {
+                throw new System.ArgumentException("Invalid Font.");
             }
 
             Font = font;
@@ -39,6 +39,19 @@ namespace Raccoon.Graphics {
 
         #region Public Properties
 
+        public override Size Size {
+            get {
+                return new Size(
+                    (float) (Font.ConvertEmToPx(_emWidth) * Scale.X),
+                    (float) (Font.ConvertEmToPx(_emHeight) * Scale.Y)
+                );
+            }
+
+            protected set {
+                base.Size = value;
+            }
+        }
+
         public int StartIndex {
             get {
                 return _startIndex;
@@ -60,25 +73,20 @@ namespace Raccoon.Graphics {
                 _startIndex = value;
 
                 int endRealIndex = _endIndex < 0 ? (Data.GlyphCount + _endIndex) : _endIndex;
-                float w = 0f;
+                double w = 0.0;
 
                 for (int i = _startIndex; i <= endRealIndex; i++) {
                     RenderData.Glyph g = Data[i];
 
-                    if (g.Position.X + g.Data.Width > w) {
-                        w = g.Position.X + g.Data.Width;
+                    if (g.X + g.Data.Width > w) {
+                        w = g.X + g.Data.Width;
                     }
                 }
 
                 RenderData.Glyph lastGlyph = Data[endRealIndex];
 
-                _unscaledSize = new Size(
-                    w,
-                    (lastGlyph.OriginalPosition.Y + lastGlyph.Data.Height)
-                        - Data[_startIndex].OriginalPosition.Y
-                );
-
-                Size = _unscaledSize * Scale;
+                _emWidth = w;
+                _emHeight = (lastGlyph.OriginalY + lastGlyph.Data.Height) - Data[_startIndex].OriginalY;
             }
         }
 
@@ -104,27 +112,27 @@ namespace Raccoon.Graphics {
 
                 // recalculate content size
                 int endRealIndex = _endIndex < 0 ? (Data.GlyphCount + _endIndex) : _endIndex;
-                float minX = float.PositiveInfinity,
-                      maxX = float.NegativeInfinity,
-                      minY = float.PositiveInfinity,
-                      maxY = float.NegativeInfinity;
+                double minX = double.PositiveInfinity,
+                       maxX = double.NegativeInfinity,
+                       minY = double.PositiveInfinity,
+                       maxY = double.NegativeInfinity;
 
                 for (int i = StartIndex; i <= endRealIndex; i++) {
                     RenderData.Glyph g = Data[i];
 
-                    if (g.Position.X < minX) {
-                        minX = g.Position.X;
+                    if (g.X < minX) {
+                        minX = g.X;
                     }
 
-                    if (g.Position.X + g.Data.Width > maxX) {
-                        maxX = g.Position.X + g.Data.Width;
+                    if (g.X + g.Data.Width > maxX) {
+                        maxX = g.X + g.Data.Width;
                     }
 
                     // glyph size doesn't includes line size aspects
                     // to calculate correctly (at horizontal lines), we need to manually calculate line size
                     // using glypg's vertical values
-                    int line = (int) Math.Floor(g.Position.Y / (Font.LineHeight + Font.SpaceBetweenLines));
-                    float lineY = line * (Font.LineHeight + Font.SpaceBetweenLines);
+                    int line = (int) Math.Floor(g.Y / (Font.LineHeight + Font.SpaceBetweenLines));
+                    double lineY = line * (Font.LineHeight + Font.SpaceBetweenLines);
 
                     if (lineY < minY) {
                         minY = lineY;
@@ -135,8 +143,8 @@ namespace Raccoon.Graphics {
                     }
                 }
 
-                _unscaledSize = new Size(maxX - minX, maxY - minY);
-                Size = _unscaledSize * Scale;
+                _emWidth = maxX - minX;
+                _emHeight = maxY - minY;
             }
         }
 
@@ -155,8 +163,7 @@ namespace Raccoon.Graphics {
                 _font = value;
 
                 if (!string.IsNullOrEmpty(_value)) {
-                    Data = _font.RenderMap.PrepareText(_value, out _unscaledSize);
-                    Size = _unscaledSize * Scale;
+                    Data = _font.RenderMap.PrepareTextRenderData(_value, out _emWidth, out _emHeight);
                 }
             }
         }
@@ -172,36 +179,20 @@ namespace Raccoon.Graphics {
                 }
 
                 _value = value;
-                Data = _font.RenderMap.PrepareText(_value, out _unscaledSize);
-                Size = _unscaledSize * Scale;
-            }
-        }
-
-        public new Vector2 Scale {
-            get {
-                return base.Scale;
-            }
-
-            set {
-                base.Scale = value;
-                Size = _unscaledSize * value;
-            }
-        }
-
-        public new float ScaleXY {
-            get {
-                return base.ScaleXY;
-            }
-
-            set {
-                base.ScaleXY = value;
-                Size = _unscaledSize * value;
+                Data = _font.RenderMap.PrepareTextRenderData(_value, out _emWidth, out _emHeight);
             }
         }
 
         public Size UnscaledSize {
             get {
-                return _unscaledSize;
+                if (_font == null) {
+                    return Size.Empty;
+                }
+
+                return new Size(
+                    (float) Font.ConvertEmToPx(_emWidth),
+                    (float) Font.ConvertEmToPx(_emHeight)
+                );
             }
         }
 
@@ -226,20 +217,24 @@ namespace Raccoon.Graphics {
         #region Protected Methods
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
+            if (Font == null || Data == null) {
+                return;
+            }
+
             Renderer.DrawString(
                 Font,
                 Data,
                 StartIndex,
                 EndIndex < 0 ? (Data.GlyphCount + EndIndex + 1) : (EndIndex - StartIndex + 1),
-                new Rectangle(position, _unscaledSize),
+                new Rectangle(position, Size),
                 rotation,
                 scale,
                 flip,
                 color * Opacity,
                 origin,
                 scroll,
-                shader,
-                shaderParameters,
+                shader ?? Font.Shader,
+                shaderParameters ?? Font.ShaderParameters,
                 layerDepth
             );
         }

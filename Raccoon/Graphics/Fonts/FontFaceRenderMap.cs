@@ -1,247 +1,272 @@
-﻿using System.Collections.Generic;
+﻿#define TIGHT_PACK_FACE_RENDER_MAP
+
+using SharpFont;
 
 using Raccoon.Graphics;
 using Raccoon.Util;
 
 namespace Raccoon.Fonts {
-    public class FontFaceRenderMap : System.IDisposable {
+    public class FontFaceRenderMap : FontRenderMap {
+        public enum SizeStrategyKind {
+            Regenerate = 0,
+            Rescale
+        }
+
+        #region Private Members
+
+        private static Library LibraryInstance;
+
+        #endregion
+
         #region Constructors
 
-        public FontFaceRenderMap(
-            SharpFont.Face face,
-            Size glyphSlotSize,
-            ushort nominalWidth,
-            ushort nominalHeight,
-            float lineSpacing,
-            float lineAscent,
-            float lineDescent
-        ) {
+        public FontFaceRenderMap(SharpFont.Face face, float size) {
+            if (face == null) {
+                throw new System.ArgumentNullException(nameof(face));
+            }
+
             Face = face;
-            GlyphSlotSize = glyphSlotSize;
-            NominalWidth = nominalWidth;
-            NominalHeight = nominalHeight;
-            LineSpacing = lineSpacing;
-            LineAscent = lineAscent;
-            LineDescent = lineDescent;
+            Face.SetPixelSizes((uint) Util.Math.Round(size), (uint) Util.Math.Round(size));
+
+            NominalWidth = Face.Size.Metrics.NominalWidth;
+            NominalHeight = Face.Size.Metrics.NominalHeight;
+
+            Load();
+        }
+
+        public FontFaceRenderMap(string filename, float size)
+            : this(
+                new SharpFont.Face(Library, filename),
+                size
+            )
+        {
+            Filename = filename;
+        }
+
+        public FontFaceRenderMap(byte[] file, int faceIndex, float size)
+            : this(
+                new SharpFont.Face(Library, file, faceIndex),
+                size
+            )
+        {
         }
 
         #endregion Constructors
 
         #region Public Properties
 
+        public static Library Library {
+            get {
+                if (LibraryInstance == null) {
+                    LibraryInstance = new Library();
+                }
+
+                return LibraryInstance;
+            }
+        }
+
+        public string Filename { get; private set; }
         public SharpFont.Face Face { get; private set; }
-        public ushort NominalWidth { get; }
-        public ushort NominalHeight { get; }
-        public float LineSpacing { get; }
-        public float LineAscent { get; }
-        public float LineDescent { get; }
-        public Texture Texture { get; set; }
-        public Size GlyphSlotSize { get; }
-        public Dictionary<uint, Glyph> Glyphs { get; private set; } = new Dictionary<uint, Glyph>();
-        public bool IsDisposed { get; private set; }
-        public char DefaultErrorCharacter { get; set; } = '?';
+        public override bool HasKerning { get { return Face.HasKerning; } }
+        public SizeStrategyKind SizeStrategy { get; set; }
+        public override Shader Shader { get { return null; } }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        public Glyph RegisterGlyph(
-            uint charCode,
-            Rectangle sourceArea,
-            float horizontalBearingX,
-            float horizontalBearingY,
-            float width,
-            float height,
-            Vector2 advance
-        ) {
-            Glyph glyph = new Glyph(
-                sourceArea,
-                horizontalBearingX,
-                horizontalBearingY,
-                width,
-                height,
-                advance
-            );
+        public override void Setup(float size) {
+            base.Setup(size);
 
-            Glyphs.Add(charCode, glyph);
-            return glyph;
+            switch (SizeStrategy) {
+                case SizeStrategyKind.Regenerate:
+                    Face.SetPixelSizes((uint) Util.Math.Round(size), (uint) Util.Math.Round(size));
+
+                    NominalWidth = Face.Size.Metrics.NominalWidth;
+                    NominalHeight = Face.Size.Metrics.NominalHeight;
+
+                    Load();
+                    break;
+
+                case SizeStrategyKind.Rescale:
+                    break;
+
+                default:
+                    throw new System.NotImplementedException($"Size strategy '{SizeStrategy}' isn't implemented.");
+            }
         }
 
-        public Text.RenderData PrepareText(string text, out Size textSize) {
-            int extraSpace = text.Count("\t") * Math.Max(0, FontService.TabulationWhitespacesSize - 1);
-            Text.RenderData textRenderData = new Text.RenderData(text.Length + extraSpace);
-
-            textSize = Size.Empty;
-
-            float overrun = 0,
-                  kern;
-
-            Vector2 penPosition = new Vector2(0f, LineAscent);
-            bool isEndOfLine = false;
-
-            int renderTimes;
-
-            // TODO: add support to unicode characters?
-            for (int i = 0; i < text.Length; i++) {
-                char charCode = text[i];
-
-                if (charCode == '\n') { // new line
-                    penPosition.Y += LineSpacing;
-                    continue;
-                } else if (charCode == '\r') { // carriage return
-                    // do nothing, just ignore
-                    // TODO: maybe add an option to detect when carriage return handling is needed (MAC OS 9 or older, maybe?)
-                    continue;
-                } else if (i + 1 == text.Length
-                    || text[i + 1] == '\n'
-                    || (i + 2 < text.Length && text[i + 1] == '\r' && text[i + 2] == '\n')
-                ) {
-                    isEndOfLine = true;
-                }
-
-                if (charCode == '\t') { // tabulation
-                    // will render a tabulation representation using whitespaces
-                    charCode = ' ';
-                    renderTimes = FontService.TabulationWhitespacesSize;
-                } else {
-                    renderTimes = 1;
-                }
-
-                if (!Glyphs.TryGetValue(charCode, out Glyph glyph)) {
-                    // glyph not found, just render default symbol
-                    glyph = Glyphs[DefaultErrorCharacter];
-                }
-
-                for (int j = 0; j < renderTimes; j++) {
-                    #region Underrun
-
-                    if (penPosition.X == 0f) {
-                        penPosition.X += -glyph.HorizontalBearingX;
-                    }
-
-                    #endregion Underrun
-
-                    textRenderData.AppendGlyph(
-                        penPosition + new Vector2(glyph.HorizontalBearingX, -glyph.HorizontalBearingY),
-                        glyph.SourceArea,
-                        charCode,
-                        glyph
-                    );
-
-                    #region Overrun
-
-                    if (glyph.HorizontalBearingX + glyph.SourceArea.Width > 0 || glyph.Advance.X > 0) {
-                        overrun -= Math.Max(glyph.HorizontalBearingX + glyph.SourceArea.Width, glyph.Advance.X);
-
-                        if (overrun <= 0) {
-                            overrun = 0;
-                        }
-                    }
-
-                    overrun += glyph.HorizontalBearingX == 0 && glyph.SourceArea.Width == 0 ? 0 : glyph.HorizontalBearingX + glyph.SourceArea.Width - glyph.Advance.X;
-
-                    if (isEndOfLine && j == renderTimes - 1) {
-                        penPosition.X += overrun;
-                    }
-
-                    #endregion Overrun
-
-                    penPosition += glyph.Advance;
-
-                    #region Kerning with Next Repeated Character
-
-                    // Adjust for kerning between this character and the next (if repeatTimes > 1)
-                    if (Face.HasKerning && !isEndOfLine && renderTimes > 1) {
-                        uint glyphIndex = Face.GetCharIndex(charCode);
-                        kern = Face.GetKerning(glyphIndex, glyphIndex, SharpFont.KerningMode.Default).X.ToSingle();
-
-                        if (Math.Abs(kern) > glyph.Advance.X * 5f) {
-                            kern = 0;
-                        }
-
-                        penPosition.X += kern;
-                    }
-
-                    #endregion Kerning with Next Repeated Character
-                }
-
-                #region Kerning with Next Character
-
-                // Adjust for kerning between this character and the next.
-                if (Face.HasKerning && !isEndOfLine) {
-                    char nextCharCode = text[i + 1];
-                    kern = Face.GetKerning(Face.GetCharIndex(charCode), Face.GetCharIndex(nextCharCode), SharpFont.KerningMode.Default).X.ToSingle();
-
-                    if (Math.Abs(kern) > glyph.Advance.X * 5f) {
-                        kern = 0;
-                    }
-
-                    penPosition.X += kern;
-                }
-
-                #endregion Kerning with Next Character
-
-                if (isEndOfLine) {
-                    isEndOfLine = false;
-
-                    if (penPosition.X > textSize.Width) {
-                        textSize.Width = penPosition.X;
-                    }
-
-                    overrun = penPosition.X = 0;
-                }
+        public override void Reload() {
+            if (Filename != null) {
+                Face?.Dispose();
+                Face = new SharpFont.Face(Library, Filename);
             }
 
-            textSize.Height = penPosition.Y + Math.Abs(LineDescent);
-
-            return textRenderData;
+            Face.SetCharSize(NominalWidth, NominalHeight, 96, 96);
+            Load();
         }
 
-        public void Dispose() {
-            if (IsDisposed) {
-                return;
-            }
+        public override IShaderParameters CreateShaderParameters() {
+            return null;
+        }
 
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override double Kerning(uint leftCharCode, uint rightCharCode) {
+            uint leftGlyphIndex = Face.GetCharIndex(leftCharCode),
+                 rightGlyphIndex = Face.GetCharIndex(rightCharCode);
+
+            return Face.GetKerning(leftGlyphIndex, rightGlyphIndex, SharpFont.KerningMode.Default).X.ToDouble();
+        }
+
+        protected override void Disposed() {
             if (Texture != null && !Texture.IsDisposed) {
                 Texture.Dispose();
                 Texture = null;
             }
 
-            Face = null; // Font owns SharpFont.Face
-            Glyphs = null;
-
-            IsDisposed = true;
+            if (Face != null) {
+                Face.Dispose();
+                Face = null; // Font owns SharpFont.Face
+            }
         }
 
-        #endregion Public Methods
+        #endregion Protected Methods
 
-        #region Class Glyph
+        #region Private Methods
 
-        public class Glyph {
-            public Glyph(
-                Rectangle sourceArea,
-                float horizontalBearingX,
-                float horizontalBearingY,
-                float width,
-                float height,
-                Vector2 advance
-            ) {
-                SourceArea = sourceArea;
-                HorizontalBearingX = horizontalBearingX;
-                HorizontalBearingY = horizontalBearingY;
-                Width = width;
-                Height = height;
-                Advance = advance;
+        private void Load() {
+            //SizeMetrics fontSizeMetrics = Face.Size.Metrics;
+            //Size glyphSlotSize = new Size(fontSizeMetrics.NominalWidth, fontSizeMetrics.Height.ToSingle());
+
+            /*
+            FontFaceRenderMap renderMap = new FontFaceRenderMap(
+                face,
+                glyphSlotSize,
+                fontSizeMetrics.NominalWidth,
+                fontSizeMetrics.NominalHeight,
+                fontSizeMetrics.Height.ToSingle(),
+                fontSizeMetrics.Ascender.ToSingle(),
+                fontSizeMetrics.Descender.ToSingle()
+            );
+            */
+
+            // adjust signs to respect Raccoon y-origin direction
+            LineHeight = ConvertPxToEm(Face.Size.Metrics.Height.ToSingle(), Size);
+            Ascender = -ConvertPxToEm(Face.Size.Metrics.Ascender.ToSingle(), Size);
+            Descender = Math.Abs(ConvertPxToEm(Face.Size.Metrics.Descender.ToSingle(), Size));
+            UnderlinePosition = Math.Abs(Face.UnderlinePosition / (float) Face.UnitsPerEM);
+            UnderlineThickness = Face.UnderlineThickness / (float) Face.UnitsPerEM;
+
+            // prepare texture
+            int sideSize = (int) (Util.Math.Ceiling(System.Math.Sqrt(Face.GlyphCount)) * GlyphSlotSize.Width),
+                textureSideSize = Util.Math.CeilingPowerOfTwo(sideSize);
+
+            if (Texture == null) {
+                Texture = new Graphics.Texture(textureSideSize, textureSideSize);
+            } else if (Texture.Width != textureSideSize || Texture.Height != textureSideSize) {
+                Texture.Dispose();
+                Texture = new Graphics.Texture(textureSideSize, textureSideSize);
             }
 
-            public Rectangle SourceArea { get; }
-            public float HorizontalBearingX { get; }
-            public float HorizontalBearingY { get; }
-            public float Width { get; }
-            public float Height { get; }
-            public Vector2 Advance { get; }
+            // prepare texture data copying glyphs bitmaps
+            Graphics.Color[] textureData = new Graphics.Color[textureSideSize * textureSideSize];
+
+            Vector2 glyphPosition = Vector2.Zero;
+
+            uint charCode = Face.GetFirstChar(out uint glyphIndex);
+
+            while (glyphIndex != 0) {
+                Face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                Face.Glyph.RenderGlyph(RenderMode.Normal);
+
+                FTBitmap ftBitmap = Face.Glyph.Bitmap;
+
+                if (ftBitmap != null && ftBitmap.Width > 0 && ftBitmap.Rows > 0) {
+                    if (ftBitmap.PixelMode != PixelMode.Gray) {
+                        throw new System.NotImplementedException("Supported PixelMode formats are: Gray");
+                    }
+
+                    // tests if glyph bitmap actually fits on current row
+#if TIGHT_PACK_FACE_RENDER_MAP
+                    if (glyphPosition.X + ftBitmap.Width >= textureSideSize) {
+                        glyphPosition.Y += GlyphSlotSize.Height;
+                        glyphPosition.X = 0;
+                    }
+#else
+                    if (glyphPosition.X + GlyphSlotSize.Width >= textureSideSize) {
+                        glyphPosition.Y += GlyphSlotSize.Height;
+                        glyphPosition.X = 0;
+                    }
+#endif
+
+                    CopyBitmapToDestinationArea(textureData, textureSideSize, glyphPosition, ftBitmap);
+
+                    RegisterGlyph(
+                        charCode,
+                        new Rectangle(
+                            glyphPosition,
+                            new Size(ftBitmap.Width, ftBitmap.Rows)
+                        ),
+                        -ConvertPxToEm(Face.Glyph.Metrics.HorizontalBearingX.ToDouble(), Size),
+                        -ConvertPxToEm(Face.Glyph.Metrics.HorizontalBearingY.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Metrics.Width.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Metrics.Height.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Advance.X.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Advance.Y.ToDouble(), Size)
+                    );
+
+                    // advance to next glyph area
+#if TIGHT_PACK_FACE_RENDER_MAP
+                    glyphPosition.X += ftBitmap.Width;
+#else
+                    glyphPosition.X += GlyphSlotSize.Width;
+#endif
+                } else {
+                    RegisterGlyph(
+                        charCode,
+                        Rectangle.Empty,
+                        -ConvertPxToEm(Face.Glyph.Metrics.HorizontalBearingX.ToDouble(), Size),
+                        -ConvertPxToEm(Face.Glyph.Metrics.HorizontalBearingY.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Metrics.Width.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Metrics.Height.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Advance.X.ToDouble(), Size),
+                        ConvertPxToEm(Face.Glyph.Advance.Y.ToDouble(), Size)
+                    );
+                }
+
+                charCode = Face.GetNextChar(charCode, out glyphIndex);
+            }
+
+            // render glyphs
+            Texture.SetData(textureData);
         }
 
-        #endregion Class Glyph
+        private void CopyBitmapToDestinationArea(
+            Graphics.Color[] data,
+            int dataRowSize,
+            Vector2 destinationTopleft,
+            FTBitmap ftBitmap
+        ) {
+            byte[] buffer = ftBitmap.BufferData;
+            int dataOffset,
+                bufferOffset,
+                pitch = Util.Math.Abs(ftBitmap.Pitch);
+
+            for (int row = 0; row < ftBitmap.Rows; row++) {
+                dataOffset = (int) ((destinationTopleft.Y + row) * dataRowSize + destinationTopleft.X);
+                bufferOffset = row * pitch;
+
+                for (int column = 0; column < ftBitmap.Width; column++, dataOffset++) {
+                    byte px = buffer[bufferOffset + column];
+
+                    data[dataOffset] = new Graphics.Color(px, px, px, px);
+                }
+            }
+        }
+
+        #endregion Private Methods
     }
 }
