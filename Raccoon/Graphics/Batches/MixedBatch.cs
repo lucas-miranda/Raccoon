@@ -239,7 +239,9 @@ namespace Raccoon.Graphics {
 
             float fontSizeRatio = font.SizeRatio;
 
-            if (shaderParameters is IFontSizeShaderParameter fontSizeShaderParameter) {
+            if (shaderParameters is TextShaderParameters textShaderParameter) {
+                textShaderParameter.SafeSetFontScale(scale.X * textShaderParameter.FontResolutionScale);
+            } else if (shaderParameters is IFontSizeShaderParameter fontSizeShaderParameter) {
                 fontSizeShaderParameter.SafeSetFontScale(scale.X);
             }
 
@@ -250,12 +252,15 @@ namespace Raccoon.Graphics {
                     SpriteBatchItem batchItem = GetBatchItem<SpriteBatchItem>(needsTransparency);
                     batchItem.Set(
                         font.RenderMap.Texture,
-                        destinationRectangle.Position
-                            + new Vector2(
-                                glyph.X * scale.X * font.Size,
-                                glyph.Y * scale.Y * font.Size
-                            )
-                            - origin,
+                        new Rectangle(
+                            destinationRectangle.Position
+                                + new Vector2(
+                                    glyph.X * scale.X * font.Size,
+                                    glyph.Y * scale.Y * font.Size
+                                )
+                                - origin,
+                            glyph.SourceArea.Size
+                        ),
                         glyph.SourceArea,
                         rotation,
                         scale * fontSizeRatio,

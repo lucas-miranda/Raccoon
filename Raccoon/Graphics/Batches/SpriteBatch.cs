@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using Raccoon.Fonts;
+
 namespace Raccoon.Graphics {
     public class SpriteBatch {
         #region Public Members
@@ -356,7 +358,7 @@ namespace Raccoon.Graphics {
             }
 
             bool applyRotation = false,
-                 needsTransparency = AutoHandleAlphaBlendedSprites && color.A < byte.MaxValue;
+                 needsTransparency = AutoHandleAlphaBlendedSprites;
 
             float cos = 0f,
                   sin = 0f;
@@ -367,10 +369,20 @@ namespace Raccoon.Graphics {
                 sin = Util.Math.Sin(rotation);
             }
 
-            Size textSize = destinationRectangle.Size;
+            Size textSize = destinationRectangle.Size * scale;
+            float fontSizeRatio = font.SizeRatio;
+
+            if (shaderParameters is TextShaderParameters textShaderParameter) {
+                textShaderParameter.SafeSetFontScale(scale.X * textShaderParameter.FontResolutionScale);
+            } else if (shaderParameters is IFontSizeShaderParameter fontSizeShaderParameter) {
+                fontSizeShaderParameter.SafeSetFontScale(scale.X);
+            }
 
             foreach (Text.RenderData.Glyph glyph in glyphs) {
-                Vector2 pos = new Vector2(glyph.X, glyph.Y);
+                Vector2 pos = new Vector2(
+                    glyph.X * scale.X * font.Size,
+                    glyph.Y * scale.Y * font.Size
+                );
 
                 if ((flip & ImageFlip.Horizontal) != ImageFlip.None) {
                     pos.X = textSize.Width - pos.X - glyph.SourceArea.Width;
@@ -380,7 +392,7 @@ namespace Raccoon.Graphics {
                     pos.Y = textSize.Height - pos.Y - glyph.SourceArea.Height;
                 }
 
-                pos = pos * scale - origin;
+                pos -= origin;
 
                 if (applyRotation) {
                     pos = new Vector2(pos.X * cos - pos.Y * sin, pos.X * sin + pos.Y * cos);
@@ -392,7 +404,7 @@ namespace Raccoon.Graphics {
                     destinationRectangle.Position + pos,
                     glyph.SourceArea,
                     rotation,
-                    scale,
+                    scale * fontSizeRatio,
                     flip,
                     color,
                     Vector2.Zero,

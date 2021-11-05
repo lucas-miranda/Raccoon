@@ -4,9 +4,9 @@
 Texture2D Texture;
 sampler2D TextureSampler = sampler_state {
     Texture = <Texture>;
-    MipFilter = NONE;
-    MinFilter = Point;
-    MagFilter = Point;
+    MipFilter = Linear;
+    MinFilter = Linear;
+    MagFilter = Linear;
     AddressU = Clamp;
     AddressV = Clamp;
 };
@@ -115,9 +115,9 @@ PSOut_ColorDepth PSVertexColorTextureDepth(PSIn_PosColorTextureDepth input) {
     float screenPxDistance = ScreenPixelRange * (median(px.r, px.g, px.b) - 0.5);
     float alpha = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 
-    psOut.Color = input.Diffuse * alpha;
+    psOut.Color = float4(input.Diffuse.rgb, 1.0f) * input.Diffuse.a * alpha;
 
-    if (psOut.Color.a < .01f) {
+    if (psOut.Color.a < .05f) {
         discard;
     }
 

@@ -197,6 +197,13 @@ namespace Raccoon.Graphics {
             }
         }
 
+        /// <summary>
+        /// A special kind of scale which only applies to font resolution size itself.
+        ///
+        /// Some methods, such as MTSDF, can use a dynamic font scaling and any kind of view scaling which works as a transformation matrix, which we can't retrieve it's numeric value (e.g zoom) to properly calculate font size, should be applied here. Using it don't mess anything related to position or vertices scale, only font resolution.
+        /// </summary>
+        public float FontResolutionScale { get; set; } = 1.0f;
+
         #endregion Public Properties
 
         #region Public Methods
@@ -225,12 +232,16 @@ namespace Raccoon.Graphics {
             if (shaderParameters == ShaderParameters) {
                 if (ShaderParameters == null) {
                     if (Font.ShaderParameters != null) {
-                        shaderParameters = ShaderParameters = new TextShaderParameters(Font);
+                        shaderParameters = ShaderParameters = new TextShaderParameters(Font) {
+                            FontResolutionScale = FontResolutionScale,
+                        };
                     }
-                } else if (ShaderParameters is TextShaderParameters textShaderParameters
-                    && textShaderParameters.Font != Font
-                ) {
-                    textShaderParameters.Font = Font;
+                } else if (ShaderParameters is TextShaderParameters textShaderParameters) {
+                    if (textShaderParameters.Font != Font) {
+                        textShaderParameters.Font = Font;
+                    }
+
+                    textShaderParameters.FontResolutionScale = FontResolutionScale;
                 }
             }
 
