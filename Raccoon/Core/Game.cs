@@ -764,7 +764,7 @@ Scene:
 
         private void InternalLoadContent() {
             // default content
-            StdFont = new Font(Resource._04b03, 0, 12f);
+            StdFont = new Font(Resource._04b03, 0, 16f);
             BasicShader = new BasicShader(Resource.BasicShader) {
                 DepthWriteEnabled = true
             };
