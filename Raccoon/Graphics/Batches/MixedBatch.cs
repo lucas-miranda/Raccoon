@@ -92,6 +92,7 @@ namespace Raccoon.Graphics {
         public bool AutoHandleAlphaBlendedSprites { get; private set; }
         public bool AllowIBasicShaderEffectParameterClone { get; set; } = true;
         public BatchMode BatchMode { get; private set; }
+        public BatchMode AlphaBlendBatchMode { get; private set; } = BatchMode.DepthSortDescending;
         public BlendState BlendState { get; private set; }
         public SamplerState SamplerState { get; private set; }
         public DepthStencilState DepthStencilState { get; private set; }
@@ -987,10 +988,15 @@ namespace Raccoon.Graphics {
                 basicShader.TextureEnabled = true;
             }
 
-            Render(ref _batchItems, _nextItemIndex, DepthStencilState);
+            Render(ref _batchItems, _nextItemIndex, DepthStencilState, BatchMode);
 
             if (AutoHandleAlphaBlendedSprites && includeAlphaBlendedSprites) {
-                Render(ref _transparencyBatchItems, _nextItemWithTransparencyIndex, DepthReadState);
+                Render(
+                    ref _transparencyBatchItems,
+                    _nextItemWithTransparencyIndex,
+                    DepthReadState,
+                    AlphaBlendBatchMode
+                );
 
 #if DEBUG
 
@@ -1074,13 +1080,13 @@ namespace Raccoon.Graphics {
             //InitializeTransparencyItemsBuffers(previousTransparencyItemsBatchSize);
         }
 
-        private void Render(ref IBatchItem[] batchItems, int itemsCount, DepthStencilState depthStencilState) {
+        private void Render(ref IBatchItem[] batchItems, int itemsCount, DepthStencilState depthStencilState, BatchMode batchMode) {
             if (itemsCount == 0) {
                 return;
             }
 
             // pre-process batches, some modes demands it
-            switch (BatchMode) {
+            switch (batchMode) {
                 case BatchMode.DepthSortAscending:
                     System.Array.Sort(batchItems, 0, itemsCount, new BatchModeComparer.DepthAscending());
                     break;
@@ -1102,7 +1108,7 @@ namespace Raccoon.Graphics {
                     break;
 
                 default:
-                    throw new System.NotImplementedException($"SpriteBatch doesn't implements BatchMode '{BatchMode}'.");
+                    throw new System.NotImplementedException($"SpriteBatch doesn't implements BatchMode '{batchMode}'.");
             }
 
             IBatchItem batchItem = batchItems[0];
