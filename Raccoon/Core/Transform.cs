@@ -29,8 +29,8 @@ namespace Raccoon {
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public Vector2 Origin { get; set; }
-        public Vector2 Scale { get; set; } = Vector2.One;
-        public float Rotation { get; set; }
+        public Vector2 LocalScale { get; set; } = Vector2.One;
+        public float LocalRotation { get; set; }
         public int ChildCount { get { return _children.Count; } }
         public bool IsDetached { get; private set; }
 
@@ -62,6 +62,26 @@ namespace Raccoon {
 
             set {
                 LocalPosition = _parent == null ? value : value - _parent.Position;
+            }
+        }
+
+        public Vector2 Scale {
+            get {
+                return _parent == null ? LocalScale : LocalScale * _parent.Scale;
+            }
+
+            set {
+                LocalScale = _parent == null ? value : value / _parent.Scale;
+            }
+        }
+
+        public float Rotation {
+            get {
+                return _parent == null ? LocalRotation : LocalRotation + _parent.Rotation;
+            }
+
+            set {
+                LocalRotation = _parent == null ? value : value - _parent.Rotation;
             }
         }
 
@@ -249,7 +269,7 @@ namespace Raccoon {
         }
 
         public override string ToString() {
-            return $"Pos: {Position}, LocPos: {LocalPosition}, Rot: {Rotation}  Origin: {Origin}  Parent? {_parent != null}  Childs: {_children.Count}";
+            return $"Pos: {Position} (l: {LocalPosition}), Scale: {Scale} (l: {LocalScale}), Rot: {Rotation} (l: {LocalRotation})  Origin: {Origin}  Parent? {_parent != null}  Childs: {_children.Count}";
         }
 
         public void LockChildren() {

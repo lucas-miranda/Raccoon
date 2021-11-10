@@ -428,15 +428,19 @@ namespace Raccoon {
         public virtual void Render() {
             Graphics.Lock();
 
+            float r = Transform.Rotation;
+            Vector2 p = Transform.Position,
+                    s = Transform.Scale;
+
             foreach (Graphic g in Graphics) {
                 if (!g.Visible) {
                     continue;
                 }
 
                 g.Render(
-                    position:   Transform.Position + g.Position * Transform.Scale,
-                    rotation:   Transform.Rotation + g.Rotation,
-                    scale:      Transform.Scale * g.Scale,
+                    position:   p + g.Position * s,
+                    rotation:   r + g.Rotation,
+                    scale:      s * g.Scale,
                     flip:       g.Flipped,
                     color:      g.Color,
                     scroll:     g.Scroll,
