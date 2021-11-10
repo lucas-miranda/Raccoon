@@ -132,15 +132,15 @@ namespace Raccoon.Graphics {
                     // glyph size doesn't includes line size aspects
                     // to calculate correctly (at horizontal lines), we need to manually calculate line size
                     // using glypg's vertical values
-                    int line = (int) Math.Floor(g.Y / (Font.LineHeight + Font.SpaceBetweenLines));
-                    double lineY = line * (Font.LineHeight + Font.SpaceBetweenLines);
+                    int line = (int) Math.Floor(g.Y / Font.RenderMap.LineHeight);
+                    double lineY = line * Font.RenderMap.LineHeight;
 
                     if (lineY < minY) {
                         minY = lineY;
                     }
 
                     if (lineY + Font.LineHeight > maxY) {
-                        maxY = lineY + Font.LineHeight;
+                        maxY = lineY + Font.RenderMap.LineHeight;
                     }
                 }
 
