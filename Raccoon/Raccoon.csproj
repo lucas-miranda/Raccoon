@@ -1,7 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\NUnit.3.12.0\build\NUnit.props" Condition="Exists('..\packages\NUnit.3.12.0\build\NUnit.props')" />
-  <Import Project="..\..\Grimoire-Editor\packages\NUnit.3.12.0\build\NUnit.props" Condition="Exists('..\..\Grimoire-Editor\packages\NUnit.3.12.0\build\NUnit.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
@@ -212,6 +210,7 @@
     <Compile Include="Graphics\Drawables\Graphic.cs" />
     <Compile Include="Graphics\Drawables\Grid.cs" />
     <Compile Include="Graphics\Drawables\Image.cs" />
+    <Compile Include="Graphics\Drawables\NineSlice.cs" />
     <Compile Include="Graphics\Drawables\PrimitiveGraphic.cs" />
     <Compile Include="Graphics\Drawables\Primitives\AnnulusPrimitive.cs" />
     <Compile Include="Graphics\Drawables\Primitives\CirclePrimitive.cs" />
@@ -242,6 +241,7 @@
     <Compile Include="Graphics\Fonts\FontTextureRenderMap.cs" />
     <Compile Include="Graphics\Fonts\Shaders\FontMTSDFShader.cs" />
     <Compile Include="Graphics\Fonts\Shaders\FontMTSDFShaderParameters.cs" />
+    <Compile Include="Graphics\Fonts\Shaders\IFontShaderParameter.cs" />
     <Compile Include="Graphics\Fonts\Shaders\IFontSizeShaderParameter.cs" />
     <Compile Include="Graphics\Fonts\Shaders\TextShaderParameters.cs" />
     <Compile Include="Graphics\Renderer.cs" />
