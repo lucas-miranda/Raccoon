@@ -6,7 +6,7 @@ namespace Raccoon.Graphics {
         #region Private Members
 
         private static readonly int[] FilledIndices = new int[] { 0, 1, 2,  2, 1, 3 },
-                                      HollowIndices = new int[] { 
+                                      HollowIndices = new int[] {
                                                           1, 3,
                                                           3, 2,
                                                           2, 0,
@@ -17,7 +17,7 @@ namespace Raccoon.Graphics {
         private int[] _indices;
         private VertexPositionColorTexture[] _vertexData;
 
-        private bool _filled = true, 
+        private bool _filled = true,
                      _needsSetup;
 
         #endregion Private Members
@@ -168,8 +168,8 @@ namespace Raccoon.Graphics {
             Texture = texture;
             SourceRegion = texture.Bounds;
 
-            if (clippingRegion.Left < 0 || clippingRegion.Top < 0 
-              || clippingRegion.Right > SourceRegion.Width 
+            if (clippingRegion.Left < 0 || clippingRegion.Top < 0
+              || clippingRegion.Right > SourceRegion.Width
               || clippingRegion.Bottom > SourceRegion.Height) {
                 throw new System.ArgumentOutOfRangeException("clippingRegion", clippingRegion, $"Value must be within source region bounds {SourceRegion}");
             }
@@ -185,15 +185,15 @@ namespace Raccoon.Graphics {
             NeedsReload = _needsSetup = Texture == null;
             Texture = texture;
 
-            if (sourceRegion.Left < Texture.Bounds.Left || sourceRegion.Top < Texture.Bounds.Top 
+            if (sourceRegion.Left < Texture.Bounds.Left || sourceRegion.Top < Texture.Bounds.Top
               || sourceRegion.Right > Texture.Bounds.Right || sourceRegion.Bottom > Texture.Bounds.Bottom) {
                 throw new System.ArgumentOutOfRangeException("sourceRegion", sourceRegion, "Value must be within texture bounds.");
             }
 
             SourceRegion = sourceRegion;
 
-            if (clippingRegion.Left < 0 || clippingRegion.Top < 0 
-              || clippingRegion.Right > SourceRegion.Width 
+            if (clippingRegion.Left < 0 || clippingRegion.Top < 0
+              || clippingRegion.Right > SourceRegion.Width
               || clippingRegion.Bottom > SourceRegion.Height) {
                 throw new System.ArgumentOutOfRangeException("clippingRegion", clippingRegion, $"Value must be within source region bounds {SourceRegion}");
             }

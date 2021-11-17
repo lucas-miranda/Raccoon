@@ -251,7 +251,8 @@ namespace Raccoon.Graphics {
 
         #region Protected Methods
 
-        protected virtual void Load() { }
+        protected virtual void Load() {
+        }
 
         protected virtual void BeforeDraw() {
         }

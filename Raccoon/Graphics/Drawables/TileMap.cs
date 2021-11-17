@@ -440,11 +440,11 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            if (_vertices == null 
-             || _vertices.Length == 0 
+            if (_vertices == null
+             || _vertices.Length == 0
              || _indices == null
              || _indices.Length == 0
-             || Columns * Rows == 0 
+             || Columns * Rows == 0
              || Texture == null
             ) {
                 return;

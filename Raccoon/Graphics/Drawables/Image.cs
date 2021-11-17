@@ -9,7 +9,8 @@
 
         #region Constructors
 
-        public Image() { }
+        public Image() {
+        }
 
         public Image(Texture texture) {
             Texture = texture;
