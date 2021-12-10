@@ -484,8 +484,38 @@ namespace Raccoon.Graphics {
                 // frame destination works like a guide to where render at local space
                 // 'frameDestination.position' should be interpreted as 'origin'
                 ref Rectangle frameDestination = ref CurrentTrack.CurrentFrameDestination;
+
                 if (frameDestination.Position != Vector2.Zero) {
-                    origin += frameDestination.Position;
+                    // frame region defines the crop rectangle at it's texture
+                    ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+
+                    if (FlippedHorizontally) {
+                        if (FlippedVertically) {
+                            float rightSideSpacing = frameDestination.Width - frameRegion.Width + frameDestination.X,
+                                  bottomSideSpacing = frameDestination.Height - frameRegion.Height + frameDestination.Y;
+
+                            origin = new Vector2(
+                                (frameRegion.Width - origin.X) - rightSideSpacing,
+                                (frameRegion.Height - origin.Y) - bottomSideSpacing
+                            );
+                        } else {
+                            float rightSideSpacing = frameDestination.Width - frameRegion.Width + frameDestination.X;
+
+                            origin = new Vector2(
+                                (frameRegion.Width - origin.X) - rightSideSpacing,
+                                origin.Y + frameDestination.Y
+                            );
+                        }
+                    } else if (FlippedVertically) {
+                        float bottomSideSpacing = frameDestination.Height - frameRegion.Height + frameDestination.Y;
+
+                        origin = new Vector2(
+                            origin.X + frameDestination.X,
+                            (frameRegion.Height - origin.Y) - bottomSideSpacing
+                        );
+                    } else {
+                        origin += frameDestination.Position;
+                    }
                 }
 
                 // maybe we should make a careful check before modifying DestinationRegion here
