@@ -148,6 +148,7 @@ namespace Raccoon.Graphics {
                 throw new System.IndexOutOfRangeException($"Supplied frame index '{frameIndex}' is out of valid frames range [0, {frames.Count - 1}] at track '{tag}'.");
             }
 
+            Texture = atlasAnimation.Texture;
             AtlasAnimationFrame frame = frames[frameIndex];
 
             bool wasUsingCustomSize = _isUsingCustomSize;
@@ -184,6 +185,7 @@ namespace Raccoon.Graphics {
                 throw new System.IndexOutOfRangeException($"Supplied frame index '{frameIndex}' is out of valid frames range [0, {frames.Count - 1}] at default track.");
             }
 
+            Texture = atlasAnimation.Texture;
             AtlasAnimationFrame frame = frames[frameIndex];
 
             bool wasUsingCustomSize = _isUsingCustomSize;
