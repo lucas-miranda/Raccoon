@@ -50,6 +50,9 @@
             }
         }
 
+        public Image(AtlasAnimation atlasAnimation, int frameIndex) : this(atlasAnimation, AtlasAnimation.DefaultAllFramesTrackName, frameIndex) {
+        }
+
         public Image(Animation animation, string tag, int frameIndex) {
             Texture = animation.Texture;
             SourceRegion = animation.SourceRegion;
