@@ -59,8 +59,16 @@ namespace Raccoon.Util.Tween {
         #region Constructors
 
         public Tween(object subject, int duration, bool additional = false) {
+            if (subject == null) {
+                throw new System.ArgumentNullException(nameof(subject));
+            }
+
+            if (duration <= 0) {
+                throw new System.ArgumentException("Duration can't be zero or negative.");
+            }
+
             Subject = subject;
-            Duration = duration;
+            _duration = duration;
             IsAdditional = additional;
         }
 
@@ -91,8 +99,8 @@ namespace Raccoon.Util.Tween {
             }
 
             set {
-                if (IsPlaying) {
-                    throw new System.InvalidOperationException("Can't change duration while is playing.");
+                if (value <= 0) {
+                    throw new System.ArgumentException("Duration can't be zero or negative.");
                 }
 
                 _duration = value;
