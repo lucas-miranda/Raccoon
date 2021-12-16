@@ -159,7 +159,7 @@
 
         public static float Unlerp(float start, float end, float value) {
             if (Math.Abs(end - start) < Epsilon) {
-                return start;
+                return 1.0f;
             }
 
             return (value - start) / (end - start);
