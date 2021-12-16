@@ -239,6 +239,10 @@ namespace Raccoon.Graphics {
             Origin = new Vector2(Size.Width / 2f, Size.Height / 2f);
         }
 
+        public void CentralizeOriginRounded() {
+            Origin = new Vector2(Math.Round(Size.Width / 2f), Math.Round(Size.Height / 2f));
+        }
+
         public virtual void Dispose() {
             if (IsDisposed) {
                 return;
