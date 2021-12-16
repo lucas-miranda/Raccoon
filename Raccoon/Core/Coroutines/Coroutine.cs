@@ -119,7 +119,7 @@ namespace Raccoon {
                                     instruction.RoutineMoveNextCallback(MoveNext(instructionInternalEnumerator));
                                 }
                             } while (isRunningInstruction);
-                            
+
                             return true;
                         }
                     } else if (enumerator.Current is float seconds) {

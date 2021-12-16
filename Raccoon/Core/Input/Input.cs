@@ -74,9 +74,9 @@ namespace Raccoon.Input {
             get {
                 return Instance._lockMouseOnCenter;
             }
-            
+
             set {
-                Instance._lockMouseOnCenter = 
+                Instance._lockMouseOnCenter =
                     Mouse.IsRelativeMouseModeEXT = value;
             }
         }
@@ -84,7 +84,7 @@ namespace Raccoon.Input {
         public static Vector2 MouseAbsolutePosition {
             get {
                 return new Vector2(
-                    Instance._mouseAbsolutePosition.X, 
+                    Instance._mouseAbsolutePosition.X,
                     Instance._mouseAbsolutePosition.Y
                 );
             }
@@ -134,11 +134,11 @@ namespace Raccoon.Input {
             get {
                 return Instance._customMouseAllowedArea;
             }
-            
+
             set {
                 Instance._customMouseAllowedArea = value;
 
-                if (!LockMouseOnCenter && LockMouseOnWindow 
+                if (!LockMouseOnCenter && LockMouseOnWindow
                  && Instance._customMouseAllowedArea.HasValue && !Instance._customMouseAllowedArea.Value.Contains(MousePosition)) {
                     MousePosition = Util.Math.Clamp(MousePosition, Instance._customMouseAllowedArea.Value);
                 }
@@ -201,7 +201,7 @@ namespace Raccoon.Input {
                 return false;
             }
 
-            return Instance._keyboardPreviousState[(Keys) key] == KeyState.Up 
+            return Instance._keyboardPreviousState[(Keys) key] == KeyState.Up
                 && Instance._keyboardState[(Keys) key] == KeyState.Down;
         }
 
@@ -210,7 +210,7 @@ namespace Raccoon.Input {
         }
 
         public static bool IsKeyReleased(Key key) {
-            return Instance._keyboardPreviousState[(Keys) key] == KeyState.Down 
+            return Instance._keyboardPreviousState[(Keys) key] == KeyState.Down
                 && Instance._keyboardState[(Keys) key] == KeyState.Up;
         }
 
@@ -322,7 +322,7 @@ namespace Raccoon.Input {
         #region Mouse
 
         public static bool IsMouseButtonPressed(MouseButton button) {
-            return Instance._mouseButtonsLastState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Released 
+            return Instance._mouseButtonsLastState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Released
                 && Instance._mouseButtonsState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
         }
 
@@ -331,7 +331,7 @@ namespace Raccoon.Input {
         }
 
         public static bool IsMouseButtonReleased(MouseButton button) {
-            return Instance._mouseButtonsLastState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed 
+            return Instance._mouseButtonsLastState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Pressed
                 && Instance._mouseButtonsState[(int) button] == Microsoft.Xna.Framework.Input.ButtonState.Released;
         }
 
@@ -450,19 +450,19 @@ namespace Raccoon.Input {
 
                         expectedMousePos = (
                             Util.Math.Clamp(
-                                XNAMouseState.X, 
-                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Left * s)), 
+                                XNAMouseState.X,
+                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Left * s)),
                                 Util.Math.Min(Game.Instance.WindowWidth, (int) Util.Math.Round(allowedArea.Right * s))
-                            ), 
+                            ),
                             Util.Math.Clamp(
-                                XNAMouseState.Y, 
-                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Top * s)), 
+                                XNAMouseState.Y,
+                                Util.Math.Max(0, (int) Util.Math.Round(allowedArea.Top * s)),
                                 Util.Math.Min(Game.Instance.WindowHeight, (int) Util.Math.Round(allowedArea.Bottom * s))
                             )
                         );
                     } else {
                         expectedMousePos = (
-                            Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth), 
+                            Util.Math.Clamp(XNAMouseState.X, 0, Game.Instance.WindowWidth),
                             Util.Math.Clamp(XNAMouseState.Y, 0, Game.Instance.WindowHeight)
                         );
                     }
@@ -481,17 +481,17 @@ namespace Raccoon.Input {
                 _mouseAbsolutePosition = newMouseAbsolutePosition;
                 _mousePosition = new Vector2(
                     Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.X / scale), 0, Game.Instance.Width),
-                    Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.Y / scale), 0, Game.Instance.Height) 
+                    Util.Math.Clamp(Util.Math.Round(newMouseAbsolutePosition.Y / scale), 0, Game.Instance.Height)
                 );
 
                 // ignore out of screen mouse interactions
                 if (XNAMouseState.X < 0 || XNAMouseState.X > Game.Instance.WindowWidth || XNAMouseState.Y < 0 || XNAMouseState.Y > Game.Instance.WindowHeight) {
                     // mouse buttons and scroll was reset because went out of bounds, so it should stop at this phase
 
-                    _mouseButtonsState[(int) MouseButton.Left] = 
-                        _mouseButtonsState[(int) MouseButton.Middle] = 
-                        _mouseButtonsState[(int) MouseButton.Right] = 
-                        _mouseButtonsState[(int) MouseButton.M4] = 
+                    _mouseButtonsState[(int) MouseButton.Left] =
+                        _mouseButtonsState[(int) MouseButton.Middle] =
+                        _mouseButtonsState[(int) MouseButton.Right] =
+                        _mouseButtonsState[(int) MouseButton.M4] =
                         _mouseButtonsState[(int) MouseButton.M5] = Microsoft.Xna.Framework.Input.ButtonState.Released;
 
                     MouseScrollWheelDelta = 0;

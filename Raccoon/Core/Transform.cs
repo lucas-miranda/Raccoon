@@ -67,11 +67,11 @@ namespace Raccoon {
 
         public Vector2 Scale {
             get {
-                return _parent == null ? LocalScale : LocalScale * _parent.Scale;
+                return _parent == null ? LocalScale : (LocalScale * _parent.Scale);
             }
 
             set {
-                LocalScale = _parent == null ? value : value / _parent.Scale;
+                LocalScale = _parent == null ? value : (value / _parent.Scale);
             }
         }
 
