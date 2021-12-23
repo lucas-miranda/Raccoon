@@ -57,11 +57,11 @@ namespace Raccoon {
 
         public Vector2 Position {
             get {
-                return _parent == null ? LocalPosition : LocalPosition + _parent.Position;
+                return _parent == null ? LocalPosition : ((LocalPosition * _parent.Scale) + _parent.Position);
             }
 
             set {
-                LocalPosition = _parent == null ? value : value - _parent.Position;
+                LocalPosition = _parent == null ? value : ((value - _parent.Position) / _parent.Scale);
             }
         }
 
@@ -77,11 +77,11 @@ namespace Raccoon {
 
         public float Rotation {
             get {
-                return _parent == null ? LocalRotation : LocalRotation + _parent.Rotation;
+                return _parent == null ? LocalRotation : (LocalRotation + _parent.Rotation);
             }
 
             set {
-                LocalRotation = _parent == null ? value : value - _parent.Rotation;
+                LocalRotation = _parent == null ? value : (value - _parent.Rotation);
             }
         }
 
