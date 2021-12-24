@@ -150,7 +150,6 @@ Scene:
         public Renderer DebugRenderer { get; private set; }
 #endif
         public System.TimeSpan Time { get; private set; }
-        public PrimitiveBatch DebugPrimitiveBatch { get; private set; }
         public BasicShader BasicShader { get; private set; }
         public ResizeMode ResizeMode { get; private set; }
 
@@ -231,6 +230,7 @@ Scene:
 #if DEBUG
         public bool DebugMode { get; set; }
         public List<int> FramerateValues { get; } = new List<int>();
+        public Size DebugScreenSize { get { return DebugCanvas.Size; } }
 #else
         public bool DebugMode { get { return false; } }
 #endif
@@ -571,9 +571,7 @@ Scene:
             Debug.Instance.Render();
 
             if (Debug.ShowPerformanceDiagnostics) {
-                Debug.DrawString(
-                    null,
-                    new Vector2(WindowWidth - 310, 15),
+                Debug.Draw.PerformanceDiagnosticsLens.String.AtWindow(
                     string.Format(
                         DiagnosticsTextFormat,
 
@@ -595,12 +593,16 @@ Scene:
                         Scene == null ? "0" : Scene.UpdatableCount.ToString(),
                         Scene == null ? "0" : Scene.RenderableCount.ToString(),
                         Scene == null ? "0" : Scene.SceneObjectsCount.ToString()
-                    )
+                    ),
+                    new Vector2(WindowWidth - 310, 15),
+                    Color.White
                 );
 
                 // framerate monitor frame
                 Rectangle framerateMonitorRect = new Rectangle(new Vector2(WindowWidth - 310 - _framerateMonitorSize.Width - 32, 15), _framerateMonitorSize);
-                Debug.DrawRectangle(null, framerateMonitorRect, Color.White);
+                Debug.Draw.PerformanceDiagnosticsLens.Rectangle.AtWindow(
+                    framerateMonitorRect, false, Vector2.Zero
+                );
 
                 // plot framerate values
                 int previousFramerateValue = FramerateValues[0], currentFramerateValue;
@@ -623,7 +625,7 @@ Scene:
                         color = Color.Red;
                     }
 
-                    Debug.DrawLine(null, previousPos, currentPos, color);
+                    Debug.Draw.PerformanceDiagnosticsLens.Line.AtWindow(previousPos, currentPos, color);
                     previousPos = currentPos;
                     previousFramerateValue = currentFramerateValue;
                 }
@@ -770,7 +772,11 @@ Scene:
             };
 
             ScreenRenderer = new Renderer();
-            DebugRenderer = new Renderer();
+            DebugRenderer = new Renderer(true) {
+                SpriteBatchMode = BatchMode.DepthBuffer,
+                DepthStencilState = DepthStencilState.Default,
+                RecalculateProjectionSize = () => Math.Round(Size * KeepProportionsScale * PixelScale)
+            };
 
             MainRenderer = new Renderer(autoHandleAlphaBlendedSprites: true) {
                 SpriteBatchMode = BatchMode.DepthBuffer,
@@ -804,11 +810,11 @@ Scene:
 
 #if DEBUG
             DebugCanvas = new Canvas(
-                WindowWidth,
-                WindowHeight,
+                (int) Math.Floor(Width * KeepProportionsScale * PixelScale),
+                (int) Math.Floor(Height * KeepProportionsScale * PixelScale),
                 mipMap: false,
                 surfaceFormat: SurfaceFormat.Color,
-                depthFormat: DepthFormat.None,
+                depthFormat: DepthFormat.Depth24Stencil8,
                 multiSampleCount: 0,
                 usage: RenderTargetUsage.PreserveContents
             ) {
@@ -822,8 +828,6 @@ Scene:
                 FramerateValues.Add(0);
             }
 #endif
-
-            DebugPrimitiveBatch = new PrimitiveBatch();
 
             MainRenderer.RecalculateProjection();
             InterfaceRenderer.RecalculateProjection();
@@ -876,9 +880,7 @@ Scene:
             // debug render
             DebugCanvas.Begin(Color.Transparent);
 
-            DebugPrimitiveBatch.Begin(DebugRenderer.World, DebugRenderer.View, DebugRenderer.Projection);
             DebugRender();
-            DebugPrimitiveBatch.End();
 
             DebugCanvas.End();
 #endif
@@ -908,7 +910,7 @@ Scene:
 #if DEBUG
             ScreenRenderer.Draw(
                 DebugCanvas,
-                _gameCanvasPosition,
+                DebugCanvas.Position + _gameCanvasPosition,
                 null,
                 0f,
                 Vector2.One,
@@ -1072,7 +1074,7 @@ Scene:
 
 #if DEBUG
             if (DebugCanvas != null) {
-                DebugCanvas.Resize(WindowSize);
+                DebugCanvas.Resize((int) Math.Floor(Size.Width * KeepProportionsScale * PixelScale), (int) Math.Floor(Size.Height * KeepProportionsScale * PixelScale));
                 DebugCanvas.ClippingRegion = DebugCanvas.SourceRegion;
             }
 #endif

@@ -82,12 +82,15 @@ namespace Raccoon {
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
             if (!Math.EqualsEstimate(Rotation, 0f)) {
-                Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
+                Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
+                    BoundingBox, false, position, Color.Indigo, 0f, Vector2.One, Origin
+                );
             }
 
             // draw using Polygon
-            Polygon polygon = new Polygon(Shape);
-            Debug.DrawPolygon(polygon, position, color, Origin);
+            Debug.Draw.PhysicsBodiesLens.Polygon.AtWorld(
+                Shape, false, position, color, 0f, Vector2.One, Origin
+            );
 
             // normals
             /*int i = 0;
@@ -97,7 +100,24 @@ namespace Raccoon {
             }*/
 
             // centroid
-            Debug.DrawCircle(position - Origin + BoundingBox.Center, 1, Color.White, 10);
+            if (Rotation != 0f) {
+                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                    new Circle(
+                        position - Math.RotateAround(Origin, Vector2.Zero, Rotation) + BoundingBox.Center,
+                        1
+                    ),
+                    false, 10, Color.White, 0f, 1f, Vector2.Zero
+                );
+            } else {
+                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                    new Circle(position - Origin + BoundingBox.Center, 1),
+                    false, 10, Color.White, 0f, 1f, Vector2.Zero
+                );
+            }
+
+            Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                new Circle(position - Origin + BoundingBox.Center, 1), false, 10
+            );
         }
 
         public bool ContainsPoint(Vector2 point) {

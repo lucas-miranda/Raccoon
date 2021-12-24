@@ -89,7 +89,11 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
-            Debug.DrawString(Entity.Transform.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0), $"State ({(IsRunning ? "R" : (CurrentState == null ? "S" : "P"))}):\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}");
+            Debug.Draw.String.AtWorld(
+                $"State ({(IsRunning ? "R" : (CurrentState == null ? "S" : "P"))}):\n Previous: {(PreviousState == null ? "-" : PreviousState.Label.ToString())}\n Current: {(CurrentState == null ? "-" : CurrentState.Label.ToString())}\n Next: {(NextState == null ? "-" : NextState.Label.ToString())}",
+                Entity.Transform.Position + new Vector2(Entity.Graphic.Width / 1.9f, 0),
+                Graphics.Color.White
+            );
         }
 
         public void Start(T label) {

@@ -213,7 +213,7 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            Debug.DrawString(new Vector2(16, Game.Instance.Height / 2f), ToStringDetailed());
+            Debug.Draw.PhysicsBodiesLens.String.AtWorld(ToStringDetailed(), new Vector2(16, Game.Instance.Height / 2f), Graphics.Color.White);
         }
 
         public string ToStringDetailed() {

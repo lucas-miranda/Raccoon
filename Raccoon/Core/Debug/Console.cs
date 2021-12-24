@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if DEBUG
+using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Graphics.Primitives;
@@ -807,3 +808,4 @@ namespace Raccoon {
         #endregion Class MessageFormat
     }
 }
+#endif

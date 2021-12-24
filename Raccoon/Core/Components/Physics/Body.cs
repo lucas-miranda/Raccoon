@@ -246,8 +246,7 @@ namespace Raccoon.Components {
 
             // Position and Velocity
             if (ShowDebugInfo) {
-                Debug.DrawString(
-                    Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0),
+                Debug.Draw.PhysicsBodiesLens.String.AtWorld(
                     string.Format("[{0:0.##}, {1:0.##}]\nVelocity: [{2:0.##}, {3:0.##}]\nM: {4}",
                         Position.X,
                         Position.Y,
@@ -255,7 +254,9 @@ namespace Raccoon.Components {
                         Velocity.Y,
                         1f
                         //Mass
-                    )
+                    ),
+                    Position + new Vector2(Shape.BoundingBox.Width / 1.9f, 0),
+                    Graphics.Color.White
                 );
             }
 

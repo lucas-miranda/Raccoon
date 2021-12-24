@@ -67,24 +67,29 @@ namespace Raccoon {
 
                 Vector2 tilePos = position - Origin + new Vector2(tile.Column * TileSize.Width, tile.Row * TileSize.Height);
                 if (tile.Shape is BoxTileShape) {
-                    Debug.DrawRectangle(new Rectangle(tilePos, TileSize), CollisionTilesColor);
+                    Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
+                        new Rectangle(tilePos, TileSize), false, CollisionTilesColor
+                    );
                 } else if (tile.Shape is PolygonTileShape polygonTile) {
 #if !DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
                     if (polygonTile.Polygon.IsConvex) {
                         Polygon p = new Polygon(polygonTile.Polygon);
                         p.Translate(tilePos);
-                        Debug.DrawPolygon(p, CollisionTilesColor);
+
+                        Debug.Draw.PhysicsBodiesLens.Polygon.AtWorld(p, false, CollisionTilesColor);
                     } else {
 #endif
                         List<Vector2[]> components = polygonTile.Polygon.ConvexComponents();
                         Vector2 anchorVertex = polygonTile.Polygon[0];
 
                         foreach (Vector2[] component in components) {
-                            Debug.DrawLines(component, tilePos + anchorVertex, CollisionTilesColor);
+                            Debug.Draw.PhysicsBodiesLens.Lines.AtWorld(
+                                component, true, tilePos + anchorVertex, CollisionTilesColor
+                            );
                         }
 
                         if (DebugRenderDetailed) {
-                            Debug.DrawString(tilePos + TileSize / 2f, $"{components.Count}");
+                            Debug.Draw.String.AtWorld($"{components.Count}", tilePos + TileSize / 2f, Color.White);
                         }
 #if !DEBUG_RENDER_FORCE_DRAWING_COMPONENTS
                     }

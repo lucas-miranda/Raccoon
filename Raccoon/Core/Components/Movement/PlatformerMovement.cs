@@ -523,8 +523,9 @@ namespace Raccoon.Components {
 
         public override void DebugRender() {
             base.DebugRender();
-            Debug.DrawString(null, new Vector2(10f, 10f), ToStringDetailed());
-            Debug.DrawLine(
+            Debug.Draw.PhysicsBodiesLens.String.AtWindow(ToStringDetailed(), new Vector2(10f, 10f));
+
+            Debug.Draw.PhysicsBodiesLens.Line.AtWorld(
                 new Vector2(Body.Position.X - 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
                 new Vector2(Body.Position.X + 32, _jumpMaxY + Body.Shape.BoundingBox.Height / 2f),
                 Graphics.Color.Yellow
@@ -533,7 +534,7 @@ namespace Raccoon.Components {
             //Debug.DrawString(Debug.Transform(Body.Position - new Vector2(16)), $"Impulse Time: {ImpulseTime}\n(I/s: {ImpulsePerSec})");
 
             Rectangle bounds = Body.Bounds;
-            Debug.DrawLine(
+            Debug.Draw.PhysicsBodiesLens.Line.AtWorld(
                 new Vector2(bounds.Center.X - 8, _jumpInitialY - JumpMinHeight),
                 new Vector2(bounds.Center.X + 8, _jumpInitialY - JumpMinHeight),
                 Graphics.Color.Magenta

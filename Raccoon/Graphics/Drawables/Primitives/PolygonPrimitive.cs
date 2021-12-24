@@ -15,7 +15,7 @@ namespace Raccoon.Graphics.Primitives {
             Color = color;
         }
 
-        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Polygon(points), color) { 
+        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Polygon(points), color) {
             if (points == null) {
                 throw new System.ArgumentNullException(nameof(points));
             }
@@ -46,7 +46,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
 
-        public override void Dispose() { 
+        public override void Dispose() {
         }
 
         #endregion Public Methods

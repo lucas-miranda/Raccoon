@@ -30,7 +30,7 @@ namespace Raccoon {
             }
         }
 
-        private int ControlPointsCount { get { return _controlPoints == null ? 0 : _controlPoints.Length; } }
+        public int ControlPointsCount { get { return _controlPoints == null ? 0 : _controlPoints.Length; } }
 
         public static BezierCurve From(Vector2 a, Vector2 b, Vector2 c) {
             BezierCurve bezierCurve = new BezierCurve(controlPoints: 3);

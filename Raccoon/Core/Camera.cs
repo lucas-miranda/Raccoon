@@ -56,14 +56,14 @@ namespace Raccoon {
         public bool IsDisposed { get; private set; }
         public Rectangle Bounds { get; set; }
 
-        public Vector2 Center { 
-            get { 
-                return Position + Game.Instance.Size / (2f * _zoom); 
-            } 
+        public Vector2 Center {
+            get {
+                return Position + Game.Instance.Size / (2f * _zoom);
+            }
 
-            set { 
-                Position = value - Game.Instance.Size / (2f * _zoom); 
-            } 
+            set {
+                Position = value - Game.Instance.Size / (2f * _zoom);
+            }
         }
 
         public Vector2 Position {
@@ -82,9 +82,9 @@ namespace Raccoon {
 
                     if (moveSpaceWidth > Math.Epsilon || moveSpaceHeight > Math.Epsilon) {
                         _position = Math.Clamp(
-                            value, 
+                            value,
                             new Rectangle(
-                                Bounds.Position, 
+                                Bounds.Position,
                                 new Size(Math.Max(0f, moveSpaceWidth), Math.Max(0f, moveSpaceHeight))
                             )
                         );
@@ -148,7 +148,7 @@ namespace Raccoon {
             _needViewRefresh = true;
         }
 
-        public virtual void SceneEnd(Scene scene) { 
+        public virtual void SceneEnd(Scene scene) {
         }
 
         public virtual void Update(int delta) {
@@ -162,7 +162,7 @@ namespace Raccoon {
             }
         }
 
-        public virtual void DebugRender() { 
+        public virtual void DebugRender() {
         }
 
         public void Dispose() {

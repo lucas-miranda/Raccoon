@@ -28,9 +28,18 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // boundingBox
-            Debug.DrawRectangle(new Rectangle(position - Origin - Radius, BoundingBox.Size), Color.Indigo, 0f, Vector2.One, Vector2.Zero);
+            Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
+                new Rectangle(position - Radius, BoundingBox.Size),
+                false,
+                Color.Indigo,
+                0f,
+                Vector2.One,
+                Origin
+            );
 
-            Debug.DrawCircle(position - Origin, Radius, color);
+            Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                new Circle(position, Radius), false, 0, Vector2.Zero, color, 0f, 1f, Origin
+            );
         }
 
         public bool ContainsPoint(Vector2 point) {

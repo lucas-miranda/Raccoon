@@ -58,10 +58,13 @@ namespace Raccoon {
 
         public void DebugRender(Vector2 position, Color color) {
             // bounding box
-            Debug.DrawRectangle(BoundingBox + position, Color.Indigo, 0f, Vector2.One, Origin);
+            Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
+                BoundingBox, false, position, Color.Indigo, 0f, Vector2.One, Origin
+            );
 
-            Polygon polygon = new Polygon(Shape);
-            Debug.DrawPolygon(polygon, position, color, Origin);
+            Debug.Draw.PhysicsBodiesLens.Polygon.AtWorld(
+                Shape, false, position, color, 0f, Vector2.One, Origin
+            );
 
             // normals
             /*int i = 0;
@@ -71,7 +74,17 @@ namespace Raccoon {
             }*/
 
             // centroid
-            Debug.DrawCircle(position - Origin, 1, Color.White, 10);
+            if (Rotation != 0f) {
+                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                    new Circle(position - Math.RotateAround(Origin, Vector2.Zero, Rotation), 1),
+                    false, 10, Color.White, 0f, 1f, Vector2.Zero
+                );
+            } else {
+                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                    new Circle(position - Origin, 1),
+                    false, 10, Color.White, 0f, 1f, Vector2.Zero
+                );
+            }
 
             /*
             if (!polygon.IsConvex) {

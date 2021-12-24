@@ -88,11 +88,12 @@ namespace Raccoon.Graphics {
                 for (int column = 0; column < 3; column++) {
                     Patch patch = _patches[row * 3 + column];
 
-                    Debug.DrawRectangle(
+                    Debug.Draw.Rectangle.AtWorld(
                         new Rectangle(
                             new Vector2(position.X + x, position.Y + y),
                             patch.Size
                         ),
+                        false,
                         Colors.Magenta
                     );
 
