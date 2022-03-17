@@ -12,6 +12,11 @@
         public static readonly double RadToDeg = 180.0 / PI;
         public static readonly double DegToRad = PI / 180.0;
 
+        public const float AngleRight = 0f;
+        public const float AngleDown = 90f;
+        public const float AngleLeft = 180f;
+        public const float AngleUp = 270f;
+
         #region Numeric Stuff
 
         public static float Abs(float n) {
