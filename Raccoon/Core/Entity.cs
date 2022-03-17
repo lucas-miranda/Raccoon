@@ -286,17 +286,19 @@ namespace Raccoon {
             }
             Components.Unlock();
 
-            Transform.LockChildren();
-            foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
-                    continue;
+            if (Transform != null) {
+                Transform.LockChildren();
+                foreach (Transform child in Transform) {
+                    if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                        continue;
+                    }
+
+                    child.Entity.BeforeUpdate();
                 }
-
-                child.Entity.BeforeUpdate();
+                Transform.UnlockChildren();
             }
-            Transform.UnlockChildren();
 
-            OnBeforeUpdate();
+            OnBeforeUpdate?.Invoke();
         }
 
         public virtual void Update(int delta) {
@@ -322,17 +324,19 @@ namespace Raccoon {
             }
             Components.Unlock();
 
-            Transform.LockChildren();
-            foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
-                    continue;
+            if (Transform != null) {
+                Transform.LockChildren();
+                foreach (Transform child in Transform) {
+                    if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                        continue;
+                    }
+
+                    child.Entity.Update(delta);
                 }
-
-                child.Entity.Update(delta);
+                Transform.UnlockChildren();
             }
-            Transform.UnlockChildren();
 
-            OnUpdate();
+            OnUpdate?.Invoke();
         }
 
         public virtual void LateUpdate() {
@@ -346,17 +350,23 @@ namespace Raccoon {
             }
             Components.Unlock();
 
-            Transform.LockChildren();
-            foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
-                    continue;
+            if (Transform != null) {
+                Transform.LockChildren();
+                foreach (Transform child in Transform) {
+                    if (child.IsDetached
+                     || child.Entity == null
+                     || !child.Entity.IsSceneFromTransformAncestor
+                     || !child.Entity.Active
+                    ) {
+                        continue;
+                    }
+
+                    child.Entity.LateUpdate();
                 }
-
-                child.Entity.LateUpdate();
+                Transform.UnlockChildren();
             }
-            Transform.UnlockChildren();
 
-            OnLateUpdate();
+            OnLateUpdate?.Invoke();
         }
 
         public virtual void BeforePhysicsStep() {

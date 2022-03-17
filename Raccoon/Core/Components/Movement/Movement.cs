@@ -411,7 +411,10 @@ namespace Raccoon.Components {
 
         public void FullStop() {
             NextAxis = Vector2.Zero;
-            Body.Velocity = Vector2.Zero;
+
+            if (Body != null) {
+                Body.Velocity = Vector2.Zero;
+            }
 
             // impulse
             ForcePerSec = Vector2.Zero;
