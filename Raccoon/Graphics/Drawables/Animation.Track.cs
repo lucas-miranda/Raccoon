@@ -87,12 +87,14 @@
             public int RepeatTimes { get; set; }
             public int TimesPlayed { get; private set; }
             public int FrameCount { get { return FramesRegions?.Length ?? 0; } }
+            public int LastFrameIndex { get { return FramesRegions.Length - 1; } }
             public bool HasEnded { get; private set; }
             public bool IsLooping { get { return RepeatTimes < 0; } set { RepeatTimes = value ? -1 : 0; } }
             public bool IsPingPong { get; set; }
             public bool IsReverse { get; set; }
             public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
             public bool IsDisposed { get; private set; }
+            public bool IsAtLastFrame { get { return CurrentFrameIndex == FramesRegions.Length - 1; } }
 
             public int TotalDuration {
                 get {
