@@ -21,40 +21,40 @@
         public Vector2[] Points { get; private set; } = new Vector2[2];
         public Line Equation { get { return new Line(From, To); } }
 
-        public Vector2 From { 
-            get { 
-                return Position + Points[0]; 
-            } 
+        public Vector2 From {
+            get {
+                return Position + Points[0];
+            }
 
-            set { 
+            set {
                 if (value == Points[0]) {
                     return;
                 }
 
                 Points[0] = value;
-            } 
+            }
         }
 
-        public Vector2 To { 
-            get { 
-                return Position + Points[1]; 
-            } 
+        public Vector2 To {
+            get {
+                return Position + Points[1];
+            }
 
-            set { 
+            set {
                 if (value == Points[1]) {
                     return;
                 }
 
 
                 Points[1] = value;
-            } 
+            }
         }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        public override void Dispose() { 
+        public override void Dispose() {
         }
 
         #endregion Public Methods
