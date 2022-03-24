@@ -74,7 +74,11 @@ namespace Raccoon.Util {
 
             if (autoPlay) {
                 animation.Play(trackName);
-            } else if (!animation.CurrentKey.Equals(trackName)) {
+            } else if (animation.CurrentTrack == null
+             || !animation.IsPlaying
+             || !animation.CurrentKey.Equals(trackName)
+             || animation.CurrentTrack.HasEnded
+            ) {
                 yield break;
             }
 
@@ -86,7 +90,7 @@ namespace Raccoon.Util {
                     yield return null;
                 }
             } else {
-                while (!track.HasEnded) {
+                while (animation.CurrentKey.Equals(trackName) && !track.HasEnded) {
                     yield return null;
                 }
             }
