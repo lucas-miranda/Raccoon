@@ -219,7 +219,7 @@ namespace Raccoon.Graphics {
 
         public void Stop() {
             Pause();
-            CurrentTrack.Reset();
+            CurrentTrack?.Reset();
             UpdateClippingRegion();
             ElapsedTime = 0;
         }
@@ -540,7 +540,9 @@ namespace Raccoon.Graphics {
         #region Private Methods
 
         private void UpdateClippingRegion() {
-            ClippingRegion = CurrentTrack.CurrentFrameRegion;
+            if (CurrentTrack != null) {
+                ClippingRegion = CurrentTrack.CurrentFrameRegion;
+            }
         }
 
         private void GenerateFramesRegions(int[] frames, ref Rectangle[] framesRegions, ref Rectangle[] framesDestinations) {
