@@ -6,16 +6,15 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Constructors
 
-        public PolygonPrimitive(Polygon polygon, Color color) {
+        public PolygonPrimitive(Polygon polygon) {
             if (polygon == null) {
                 throw new System.ArgumentNullException(nameof(polygon));
             }
 
             Shape = polygon;
-            Color = color;
         }
 
-        public PolygonPrimitive(IEnumerable<Vector2> points, Color color) : this(new Polygon(points), color) {
+        public PolygonPrimitive(IEnumerable<Vector2> points) : this(new Polygon(points)) {
             if (points == null) {
                 throw new System.ArgumentNullException(nameof(points));
             }
