@@ -110,6 +110,8 @@ namespace Raccoon.Util {
         public static int Integer(int min, int max) {
             if (max < min) {
                 throw new System.ArgumentException("Max should be greater or equals min.");
+            } else if (min == max) {
+                return max;
             }
 
             return BaseRandom.Next(min, max + 1);
@@ -246,6 +248,12 @@ namespace Raccoon.Util {
         /// <param name="chance">Percent value in range [1, 100].</param>
         /// <returns>True if random value is less than or equals chance, False otherwise.</returns>
         public static bool PercentInteger(int chance) {
+            if (chance <= 0) {
+                return false;
+            } else if (chance >= 100) {
+                return true;
+            }
+
             return Integer(1, 100) <= chance;
         }
 
@@ -289,6 +297,8 @@ namespace Raccoon.Util {
         public static T Choose<T>(IList<T> list) {
             if (list.Count == 0) {
                 throw new System.ArgumentException($"Can't choose an element from an empty IList<{typeof(T)}>");
+            } else if (list.Count == 1) {
+                return list[0];
             }
 
             return list[Integer(0, list.Count - 1)];
@@ -317,6 +327,28 @@ namespace Raccoon.Util {
             }
 
             return default;
+        }
+
+        public static KeyValuePair<K, V> Choose<K, V>(IDictionary<K, V> dictionary) {
+            if (dictionary.Count <= 0) {
+                throw new System.ArgumentException($"Can't retrieve an element from a empty IDictionary<{typeof(K)}, {typeof(V)}>");
+            }
+
+            int index = Integer(0, dictionary.Count - 1);
+            K key = default;
+            V value = default;
+
+            foreach (KeyValuePair<K, V> entry in dictionary) {
+                index -= 1;
+
+                if (index < 0) {
+                    key = entry.Key;
+                    value = entry.Value;
+                    break;
+                }
+            }
+
+            return new KeyValuePair<K, V>(key, value);
         }
 
         /// <summary>
@@ -441,27 +473,9 @@ namespace Raccoon.Util {
         }
 
         public static KeyValuePair<K, V> Retrieve<K, V>(IDictionary<K, V> dictionary) {
-            if (dictionary.Count <= 0) {
-                throw new System.ArgumentException($"Can't retrieve an element from a empty IDictionary<{typeof(K)}, {typeof(V)}>");
-            }
-
-            int index = Integer(0, dictionary.Count - 1);
-            K key = default;
-            V value = default;
-
-            foreach (KeyValuePair<K, V> entry in dictionary) {
-                index -= 1;
-
-                if (index >= 0) {
-                    continue;
-                }
-
-                key = entry.Key;
-                value = entry.Value;
-            }
-
-            dictionary.Remove(key);
-            return new KeyValuePair<K, V>(key, value);
+            KeyValuePair<K, V> entry = Choose<K, V>(dictionary);
+            dictionary.Remove(entry.Key);
+            return entry;
         }
 
         #endregion Public Methods
