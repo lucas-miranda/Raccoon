@@ -3,24 +3,129 @@ using Raccoon.Util;
 
 namespace Raccoon {
     public class BoxShape : IShape {
-        private readonly Polygon _normalizedPolygon;
+        private Polygon _normalizedPolygon;
         private Vector2 _origin;
 
         public BoxShape(int width, int height) {
-            Width = width;
-            Height = height;
-            Area = Width * Height;
-            BoundingBox = new Rectangle(-(Size / 2f).ToVector2(), Size);
-
             Axes = new Vector2[] {
                 Vector2.Right,
                 Vector2.Up
             };
 
-            Extents = new float[] {
-                width / 2f,
-                height / 2f
-            };
+            Setup(width, height);
+        }
+
+        public BoxShape(int wh) : this(wh, wh) {
+        }
+
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int Area { get { return Width * Height; } }
+        public Size Size { get { return new Size(Width, Height); } }
+        public Rectangle BoundingBox { get; private set; }
+        public Vector2[] Axes { get; }
+        public Vector2 HalwidthExtents { get; private set; }
+        public float[] Extents { get; private set; }
+        public Polygon Shape { get; private set; }
+
+            public Vector2 Origin {
+                get {
+                    return _origin;
+                }
+
+                set {
+                    _origin = value;
+                    Shape = new Polygon(_normalizedPolygon);
+
+                    if (!Math.EqualsEstimate(Rotation, 0f)) {
+                        Shape.RotateAround(Rotation, Shape.Center + Origin);
+                    }
+
+                    BoundingBox = Shape.BoundingBox();
+                }
+            }
+
+            public float Rotation {
+                get {
+                    return Math.Angle(Axes[0]);
+                }
+
+                set {
+                    Axes[0] = Math.Rotate(Vector2.Right, value);
+                    Axes[1] = Math.Rotate(Vector2.Up, value);
+
+                    Shape = new Polygon(_normalizedPolygon);
+                    Shape.RotateAround(value, Shape.Center + Origin);
+                    BoundingBox = Shape.BoundingBox();
+                }
+            }
+
+            public void DebugRender(Vector2 position, Color color) {
+                // bounding box
+                if (!Math.EqualsEstimate(Rotation, 0f)) {
+                    Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
+                        BoundingBox, false, position, Color.Indigo, 0f, Vector2.One, Origin
+                    );
+                }
+
+                // draw using Polygon
+                Debug.Draw.PhysicsBodiesLens.Polygon.AtWorld(
+                    Shape, false, position, color, 0f, Vector2.One, Origin
+                );
+
+                // normals
+                /*int i = 0;
+                foreach (Line edge in polygon.Edges()) {
+                    Debug.DrawLine(edge.GetPointNormalized(.5f), edge.GetPointNormalized(.5f) + polygon.Normals[i] * 4f, Color.Yellow);
+                    i++;
+                }*/
+
+                // centroid
+                if (Rotation != 0f) {
+                    Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                        new Circle(
+                            position - Math.RotateAround(Origin, Vector2.Zero, Rotation) + BoundingBox.Center,
+                            1
+                        ),
+                        false, 10, Color.White, 0f, 1f, Vector2.Zero
+                    );
+                } else {
+                    Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                        new Circle(position - Origin + BoundingBox.Center, 1),
+                        false, 10, Color.White, 0f, 1f, Vector2.Zero
+                    );
+                }
+
+                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
+                    new Circle(position - Origin + BoundingBox.Center, 1), false, 10
+                );
+            }
+
+            public void Setup(int width, int height) {
+                if (width == Width && height == Height) {
+                    return;
+                }
+
+                float rotation;
+                if (Axes != null) {
+                    rotation = Rotation;
+                } else {
+                    rotation = 0f;
+                }
+
+                Width = width;
+                Height = height;
+                BoundingBox = new Rectangle(-(Size / 2f).ToVector2(), Size);
+
+                if (Extents == null) {
+                Extents = new float[] {
+                    width / 2f,
+                    height / 2f
+                };
+            } else {
+                Extents[0] = width / 2f;
+                Extents[1] = height / 2f;
+            }
 
             HalwidthExtents = new Vector2(Extents[0], Extents[1]);
 
@@ -32,92 +137,10 @@ namespace Raccoon {
             );
 
             Shape = new Polygon(_normalizedPolygon);
-        }
 
-        public BoxShape(int wh) : this(wh, wh) {
-        }
-
-        public int Width { get; }
-        public int Height { get; }
-        public int Area { get; }
-        public Size Size { get { return new Size(Width, Height); } }
-        public Rectangle BoundingBox { get; private set; }
-        public Vector2[] Axes { get; private set; }
-        public Vector2 HalwidthExtents { get; }
-        public float[] Extents { get; }
-        public Polygon Shape { get; private set; }
-
-        public Vector2 Origin {
-            get {
-                return _origin;
+            if (rotation != 0f) {
+                Shape.RotateAround(rotation, Shape.Center + Origin);
             }
-
-            set {
-                _origin = value;
-                Shape = new Polygon(_normalizedPolygon);
-
-                if (!Math.EqualsEstimate(Rotation, 0f)) {
-                    Shape.RotateAround(Rotation, Shape.Center + Origin);
-                }
-
-                BoundingBox = Shape.BoundingBox();
-            }
-        }
-
-        public float Rotation {
-            get {
-                return Math.Angle(Axes[0]);
-            }
-
-            set {
-                Axes[0] = Math.Rotate(Vector2.Right, value);
-                Axes[1] = Math.Rotate(Vector2.Up, value);
-
-                Shape = new Polygon(_normalizedPolygon);
-                Shape.RotateAround(value, Shape.Center + Origin);
-                BoundingBox = Shape.BoundingBox();
-            }
-        }
-
-        public void DebugRender(Vector2 position, Color color) {
-            // bounding box
-            if (!Math.EqualsEstimate(Rotation, 0f)) {
-                Debug.Draw.PhysicsBodiesLens.Rectangle.AtWorld(
-                    BoundingBox, false, position, Color.Indigo, 0f, Vector2.One, Origin
-                );
-            }
-
-            // draw using Polygon
-            Debug.Draw.PhysicsBodiesLens.Polygon.AtWorld(
-                Shape, false, position, color, 0f, Vector2.One, Origin
-            );
-
-            // normals
-            /*int i = 0;
-            foreach (Line edge in polygon.Edges()) {
-                Debug.DrawLine(edge.GetPointNormalized(.5f), edge.GetPointNormalized(.5f) + polygon.Normals[i] * 4f, Color.Yellow);
-                i++;
-            }*/
-
-            // centroid
-            if (Rotation != 0f) {
-                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
-                    new Circle(
-                        position - Math.RotateAround(Origin, Vector2.Zero, Rotation) + BoundingBox.Center,
-                        1
-                    ),
-                    false, 10, Color.White, 0f, 1f, Vector2.Zero
-                );
-            } else {
-                Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
-                    new Circle(position - Origin + BoundingBox.Center, 1),
-                    false, 10, Color.White, 0f, 1f, Vector2.Zero
-                );
-            }
-
-            Debug.Draw.PhysicsBodiesLens.Circle.AtWorld(
-                new Circle(position - Origin + BoundingBox.Center, 1), false, 10
-            );
         }
 
         public bool ContainsPoint(Vector2 point) {
