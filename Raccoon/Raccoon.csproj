@@ -203,6 +203,10 @@
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="Core\XNAGameWrapper.cs" />
+    <Compile Include="FileSystem\Directories.cs" />
+    <Compile Include="FileSystem\Path.cs" />
+    <Compile Include="FileSystem\PathBuf.cs" />
+    <Compile Include="FileSystem\SafeFile.cs" />
     <Compile Include="Graphics\Atlas\Atlas.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimation.cs" />
     <Compile Include="Graphics\Atlas\AtlasAnimationFrame.cs" />
