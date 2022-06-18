@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Raccoon.Util;
 
 namespace Raccoon {
     public struct Size {
@@ -35,7 +36,7 @@ namespace Raccoon {
         #region Public Properties
 
         public float Area { get { return Width * Height; } }
-        public bool IsEmpty { get { return (int) Width == 0 || (int) Height == 0; } }
+        public bool IsEmpty { get { return Math.EqualsEstimate(Width, 0f) || Math.EqualsEstimate(Height, 0f); } }
 
         #endregion Public Properties
 
