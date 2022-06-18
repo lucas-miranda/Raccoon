@@ -273,12 +273,20 @@
             return new Size(Max(s1.Width, s2.Width), Max(s1.Height, s2.Height));
         }
 
+        public static Location Max(Location l1, Location l2) {
+            return new Location(Max(l1.X, l2.X), Max(l1.Y, l2.Y));
+        }
+
         public static Vector2 Min(Vector2 v1, Vector2 v2) {
             return new Vector2(Min(v1.X, v2.X), Min(v1.Y, v2.Y));
         }
 
         public static Size Min(Size s1, Size s2) {
             return new Size(Min(s1.Width, s2.Width), Min(s1.Height, s2.Height));
+        }
+
+        public static Location Min(Location l1, Location l2) {
+            return new Location(Min(l1.X, l2.X), Min(l1.Y, l2.Y));
         }
 
         public static float Max(params float[] values) {
