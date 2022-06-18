@@ -687,6 +687,12 @@ namespace Raccoon.Graphics {
     }
 
     public class Animation : Animation<string> {
+        #region Public Members
+
+        public const string AllFramesTrackDefaultKey = "all";
+
+        #endregion Public Members
+
         #region Constructors
 
         public Animation() : base() { }
@@ -700,7 +706,7 @@ namespace Raccoon.Graphics {
 
         public override string AllFramesTrackKey {
             get {
-                return "all";
+                return AllFramesTrackDefaultKey;
             }
         }
 
