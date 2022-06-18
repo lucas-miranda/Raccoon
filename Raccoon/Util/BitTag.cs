@@ -157,6 +157,22 @@ namespace Raccoon.Util {
             return BinaryRepresentation;
         }
 
+        public string ToStringValueList() {
+            if (EnumType == null) {
+                return BinaryRepresentation;
+            } else if (LiteralValue == 0L) {
+                return $"{ToEnum().ToString()}; ";
+            }
+
+            string result = "";
+
+            foreach (BitTag value in this) {
+                result += $"{value.ToEnum().ToString()}; ";
+            }
+
+            return result;
+        }
+
         #region System.IConvertible Implementation
 
         public System.TypeCode GetTypeCode() {
