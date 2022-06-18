@@ -124,6 +124,12 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public Frame this[int index] {
+            get {
+                return _frames[index];
+            }
+        }
+
         public int CurrentFrameColumn {
             get {
                 return _currentFrameColumn;
@@ -365,7 +371,9 @@ namespace Raccoon.Graphics {
 
         #endregion Private Methods
 
-        private class Frame {
+        #region Frame Class
+
+        public class Frame {
             public Frame() {
             }
 
@@ -377,5 +385,7 @@ namespace Raccoon.Graphics {
             public Rectangle ClippingRegion { get; set; }
             public Rectangle Destination { get; set; }
         }
+
+        #endregion Frame Class
     }
 }
