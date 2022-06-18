@@ -9,7 +9,7 @@ namespace Raccoon {
 
         private Camera _camera;
 
-        private HashSet<int> _pausedGroups = new HashSet<int>();
+        private Dictionary<int, ControlGroup> _controlGroups = new Dictionary<int, ControlGroup>();
 
         /// <summary>
         /// All scene objects for quickly access.
@@ -254,6 +254,12 @@ namespace Raccoon {
         /// <param name="updatable">IUpdatable to remove.</param>
         /// <returns>Reference to IUpdatable.</returns>
         public bool Remove(IUpdatable updatable) {
+            if (updatable is IPausable pausable
+             && pausable.ControlGroup != null
+            ) {
+                pausable.ControlGroup.Unregister(pausable);
+            }
+
             return _updatables.Remove(updatable);
         }
 
@@ -342,8 +348,8 @@ namespace Raccoon {
         /// <param name="entity">Entity to remove.</param>
         /// <param name="wipe">Allow Entity to be wiped after removed.</param>
         public bool RemoveEntity(Entity entity, bool wipe = true) {
-            _updatables.Remove(entity);
-            _renderables.Remove(entity);
+            Remove((IUpdatable) entity);
+            Remove((IRenderable) entity);
 
             if (_sceneObjects.Remove(entity)) {
                 entity.SceneRemoved(wipe);
@@ -414,14 +420,25 @@ namespace Raccoon {
         /// </summary>
         /// <param name="wipe">Allow ISceneObject to be wiped after removed.</param>
         public void Clear(bool wipe = true) {
+            foreach (IUpdatable updatable in _updatables) {
+                if (updatable is IPausable pausable
+                 && pausable.ControlGroup != null
+                ) {
+                    pausable.ControlGroup.Unregister(pausable);
+                }
+            }
             _updatables.Clear();
+
             _renderables.Clear();
 
             foreach (ISceneObject sceneObject in _sceneObjects) {
                 sceneObject.SceneRemoved(wipe);
             }
-
             _sceneObjects.Clear();
+
+            foreach (ControlGroup controlGroup in _controlGroups.Values) {
+                controlGroup.Clear();
+            }
         }
 
         #endregion Public Methods
@@ -515,9 +532,7 @@ namespace Raccoon {
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
@@ -540,9 +555,7 @@ namespace Raccoon {
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
@@ -562,9 +575,7 @@ namespace Raccoon {
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
@@ -582,9 +593,7 @@ namespace Raccoon {
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
@@ -593,20 +602,18 @@ namespace Raccoon {
             _updatables.Unlock();
         }
 
-        public virtual void PhysicsStep(int delta) {
+        public virtual void PhysicsStep(float stepDelta) {
             if (!IsRunning) {
                 return;
             }
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
-                extendedUpdatable.PhysicsStep(delta);
+                extendedUpdatable.PhysicsStep(stepDelta);
             }
             _updatables.Unlock();
         }
@@ -618,9 +625,7 @@ namespace Raccoon {
 
             _updatables.Lock();
             foreach (IUpdatable updatable in _updatables) {
-                if (!updatable.Active
-                  || !(updatable is IExtendedUpdatable extendedUpdatable)
-                  || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)) {
+                if (!CanUpdate(updatable, out IExtendedUpdatable extendedUpdatable)) {
                     continue;
                 }
 
@@ -671,6 +676,27 @@ namespace Raccoon {
 
 #endif
 
+        public ControlGroup ControlGroup(int index) {
+            return _controlGroups[index];
+        }
+
+        public ControlGroup ControlGroup(System.Enum index) {
+            return ControlGroup(System.Convert.ToInt32(index));
+        }
+
+        public void RegisterControlGroup(int index, ControlGroup controlGroup) {
+            if (controlGroup == null) {
+                throw new System.ArgumentNullException(nameof(controlGroup));
+            }
+
+            _controlGroups.Add(index, controlGroup);
+        }
+
+        public void RegisterControlGroup(System.Enum index, ControlGroup controlGroup) {
+            RegisterControlGroup(System.Convert.ToInt32(index), controlGroup);
+        }
+
+        /*
         public void PauseControlGroup(int controlGroup) {
             _pausedGroups.Add(controlGroup);
             foreach (IUpdatable updatable in _updatables) {
@@ -695,29 +721,40 @@ namespace Raccoon {
                 updatable.Active = true;
             }
         }
+        */
 
         public void PauseAll() {
-            foreach (IUpdatable updatable in _updatables) {
-                _pausedGroups.Add(updatable.ControlGroup);
-                updatable.Active = false;
+            foreach (ControlGroup controlGroup in _controlGroups.Values) {
+                controlGroup.Pause();
             }
         }
 
         public void ResumeAll() {
-            foreach (IUpdatable updatable in _updatables) {
-                if (!_pausedGroups.Contains(updatable.ControlGroup)) {
+            foreach (ControlGroup controlGroup in _controlGroups.Values) {
+                controlGroup.Resume();
+            }
+        }
+
+        public void ResumeAllExcept(int index) {
+            foreach (KeyValuePair<int, ControlGroup> entry in _controlGroups) {
+                if (entry.Key == index) {
                     continue;
                 }
 
-                updatable.Active = true;
+                entry.Value.Resume();
             }
-
-            _pausedGroups.Clear();
         }
+
+        public void ResumeAllExcept(System.Enum index) {
+            ResumeAllExcept(System.Convert.ToInt32(index));
+        }
+
+        /*
 
         public bool IsControlGroupPaused(int controlGroup) {
             return _pausedGroups.Contains(controlGroup);
         }
+        */
 
         public void Pause() {
             if (!HasStarted) {
@@ -741,10 +778,20 @@ namespace Raccoon {
 
         private void AddUpdatable(IUpdatable updatable) {
             _updatables.Add(updatable);
+        }
 
-            if (IsControlGroupPaused(updatable.ControlGroup)) {
-                updatable.Active = false;
+        private bool CanUpdate(IUpdatable updatable, out IExtendedUpdatable extendedUpdatable) {
+            if (!(!updatable.Active
+             || (updatable.ControlGroup != null && updatable.ControlGroup.IsPaused)
+             || !(updatable is IExtendedUpdatable e)
+             || (updatable is ISceneObject sceneObject && !sceneObject.AutoUpdate)
+            )) {
+                extendedUpdatable = e;
+                return true;
             }
+
+            extendedUpdatable = null;
+            return false;
         }
 
         #endregion Private Methods

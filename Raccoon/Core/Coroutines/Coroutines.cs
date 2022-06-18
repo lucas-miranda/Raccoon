@@ -45,7 +45,9 @@ namespace Raccoon {
 
             _pausedCoroutines.Lock();
             foreach (Coroutine coroutine in _pausedCoroutines) {
-                if (coroutine.IsRunning) { // checks if a coroutine it's running again
+                if (coroutine.HasEnded) { // remove ended coroutine
+                    _pausedCoroutines.Remove(coroutine);
+                } else if (coroutine.IsRunning) { // checks if a coroutine it's running again
                     _pausedCoroutines.Remove(coroutine);
                     _runningCoroutines.Add(coroutine);
                 }

@@ -46,7 +46,7 @@ namespace Raccoon.Graphics {
         public float ScaleXY { get { return Math.Max(Scale.X, Scale.Y); } set { Scale = new Vector2(value); } }
         public int Order { get; set; }
         public int Layer { get; set; }
-        public int ControlGroup { get; set; }
+        public ControlGroup ControlGroup { get; private set; }
         public float X { get { return Position.X; } set { Position = new Vector2(value, Y); } }
         public float Y { get { return Position.Y; } set { Position = new Vector2(X, value); } }
         public float Width { get { return Size.Width; } }
@@ -241,6 +241,20 @@ namespace Raccoon.Graphics {
 
         public void CentralizeOriginRounded() {
             Origin = new Vector2(Math.Round(Size.Width / 2f), Math.Round(Size.Height / 2f));
+        }
+
+        public virtual void Paused() {
+        }
+
+        public virtual void Resumed() {
+        }
+
+        public virtual void ControlGroupRegistered(ControlGroup controlGroup) {
+            ControlGroup = controlGroup;
+        }
+
+        public virtual void ControlGroupUnregistered() {
+            ControlGroup = null;
         }
 
         public virtual void Dispose() {

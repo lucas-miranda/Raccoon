@@ -1,8 +1,7 @@
 ﻿namespace Raccoon {
-    public interface IUpdatable {
+    public interface IUpdatable : IPausable {
         bool Active { get; set; }
         int Order { get; set; }
-        int ControlGroup { get; set; }
 
         void Update(int delta);
     }

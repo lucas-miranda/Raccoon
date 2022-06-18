@@ -3,7 +3,7 @@
         void BeforeUpdate();
         void LateUpdate();
         void BeforePhysicsStep();
-        void PhysicsStep(int delta);
+        void PhysicsStep(float stepDelta);
         void LatePhysicsStep();
     }
 }

@@ -6,7 +6,8 @@ namespace Raccoon.Components {
     public class CoroutinesHandler : Component {
         #region Private Members
 
-        public Locker<Coroutine> _coroutines = new Locker<Coroutine>();
+        private Locker<Coroutine> _coroutines = new Locker<Coroutine>();
+        private bool _pausedByControlGroup;
 
         #endregion Private Members
 
@@ -69,6 +70,39 @@ namespace Raccoon.Components {
         public override void DebugRender() {
         }
 
+        public override void Paused() {
+            base.Paused();
+            _pausedByControlGroup = true;
+
+            foreach (Coroutine coroutine in _coroutines) {
+                coroutine.Pause();
+            }
+        }
+
+        public override void Resumed() {
+            base.Resumed();
+
+            if (_pausedByControlGroup) {
+                _pausedByControlGroup = false;
+
+                foreach (Coroutine coroutine in _coroutines) {
+                    coroutine.Resume();
+                }
+            }
+        }
+
+        public override void ControlGroupUnregistered() {
+            base.ControlGroupUnregistered();
+
+            if (_pausedByControlGroup) {
+                _pausedByControlGroup = false;
+
+                foreach (Coroutine coroutine in _coroutines) {
+                    coroutine.Resume();
+                }
+            }
+        }
+
         public Coroutine Start(IEnumerator coroutine) {
             return RegisterCoroutine(Coroutines.Instance.Start(coroutine));
         }
@@ -110,6 +144,10 @@ namespace Raccoon.Components {
         }
 
         public void ResumeAll() {
+            if (_pausedByControlGroup) {
+                return;
+            }
+
             foreach (Coroutine coroutine in _coroutines) {
                 coroutine.Resume();
             }

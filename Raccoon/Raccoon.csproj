@@ -80,6 +80,9 @@
     <Compile Include="Core\Components\Physics\Body.cs" />
     <Compile Include="Core\Components\StateMachine\State.cs" />
     <Compile Include="Core\Components\StateMachine\StateMachine.cs" />
+    <Compile Include="Core\Components\TweenHandler.cs" />
+    <Compile Include="Core\Components\TweensHandler.cs" />
+    <Compile Include="Core\ControlGroup.cs" />
     <Compile Include="Core\Coroutines\Coroutine.cs" />
     <Compile Include="Core\Coroutines\Coroutines.cs" />
     <Compile Include="Core\Coroutines\Instructions\CoroutineInstruction.cs" />
@@ -111,6 +114,7 @@
     <Compile Include="Core\IDebugRenderable.cs" />
     <Compile Include="Core\IExtendedRenderable.cs" />
     <Compile Include="Core\IExtendedUpdatable.cs" />
+    <Compile Include="Core\IPausable.cs" />
     <Compile Include="Core\IRenderable.cs" />
     <Compile Include="Core\ISceneObject.cs" />
     <Compile Include="Core\IUpdatable.cs" />
@@ -206,6 +210,7 @@
     <Compile Include="Graphics\Atlas\Exceptions\AtlasMismatchSubTextureTypeException.cs" />
     <Compile Include="Graphics\Atlas\Exceptions\AtlasSubTextureNotFoundException.cs" />
     <Compile Include="Graphics\Atlas\Processors\AsepriteAtlasProcessor.cs" />
+    <Compile Include="Graphics\Atlas\Processors\ClymeneAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\IAtlasProcessor.cs" />
     <Compile Include="Graphics\Atlas\Processors\RavenAtlasProcessor.cs" />
     <Compile Include="Graphics\Batches\BatchMode.cs" />

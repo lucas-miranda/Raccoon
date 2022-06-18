@@ -519,9 +519,10 @@ Scene:
                 Physics.Instance.PrepareUpdate(delta);
 
                 if (Scene != null) {
+                    float stepDelta = Physics.Instance.Timesteps <= 0 ? 0f : (delta / (float) Physics.Instance.Timesteps);
                     for (int i = 0; i < Physics.Instance.Timesteps; i++) {
                         Scene.BeforePhysicsStep();
-                        Scene.PhysicsStep(delta);
+                        Scene.PhysicsStep(stepDelta);
                         Physics.Instance.Update();
                         Scene.LatePhysicsStep();
                     }

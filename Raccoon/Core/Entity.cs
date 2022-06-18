@@ -28,6 +28,7 @@ namespace Raccoon {
 
         private Renderer _renderer;
         private int _layer;
+        private ControlGroup _controlGroup;
 
         #endregion Private Members
 
@@ -56,7 +57,6 @@ namespace Raccoon {
         public bool WipeOnRemoved { get; set; } = true;
         public bool IsWiped { get; private set; }
         public int Order { get; set; }
-        public int ControlGroup { get; set; }
         public uint Timer { get; private set; }
         public Locker<Graphic> Graphics { get; private set; } = new Locker<Graphic>(Graphic.LayerComparer);
         public Locker<Component> Components { get; private set; } = new Locker<Component>();
@@ -134,6 +134,22 @@ namespace Raccoon {
             }
         }
 
+        public int LocalLayer { get { return _layer; } }
+
+        public ControlGroup ControlGroup {
+            get {
+                if (_controlGroup != null) {
+                    return _controlGroup;
+                }
+
+                return Transform.Parent?.Entity.ControlGroup;
+            }
+
+            private set {
+                _controlGroup = value;
+            }
+        }
+
         #endregion Public Properties
 
         #region Public Methods
@@ -162,6 +178,10 @@ namespace Raccoon {
             if (IsWiped) {
                 // avoid more than one wipe call
                 return;
+            }
+
+            if (ControlGroup != null) {
+                ControlGroup.Unregister(this);
             }
 
             Scene = null;
@@ -250,7 +270,7 @@ namespace Raccoon {
         public virtual void SceneBegin() {
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
+                if (!IsChildAvailable(child)) {
                     continue;
                 }
 
@@ -264,7 +284,7 @@ namespace Raccoon {
         public virtual void SceneEnd() {
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor) {
+                if (!IsChildAvailable(child)) {
                     continue;
                 }
 
@@ -289,7 +309,7 @@ namespace Raccoon {
             if (Transform != null) {
                 Transform.LockChildren();
                 foreach (Transform child in Transform) {
-                    if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                    if (!CanUpdateChild(child)) {
                         continue;
                     }
 
@@ -306,7 +326,9 @@ namespace Raccoon {
 
             Graphics.Lock();
             foreach (Graphic g in Graphics) {
-                if (!g.Visible) {
+                if (!g.Visible
+                 || (g.ControlGroup != null && g.ControlGroup.IsPaused)
+                ) {
                     continue;
                 }
 
@@ -327,7 +349,7 @@ namespace Raccoon {
             if (Transform != null) {
                 Transform.LockChildren();
                 foreach (Transform child in Transform) {
-                    if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                    if (!CanUpdateChild(child)) {
                         continue;
                     }
 
@@ -353,11 +375,7 @@ namespace Raccoon {
             if (Transform != null) {
                 Transform.LockChildren();
                 foreach (Transform child in Transform) {
-                    if (child.IsDetached
-                     || child.Entity == null
-                     || !child.Entity.IsSceneFromTransformAncestor
-                     || !child.Entity.Active
-                    ) {
+                    if (!CanUpdateChild(child)) {
                         continue;
                     }
 
@@ -382,7 +400,7 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                if (!CanUpdateChild(child)) {
                     continue;
                 }
 
@@ -391,24 +409,24 @@ namespace Raccoon {
             Transform.UnlockChildren();
         }
 
-        public virtual void PhysicsStep(int delta) {
+        public virtual void PhysicsStep(float stepDelta) {
             Components.Lock();
             foreach (Component c in Components) {
                 if (!c.Active) {
                     continue;
                 }
 
-                c.PhysicsStep(delta);
+                c.PhysicsStep(stepDelta);
             }
             Components.Unlock();
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                if (!CanUpdateChild(child)) {
                     continue;
                 }
 
-                child.Entity.PhysicsStep(delta);
+                child.Entity.PhysicsStep(stepDelta);
             }
             Transform.UnlockChildren();
         }
@@ -426,7 +444,7 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Active) {
+                if (!CanUpdateChild(child)) {
                     continue;
                 }
 
@@ -472,11 +490,7 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached
-                 || !child.Entity.IsSceneFromTransformAncestor
-                 || !child.Entity.Visible
-                 || !child.Entity.AutoRender
-                ) {
+                if (!CanRenderChild(child)) {
                     continue;
                 }
 
@@ -511,7 +525,7 @@ namespace Raccoon {
 
             Transform.LockChildren();
             foreach (Transform child in Transform) {
-                if (child.IsDetached || !child.Entity.IsSceneFromTransformAncestor || !child.Entity.Visible) {
+                if (!CanDebugRenderChild(child)) {
                     continue;
                 }
 
@@ -522,6 +536,82 @@ namespace Raccoon {
             OnDebugRender();
         }
 #endif
+
+        public virtual void Paused() {
+            Graphics.Lock();
+            foreach (Graphic g in Graphics) {
+                if (g.ControlGroup != null) {
+                    continue;
+                }
+
+                g.Paused();
+            }
+            Graphics.Unlock();
+
+            Components.Lock();
+            foreach (Component c in Components) {
+                c.Paused();
+            }
+            Components.Unlock();
+        }
+
+        public virtual void Resumed() {
+            Graphics.Lock();
+            foreach (Graphic g in Graphics) {
+                if (g.ControlGroup != null) {
+                    continue;
+                }
+
+                g.Resumed();
+            }
+            Graphics.Unlock();
+
+            Components.Lock();
+            foreach (Component c in Components) {
+                c.Resumed();
+            }
+            Components.Unlock();
+        }
+
+        public virtual void ControlGroupRegistered(ControlGroup controlGroup) {
+            ControlGroup = controlGroup;
+
+            Graphics.Lock();
+            foreach (Graphic g in Graphics) {
+                if (g.ControlGroup != null) {
+                    continue;
+                }
+
+                g.ControlGroupRegistered(controlGroup);
+            }
+            Graphics.Unlock();
+
+            Components.Lock();
+            foreach (Component c in Components) {
+                c.ControlGroupRegistered(ControlGroup);
+            }
+            Components.Unlock();
+        }
+
+        public virtual void ControlGroupUnregistered() {
+            Graphics.Lock();
+            foreach (Graphic g in Graphics) {
+                if (g.ControlGroup != null) {
+                    continue;
+                }
+
+                g.ControlGroupUnregistered();
+            }
+            Graphics.Unlock();
+
+            Components.Lock();
+            foreach (Component c in Components) {
+                c.ControlGroupUnregistered();
+            }
+            Components.Unlock();
+
+            ControlGroup = null;
+        }
 
         public Graphic AddGraphic(Graphic graphic) {
             if (graphic == null) {
@@ -913,10 +1003,12 @@ namespace Raccoon {
         }
 
         protected virtual void GraphicRemoved(Graphic graphic) {
+            if (graphic.ControlGroup != null) {
+                graphic.ControlGroup.Unregister(graphic);
+            }
         }
 
         protected virtual bool ComponentAdded(Component component) {
-
             return true;
         }
 
@@ -927,5 +1019,36 @@ namespace Raccoon {
         }
 
         #endregion Protected Methods
+
+        #region Private Methods
+
+        private bool CanUpdateChild(Transform child) {
+            return !(!IsChildAvailable(child)
+                || !child.Entity.Active
+                || (child.Entity.ControlGroup != null && child.Entity.ControlGroup.IsPaused)
+            );
+        }
+
+        private bool CanRenderChild(Transform child) {
+            return !(!IsChildAvailable(child)
+                || !child.Entity.Visible
+                || !child.Entity.AutoRender
+            );
+        }
+
+        private bool CanDebugRenderChild(Transform child) {
+            return !(!IsChildAvailable(child)
+                || !child.Entity.Visible
+            );
+        }
+
+        private bool IsChildAvailable(Transform child) {
+            return !(child.IsDetached
+                || child.Entity == null
+                || !child.Entity.IsSceneFromTransformAncestor
+            );
+        }
+
+        #endregion Private Methods
     }
 }

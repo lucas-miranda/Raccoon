@@ -2,15 +2,16 @@
 
 namespace Raccoon.Components {
     public class CoroutineHandler : Component {
+        private bool _pausedByControlGroup;
+
+        public CoroutineHandler() {
+        }
+
         public Coroutine Coroutine { get; private set; }
 
         public bool IsRunning {
             get {
-                if (Coroutine == null) {
-                    return false;
-                }
-
-                return Coroutine.IsRunning;
+                return Coroutine != null && Coroutine.IsRunning;
             }
         }
 
@@ -36,6 +37,10 @@ namespace Raccoon.Components {
         }
 
         public override void Update(int delta) {
+            if (Entity.Scene == null) {
+                return;
+            }
+
             if (Coroutine != null && Coroutine.HasEnded) {
                 Coroutine = null;
             }
@@ -45,6 +50,30 @@ namespace Raccoon.Components {
         }
 
         public override void DebugRender() {
+        }
+
+        public override void Paused() {
+            base.Paused();
+            _pausedByControlGroup = true;
+            Coroutine?.Pause();
+        }
+
+        public override void Resumed() {
+            base.Resumed();
+
+            if (_pausedByControlGroup) {
+                _pausedByControlGroup = false;
+                Coroutine?.Resume();
+            }
+        }
+
+        public override void ControlGroupUnregistered() {
+            base.ControlGroupUnregistered();
+
+            if (_pausedByControlGroup) {
+                _pausedByControlGroup = false;
+                Coroutine?.Resume();
+            }
         }
 
         public Coroutine Start(IEnumerator coroutine) {
@@ -77,7 +106,7 @@ namespace Raccoon.Components {
         }
 
         public void Resume() {
-            if (Coroutine == null) {
+            if (Coroutine == null || _pausedByControlGroup) {
                 return;
             }
 

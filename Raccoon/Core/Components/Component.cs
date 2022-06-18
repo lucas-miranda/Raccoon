@@ -30,9 +30,7 @@ namespace Raccoon.Components {
         public int Layer { get; set; }
         public Renderer Renderer { get; set; }
         public uint Timer { get { return Entity.Timer; } }
-
-        // TODO  Properly enable/disable components using ControlGroup (at Scene)
-        public int ControlGroup { get; set; }
+        public ControlGroup ControlGroup { get { return Entity?.ControlGroup; } }
 
         public bool Active {
             get {
@@ -92,7 +90,7 @@ namespace Raccoon.Components {
         public virtual void BeforePhysicsStep() {
         }
 
-        public virtual void PhysicsStep(int delta) {
+        public virtual void PhysicsStep(float stepDelta) {
         }
 
         public virtual void LatePhysicsStep() {
@@ -120,6 +118,19 @@ namespace Raccoon.Components {
                 Entity.RemoveComponent(this);
             }
         }
+
+        public virtual void Paused() {
+        }
+
+        public virtual void Resumed() {
+        }
+
+        public virtual void ControlGroupRegistered(ControlGroup controlGroup) {
+        }
+
+        public virtual void ControlGroupUnregistered() {
+        }
+
 
         #endregion Public Methods
 
