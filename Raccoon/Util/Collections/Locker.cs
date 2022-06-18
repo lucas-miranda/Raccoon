@@ -15,7 +15,7 @@ namespace Raccoon.Util.Collections {
 
         #region Constructors
 
-        public Locker() { 
+        public Locker() {
             /*
             ToAdd = new ReadOnlyList<T>(_toAdd);
             ToRemove = new ReadOnlyList<T>(_toRemove);

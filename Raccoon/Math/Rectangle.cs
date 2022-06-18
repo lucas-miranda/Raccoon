@@ -28,8 +28,30 @@ namespace Raccoon {
             Height = height;
         }
 
-        public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) { }
-        public Rectangle(Vector2 startPos, Vector2 endPos) : this(Math.Min(startPos.X, endPos.X), Math.Min(startPos.Y, endPos.Y), Math.Abs(endPos.X - startPos.X), Math.Abs(endPos.Y - startPos.Y)) {
+        public Rectangle(Vector2 topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
+        }
+
+        public Rectangle(Location topLeft, Size size) : this(topLeft.X, topLeft.Y, size.Width, size.Height) {
+        }
+
+        public Rectangle(Vector2 startPos, Vector2 endPos)
+            : this(
+                Math.Min(startPos.X, endPos.X),
+                Math.Min(startPos.Y, endPos.Y),
+                Math.Abs(endPos.X - startPos.X),
+                Math.Abs(endPos.Y - startPos.Y)
+            )
+        {
+        }
+
+        public Rectangle(Location startPos, Location endPos)
+            : this(
+                Math.Min(startPos.X, endPos.X),
+                Math.Min(startPos.Y, endPos.Y),
+                Math.Abs(endPos.X - startPos.X),
+                Math.Abs(endPos.Y - startPos.Y)
+            )
+        {
         }
 
         public Rectangle(float w, float h) {
@@ -38,7 +60,8 @@ namespace Raccoon {
             Height = h;
         }
 
-        public Rectangle(Size size) : this(size.Width, size.Height) { }
+        public Rectangle(Size size) : this(size.Width, size.Height) {
+        }
 
         #endregion Constructors
 

@@ -89,7 +89,7 @@ namespace Raccoon.Graphics.Primitives {
 
         #region Public Methods
 
-        public override void Dispose() { 
+        public override void Dispose() {
             base.Dispose();
         }
 
@@ -158,7 +158,7 @@ namespace Raccoon.Graphics.Primitives {
             if (_arcFill <= 0.001f) {
                 return;
             }
-             
+
             Renderer.DrawVertices(
                 _vertices,
                 minVertexIndex: 0,

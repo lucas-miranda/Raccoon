@@ -1,7 +1,7 @@
 //#define HALF_TEXEL_OFFSET
 
 float is_same(float3 colorA, float3 colorB) {
-    return !(abs(colorB.r - colorA.r) >= 0.01f 
+    return !(abs(colorB.r - colorA.r) >= 0.01f
           || abs(colorB.g - colorA.g) >= 0.01f
           || abs(colorB.b - colorA.b) >= 0.01f);
 }
@@ -26,7 +26,7 @@ float4 snap_pixel(float4 position, float2 renderTargetSize) {
 #else
     float hpcOX = 0;
     float hpcOY = 0;
-#endif	
+#endif
 
     float4 snappedPos = position;
 
