@@ -9,18 +9,20 @@ namespace Raccoon.Graphics {
     public class Atlas : IAsset {
         #region Private Members
 
-        private static readonly IAtlasProcessor[] _processors;
+        private static readonly HashSet<IAtlasProcessor> _processors;
 
-        private Dictionary<string, AtlasSubTexture> _subTextures = new Dictionary<string, AtlasSubTexture>();
+        private Dictionary<string, AtlasSubTexture> _subTextures
+            = new Dictionary<string, AtlasSubTexture>();
 
         #endregion Private Members
 
         #region Constructors
 
         static Atlas() {
-            _processors = new IAtlasProcessor[] {
+            _processors = new HashSet<IAtlasProcessor>() {
                 new AsepriteAtlasProcessor(),
-                new RavenAtlasProcessor()
+                new RavenAtlasProcessor(),
+                new ClymeneAtlasProcessor(),
             };
         }
 
@@ -115,6 +117,16 @@ namespace Raccoon.Graphics {
         #endregion Public Properties
 
         #region Public Methods
+
+        public static void RegisterProcessor(IAtlasProcessor processor) {
+            if (processor == null) {
+                throw new System.ArgumentNullException(nameof(processor));
+            }
+
+            if (!_processors.Add(processor)) {
+                throw new System.ArgumentException($"A processor with type '{processor.GetType().Name}' is already registered.");
+            }
+        }
 
         public AtlasSubTexture RetrieveSubTexture(string name) {
             if (!_subTextures.TryGetValue(name.ToLowerInvariant(), out AtlasSubTexture subTexture)) {

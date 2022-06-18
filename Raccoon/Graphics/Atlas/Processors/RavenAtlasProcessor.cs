@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 
 namespace Raccoon.Graphics.AtlasProcessors {
+    [System.Obsolete(
+        "Raven is completely deprecated. Use clymene and ClymeneAtlasProcessor instead.",
+        false
+    )]
     public class RavenAtlasProcessor : IAtlasProcessor {
         public bool VerifyJsonMeta(JToken metaToken) {
             JToken ravenAppToken = metaToken.SelectToken("raven.app");
