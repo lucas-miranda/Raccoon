@@ -109,7 +109,7 @@ namespace Raccoon.Util {
         /// <returns>Number in range [min, max].</returns>
         public static int Integer(int min, int max) {
             if (max < min) {
-                throw new System.ArgumentException("Max should be greater or equals min.");
+                throw new System.ArgumentException($"Max should be greater or equals min.\nMin: {min}, Max: {max}");
             } else if (min == max) {
                 return max;
             }
@@ -476,6 +476,23 @@ namespace Raccoon.Util {
             KeyValuePair<K, V> entry = Choose<K, V>(dictionary);
             dictionary.Remove(entry.Key);
             return entry;
+        }
+
+        public static void Shuffle<T>(IList<T> list) {
+            if (list.Count <= 1) {
+                return;
+            }
+
+            // using Fisher-Yates shuffle algorithm
+            int j;
+            T value;
+
+            for (int i = list.Count - 1; i >= 0; i--) {
+                j = Integer(0, i);
+                value = list[i];
+                list[i] = list[j];
+                list[j] = value;
+            }
         }
 
         #endregion Public Methods
