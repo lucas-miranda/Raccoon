@@ -174,45 +174,14 @@ namespace Raccoon {
         }
 
         public bool IntersectionPoint(Rectangle rectangle, out Vector2 intersectionPoint) {
-            // ref: https://gist.github.com/ChickenProp/3194723
-            Vector2 v = ToVector2();
-
-            float[] p = new float[] {
-                        -v.X, v.X, -v.Y, v.Y
-                    },
-                    q = new float[] {
-                        PointA.X - rectangle.Left,
-                        rectangle.Right - PointA.X,
-                        PointA.Y - rectangle.Top,
-                        rectangle.Bottom - PointA.Y
-                    };
-
-            float u1 = float.NegativeInfinity,
-                  u2 = float.PositiveInfinity;
-
-            for (int i = 0; i < 4; i++) {
-                if (p[i] == 0) {
-                    if (q[i] < 0) {
-                        intersectionPoint = default;
-                        return false;
-                    }
-                } else {
-                    float t = q[i] / p[i];
-                    if (p[i] < 0 && u1 < t) {
-                        u1 = t;
-                    } else if (p[i] > 0 && u2 > t) {
-                        u2 = t;
-                    }
+            foreach (Line edge in rectangle.Edges()) {
+                if (IntersectionPoint(edge, out intersectionPoint)) {
+                    return true;
                 }
             }
 
-            if (u1 > u2 || u1 > 1 || u1 < 0) {
-                intersectionPoint = default;
-                return false;
-            }
-
-            intersectionPoint = new Vector2(PointA.X + u1 * v.X, PointA.Y + u1 * v.Y);
-            return true;
+            intersectionPoint = default;
+            return false;
         }
 
         public bool Intersects(Rectangle rectangle) {
@@ -258,6 +227,10 @@ namespace Raccoon {
             return PointB - PointA;
         }
 
+        public override string ToString() {
+            return $"[A: {PointA}, B: {PointB}]";
+        }
+
         #endregion Public Methods
 
         #region Private Methods
@@ -292,7 +265,7 @@ namespace Raccoon {
         }
 
         private bool PointIsSmaller(Vector2 a, Vector2 b) {
-            return a.X < b.X - Math.Epsilon 
+            return a.X < b.X - Math.Epsilon
                 || (Math.Abs(a.X - b.X) < Math.Epsilon && a.Y < b.Y - Math.Epsilon);
         }
 
