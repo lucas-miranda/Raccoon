@@ -130,6 +130,12 @@ public static class Extensions {
         }
     }
 
+    public static T Retrieve<T>(this IList<T> list, int index) {
+        T e = list[index];
+        list.RemoveAt(index);
+        return e;
+    }
+
     #endregion IList
 
     #region List
