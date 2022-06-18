@@ -80,6 +80,10 @@ namespace Raccoon {
             Height = System.Math.Abs(Height - h);
         }
 
+        public bool Fits(Size size) {
+            return size.Width <= Width && size.Height <= Height;
+        }
+
         public override bool Equals(object obj) {
             return obj is Size && Equals((Size) obj);
         }
