@@ -85,6 +85,12 @@ namespace Raccoon {
             }
         }
 
+        public Transform this[int index] {
+            get {
+                return _children[index];
+            }
+        }
+
         #endregion Public Properties
 
         #region Public Methods
