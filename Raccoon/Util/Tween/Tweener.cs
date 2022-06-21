@@ -71,12 +71,17 @@ namespace Raccoon.Util.Tween {
             tween.Play(forceReset);
         }
 
+        public static bool IsRegistered(Tween tween) {
+            return Instance._tweens.Contains(tween);
+        }
+
         public static void Clear() {
             foreach (Tween tween in Instance._tweens) {
                 if (tween.CanDisposeWhenRemoved) {
                     tween.Dispose();
                 }
             }
+
             Instance._tweens.Clear();
         }
 

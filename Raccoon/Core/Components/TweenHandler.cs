@@ -45,7 +45,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Tween == null) {
+            if (Tween == null || !Tweener.IsRegistered(Tween)) {
                 return;
             }
 
