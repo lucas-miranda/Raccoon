@@ -31,6 +31,21 @@ namespace Raccoon.Input {
             return (T) inputInterface;
         }
 
+        public bool ExistsAs<T>() where T : InputInterface {
+            return InputInterfaces.ContainsKey(typeof(T));
+        }
+
+
+        public bool TryAs<T>(out T interfaceT) where T : InputInterface {
+            if (InputInterfaces.TryGetValue(typeof(T), out InputInterface i)) {
+                interfaceT = (T) i;
+                return true;
+            }
+
+            interfaceT = null;
+            return false;
+        }
+
         #endregion Public Methods
 
         #region Private Methods

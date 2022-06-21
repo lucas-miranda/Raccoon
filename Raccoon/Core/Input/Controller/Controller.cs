@@ -205,6 +205,15 @@ namespace Raccoon.Input {
             }
         }
 
+        public bool TryButton(T commandLabel, out Button button) {
+            if (!_commands.TryGetValue(commandLabel, out Command command)) {
+                button = null;
+                return false;
+            }
+
+            return command.TryAs<Button>(out button);
+        }
+
         public Command CreateCommand(T label) {
             if (_commands.ContainsKey(label)) {
                 throw new System.ArgumentException($"Already exists a command with label '{label}'");
@@ -217,6 +226,10 @@ namespace Raccoon.Input {
             CommandAdded(label, command);
 
             return command;
+        }
+
+        public bool IsRegistered(T commandLabel) {
+            return _commands.ContainsKey(commandLabel);
         }
 
         public override string ToString() {
