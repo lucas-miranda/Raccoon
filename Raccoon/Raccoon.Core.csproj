@@ -51,7 +51,7 @@
         <ProjectReference Include="..\SharpFont\Source\SharpFont\SharpFont.Core.csproj"/>
     </ItemGroup>
     <ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
         <PackageReference Include="NUnit" Version="3.12.0" />
     </ItemGroup>
 </Project>
