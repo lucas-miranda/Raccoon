@@ -84,6 +84,7 @@ namespace Raccoon.Util.Tween {
         public bool IsAdditional { get; private set; }
         public bool HasEnded { get; private set; }
         public bool IsPlaying { get; private set; }
+        public bool IsPaused { get; private set; }
         public bool IsLooping { get { return RepeatTimes < 0; } set { RepeatTimes = value ? -1 : 0; } }
         public bool IsPingPong { get; set; }
         public bool IsReverse { get; set; }
@@ -128,7 +129,7 @@ namespace Raccoon.Util.Tween {
         }
 
         public void Update(int delta) {
-            if (!IsPlaying) {
+            if (!IsPlaying || IsPaused) {
                 return;
             }
 
@@ -159,7 +160,7 @@ namespace Raccoon.Util.Tween {
         }
 
         public void Reset() {
-            IsPlaying = false;
+            IsPlaying = IsPaused = false;
             HasEnded = false;
             Timer = 0;
             TimesPlayed = 0;
@@ -174,9 +175,13 @@ namespace Raccoon.Util.Tween {
         public Tween Play(bool forceReset = true) {
             if (forceReset) {
                 Reset();
+            } else if (IsPlaying && IsPaused) {
+                Resume();
+                return this;
             }
 
             IsPlaying = true;
+            IsPaused = false;
 
             if (Timer == 0) {
                 _onStart?.Invoke();
@@ -191,8 +196,20 @@ namespace Raccoon.Util.Tween {
             return this;
         }
 
+        public void Resume() {
+            if (!IsPaused) {
+                return;
+            }
+
+            IsPaused = false;
+        }
+
         public void Pause() {
-            IsPlaying = false;
+            if (IsPaused) {
+                return;
+            }
+
+            IsPaused = true;
         }
 
         public void ClearLerpers() {
