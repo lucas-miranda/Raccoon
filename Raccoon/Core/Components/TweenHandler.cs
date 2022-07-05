@@ -45,17 +45,16 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Tween == null || !Tweener.IsRegistered(Tween)) {
+            if (Tween == null) {
+                return;
+            } else if (Tween.IsDisposed) {
+                Tween = null;
+                return;
+            } else if (!Tweener.IsRegistered(Tween)) {
                 return;
             }
 
-            if (Tween.CanDisposeWhenRemoved) {
-                Tween.CanDisposeWhenRemoved = false; // to avoid disposing when it shouldn't
-                Tweener.Remove(Tween);
-                Tween.CanDisposeWhenRemoved = true;
-            } else {
-                Tweener.Remove(Tween);
-            }
+            Remove();
         }
 
         public override void Update(int delta) {
@@ -63,7 +62,7 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Tween != null && Tween.HasEnded) {
+            if (Tween != null && Tween.HasEnded && Tween.IsDisposed) {
                 Tween = null;
             }
         }
@@ -140,12 +139,38 @@ namespace Raccoon.Components {
             return Tween;
         }
 
+        public void Resume() {
+            if (Tween == null) {
+                return;
+            }
+
+            Tween.Resume();
+        }
+
         public void Pause() {
             if (Tween == null) {
                 return;
             }
 
             Tween.Pause();
+        }
+
+        public void Remove() {
+            if (Tween == null) {
+                return;
+            } else if (Tween.IsDisposed) {
+                Tween = null;
+                return;
+            }
+
+            // remove tween but don't dispose it
+            if (Tween.CanDisposeWhenRemoved) {
+                Tween.CanDisposeWhenRemoved = false; // to avoid disposing when it shouldn't
+                Tweener.Remove(Tween);
+                Tween.CanDisposeWhenRemoved = true;
+            } else {
+                Tweener.Remove(Tween);
+            }
         }
 
         public void Clear() {

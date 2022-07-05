@@ -40,7 +40,7 @@ namespace Raccoon.Components {
 
             if (AutoRegister) {
                 foreach (Tween tween in _tweens) {
-                    PlayTween(tween, false);
+                    Tweener.Play(tween, false);
                 }
             }
         }
@@ -58,13 +58,11 @@ namespace Raccoon.Components {
             }
 
             foreach (Tween tween in _tweens) {
-                if (tween.CanDisposeWhenRemoved) {
-                    tween.CanDisposeWhenRemoved = false; // to avoid disposing when it shouldn't
-                    RemoveTween(tween);
-                    tween.CanDisposeWhenRemoved = true;
-                } else {
-                    RemoveTween(tween);
+                if (!Tweener.IsRegistered(tween)) {
+                    continue;
                 }
+
+                InternalRemove(tween);
             }
         }
 
@@ -75,7 +73,7 @@ namespace Raccoon.Components {
 
             _tweens.Lock();
             foreach (Tween tween in _tweens) {
-                if (tween.HasEnded) {
+                if (tween.HasEnded && tween.IsDisposed) {
                     _tweens.Remove(tween);
                 }
             }
@@ -126,10 +124,21 @@ namespace Raccoon.Components {
         public Tween Register(Tween tween) {
             if (tween == null) {
                 throw new System.ArgumentNullException(nameof(tween));
+            } else if (_tweens.Contains(tween)) {
+                return tween;
             }
 
             _tweens.Add(tween);
             return tween;
+        }
+
+        public bool Unregister(Tween tween) {
+            if (_tweens.Remove(tween)) {
+                InternalRemove(tween);
+                return true;
+            }
+
+            return false;
         }
 
         public Tween Play(Tween tween, bool forceReset = true) {
@@ -138,12 +147,21 @@ namespace Raccoon.Components {
             return tween;
         }
 
-        public void Clear() {
+        public bool Remove(Tween tween) {
+            if (!_tweens.Contains(tween)) {
+                return false;
+            }
+
+            InternalRemove(tween);
+            return true;
+        }
+
+        public void Clear(bool canForceDispose = false) {
             foreach (Tween tween in _tweens) {
                 if (!Tweener.Remove(tween)) {
                     tween.Pause();
 
-                    if (tween.CanDisposeWhenRemoved) {
+                    if (canForceDispose || tween.CanDisposeWhenRemoved) {
                         tween.Dispose();
                     }
                 }
@@ -162,6 +180,22 @@ namespace Raccoon.Components {
             }
         }
 
+        public void PauseAll() {
+            foreach (Tween tween in _tweens) {
+                tween.Pause();
+            }
+        }
+
+        public void ResumeAll() {
+            if (_pausedByControlGroup) {
+                return;
+            }
+
+            foreach (Tween tween in _tweens) {
+                tween.Resume();
+            }
+        }
+
         public void ResetAll() {
             foreach (Tween tween in _tweens) {
                 tween.Reset();
@@ -172,12 +206,15 @@ namespace Raccoon.Components {
 
         #region Private Methods
 
-        private void PlayTween(Tween tween, bool forceReset) {
-            Tweener.Play(tween, forceReset);
-        }
-
-        private void RemoveTween(Tween tween) {
-            Tweener.Remove(tween);
+        public void InternalRemove(Tween tween) {
+            // remove tween but don't dispose it
+            if (tween.CanDisposeWhenRemoved) {
+                tween.CanDisposeWhenRemoved = false; // to avoid disposing when it shouldn't
+                Tweener.Remove(tween);
+                tween.CanDisposeWhenRemoved = true;
+            } else {
+                Tweener.Remove(tween);
+            }
         }
 
         #endregion Private Methods
