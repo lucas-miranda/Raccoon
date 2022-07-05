@@ -55,7 +55,7 @@ Coroutine routines when dealing with some Raccoon types. Such as waiting an anim
 
 ### `Simplify.cs`
 
-Aids in polygon simplification through specific constraints. 
+Aids in polygon simplification through specific constraints.
 
 ### `Time.cs`
 

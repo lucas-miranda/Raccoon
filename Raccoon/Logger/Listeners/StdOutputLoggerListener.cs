@@ -23,50 +23,50 @@ namespace Raccoon {
             System.Console.OutputEncoding = new UTF8Encoding();
 
             _contexts = new Dictionary<System.Type, TextFormatter> {
-                { 
-                    typeof(TimestampLoggerToken), 
-                    new TextFormatter() { 
+                {
+                    typeof(TimestampLoggerToken),
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.DarkGray
-                    } 
+                    }
                 },
-                { 
-                    typeof(SubjectsLoggerToken), 
-                    new TextFormatter() { 
+                {
+                    typeof(SubjectsLoggerToken),
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.DarkGray
-                    } 
+                    }
                 }
             };
 
             _categories = new Dictionary<string, TextFormatter> {
-                { 
-                    "error", 
-                    new TextFormatter() { 
+                {
+                    "error",
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.Red
-                    } 
+                    }
                 },
-                { 
-                    "info", 
-                    new TextFormatter() { 
+                {
+                    "info",
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.Blue
-                    } 
+                    }
                 },
-                { 
-                    "warning", 
-                    new TextFormatter() { 
+                {
+                    "warning",
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.Yellow
-                    } 
+                    }
                 },
-                { 
-                    "critical", 
-                    new TextFormatter() { 
+                {
+                    "critical",
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.DarkYellow
-                    } 
+                    }
                 },
-                { 
-                    "success", 
-                    new TextFormatter() { 
+                {
+                    "success",
+                    new TextFormatter() {
                         ForegroundColor = System.ConsoleColor.Green
-                    } 
+                    }
                 }
             };
 
