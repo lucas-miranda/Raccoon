@@ -193,6 +193,29 @@ namespace Raccoon.Components {
 
         #region Public Methods
 
+        public static float CalculateAcceleration(
+            float speed,
+            float targetSpeed,
+            float dt,
+            float acceleration
+        ) {
+            if (Math.EqualsEstimate(speed, targetSpeed)) {
+                return 0f;
+            }
+
+            if (targetSpeed > speed) {
+                if (speed + acceleration * dt <= targetSpeed) {
+                    return acceleration;
+                }
+            } else {
+                if (speed - acceleration * dt >= targetSpeed) {
+                    return -acceleration;
+                }
+            }
+
+            return (targetSpeed - speed) / dt;
+        }
+
         public virtual void OnAdded(Body body) {
             Body = body;
         }
@@ -454,24 +477,6 @@ namespace Raccoon.Components {
         }
 
         protected virtual void ForceEnds() {
-        }
-
-        protected float CalculateAcceleration(float speed, float targetSpeed, float dt, float acceleration) {
-            if (Math.EqualsEstimate(speed, targetSpeed)) {
-                return 0f;
-            }
-
-            if (targetSpeed > speed) {
-                if (speed + acceleration * dt <= targetSpeed) {
-                    return acceleration;
-                }
-            } else {
-                if (speed - acceleration * dt >= targetSpeed) {
-                    return -acceleration;
-                }
-            }
-
-            return (targetSpeed - speed) / dt;
         }
 
         #endregion Protected Methods
