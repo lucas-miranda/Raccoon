@@ -3,7 +3,7 @@ namespace Raccoon.Log {
     public class TimestampLoggerToken : LoggerToken, System.IEquatable<TimestampLoggerToken> {
         public TimestampLoggerToken(System.DateTime dateTime) {
             DateTime = dateTime;
-            Timestamp = dateTime.ToString("dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            Timestamp = dateTime.ToString("dd/MM/yyyy HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         public TimestampLoggerToken(System.DateTime dateTime, string timestampFormat) {
