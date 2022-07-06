@@ -184,6 +184,30 @@ public static class Extensions {
 
     #endregion List
 
+    #region Stack
+
+    public static bool TryPeek<T>(this Stack<T> stack, out T value) {
+        if (stack.Count == 0) {
+            value = default(T);
+            return false;
+        }
+
+        value = stack.Peek();
+        return true;
+    }
+
+    public static bool TryPop<T>(this Stack<T> stack, out T value) {
+        if (stack.Count == 0) {
+            value = default(T);
+            return false;
+        }
+
+        value = stack.Pop();
+        return true;
+    }
+
+    #endregion Stack
+
     #region Boolean
 
     public static string ToPrettyString(this bool value) {
