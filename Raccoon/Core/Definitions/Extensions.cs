@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 
 using Raccoon.Util;
@@ -44,6 +43,9 @@ public static class Extensions {
 
     #region String
 
+    private static readonly char[] WordSeparator = new char[] { ' ' };
+    private static readonly System.Text.StringBuilder Builder = new System.Text.StringBuilder();
+
     public static int Count(this string str, string value) {
         if (value == null) {
             throw new System.ArgumentNullException(nameof(value));
@@ -60,34 +62,104 @@ public static class Extensions {
         return count;
     }
 
-    public static string Capitalize(this string str, bool capitalizeSingleLetters = false) {
-        string[] splitted = str.Split(new char[] { ' ' });
-        StringBuilder resultBuilder = new StringBuilder();
 
-        for (int i = 0; i < splitted.Length; i++) {
-            string part = splitted[i];
+    public static string ToCamelCase(this string str, bool ignoreSingleLetters = false) {
+        Builder.Clear();
 
-            if (part.Length == 0) {
-                continue;
-            } else if (part.Length == 1) {
-                if (capitalizeSingleLetters) {
-                    resultBuilder.Append(char.ToUpperInvariant(part[0]));
-                } else {
-                    resultBuilder.Append(part[0]);
+        int startIndex = 0,
+            endIndex;
+
+        bool isWordSeparator = false,
+             isFirstWord = true;
+
+        while (startIndex < str.Length) {
+            for (endIndex = 0; endIndex < str.Length; endIndex++) {
+                char c = str[endIndex];
+
+                if (System.Array.IndexOf(WordSeparator, c) > 0) {
+                    isWordSeparator = true;
+                    break;
+                } else if (endIndex > startIndex && char.IsUpper(c)) {
+                    break;
                 }
-
-                continue;
             }
 
-            resultBuilder.Append(char.ToUpperInvariant(part[0]));
-            resultBuilder.Append(part.Substring(startIndex: 1));
+            if (endIndex > startIndex) {
+                // push word
 
-            if (i < splitted.Length - 1) {
-                resultBuilder.Append(' ');
+                if (isFirstWord) {
+                    Builder.Append(str.Substring(startIndex, (endIndex - startIndex)).ToLowerInvariant());
+                    isFirstWord = false;
+                } else if (endIndex - startIndex == 1) {
+                    // handle single char
+
+                    if (ignoreSingleLetters) {
+                        Builder.Append(str[startIndex]);
+                    } else {
+                        Builder.Append(char.ToUpperInvariant(str[startIndex]));
+                    }
+                } else {
+                    Builder.Append(char.ToUpperInvariant(str[startIndex]));
+                    Builder.Append(str, startIndex + 1, endIndex - (startIndex + 1));
+                }
+            }
+
+            if (isWordSeparator) {
+                // push separator
+                Builder.Append(str, endIndex, 1);
+                isWordSeparator = false;
+                startIndex = endIndex + 1;
+            } else {
+                startIndex = endIndex;
             }
         }
 
-        return resultBuilder.ToString();
+        string result = Builder.ToString();
+        Builder.Clear();
+        return result;
+    }
+
+    public static string ToCapitalized(this string str, bool ignoreSingleLetters = false) {
+        Builder.Clear();
+
+        int startIndex = 0,
+            endIndex;
+
+        while (startIndex < str.Length) {
+            for (endIndex = 0; endIndex < str.Length; endIndex++) {
+                char c = str[endIndex];
+
+                if (System.Array.IndexOf(WordSeparator, c) > 0) {
+                    break;
+                }
+            }
+
+            if (endIndex > startIndex) {
+                // push word
+
+                if (endIndex - startIndex == 1) {
+                    if (ignoreSingleLetters) {
+                        Builder.Append(str[startIndex]);
+                    } else {
+                        Builder.Append(char.ToUpperInvariant(str[startIndex]));
+                    }
+                } else {
+                    Builder.Append(char.ToUpperInvariant(str[startIndex]));
+                    Builder.Append(str, startIndex + 1, endIndex - (startIndex + 1));
+                }
+            }
+
+            // push separator
+            if (endIndex < str.Length) {
+                Builder.Append(str, endIndex, 1);
+            }
+
+            startIndex = endIndex + 1;
+        }
+
+        string result = Builder.ToString();
+        Builder.Clear();
+        return result;
     }
 
     public static string SeparateCapitalized(this string str, char separationChar = ' ') {
@@ -100,6 +172,32 @@ public static class Extensions {
         }
 
         return str;
+    }
+
+    public static string RemoveAll(this string str, char removeChar) {
+        Builder.Clear();
+
+        int startIndex = 0;
+
+        for (int i = 0; i < str.Length; i++) {
+            char c = str[i];
+
+            if (c == removeChar) {
+                if (i > startIndex) {
+                    Builder.Append(str, startIndex, i - startIndex);
+                }
+
+                startIndex = i + 1;
+            }
+        }
+
+        if (startIndex < str.Length) {
+            Builder.Append(str, startIndex, str.Length - startIndex);
+        }
+
+        string result = Builder.ToString();
+        Builder.Clear();
+        return result;
     }
 
     #endregion String
