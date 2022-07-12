@@ -39,9 +39,16 @@ namespace Raccoon.Components {
             base.OnSceneAdded();
 
             if (AutoRegister) {
+                _tweens.Lock();
                 foreach (Tween tween in _tweens) {
+                    if (tween.IsDisposed) {
+                        _tweens.Remove(tween);
+                        continue;
+                    }
+
                     Tweener.Play(tween, false);
                 }
+                _tweens.Unlock();
             }
         }
 
@@ -57,13 +64,18 @@ namespace Raccoon.Components {
                 return;
             }
 
+            _tweens.Lock();
             foreach (Tween tween in _tweens) {
-                if (!Tweener.IsRegistered(tween)) {
+                if (tween.HasEnded || tween.IsDisposed) {
+                    _tweens.Remove(tween);
+                    continue;
+                } else if (!Tweener.IsRegistered(tween)) {
                     continue;
                 }
 
                 InternalRemove(tween);
             }
+            _tweens.Unlock();
         }
 
         public override void Update(int delta) {
@@ -73,7 +85,7 @@ namespace Raccoon.Components {
 
             _tweens.Lock();
             foreach (Tween tween in _tweens) {
-                if (tween.HasEnded && tween.IsDisposed) {
+                if (tween.HasEnded || tween.IsDisposed) {
                     _tweens.Remove(tween);
                 }
             }
