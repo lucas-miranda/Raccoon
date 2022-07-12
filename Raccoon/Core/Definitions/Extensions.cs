@@ -73,10 +73,10 @@ public static class Extensions {
              isFirstWord = true;
 
         while (startIndex < str.Length) {
-            for (endIndex = 0; endIndex < str.Length; endIndex++) {
+            for (endIndex = startIndex; endIndex < str.Length; endIndex++) {
                 char c = str[endIndex];
 
-                if (System.Array.IndexOf(WordSeparator, c) > 0) {
+                if (System.Array.IndexOf(WordSeparator, c) >= 0) {
                     isWordSeparator = true;
                     break;
                 } else if (endIndex > startIndex && char.IsUpper(c)) {
@@ -126,10 +126,8 @@ public static class Extensions {
             endIndex;
 
         while (startIndex < str.Length) {
-            for (endIndex = 0; endIndex < str.Length; endIndex++) {
-                char c = str[endIndex];
-
-                if (System.Array.IndexOf(WordSeparator, c) > 0) {
+            for (endIndex = startIndex; endIndex < str.Length; endIndex++) {
+                if (System.Array.IndexOf(WordSeparator, str[endIndex]) >= 0) {
                     break;
                 }
             }
