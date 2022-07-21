@@ -14,6 +14,12 @@ namespace Raccoon.Components {
         /// </summary>
         public bool AutoRegister { get; set; } = true;
 
+        /// <summary>
+        /// Keep Tween after it has ended.
+        /// But can rid if it was disposed.
+        /// </summary>
+        public bool KeepEndedTween { get; set; }
+
         public bool IsPlaying {
             get {
                 return Tween != null && Tween.IsPlaying;
@@ -62,7 +68,15 @@ namespace Raccoon.Components {
                 return;
             }
 
-            if (Tween != null && Tween.HasEnded && Tween.IsDisposed) {
+            if (Tween == null) {
+                return;
+            }
+
+            if (KeepEndedTween) {
+                if (Tween.IsDisposed) {
+                    Tween = null;
+                }
+            } else if (Tween.HasEnded || Tween.IsDisposed) {
                 Tween = null;
             }
         }
