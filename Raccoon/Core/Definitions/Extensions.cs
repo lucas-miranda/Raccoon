@@ -161,15 +161,25 @@ public static class Extensions {
     }
 
     public static string SeparateCapitalized(this string str, char separationChar = ' ') {
+        Builder.Clear();
         string separation = separationChar.ToString();
+        int startIndex = 0;
 
         for (int i = 1; i < str.Length; i++) {
             if (char.IsUpper(str[i]) && str[i - 1] != separationChar) {
-                str.Insert(i, separation);
+                Builder.Append(str, startIndex, i - startIndex);
+                Builder.Append(separation);
+                startIndex = i;
             }
         }
 
-        return str;
+        if (startIndex < str.Length) {
+            Builder.Append(str, startIndex, str.Length - startIndex);
+        }
+
+        string result = Builder.ToString();
+        Builder.Clear();
+        return result;
     }
 
     public static string RemoveAll(this string str, char removeChar) {
