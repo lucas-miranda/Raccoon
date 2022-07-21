@@ -192,7 +192,10 @@ namespace Raccoon.Util.Tween {
                 HasEnded = true;
             }
 
-            MoveLerpersToStart();
+            if (forceReset) {
+                MoveLerpersToStart();
+            }
+
             return this;
         }
 
