@@ -59,6 +59,9 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public Animation(Atlas atlas, string name) : this(atlas.RetrieveAnimation(name)) {
+        }
+
         public Animation(Animation<KeyType> animation) {
             Texture = animation.Texture;
             SourceRegion = animation.SourceRegion;
@@ -700,6 +703,7 @@ namespace Raccoon.Graphics {
         public Animation(string filename, Size frameSize) : base(filename, frameSize) { }
         public Animation(AtlasSubTexture subTexture, Size frameSize) : base(subTexture, frameSize) { }
         public Animation(AtlasAnimation animTexture) : base(animTexture) { }
+        public Animation(Atlas atlas, string name) : base(atlas, name) { }
         public Animation(Animation animation) : base(animation) { }
 
         #endregion Constructors
