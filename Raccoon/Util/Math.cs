@@ -205,6 +205,32 @@
             return n;
         }
 
+        public static float Min(float a, float b) {
+            return a < b ? a : b;
+        }
+
+        public static float Min(float a, float b, float c) {
+            if (a < b) {
+                return a < c ? a : c;
+            }
+
+            return b < c ? b : c;
+        }
+
+        public static float Min(float a, float b, float c, float d) {
+            if (a < b) {
+                if (a < c) {
+                    return a < d ? a : d;
+                } else {
+                    return c < d ? c : d;
+                }
+            } else if (b < c) {
+                return b < d ? b : d;
+            }
+
+            return c < d ? c : d;
+        }
+
         public static float Min(params float[] values) {
             if (values.Length == 0) {
                 throw new System.ArgumentException("At least one value must be supplied.");
@@ -225,6 +251,32 @@
             return min;
         }
 
+        public static int Min(int a, int b) {
+            return a < b ? a : b;
+        }
+
+        public static int Min(int a, int b, int c) {
+            if (a < b) {
+                return a < c ? a : c;
+            }
+
+            return b < c ? b : c;
+        }
+
+        public static int Min(int a, int b, int c, int d) {
+            if (a < b) {
+                if (a < c) {
+                    return a < d ? a : d;
+                } else {
+                    return c < d ? c : d;
+                }
+            } else if (b < c) {
+                return b < d ? b : d;
+            }
+
+            return c < d ? c : d;
+        }
+
         public static int Min(params int[] values) {
             if (values.Length == 0) {
                 throw new System.ArgumentException("At least one value must be supplied.");
@@ -243,6 +295,32 @@
             }
 
             return min;
+        }
+
+        public static int Max(int a, int b) {
+            return a > b ? a : b;
+        }
+
+        public static int Max(int a, int b, int c) {
+            if (a > b) {
+                return a > c ? a : c;
+            }
+
+            return b > c ? b : c;
+        }
+
+        public static int Max(int a, int b, int c, int d) {
+            if (a > b) {
+                if (a > c) {
+                    return a > d ? a : d;
+                } else {
+                    return c > d ? c : d;
+                }
+            } else if (b > c) {
+                return b > d ? b : d;
+            }
+
+            return c > d ? c : d;
         }
 
         public static int Max(params int[] values) {
@@ -287,6 +365,32 @@
 
         public static Location Min(Location l1, Location l2) {
             return new Location(Min(l1.X, l2.X), Min(l1.Y, l2.Y));
+        }
+
+        public static float Max(float a, float b) {
+            return a > b ? a : b;
+        }
+
+        public static float Max(float a, float b, float c) {
+            if (a > b) {
+                return a > c ? a : c;
+            }
+
+            return b > c ? b : c;
+        }
+
+        public static float Max(float a, float b, float c, float d) {
+            if (a > b) {
+                if (a > c) {
+                    return a > d ? a : d;
+                } else {
+                    return c > d ? c : d;
+                }
+            } else if (b > c) {
+                return b > d ? b : d;
+            }
+
+            return c > d ? c : d;
         }
 
         public static float Max(params float[] values) {
