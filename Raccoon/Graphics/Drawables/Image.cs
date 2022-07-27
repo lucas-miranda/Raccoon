@@ -24,6 +24,9 @@
             Origin = subTexture.OriginalFrame.Position;
         }
 
+        public Image(Atlas atlas, string name) : this(atlas.RetrieveSubTexture(name)) {
+        }
+
         public Image(AtlasAnimation animTexture) : this(animTexture.Texture) {
             Texture = animTexture.Texture;
             SourceRegion = animTexture.SourceRegion;
