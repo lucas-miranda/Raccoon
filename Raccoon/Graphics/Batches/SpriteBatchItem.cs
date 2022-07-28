@@ -38,25 +38,25 @@ namespace Raccoon.Graphics {
             }
 
             VertexData[0] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + topLeft), layerDepth + vertexData[0].Position.Z),
+                new Vector3(Math.Floor(position + topLeft), layerDepth + vertexData[0].Position.Z),
                 new Color(vertexData[0].Color) * color,
                 vertexData[0].TextureCoordinate
             );
 
             VertexData[1] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + topRight), layerDepth + vertexData[1].Position.Z),
+                new Vector3(Math.Floor(position + topRight), layerDepth + vertexData[1].Position.Z),
                 new Color(vertexData[1].Color) * color,
                 vertexData[1].TextureCoordinate
             );
 
             VertexData[2] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + bottomRight), layerDepth + vertexData[2].Position.Z),
+                new Vector3(Math.Floor(position + bottomRight), layerDepth + vertexData[2].Position.Z),
                 new Color(vertexData[2].Color) * color,
                 vertexData[2].TextureCoordinate
             );
 
             VertexData[3] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + bottomLeft), layerDepth + vertexData[3].Position.Z),
+                new Vector3(Math.Floor(position + bottomLeft), layerDepth + vertexData[3].Position.Z),
                 new Color(vertexData[3].Color) * color,
                 vertexData[3].TextureCoordinate
             );
@@ -107,25 +107,25 @@ namespace Raccoon.Graphics {
             }
 
             VertexData[0] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + topLeft), layerDepth),
+                new Vector3(Math.Floor(position + topLeft), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[1] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + topRight), layerDepth),
+                new Vector3(Math.Floor(position + topRight), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[2] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + bottomRight), layerDepth),
+                new Vector3(Math.Floor(position + bottomRight), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
 
             VertexData[3] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(position + bottomLeft), layerDepth),
+                new Vector3(Math.Floor(position + bottomLeft), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
@@ -176,25 +176,25 @@ namespace Raccoon.Graphics {
             }
 
             VertexData[0] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(destinationRectangle.TopLeft + topLeft), layerDepth),
+                new Vector3(Math.Floor(destinationRectangle.TopLeft + topLeft), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[1] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(destinationRectangle.TopLeft + topRight), layerDepth),
+                new Vector3(Math.Floor(destinationRectangle.TopLeft + topRight), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Top / texture.Height)
             );
 
             VertexData[2] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(destinationRectangle.TopLeft + bottomRight), layerDepth),
+                new Vector3(Math.Floor(destinationRectangle.TopLeft + bottomRight), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Right / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
 
             VertexData[3] = new VertexPositionColorTexture(
-                new Vector3(Math.Round(destinationRectangle.TopLeft + bottomLeft), layerDepth),
+                new Vector3(Math.Floor(destinationRectangle.TopLeft + bottomLeft), layerDepth),
                 color,
                 new Microsoft.Xna.Framework.Vector2(sourceRectangle.Value.Left / texture.Width, sourceRectangle.Value.Bottom / texture.Height)
             );
