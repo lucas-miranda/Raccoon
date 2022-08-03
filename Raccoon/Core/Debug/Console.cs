@@ -386,7 +386,7 @@ namespace Raccoon {
                 // message repeat count
                 if (MergeIdenticalMessages && message.Count > 1) {
                     string countText = message.Count > 999 ? "[999+]" : $"[{message.Count}]";
-                    x = Viewport.X + (60f - Font.MeasureText(countText).X) / 2f;
+                    x = Viewport.X + (60f - Font.MeasureText(countText).X * Font.Size) / 2f;
 
                     Renderer.DrawString(
                         Font,
@@ -777,7 +777,7 @@ namespace Raccoon {
             }
 
             public void CalculateTextSize(Font font) {
-                TextSize = font.MeasureText(Representation);
+                TextSize = font.MeasureText(Representation) * font.Size;
             }
 
             public bool IsLoggerType(System.Type loggerType) {
