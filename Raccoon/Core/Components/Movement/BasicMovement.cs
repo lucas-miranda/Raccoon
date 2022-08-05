@@ -4,7 +4,6 @@ namespace Raccoon.Components {
     public class BasicMovement : Movement {
         #region Private Members
 
-        private Vector2 _currentAcceleration;
 
         #endregion Private Members
 
@@ -42,6 +41,11 @@ namespace Raccoon.Components {
         #endregion Constructors
 
         #region Public Methods
+
+        public override void DebugRender() {
+            base.DebugRender();
+            Debug.Draw.PhysicsBodiesLens.String.AtWorld(ToStringDetailed(), new Vector2(16, Game.Instance.Height / 2f), Graphics.Color.White);
+        }
 
         public override Vector2 Integrate(float dt) {
             bool combinedAxis = false;
@@ -151,7 +155,7 @@ namespace Raccoon.Components {
                 velocity.X += currentAcceleration.X * dt;
             }
 
-            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * _currentAcceleration.X * dt * dt;
+            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * CurrentIntegrationAcceleration.X * dt * dt;
 
             //
             // vertical velocity
@@ -201,19 +205,14 @@ namespace Raccoon.Components {
                 velocity.Y += currentAcceleration.Y * dt;
             }
 
-            displacement.Y += velocityDisplacement.Y + Body.Force.Y * dt + .5f * _currentAcceleration.Y * dt * dt;
+            displacement.Y += velocityDisplacement.Y + Body.Force.Y * dt + .5f * CurrentIntegrationAcceleration.Y * dt * dt;
 
             //
 
             Velocity = velocity;
-            _currentAcceleration = currentAcceleration;
+            CurrentIntegrationAcceleration = currentAcceleration;
 
             return displacement;
-        }
-
-        public override void DebugRender() {
-            base.DebugRender();
-            Debug.Draw.PhysicsBodiesLens.String.AtWorld(ToStringDetailed(), new Vector2(16, Game.Instance.Height / 2f), Graphics.Color.White);
         }
 
         public string ToStringDetailed() {

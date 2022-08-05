@@ -178,6 +178,8 @@ namespace Raccoon.Components {
             }
         }
 
+        public Vector2 CurrentIntegrationAcceleration { get; set; }
+
 #if DEBUG
         public bool IsDebugRenderEnabled { get; set; }
 #endif

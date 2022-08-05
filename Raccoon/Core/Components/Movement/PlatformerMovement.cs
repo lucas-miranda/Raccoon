@@ -99,9 +99,6 @@ namespace Raccoon.Components {
 
         private bool _touchedBottom, _touchedTop;
 
-        // integration
-        private Vector2 _currentAcceleration;
-
         // jump
         private int _maxJumps = 1;
         private bool _canJump = true,
@@ -858,7 +855,7 @@ namespace Raccoon.Components {
                 velocity.X += currentAcceleration.X * dt;
             }
 
-            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * _currentAcceleration.X * dt * dt;
+            displacement.X += (Velocity.X + Body.Force.X) * dt + .5f * CurrentIntegrationAcceleration.X * dt * dt;
 
             ///////////////////////
             // Vertical Velocity //
@@ -913,12 +910,12 @@ namespace Raccoon.Components {
                 velocity.Y += currentAcceleration.Y * dt;
             }
 
-            displacement.Y += (Velocity.Y + Body.Force.Y) * dt + .5f * _currentAcceleration.Y * dt * dt;
+            displacement.Y += (Velocity.Y + Body.Force.Y) * dt + .5f * CurrentIntegrationAcceleration.Y * dt * dt;
 
             //
 
             Velocity = velocity;
-            _currentAcceleration = currentAcceleration;
+            CurrentIntegrationAcceleration = currentAcceleration;
 
             return displacement;
         }
