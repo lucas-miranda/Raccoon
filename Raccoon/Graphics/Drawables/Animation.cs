@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
 using Raccoon.Util;
 
 namespace Raccoon.Graphics {
@@ -33,30 +34,7 @@ namespace Raccoon.Graphics {
         }
 
         public Animation(AtlasAnimation animTexture) {
-            // TODO: support KeyType with AtlasAnimation, converting string animations label to KeyType enum
-            if (typeof(KeyType) != typeof(string)) {
-                throw new System.NotSupportedException($"KeyType '{typeof(KeyType)}' doesn't support AtlasAnimationTexture, switch to string.");
-            }
-
-            Texture = animTexture.Texture;
-            SourceRegion = animTexture.SourceRegion;
-            ClippingRegion = animTexture["all"][0].ClippingRegion;
-
-            foreach (KeyValuePair<string, List<AtlasAnimationFrame>> anim in animTexture) {
-                Rectangle[] framesRegions = new Rectangle[anim.Value.Count];
-                int[] durations = new int[framesRegions.Length];
-                Rectangle[] destinationFrames = new Rectangle[anim.Value.Count];
-
-                int i = 0;
-                foreach (AtlasAnimationFrame frame in anim.Value) {
-                    framesRegions[i] = frame.ClippingRegion;
-                    durations[i] = frame.Duration;
-                    destinationFrames[i] = new Rectangle(frame.OriginalFrame.Position, frame.ClippingRegion.Size);
-                    i++;
-                }
-
-                Add((KeyType) (object) anim.Key, framesRegions, destinationFrames, durations);
-            }
+            Initialize(animTexture);
         }
 
         public Animation(Atlas atlas, string name) : this(atlas.RetrieveAnimation(name)) {
@@ -90,6 +68,24 @@ namespace Raccoon.Graphics {
         public Dictionary<KeyType, Track>.KeyCollection TracksKeys { get { return Tracks.Keys; } }
         public int TrackCount { get { return Tracks.Count; } }
 
+        public override Size Size {
+            get {
+                if (CurrentTrack != null && CurrentTrack.Frames.Length > 0) {
+                    ref Track.Frame frame = ref CurrentTrack.CurrentFrame;
+
+                    if (frame.FrameDestination.HasValue) {
+                        return frame.FrameDestination.Value.Size;
+                    }
+                }
+
+                return base.Size;
+            }
+
+            protected set {
+                base.Size = value;
+            }
+        }
+
         public virtual KeyType AllFramesTrackKey {
             get {
                 return default(KeyType);
@@ -106,10 +102,10 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public virtual Track this[KeyType key] {
+        public Track this[KeyType key] {
             get {
                 try {
-                    return Tracks[key];
+                    return Tracks[HandleKey(key)];
                 } catch (KeyNotFoundException e) {
                     throw new KeyNotFoundException($"Animation frame Key '{key}' not found.", e);
                 }
@@ -131,10 +127,17 @@ namespace Raccoon.Graphics {
                 return;
             }
 
+            if (CurrentTrack == null || CurrentTrack.FrameCount == 0) {
+                return;
+            }
+
             ElapsedTime += (int) Math.Round(delta * PlaybackSpeed);
-            if (ElapsedTime >= CurrentTrack.CurrentFrameDuration) {
-                ElapsedTime -= CurrentTrack.CurrentFrameDuration;
+            ref Track.Frame currentFrame = ref CurrentTrack.CurrentFrame;
+
+            if (ElapsedTime >= currentFrame.Duration) {
+                ElapsedTime -= currentFrame.Duration;
                 CurrentTrack.NextFrame();
+
                 if (CurrentTrack.HasEnded) {
                     Pause();
                 } else {
@@ -156,12 +159,14 @@ namespace Raccoon.Graphics {
             }
         }
 
-        public virtual void Play(KeyType key, bool forceReset = true) {
+        public void Play(KeyType key, bool forceReset = true) {
             if (IsDisposed) {
                 return;
             }
 
+            key = HandleKey(key);
             IsPlaying = true;
+
             if (CurrentTrack == null || !CurrentKey.Equals(key)) {
                 CurrentKey = key;
                 CurrentTrack = Tracks[CurrentKey];
@@ -227,137 +232,149 @@ namespace Raccoon.Graphics {
             ElapsedTime = 0;
         }
 
-        public virtual Track Add(KeyType key, Rectangle[] framesRegions, string durations) {
-            ValidateArraySize(framesRegions, "framesRegions");
-            ValidateDurations(durations);
+        public Track Add(KeyType key, Track track) {
+            if (track == null) {
+                throw new System.ArgumentNullException(nameof(track));
+            }
 
-            ParseDurations(durations, out List<int> durationList);
-
-            Track track = new Track(framesRegions, durationList.ToArray());
-            Add(key, track);
-
+            Tracks.Add(HandleKey(key), track);
             return track;
         }
 
-        public virtual Track Add(KeyType key, Rectangle[] framesRegions, int duration) {
-            ValidateArraySize(framesRegions, "framesRegions");
-            ValidateDuration(duration);
-
-            GenerateDurationsArray(framesRegions.Length, duration, out int[] durations);
-
-            Track track = new Track(framesRegions, durations);
-            Add(key, track);
-
-            return track;
-        }
-
-        public virtual Track Add(KeyType key, Rectangle[] framesRegions, Rectangle[] framesDestinations, ICollection<int> durations) {
-            ValidateArraySize(framesRegions, "framesRegions");
-            ValidateArraySize(framesDestinations, "framesDestinations");
+        public Track Add(KeyType key, IList<int> frames, IList<int> durations) {
+            ValidateArraySize((ICollection) frames, "frames");
             ValidateArraySize((ICollection) durations, "durations");
 
-            int[] durationList = new int[durations.Count];
-            durations.CopyTo(durationList, 0);
+            Track.Frame[] f = GenerateFrames(frames);
 
-            Track track = new Track(framesRegions, framesDestinations, durationList);
+            for (int i = 0; i < f.Length; i++) {
+                f[i].Duration = durations[i];
+            }
+
+            Track track = new Track(f);
             Add(key, track);
-
             return track;
         }
 
-        public virtual Track Add(KeyType key, Rectangle[] framesRegions, ICollection<int> durations) {
-            ValidateArraySize(framesRegions, "framesRegions");
-            ValidateArraySize((ICollection) durations, "durations");
-
-            int[] durationList = new int[durations.Count];
-            durations.CopyTo(durationList, 0);
-
-            Track track = new Track(framesRegions, durationList);
-            Add(key, track);
-
-            return track;
-        }
-
-        public virtual Track Add(KeyType key, string frames, string durations) {
+        public Track Add(KeyType key, string frames, string durations) {
             ValidateFrames(frames);
             ValidateDurations(durations);
 
             ParseFramesDuration(frames, durations, out List<int> durationList, out List<int> frameList);
+            return Add(key, frameList, durationList);
+        }
 
-            Rectangle[] framesRegions = null,
-                        framesDestinations = null;
+        public Track Add(KeyType key, IList<int> frames, int duration) {
+            ValidateDuration(duration);
 
-            GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
+            Track.Frame[] f = GenerateFrames(frames);
 
-            Track track = new Track(framesRegions, durationList.ToArray());
+            for (int i = 0; i < f.Length; i++) {
+                f[i].Duration = duration;
+            }
+
+            Track track = new Track(f);
             Add(key, track);
-
             return track;
         }
 
-        public virtual Track Add(KeyType key, string frames, int duration) {
+        public Track Add(KeyType key, string frames, int duration) {
             ValidateFrames(frames);
             ValidateDuration(duration);
 
             ParseFrames(frames, out List<int> frameList);
-            GenerateDurationsArray(frameList.Count, duration, out int[] durations);
-
-            Rectangle[] framesRegions = null,
-                        framesDestinations = null;
-
-            GenerateFramesRegions(frameList.ToArray(), ref framesRegions, ref framesDestinations);
-
-            Track track = new Track(framesRegions, durations);
-            Add(key, track);
-
-            return track;
+            return Add(key, frameList, duration);
         }
 
-        public virtual Track Add(KeyType key, ICollection<int> frames, ICollection<int> durations) {
-            ValidateArraySize((ICollection) frames, "frames");
+        public Track AddRaw(KeyType key, Rectangle[] framesRegions, IList<int> durations) {
+            ValidateArraySize(framesRegions, "framesRegions");
             ValidateArraySize((ICollection) durations, "durations");
 
-            int[] frameList = new int[frames.Count];
-            frames.CopyTo(frameList, 0);
+            if (framesRegions.Length != durations.Count) {
+                throw new System.ArgumentException($"Mismatch lengths at frames regions ({framesRegions.Length}) and durations ({durations.Count}).");
+            }
 
-            int[] durationList = new int[durations.Count];
-            durations.CopyTo(durationList, 0);
+            Track.Frame[] frames = new Track.Frame[framesRegions.Length];
 
-            Rectangle[] framesRegions = null,
-                        framesDestinations = null;
+            for (int i = 0; i < framesRegions.Length; i++) {
+                ref Track.Frame frame = ref frames[i];
+                frame = new Track.Frame(
+                    -1,
+                    durations[i],
+                    framesRegions[i]
+                );
+            }
 
-            GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);
-
-            Track track = new Track(framesRegions, durationList);
+            Track track = new Track(frames);
             Add(key, track);
-
             return track;
         }
 
-        public virtual Track Add(KeyType key, ICollection<int> frames, int duration) {
+        public Track AddRaw(KeyType key, Rectangle[] framesRegions, int duration) {
+            ValidateArraySize(framesRegions, "framesRegions");
             ValidateDuration(duration);
 
-            int[] frameList = new int[frames.Count];
-            frames.CopyTo(frameList, 0);
+            Track.Frame[] frames = new Track.Frame[framesRegions.Length];
 
-            GenerateDurationsArray(frameList.Length, duration, out int[] durations);
-            Rectangle[] framesRegions = null,
-                        framesDestinations = null;
+            for (int i = 0; i < framesRegions.Length; i++) {
+                ref Track.Frame frame = ref frames[i];
+                frame = new Track.Frame(
+                    -1,
+                    duration,
+                    framesRegions[i]
+                );
+            }
 
-            GenerateFramesRegions(frameList, ref framesRegions, ref framesDestinations);
-
-            Track track = new Track(framesRegions, framesDestinations, durations);
+            Track track = new Track(frames);
             Add(key, track);
-
             return track;
         }
 
-        public virtual Track Add(KeyType key, Track track) {
-            Tracks.Add(key, track);
+        public Track AddRaw(KeyType key, Rectangle[] framesRegions, string durations) {
+            ValidateArraySize(framesRegions, "framesRegions");
+            ValidateDurations(durations);
+
+            ParseDurations(durations, out List<int> durationList);
+            return AddRaw(key, framesRegions, durationList);
+        }
+
+        public Track AddRaw(KeyType key, Rectangle[] framesRegions, Rectangle[] framesDestinations, IList<int> durations) {
+            ValidateArraySize(framesRegions, "framesRegions");
+            ValidateArraySize(framesDestinations, "framesDestinations");
+            ValidateArraySize((ICollection) durations, "durations");
+
+            if (framesRegions.Length != framesDestinations.Length) {
+                throw new System.ArgumentException($"Mismatch lengths at frames regions ({framesRegions.Length}) and frames destinations ({framesDestinations.Length}).");
+            }
+
+            if (framesRegions.Length != durations.Count) {
+                throw new System.ArgumentException($"Mismatch lengths at frames regions ({framesRegions.Length}) and durations ({durations.Count}).");
+            }
+
+            Track.Frame[] frames = new Track.Frame[framesRegions.Length];
+
+            for (int i = 0; i < framesRegions.Length; i++) {
+                ref Track.Frame frame = ref frames[i];
+                frame = new Track.Frame(
+                    -1,
+                    durations[i],
+                    framesRegions[i],
+                    framesDestinations[i]
+                );
+            }
+
+            Track track = new Track(frames);
+            Add(key, track);
             return track;
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, bool reverse = false) {
+        public Track CloneAdd(KeyType targetKey, Track originalTrack) {
+            Track targetTrack = new Track(originalTrack);
+            Add(targetKey, targetTrack);
+            return targetTrack;
+        }
+
+        public Track CloneAdd(KeyType targetKey, KeyType originalKey, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
             Track targetTrack = new Track(originalTrack);
             Add(targetKey, targetTrack);
@@ -369,90 +386,132 @@ namespace Raccoon.Graphics {
             return targetTrack;
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, string frames, bool reverse = false) {
+        public Track CloneAdd(KeyType targetKey, KeyType originalKey, Track.ReplaceFrame?[] replace, bool reverse = false) {
             Track originalTrack = Tracks[originalKey];
+            Track targetTrack = new Track(originalTrack, replace);
+            Add(targetKey, targetTrack);
+
+            if (reverse) {
+                targetTrack.Reverse();
+            }
+
+            return targetTrack;
+        }
+
+        public Track CloneAdd(KeyType targetKey, KeyType originalKey, IList<int> frames, bool reverse = false) {
+            Track originalTrack = Tracks[originalKey];
+            Track.Frame[] f = new Track.Frame[frames.Count];
+
+            for (int i = 0; i < frames.Count; i++) {
+                int localIndex = frames[i];
+
+                if (localIndex < 0) {
+                    localIndex = originalTrack.Frames.Length + localIndex;
+                }
+
+                ref Track.Frame originalFrame = ref originalTrack.Frames[localIndex];
+                f[i] = originalFrame;
+            }
+
+            Track targetTrack = new Track(f);
+            Add(targetKey, targetTrack);
+
+            if (reverse) {
+                targetTrack.Reverse();
+            }
+
+            return targetTrack;
+        }
+
+        public Track CloneAdd(KeyType targetKey, KeyType originalKey, string frames, bool reverse = false) {
             ParseFrames(frames, out List<int> frameList);
-
-            Rectangle[] frameRegions = new Rectangle[frameList.Count],
-                        frameDestinations = new Rectangle[frameList.Count];
-
-            int[] durations = new int[frameList.Count];
-
-            for (int i = 0; i < frameList.Count; i++) {
-                int id = frameList[i];
-
-                frameRegions[i] = originalTrack.FramesRegions[id];
-                frameDestinations[i] = originalTrack.FramesDestinations[id];
-                durations[i] = originalTrack.Durations[id];
-            }
-
-            Track targetTrack = new Track(originalTrack, frameRegions, frameDestinations, durations);
-            Add(targetKey, targetTrack);
-
-            if (reverse) {
-                targetTrack.Reverse();
-            }
-
-            return targetTrack;
+            return CloneAdd(targetKey, originalKey, frameList, reverse);
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, Rectangle[] replaceFrameRegions, Rectangle[] replaceFrameDestinations, bool reverse = false) {
-            Track originalTrack = Tracks[originalKey];
-            Track targetTrack = new Track(originalTrack, replaceFrameRegions, replaceFrameDestinations, replaceDurations: null);
-            Add(targetKey, targetTrack);
-
-            if (reverse) {
-                targetTrack.Reverse();
-            }
-
-            return targetTrack;
+        public Track CreateTrackFromTracks(KeyType newKey, KeyType key) {
+            return CloneAdd(newKey, key);
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, KeyType originalKey, int[] replaceDurations, bool reverse = false) {
-            Track originalTrack = Tracks[originalKey];
-            Track targetTrack = new Track(originalTrack, null, null, replaceDurations);
-            Add(targetKey, targetTrack);
+        public Track CreateTrackFromTracks(KeyType newKey, KeyType sourceKey, KeyType sourceKey2) {
+            Track track = Tracks[sourceKey],
+                  track2 = Tracks[sourceKey2];
 
-            if (reverse) {
-                targetTrack.Reverse();
-            }
+            Track.Frame[] frames = new Track.Frame[track.Frames.Length + track2.Frames.Length];
 
-            return targetTrack;
+            int i = 0;
+            track.Frames.CopyTo(frames, i);
+            i += track.Frames.Length;
+            track2.Frames.CopyTo(frames, i);
+
+            return Add(newKey, new Track(frames));
         }
 
-        public virtual Track CloneAdd(KeyType targetKey, Track originalTrack) {
-            Track targetTrack = new Track(originalTrack);
-            Add(targetKey, targetTrack);
-            return targetTrack;
+        public Track CreateTrackFromTracks(KeyType newKey, KeyType sourceKey, KeyType sourceKey2, KeyType sourceKey3) {
+            Track track = Tracks[sourceKey],
+                  track2 = Tracks[sourceKey2],
+                  track3 = Tracks[sourceKey3];
+
+            Track.Frame[] frames = new Track.Frame[track.Frames.Length + track2.Frames.Length + track3.Frames.Length];
+
+            int i = 0;
+            track.Frames.CopyTo(frames, i);
+            i += track.Frames.Length;
+            track2.Frames.CopyTo(frames, i);
+            i += track2.Frames.Length;
+            track3.Frames.CopyTo(frames, i);
+
+            return Add(newKey, new Track(frames));
         }
 
-        public virtual Track CreateTrackFromTracks(KeyType newKey, KeyType[] keys) {
-            if (keys == null) {
-                throw new System.ArgumentNullException(nameof(keys));
-            }
+        public Track CreateTrackFromTracks(KeyType newKey, KeyType sourceKey, KeyType sourceKey2, KeyType sourceKey3, KeyType sourceKey4) {
+            Track track = Tracks[sourceKey],
+                  track2 = Tracks[sourceKey2],
+                  track3 = Tracks[sourceKey3],
+                  track4 = Tracks[sourceKey4];
 
-            if (keys.Length == 0) {
-                throw new System.ArgumentException("Expected KeyType[] with length > 0, but none was suplied.", nameof(keys));
-            }
+            Track.Frame[] frames = new Track.Frame[track.Frames.Length + track2.Frames.Length + track3.Frames.Length + track4.Frames.Length];
 
-            List<Rectangle> framesRegions = new List<Rectangle>();
-            List<int> durations = new List<int>();
-            List<Rectangle> destinationRegions = new List<Rectangle>();
+            int i = 0;
+            track.Frames.CopyTo(frames, i);
+            i += track.Frames.Length;
+            track2.Frames.CopyTo(frames, i);
+            i += track2.Frames.Length;
+            track3.Frames.CopyTo(frames, i);
+            i += track3.Frames.Length;
+            track4.Frames.CopyTo(frames, i);
 
-            for (int i = 0; i < keys.Length; i++) {
-                Track track = Tracks[keys[i]];
-
-                framesRegions.AddRange(track.FramesRegions);
-                durations.AddRange(track.Durations);
-                destinationRegions.AddRange(track.FramesDestinations);
-
-            }
-
-            return Add(newKey, framesRegions.ToArray(), destinationRegions.ToArray(), durations);
+            return Add(newKey, new Track(frames));
         }
 
-        public virtual bool ContainsTrack(KeyType key) {
-            return Tracks.ContainsKey(key);
+        public Track CreateTrackFromTracks(KeyType newKey, params KeyType[] sourceKeys) {
+            if (sourceKeys == null) {
+                throw new System.ArgumentNullException(nameof(sourceKeys));
+            }
+
+            if (sourceKeys.Length == 0) {
+                throw new System.ArgumentException("Expected KeyType[] with length > 0, but none was suplied.", nameof(sourceKeys));
+            }
+
+            int length = 0;
+            for (int i = 0; i < sourceKeys.Length; i++) {
+                Track track = Tracks[sourceKeys[i]];
+                length += track.Frames.Length;
+            }
+
+            Track.Frame[] frames = new Track.Frame[length];
+
+            length = 0;
+            for (int i = 0; i < sourceKeys.Length; i++) {
+                Track track = Tracks[sourceKeys[i]];
+                track.Frames.CopyTo(frames, length);
+                length += track.Frames.Length;
+            }
+
+            return Add(newKey, new Track(frames));
+        }
+
+        public bool ContainsTrack(KeyType key) {
+            return Tracks.ContainsKey(HandleKey(key));
         }
 
         public void Refresh() {
@@ -482,60 +541,124 @@ namespace Raccoon.Graphics {
 
         #region Protected Methods
 
-        protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            if (CurrentTrack != null && CurrentTrack.FramesDestinations != null) {
-                // frame destination works like a guide to where render at local space
-                // 'frameDestination.position' should be interpreted as 'origin'
-                ref Rectangle frameDestination = ref CurrentTrack.CurrentFrameDestination;
-
-                if (frameDestination.Position != Vector2.Zero) {
-                    // frame region defines the crop rectangle at it's texture
-                    ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
-
-                    if (FlippedHorizontally) {
-                        if (FlippedVertically) {
-                            float rightSideSpacing = frameDestination.Width - frameRegion.Width + frameDestination.X,
-                                  bottomSideSpacing = frameDestination.Height - frameRegion.Height + frameDestination.Y;
-
-                            origin = new Vector2(
-                                (frameRegion.Width - origin.X) - rightSideSpacing,
-                                (frameRegion.Height - origin.Y) - bottomSideSpacing
-                            );
-                        } else {
-                            float rightSideSpacing = frameDestination.Width - frameRegion.Width + frameDestination.X;
-
-                            origin = new Vector2(
-                                (frameRegion.Width - origin.X) - rightSideSpacing,
-                                origin.Y + frameDestination.Y
-                            );
-                        }
-                    } else if (FlippedVertically) {
-                        float bottomSideSpacing = frameDestination.Height - frameRegion.Height + frameDestination.Y;
-
-                        origin = new Vector2(
-                            origin.X + frameDestination.X,
-                            (frameRegion.Height - origin.Y) - bottomSideSpacing
-                        );
-                    } else {
-                        origin += frameDestination.Position;
-                    }
-                }
-
-                // maybe we should make a careful check before modifying DestinationRegion here
-                // user could modify value globally to Animation and we'll be interfering
-                // making a change frame based here
-
-                /*
-                // there we give the power to frame regions deform animations
-                // I don't know if it will be usefull anywhere, but we can do this
-                ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
-                if (frameDestination.Size != frameRegion.Size) {
-                    DestinationRegion = new Rectangle(frameDestination.Size);
-                }
-                */
+        protected void Initialize(AtlasAnimation animTexture) {
+            // TODO: support KeyType with AtlasAnimation, converting string animations label to KeyType enum
+            if (typeof(KeyType) != typeof(string)) {
+                throw new System.NotSupportedException($"KeyType '{typeof(KeyType)}' doesn't support AtlasAnimationTexture, switch to string.");
             }
 
-            base.Draw(position, rotation, scale, flip, color, scroll, shader, shaderParameters, origin, layerDepth);
+            Texture = animTexture.Texture;
+            SourceRegion = animTexture.SourceRegion;
+            ClippingRegion = animTexture["all"][0].ClippingRegion;
+
+            foreach (KeyValuePair<string, List<AtlasAnimationFrame>> anim in animTexture) {
+                Track.Frame[] frames = new Track.Frame[anim.Value.Count];
+
+                for (int i = 0; i < anim.Value.Count; i++) {
+                    AtlasAnimationFrame atlasFrame = anim.Value[i];
+                    frames[i] = new Track.Frame(
+                        atlasFrame.GlobalIndex,
+                        atlasFrame.Duration,
+                        atlasFrame.ClippingRegion,
+                        new Rectangle(atlasFrame.OriginalFrame.Position, atlasFrame.ClippingRegion.Size)
+                    );
+                }
+
+                Add((KeyType) (object) anim.Key, new Track(frames));
+            }
+        }
+
+        protected override void Draw(
+            Vector2 position,
+            float rotation,
+            Vector2 scale,
+            ImageFlip flip,
+            Color color,
+            Vector2 scroll,
+            Shader shader,
+            IShaderParameters shaderParameters,
+            Vector2 origin,
+            float layerDepth
+        ) {
+            CalculateFrameOrigin(flip, ref origin);
+
+            base.Draw(
+                position,
+                rotation,
+                scale,
+                flip,
+                color,
+                scroll,
+                shader,
+                shaderParameters,
+                origin,
+                layerDepth
+            );
+        }
+
+        /// <summary>
+        /// Process key before using it to retrieve a Track.
+        /// </summary>
+        protected virtual KeyType HandleKey(KeyType key) {
+            return key;
+        }
+
+        protected void CalculateFrameOrigin(ImageFlip flip, ref Vector2 origin) {
+            if (CurrentTrack == null || CurrentTrack.Frames.Length <= 0) {
+                return;
+            }
+
+            // frame destination works like a guide to where render at local space
+            // 'frameDestination.position' should be interpreted as 'origin'
+            ref Track.Frame frame = ref CurrentTrack.CurrentFrame;
+
+            if (!frame.FrameDestination.HasValue || frame.FrameDestination.Value.Position == Vector2.Zero) {
+                return;
+            }
+
+            // frame region defines the crop rectangle at it's texture
+            //ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+
+            if (flip.IsHorizontal()) {
+                if (flip.IsVertical()) {
+                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X,
+                          bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
+
+                    origin = new Vector2(
+                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
+                        (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
+                    );
+                } else {
+                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X;
+
+                    origin = new Vector2(
+                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
+                        origin.Y + frame.FrameDestination.Value.Y
+                    );
+                }
+            } else if (flip.IsVertical()) {
+                float bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
+
+                origin = new Vector2(
+                    origin.X + frame.FrameDestination.Value.X,
+                    (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
+                );
+            } else {
+                origin += frame.FrameDestination.Value.Position;
+            }
+
+            // maybe we should make a careful check before modifying DestinationRegion here
+            // user could modify value globally to Animation and we'll be interfering
+            // making a change frame based here
+
+            /*
+            // there we give the power to frame regions deform animations
+            // I don't know if it will be usefull anywhere, but we can do this
+            ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+            if (frameDestination.Size != frameRegion.Size) {
+                DestinationRegion = new Rectangle(frameDestination.Size);
+            }
+            */
         }
 
         #endregion Protected Methods
@@ -544,39 +667,40 @@ namespace Raccoon.Graphics {
 
         private void UpdateClippingRegion() {
             if (CurrentTrack != null) {
-                ClippingRegion = CurrentTrack.CurrentFrameRegion;
+                ClippingRegion = CurrentTrack.CurrentFrame.FrameRegion;
             }
         }
 
-        private void GenerateFramesRegions(int[] frames, ref Rectangle[] framesRegions, ref Rectangle[] framesDestinations) {
-            framesRegions = new Rectangle[frames.Length];
-            framesDestinations = new Rectangle[frames.Length];
-
+        private Track.Frame[] GenerateFrames(IList<int> frames) {
+            Track.Frame[] framesResult = new Track.Frame[frames.Count];
             Track allFramesTrack = AllFramesTrack;
+
             if (allFramesTrack != null) {
-                for (int i = 0; i < frames.Length; i++) {
-                    int frameId = frames[i];
-                    framesRegions[i] = allFramesTrack.FramesRegions[frameId];
-                    framesDestinations[i] = allFramesTrack.FramesDestinations[frameId];
+                for (int i = 0; i < frames.Count; i++) {
+                    framesResult[i] = allFramesTrack.Frames[frames[i]];
                 }
             } else {
                 int columns = (int) (SourceRegion.Width / ClippingRegion.Width);
                 //int rows = (int) (SourceRegion.Height / ClippingRegion.Height);
 
-                for (int i = 0; i < frames.Length; i++) {
-                    int frameId = frames[i];
+                for (int i = 0; i < frames.Count; i++) {
+                    int frameGlobalId = frames[i];
 
-                    Rectangle frameRegion = new Rectangle(
-                        (frameId % columns) * ClippingRegion.Width,
-                        (frameId / columns) * ClippingRegion.Height,
-                        ClippingRegion.Width,
-                        ClippingRegion.Height
+                    framesResult[i] = new Track.Frame(
+                        frameGlobalId,
+                        0,
+                        new Rectangle(
+                            (frameGlobalId % columns) * ClippingRegion.Width,
+                            (frameGlobalId / columns) * ClippingRegion.Height,
+                            ClippingRegion.Width,
+                            ClippingRegion.Height
+                        ),
+                        Raccoon.Rectangle.Empty
                     );
-
-                    framesRegions[i] = frameRegion;
-                    framesDestinations[i] = Raccoon.Rectangle.Empty;
                 }
             }
+
+            return framesResult;
         }
 
         private void ParseFramesDuration(string frames, string durations, out List<int> durationList, out List<int> frameList) {
@@ -655,13 +779,6 @@ namespace Raccoon.Graphics {
             }
         }
 
-        private void GenerateDurationsArray(int frameCount, int duration, out int[] durations) {
-            durations = new int[frameCount];
-            for (int i = 0; i < frameCount; i++) {
-                durations.SetValue(duration, i);
-            }
-        }
-
         private void ValidateFrames(string frames) {
             if (string.IsNullOrWhiteSpace(frames)) {
                 throw new System.ArgumentException("Value is empty.", "frames");
@@ -708,80 +825,22 @@ namespace Raccoon.Graphics {
 
         #endregion Constructors
 
+        #region Public Properties
+
         public override string AllFramesTrackKey {
             get {
                 return AllFramesTrackDefaultKey;
             }
         }
 
-        public override Track this[string key] {
-            get {
-                try {
-                    return Tracks[key.ToLowerInvariant()];
-                } catch (KeyNotFoundException e) {
-                    throw new KeyNotFoundException($"Animation frame Key '{key}' not found.", e);
-                }
-            }
+        #endregion Public Properties
+
+        #region Protected Methods
+
+        protected override string HandleKey(string key) {
+            return key.ToLowerInvariant();
         }
 
-        public override void Play(string key, bool forceReset = true) {
-            base.Play(key.ToLowerInvariant(), forceReset);
-        }
-
-        public override Track Add(string key, Rectangle[] framesRegions, string durations) {
-            return base.Add(key.ToLowerInvariant(), framesRegions, durations);
-        }
-
-        public override Track Add(string key, Rectangle[] framesRegions, int duration) {
-            return base.Add(key.ToLowerInvariant(), framesRegions, duration);
-        }
-
-        public override Track Add(string key, Rectangle[] framesRegions, Rectangle[] framesDestinations, ICollection<int> durations) {
-            return base.Add(key.ToLowerInvariant(), framesRegions, framesDestinations, durations);
-        }
-
-        public override Track Add(string key, Rectangle[] framesRegions, ICollection<int> durations) {
-            return base.Add(key.ToLowerInvariant(), framesRegions, durations);
-        }
-
-        public override Track Add(string key, string frames, string durations) {
-            return base.Add(key.ToLowerInvariant(), frames, durations);
-        }
-
-        public override Track Add(string key, string frames, int duration) {
-            return base.Add(key.ToLowerInvariant(), frames, duration);
-        }
-
-        public override Track Add(string key, ICollection<int> frames, ICollection<int> durations) {
-            return base.Add(key.ToLowerInvariant(), frames, durations);
-        }
-
-        public override Track Add(string key, ICollection<int> frames, int duration) {
-            return base.Add(key.ToLowerInvariant(), frames, duration);
-        }
-
-        public override Track Add(string key, Track track) {
-            return base.Add(key.ToLowerInvariant(), track);
-        }
-
-        public override Track CloneAdd(string targetKey, string originalKey, bool reverse = false) {
-            return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey.ToLowerInvariant(), reverse);
-        }
-
-        public override Track CloneAdd(string targetKey, string originalKey, Rectangle[] replaceFrameRegions, Rectangle[] replaceFrameDestinations, bool reverse = false) {
-            return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey, replaceFrameRegions, replaceFrameDestinations);
-        }
-
-        public override Track CloneAdd(string targetKey, string originalKey, int[] replaceDurations, bool reverse = false) {
-            return base.CloneAdd(targetKey.ToLowerInvariant(), originalKey, replaceDurations, reverse);
-        }
-
-        public override Track CreateTrackFromTracks(string newKey, string[] keys) {
-            return base.CreateTrackFromTracks(newKey.ToLowerInvariant(), keys);
-        }
-
-        public override bool ContainsTrack(string key) {
-            return base.ContainsTrack(key.ToLowerInvariant());
-        }
+        #endregion Protected Methods
     }
 }

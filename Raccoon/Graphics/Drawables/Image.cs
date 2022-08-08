@@ -59,9 +59,14 @@
         public Image(Animation animation, string tag, int frameIndex) {
             Texture = animation.Texture;
             SourceRegion = animation.SourceRegion;
+
             Animation.Track track = animation[tag];
-            ClippingRegion = track.FramesRegions[frameIndex];
-            Origin = track.FramesDestinations[frameIndex].Position;
+            ref Animation.Track.Frame frame = ref track.Frames[frameIndex];
+            ClippingRegion = frame.FrameRegion;
+
+            if (frame.FrameDestination.HasValue) {
+                Origin = frame.FrameDestination.Value.Position;
+            }
 
             if (!animation.DestinationRegion.IsEmpty) {
                 DestinationRegion = animation.DestinationRegion;

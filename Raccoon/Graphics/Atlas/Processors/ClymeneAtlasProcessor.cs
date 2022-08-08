@@ -61,8 +61,9 @@ namespace Raccoon.Graphics.AtlasProcessors {
                 AtlasAnimation animation = new AtlasAnimation(texture);
 
                 // register every frame to "all" track
-                foreach (FrameData frameData in frames) {
-                    RegisterFrame(animation, "all", frameData);
+
+                for (int i = 0; i < frames.Count; i++) {
+                    RegisterFrame(i, animation, "all", frames[i]);
                 }
 
                 // -> tracks
@@ -82,9 +83,11 @@ namespace Raccoon.Graphics.AtlasProcessors {
         #region Private Methods
 
         private List<FrameData> ProcessFrames(JToken framesToken, ref List<FrameData> frames) {
+            int index = 0;
             foreach (JToken frameToken in framesToken.Children()) {
                 if (!frameToken.HasValues) {
                     frames.Add(null);
+                    index += 1;
                     continue;
                 }
 
@@ -115,10 +118,13 @@ namespace Raccoon.Graphics.AtlasProcessors {
                 }
 
                 frames.Add(new FrameData {
+                    Index = index,
                     AtlasRegion = atlasRegion,
                     SourceRegion = sourceRegion,
                     Duration = duration,
                 });
+
+                index += 1;
             }
 
             return frames;
@@ -166,13 +172,23 @@ namespace Raccoon.Graphics.AtlasProcessors {
             }
         }
 
-        private void ProcessTracks(JToken tracksToken, AtlasAnimation atlasAnimation, ref List<FrameData> frames) {
+        private void ProcessTracks(
+            JToken tracksToken,
+            AtlasAnimation atlasAnimation,
+            ref List<FrameData> frames
+        ) {
             ProcessTracks(tracksToken, atlasAnimation, string.Empty, ref frames);
         }
 
-        private void RegisterFrame(AtlasAnimation atlasAnimation, string targetTag, FrameData frameData) {
+        private void RegisterFrame(
+            int globalIndex,
+            AtlasAnimation atlasAnimation,
+            string targetTag,
+            FrameData frameData
+        ) {
             if (frameData == null) {
                 atlasAnimation.AddFrame(
+                    globalIndex,
                     Rectangle.Empty,
                     (int) 100,
                     Rectangle.Empty,
@@ -183,6 +199,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
             }
 
             atlasAnimation.AddFrame(
+                globalIndex,
                 frameData.AtlasRegion,
                 (int) frameData.Duration,
                 frameData.SourceRegion,
@@ -190,12 +207,23 @@ namespace Raccoon.Graphics.AtlasProcessors {
             );
         }
 
-        private void RegisterFrame(AtlasAnimation atlasAnimation, string targetTag, uint frameIndex, ref List<FrameData> frames) {
+        private void RegisterFrame(
+            AtlasAnimation atlasAnimation,
+            string targetTag,
+            uint frameIndex,
+            ref List<FrameData> frames
+        ) {
             FrameData frameData = frames[(int) frameIndex];
-            RegisterFrame(atlasAnimation, targetTag, frameData);
+            RegisterFrame((int) frameIndex, atlasAnimation, targetTag, frameData);
         }
 
-        private void RegisterFrameRange(AtlasAnimation atlasAnimation, string targetTag, uint fromFrameIndex, uint toFrameIndex, ref List<FrameData> frames) {
+        private void RegisterFrameRange(
+            AtlasAnimation atlasAnimation,
+            string targetTag,
+            uint fromFrameIndex,
+            uint toFrameIndex,
+            ref List<FrameData> frames
+        ) {
             for (uint i = fromFrameIndex; i <= toFrameIndex; i++) {
                 RegisterFrame(atlasAnimation, targetTag, i, ref frames);
             }
@@ -209,6 +237,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
             public FrameData() {
             }
 
+            public int Index { get; set; } = -1;
             public Rectangle AtlasRegion { get; set; }
             public Rectangle SourceRegion { get; set; }
             public uint? Duration { get; set; }

@@ -92,6 +92,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
                     AtlasAnimation animation = new AtlasAnimation(texture, sourceRegion);
 
                     foreach (KeyValuePair<string, List<JObject>> track in animationData.Value) {
+                        int i = 0;
                         foreach (JObject frameData in track.Value) {
                             JToken frameRegion = frameData["frame"];
                             Rectangle clippingRegion = new Rectangle(
@@ -101,7 +102,8 @@ namespace Raccoon.Graphics.AtlasProcessors {
                                                            frameRegion.Value<int>("h")
                                                        );
 
-                            animation.AddFrame(clippingRegion, frameData["duration"].ToObject<int>(), track.Key);
+                            animation.AddFrame(i, clippingRegion, frameData["duration"].ToObject<int>(), track.Key);
+                            i += 1;
                         }
                     }
 

@@ -81,7 +81,6 @@ namespace Raccoon.Graphics {
                 };
             }
 
-
             if (_frames.Length > 0) {
                 Columns = _frames.Length;
                 Rows = 1;
@@ -258,12 +257,7 @@ namespace Raccoon.Graphics {
         }
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
-            if (FrameCount > 0) {
-                Rectangle frameDestination = _frames[CurrentFrameIndex].Destination;
-                if (frameDestination.Position != Vector2.Zero) {
-                    origin += frameDestination.Position;
-                }
-            }
+            CalculateFrameOrigin(flip, ref origin);
 
             base.Draw(position, rotation, scale, flip, color, scroll, shader, shaderParameters, origin, layerDepth);
         }
@@ -363,6 +357,64 @@ namespace Raccoon.Graphics {
             }
 
             Load();
+        }
+
+        private void CalculateFrameOrigin(ImageFlip flip, ref Vector2 origin) {
+            if (FrameCount == 0) {
+                return;
+            }
+
+            // frame destination works like a guide to where render at local space
+            // 'frameDestination.position' should be interpreted as 'origin'
+            Frame frame = _frames[CurrentFrameIndex];
+
+            if (frame.Destination.Position == Vector2.Zero) {
+                return;
+            }
+
+            // frame region defines the crop rectangle at it's texture
+            //ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+
+            if (flip.IsHorizontal()) {
+                if (flip.IsVertical()) {
+                    float rightSideSpacing = frame.Destination.Width - frame.ClippingRegion.Width + frame.Destination.X,
+                          bottomSideSpacing = frame.Destination.Height - frame.ClippingRegion.Height + frame.Destination.Y;
+
+                    origin = new Vector2(
+                        (frame.ClippingRegion.Width - origin.X) - rightSideSpacing,
+                        (frame.ClippingRegion.Height - origin.Y) - bottomSideSpacing
+                    );
+                } else {
+                    float rightSideSpacing = frame.Destination.Width - frame.ClippingRegion.Width + frame.Destination.X;
+
+                    origin = new Vector2(
+                        (frame.ClippingRegion.Width - origin.X) - rightSideSpacing,
+                        origin.Y + frame.Destination.Y
+                    );
+                }
+            } else if (flip.IsVertical()) {
+                float bottomSideSpacing = frame.Destination.Height - frame.ClippingRegion.Height + frame.Destination.Y;
+
+                origin = new Vector2(
+                    origin.X + frame.Destination.X,
+                    (frame.ClippingRegion.Height - origin.Y) - bottomSideSpacing
+                );
+            } else {
+                origin += frame.Destination.Position;
+            }
+
+            // maybe we should make a careful check before modifying DestinationRegion here
+            // user could modify value globally to Animation and we'll be interfering
+            // making a change frame based here
+
+            /*
+            // there we give the power to frame regions deform animations
+            // I don't know if it will be usefull anywhere, but we can do this
+            ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+            if (frameDestination.Size != frameRegion.Size) {
+                DestinationRegion = new Rectangle(frameDestination.Size);
+            }
+            */
         }
 
         private void UpdateClippingRegion() {

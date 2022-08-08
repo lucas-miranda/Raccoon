@@ -1,67 +1,39 @@
 ﻿namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
-        public class Track : System.IDisposable {
+        public class Track {
             private event System.Action _onEnd;
             private event System.Action<int> _onChangeFrame;
 
             private int _currentFrameIndex;
 
-            public Track(Rectangle[] framesRegions, Rectangle[] framesDestinations, int[] durations) {
-                FramesRegions = framesRegions;
-                Durations = durations;
-
-                if (framesDestinations != null) {
-                    if (framesDestinations.Length != framesRegions.Length) {
-                        throw new System.ArgumentException($"Inconsistent arrays size, {nameof(framesRegions)} contains {framesRegions.Length}, but {nameof(framesDestinations)} contains {framesDestinations.Length}. They must be the same length.");
-                    }
-
-                    FramesDestinations = framesDestinations;
+            public Track(Frame[] frames) {
+                if (frames == null) {
+                    throw new System.ArgumentNullException(nameof(frames));
                 }
 
-                if (durations.Length < framesRegions.Length) {
-                    // clone last element until reach same size
-                    int toAdd = framesRegions.Length - durations.Length;
-                    Durations = new int[durations.Length + toAdd];
-                    durations.CopyTo(Durations, 0);
+                Frames = frames;
 
-                    for (int i = durations.Length; i < Durations.Length; i++) {
-                        Durations[i] = durations[durations.Length - 1];
-                    }
-                } else if (durations.Length > framesRegions.Length) {
-                    // trim excess
-                    int toRemove = durations.Length - framesRegions.Length;
-                    Durations = new int[durations.Length - toRemove];
+                //
 
-                    for (int i = 0; i < Durations.Length; i++) {
-                        Durations[i] = durations[i];
-                    }
+                foreach (Frame frame in Frames) {
+                    TotalDuration += frame.Duration;
                 }
             }
 
-            public Track(Rectangle[] framesRegions, int[] durations) : this(framesRegions, null, durations) {
-            }
+            public Track(Track track, ReplaceFrame?[] replaceFrames = null) {
+                Frames = new Frame[track.Frames.Length];
+                track.Frames.CopyTo(Frames, 0);
 
-            public Track(Track track, Rectangle[] replaceFrameRegions = null, Rectangle[] replaceFrameDestinations = null, int[] replaceDurations = null) {
-                if (replaceFrameRegions != null) {
-                    FramesRegions = replaceFrameRegions;
-                } else {
-                    FramesRegions = new Rectangle[track.FramesRegions.Length];
-                    track.FramesRegions.CopyTo(FramesRegions, 0);
-                }
+                if (replaceFrames != null) {
+                    for (int i = 0; i < replaceFrames.Length; i++) {
+                        ReplaceFrame? replace = replaceFrames[i];
 
-                if (replaceFrameDestinations != null) {
-                    FramesDestinations = replaceFrameDestinations;
-                } else if (track.FramesDestinations != null) {
-                    int length = replaceFrameRegions == null ? track.FramesDestinations.Length : Util.Math.Min(replaceFrameRegions.Length, track.FramesDestinations.Length);
-                    FramesDestinations = new Rectangle[length];
-                    track.FramesDestinations.CopyTo(FramesDestinations, 0);
-                }
+                        if (!replace.HasValue) {
+                            continue;
+                        }
 
-                if (replaceDurations != null) {
-                    Durations = replaceDurations;
-                } else {
-                    Durations = new int[track.Durations.Length];
-                    track.Durations.CopyTo(Durations, 0);
+                        Frames[i] = replace.Value.Apply(Frames[i]);
+                    }
                 }
 
                 RepeatTimes = track.RepeatTimes;
@@ -75,41 +47,50 @@
                 if (track._onChangeFrame != null) {
                     _onChangeFrame += track._onChangeFrame;
                 }
+
+                //
+
+                foreach (Frame frame in Frames) {
+                    TotalDuration += frame.Duration;
+                }
             }
 
-            public Rectangle[] FramesRegions { get; private set; }
-            public Rectangle[] FramesDestinations { get; private set; }
-            public int[] Durations { get; private set; }
-            public int CurrentFrameIndex { get { return _currentFrameIndex; } set { _currentFrameIndex = Util.Math.Clamp(value, 0, FramesRegions.Length - 1); } }
-            public int CurrentFrameDuration { get { return Durations[CurrentFrameIndex]; } }
-            public ref Rectangle CurrentFrameRegion { get { return ref FramesRegions[CurrentFrameIndex]; } }
-            public ref Rectangle CurrentFrameDestination { get { return ref FramesDestinations[CurrentFrameIndex]; } }
+            public Frame[] Frames { get; }
+            public ref Frame CurrentFrame { get { return ref Frames[CurrentFrameIndex]; } }
             public int RepeatTimes { get; set; }
             public int TimesPlayed { get; private set; }
-            public int FrameCount { get { return FramesRegions?.Length ?? 0; } }
-            public int LastFrameIndex { get { return FramesRegions.Length - 1; } }
+            public int FrameCount { get { return Frames?.Length ?? 0; } }
+            public int LastFrameIndex { get { return Frames.Length - 1; } }
+            public int TotalDuration { get; }
             public bool HasEnded { get; private set; }
             public bool IsLooping { get { return RepeatTimes < 0; } set { RepeatTimes = value ? -1 : 0; } }
             public bool IsPingPong { get; set; }
             public bool IsReverse { get; set; }
             public bool IsForward { get { return !IsReverse; } set { IsReverse = !value; } }
             public bool IsDisposed { get; private set; }
-            public bool IsAtLastFrame { get { return CurrentFrameIndex == FramesRegions.Length - 1; } }
+            public bool IsAtLastFrame { get { return CurrentFrameIndex == LastFrameIndex; } }
 
-            public int TotalDuration {
+            public int CurrentFrameIndex {
                 get {
-                    int total = 0;
-                    foreach (int t in Durations) {
-                        total += t;
+                    return _currentFrameIndex;
+                }
+
+                set {
+                    if (value < 0 || value >= Frames.Length) {
+                        if (Frames.Length == 0) {
+                            throw new System.InvalidOperationException("There is no frame registered.");
+                        }
+
+                        throw new System.InvalidOperationException($"Provided value ({value}) is out of bounds [0, {Frames.Length - 1}].");
                     }
 
-                    return total;
+                    _currentFrameIndex = value;
                 }
             }
 
             public void Reset() {
-                HasEnded = Durations.Length == 0 || (Durations.Length == 1 && Durations[0] == 0);
-                CurrentFrameIndex = IsReverse ? FramesRegions.Length - 1 : 0;
+                HasEnded = Frames == null || Frames.Length == 0 || (Frames.Length == 1 && Frames[0].Duration == 0);
+                CurrentFrameIndex = IsReverse ? LastFrameIndex : 0;
                 TimesPlayed = 0;
             }
 
@@ -118,13 +99,15 @@
                     return;
                 }
 
-                if ((IsReverse && CurrentFrameIndex - 1 < 0) || (IsForward && CurrentFrameIndex + 1 == FramesRegions.Length)) {
+                if ((IsReverse && CurrentFrameIndex - 1 < 0)
+                 || (IsForward && CurrentFrameIndex + 1 == Frames.Length)
+                ) {
                     if (IsPingPong) {
                         IsReverse = !IsReverse;
                     }
 
                     if (IsLooping || TimesPlayed < RepeatTimes) {
-                        CurrentFrameIndex = IsReverse ? FramesRegions.Length - 1 : 0;
+                        CurrentFrameIndex = IsReverse ? LastFrameIndex : 0;
                         TimesPlayed++;
                         _onEnd?.Invoke();
                     } else {
@@ -143,7 +126,7 @@
             }
 
             public void LastFrame() {
-                CurrentFrameIndex = FramesRegions.Length - 1;
+                CurrentFrameIndex = LastFrameIndex;
             }
 
             public Track Repeat(int times = -1) {
@@ -168,7 +151,7 @@
 
             public Track Reverse() {
                 IsReverse = true;
-                CurrentFrameIndex = FramesRegions.Length - 1;
+                CurrentFrameIndex = LastFrameIndex;
                 return this;
             }
 
@@ -195,11 +178,74 @@
 
                 _onEnd = null;
                 _onChangeFrame = null;
-                FramesRegions = FramesDestinations = null;
-                Durations = null;
 
                 IsDisposed = true;
             }
+
+            #region Frame Struct
+
+            public struct Frame {
+                public Rectangle FrameRegion;
+                public Rectangle? FrameDestination;
+                public int GlobalIndex, Duration;
+
+                public Frame(
+                    int globalIndex,
+                    int duration,
+                    Rectangle frameRegion,
+                    Rectangle? frameDestination
+                ) {
+                    GlobalIndex = globalIndex;
+                    Duration = duration;
+                    FrameRegion = frameRegion;
+                    FrameDestination = frameDestination;
+                }
+
+                public Frame(int globalIndex, int duration, Rectangle frameRegion) {
+                    GlobalIndex = globalIndex;
+                    Duration = duration;
+                    FrameRegion = frameRegion;
+                    FrameDestination = null;
+                }
+            }
+
+            #endregion Frame Struct
+
+            #region ReplaceFrame Struct
+
+            public struct ReplaceFrame {
+                public Rectangle? FrameRegion, FrameDestination;
+                public int? GlobalIndex, Duration;
+
+                public ReplaceFrame(int? globalIndex, int? duration, Rectangle? frameRegion, Rectangle? frameDestination) {
+                    GlobalIndex = globalIndex;
+                    Duration = duration;
+                    FrameRegion = frameRegion;
+                    FrameDestination = frameDestination;
+                }
+
+                public Frame Apply(Frame frame) {
+                    if (FrameRegion.HasValue) {
+                        frame.FrameRegion = FrameRegion.Value;
+                    }
+
+                    if (FrameDestination.HasValue) {
+                        frame.FrameDestination = FrameDestination.Value;
+                    }
+
+                    if (GlobalIndex.HasValue) {
+                        frame.GlobalIndex = GlobalIndex.Value;
+                    }
+
+                    if (Duration.HasValue) {
+                        frame.Duration = Duration.Value;
+                    }
+
+                    return frame;
+                }
+            }
+
+            #endregion ReplaceFrame Struct
         }
     }
 }

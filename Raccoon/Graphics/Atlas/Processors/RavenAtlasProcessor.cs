@@ -75,7 +75,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
                 // register all frames to "all" track
                 for (uint i = 0U; i < frames.Count; i++) {
                     (Rectangle Source, uint Duration, Rectangle OriginalFrame) frame = frames[(int) i];
-                    animation.AddFrame(frame.Source, (int) frame.Duration, frame.OriginalFrame, "all");
+                    animation.AddFrame((int) i, frame.Source, (int) frame.Duration, frame.OriginalFrame, "all");
                 }
 
                 // process other tracks
@@ -88,7 +88,7 @@ namespace Raccoon.Graphics.AtlasProcessors {
 
                     for (uint i = from; i <= to; i++) {
                         (Rectangle Source, uint Duration, Rectangle OriginalFrame) frame = frames[(int) i];
-                        animation.AddFrame(frame.Source, (int) frame.Duration, frame.OriginalFrame, name);
+                        animation.AddFrame((int) i, frame.Source, (int) frame.Duration, frame.OriginalFrame, name);
                     }
                 }
 

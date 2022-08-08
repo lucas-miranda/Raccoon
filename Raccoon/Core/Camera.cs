@@ -212,8 +212,12 @@ namespace Raccoon {
                 if (g is Raccoon.Graphics.Animation animation) {
                     Vector2 origin = g.Origin;
 
-                    if (animation.CurrentTrack != null) {
-                        origin += animation.CurrentTrack.CurrentFrameDestination.Position;
+                    if (animation.CurrentTrack != null && animation.CurrentTrack.Frames.Length > 0) {
+                        Graphics.Animation<string>.Track.Frame frame = animation.CurrentTrack.CurrentFrame;
+
+                        if (frame.FrameDestination.HasValue) {
+                            origin += frame.FrameDestination.Value.Position;
+                        }
                     }
 
                     return new Rectangle(-origin + g.Position, g.Size * g.ScaleXY);

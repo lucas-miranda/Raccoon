@@ -44,20 +44,40 @@ namespace Raccoon.Graphics {
             return TryGetTrack(DefaultAllFramesTrackName, out frames);
         }
 
-        public void AddFrame(Rectangle clippingRegion, int duration, Rectangle originalFrame, string targetTag) {
+        public void AddFrame(
+            int globalIndex,
+            Rectangle clippingRegion,
+            int duration,
+            Rectangle originalFrame,
+            string targetTag
+        ) {
             if (!_tracks.ContainsKey(targetTag)) {
                 _tracks.Add(targetTag, new List<AtlasAnimationFrame>());
             }
 
-            _tracks[targetTag].Add(new AtlasAnimationFrame(duration, clippingRegion, originalFrame));
+            _tracks[targetTag].Add(new AtlasAnimationFrame(
+                globalIndex,
+                duration,
+                clippingRegion,
+                originalFrame
+            ));
         }
 
-        public void AddFrame(Rectangle clippingRegion, int duration, string targetTag) {
+        public void AddFrame(
+            int globalIndex,
+            Rectangle clippingRegion,
+            int duration,
+            string targetTag
+        ) {
             if (!_tracks.ContainsKey(targetTag)) {
                 _tracks.Add(targetTag, new List<AtlasAnimationFrame>());
             }
 
-            _tracks[targetTag].Add(new AtlasAnimationFrame(duration, clippingRegion));
+            _tracks[targetTag].Add(new AtlasAnimationFrame(
+                globalIndex,
+                duration,
+                clippingRegion
+            ));
         }
 
         public override void Dispose() {
