@@ -971,6 +971,10 @@ namespace Raccoon {
         }
 
         public void RemoveSelf() {
+            if (IsWiped) {
+                return;
+            }
+
             if (Scene == null) {
                 throw new System.NullReferenceException("Can't remove from a null Scene.");
             }
