@@ -68,7 +68,7 @@ namespace Raccoon.Graphics {
         public Dictionary<KeyType, Track>.KeyCollection TracksKeys { get { return Tracks.Keys; } }
         public int TrackCount { get { return Tracks.Count; } }
 
-        public override Size Size {
+        public Size FrameSize {
             get {
                 if (CurrentTrack != null && CurrentTrack.Frames.Length > 0) {
                     ref Track.Frame frame = ref CurrentTrack.CurrentFrame;
@@ -76,13 +76,11 @@ namespace Raccoon.Graphics {
                     if (frame.FrameDestination.HasValue) {
                         return frame.FrameDestination.Value.Size;
                     }
+
+                    return frame.FrameRegion.Size;
                 }
 
-                return base.Size;
-            }
-
-            protected set {
-                base.Size = value;
+                return Size;
             }
         }
 
