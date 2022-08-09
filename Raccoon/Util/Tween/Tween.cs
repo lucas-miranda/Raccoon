@@ -148,7 +148,7 @@ namespace Raccoon.Util.Tween {
                     IsReverse = !IsReverse;
                 }
 
-                if (!IsLooping && TimesPlayed == RepeatTimes + 1) {
+                if (!IsLooping && TimesPlayed >= RepeatTimes + 1) {
                     IsPlaying = false;
                     HasEnded = true;
                 } else {
@@ -178,6 +178,12 @@ namespace Raccoon.Util.Tween {
             } else if (IsPlaying && IsPaused) {
                 Resume();
                 return this;
+            } else if (HasEnded) {
+                // tween has ended previously
+                // and it should play again
+                // (without reset)
+                TimesPlayed = 0;
+                HasEnded = false;
             }
 
             IsPlaying = true;
@@ -272,10 +278,7 @@ namespace Raccoon.Util.Tween {
                 return this;
             }
 
-            if (IsPlaying) {
-                Timer = (uint) ((1f - Time) * Duration);
-            }
-
+            Timer = (uint) ((1f - Time) * Duration);
             IsReverse = true;
             _startReverse = true;
             return this;
@@ -286,10 +289,7 @@ namespace Raccoon.Util.Tween {
                 return this;
             }
 
-            if (IsPlaying) {
-                Timer = (uint) ((1f - Time) * Duration);
-            }
-
+            Timer = (uint) ((1f - Time) * Duration);
             IsForward = true;
             _startReverse = false;
             return this;
