@@ -1022,37 +1022,33 @@ namespace Raccoon {
         protected virtual void RendererChanged(Renderer renderer) {
         }
 
-        #endregion Protected Methods
-
-        #region Private Methods
-
-        private bool CanUpdateChild(Transform child) {
+        protected bool CanUpdateChild(Transform child) {
             return !(!IsChildAvailable(child)
                 || !child.Entity.Active
                 || (child.Entity.ControlGroup != null && child.Entity.ControlGroup.IsPaused)
             );
         }
 
-        private bool CanRenderChild(Transform child) {
+        protected bool CanRenderChild(Transform child) {
             return !(!IsChildAvailable(child)
                 || !child.Entity.Visible
                 || !child.Entity.AutoRender
             );
         }
 
-        private bool CanDebugRenderChild(Transform child) {
+        protected bool CanDebugRenderChild(Transform child) {
             return !(!IsChildAvailable(child)
                 || !child.Entity.Visible
             );
         }
 
-        private bool IsChildAvailable(Transform child) {
+        protected bool IsChildAvailable(Transform child) {
             return !(child.IsDetached
                 || child.Entity == null
                 || !child.Entity.IsSceneFromTransformAncestor
             );
         }
 
-        #endregion Private Methods
+        #endregion Protected Methods
     }
 }
