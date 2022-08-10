@@ -111,11 +111,13 @@ float3 from_HSL(float3 hsl) {
     return rgb;
 }
 
-bool is_at_outer_border(sampler2D textureSampler, float4 px, float2 textureCoord, float2 pxSize) {
+bool is_at_outer_border(sampler2D textureSampler, float2 textureCoord, float2 pxSize) {
+    /*
     // current pixel should be transparent
     if (px.a > 0.01f) {
         return false;
     }
+    */
 
     // top pixel
     if (tex2D(textureSampler, textureCoord + float2(0.0f, -pxSize.y)).a > .01f) {
@@ -140,11 +142,13 @@ bool is_at_outer_border(sampler2D textureSampler, float4 px, float2 textureCoord
     return false;
 }
 
-bool is_at_inner_border(sampler2D textureSampler, float4 px, float2 textureCoord, float2 pxSize) {
+bool is_at_inner_border(sampler2D textureSampler, float2 textureCoord, float2 pxSize) {
+    /*
     // current pixel should not be transparent
     if (px.a < 0.01f) {
         return false;
     }
+    */
 
     // top pixel
     if (tex2D(textureSampler, textureCoord + float2(0.0f, -pxSize.y)).a < .01f) {
