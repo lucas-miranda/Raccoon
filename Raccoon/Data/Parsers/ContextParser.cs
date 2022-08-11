@@ -2,7 +2,7 @@
 namespace Raccoon.Data.Parsers {
     public static class ContextParser {
         public static void Reduce(ParserState state) {
-            // ident [inline_list_entries((ident[: type] = value);*)]
+            // ident [inline_list((ident[: type] = value);*)]
             while (state.LineStack.TryPop(out Token token)) {
                 // type = any_value => type = defined_value
                 if (TryDefineValueTokenType(token, state)) {
@@ -12,6 +12,16 @@ namespace Raccoon.Data.Parsers {
                 // identifier: type = value
                 // identifier = value
                 if (TryTypeAssignReduce(token, state)) {
+                    continue;
+                }
+
+                // identifier: type
+                if (TryTypedIdentifierReduce(token, state)) {
+                    continue;
+                }
+
+                //  inline_list (ident[: type] = value);* inline_list_close => inline_list
+                if (TryInlineListEntriesReduce(token, state)) {
                     continue;
                 }
 
@@ -41,7 +51,7 @@ namespace Raccoon.Data.Parsers {
             // adjust ValueToken to correct type DefinedValueToken<T>
             if (!(valueNextToken is AnyValueToken anyValueToken)) {
                 throw new System.InvalidOperationException(
-                    $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueNextToken.GetType().Name}'."
+                    $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueNextToken.GetType().ToString()}'."
                 );
             }
 
@@ -64,48 +74,118 @@ namespace Raccoon.Data.Parsers {
                 return false;
             }
 
-            if (nextToken is TypeToken typeNextToken) {
-                // ident: type = value
+            if (identToken is TypedIdentifierToken typedIdentToken) {
+                if (nextToken is ValueToken valueNextToken) {
+                    // typed_ident = value
 
-                state.ResultStack.Pop(); // pop peeked TypeToken
+                    state.ResultStack.Pop(); // pop peeked ValueToken
 
-                if (!state.ResultStack.TryPeek(out Token next2Token)) {
-                    throw new System.InvalidOperationException(
-                        $"Expecting a value token, after an identifier and type, but token list has ended."
+                    ValueAssignToken valueAssignToken = new ValueAssignToken(
+                        new IdentifierToken(typedIdentToken.Name),
+                        typedIdentToken.Type,
+                        valueNextToken
                     );
-                }
 
-                if (!(next2Token is ValueToken valueNext2Token)) {
-                    throw new System.InvalidOperationException(
-                        $"Expecting a value token, after an identifier and type, but found '{next2Token.GetType().Name}'."
+                    state.ResultStack.Push(valueAssignToken);
+                } else {
+                    return false;
+                }
+            } else{
+                if (nextToken is TypeToken typeNextToken) {
+                    // ident: type = value
+
+                    state.ResultStack.Pop(); // pop peeked TypeToken
+
+                    if (!state.ResultStack.TryPeek(out Token next2Token)) {
+                        // it doesn't has more tokens
+                        // and we need at least 1 more to be the value
+                        state.ResultStack.Push(nextToken); // return poped TypeToken
+                        return false;
+                    }
+
+                    if (!(next2Token is ValueToken valueNext2Token)) {
+                        throw new System.InvalidOperationException(
+                            $"Expecting a value token, after an identifier and type, but found '{next2Token.GetType().ToString()}'."
+                        );
+                    }
+
+                    state.ResultStack.Pop(); // pop peeked ValueToken
+
+                    ValueAssignToken valueAssignToken = new ValueAssignToken(
+                        identToken,
+                        typeNextToken,
+                        valueNext2Token
                     );
+
+                    state.ResultStack.Push(valueAssignToken);
+                } else if (nextToken is ValueToken valueNextToken) {
+                    // ident = value
+
+                    state.ResultStack.Pop(); // pop peeked ValueToken
+
+                    ValueAssignToken valueAssignToken = new ValueAssignToken(
+                        identToken,
+                        valueNextToken
+                    );
+
+                    state.ResultStack.Push(valueAssignToken);
+                } else {
+                    return false;
                 }
-
-                state.ResultStack.Pop(); // pop peeked ValueToken
-
-                ValueAssignToken valueAssignToken = new ValueAssignToken(
-                    identToken,
-                    typeNextToken,
-                    valueNext2Token
-                );
-
-                state.ResultStack.Push(valueAssignToken);
-            } else if (nextToken is ValueToken valueNextToken) {
-                // ident = value
-
-                state.ResultStack.Pop(); // pop peeked ValueToken
-
-                ValueAssignToken valueAssignToken = new ValueAssignToken(
-                    identToken,
-                    valueNextToken
-                );
-
-                state.ResultStack.Push(valueAssignToken);
-            } else {
-                return false;
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Try to reduce tokens from an expression: `ident: type`
+        /// </summary>
+        private static bool TryTypedIdentifierReduce(Token token, ParserState state) {
+            if (!(token is IdentifierToken identToken)) {
+                return false;
+            }
+
+            if (!state.ResultStack.TryPeek(out Token nextToken)
+             || !(nextToken is TypeToken typeNextToken)
+            ) {
+                // there is no next token available
+                // or it isn't a type token
+                return false;
+            }
+
+            state.ResultStack.Pop(); // pop peeked TypeToken
+
+            TypedIdentifierToken typedIdentToken = new TypedIdentifierToken(
+                identToken.Name,
+                typeNextToken
+            );
+
+            state.ResultStack.Push(typedIdentToken);
+            return true;
+        }
+
+        /// <summary>
+        /// Try to reduce tokens from an expression: `inline_list (ident[: type] = value);* inline_list_close`
+        /// Every enclosed tokens which are of valid types: ValueAssignToken. Will be registered as an inline list entry.
+        /// </summary>
+        private static bool TryInlineListEntriesReduce(Token token, ParserState state) {
+                if (!(token is InlineListEntriesToken inlineListToken)) {
+                    return false;
+                }
+
+                while (state.ResultStack.TryPop(out Token resultToken)) {
+                    if (resultToken.Kind == TokenKind.InlineListEntriesClose) {
+                        // end of inline list entries
+                        break;
+                    } else if (resultToken is ValueAssignToken valueAssignToken) {
+                        inlineListToken.Entries.Add(valueAssignToken);
+                    } else {
+                        throw new System.InvalidOperationException($"Invalid inline list entry '{resultToken}'.\nPossible values are: {nameof(ValueAssignToken)} or list close.");
+                    }
+                }
+
+                state.ResultStack.Push(inlineListToken);
+                return true;
         }
     }
 }

@@ -15,6 +15,10 @@ namespace Raccoon.Data.Parsers {
             return Value?.ToString() ?? string.Empty;
         }
 
+        public override object AsObject() {
+            return Value;
+        }
+
         public override void SetPropertyValue(object target, PropertyInfo info) {
             if (target == null) {
                 throw new System.NotSupportedException($"Target null isn't supported.");
@@ -41,7 +45,7 @@ namespace Raccoon.Data.Parsers {
             }
 
             // try to infer type using PropertyInfo
-            TypeToken inferedType = new TypeToken(info.PropertyType);
+            TypeToken inferedType = new TypeToken(GetValueType(info.PropertyType));
             ValueToken inferedTypeValueToken = inferedType.CreateValueToken(Value);
 
             if (inferedTypeValueToken is AnyValueToken) {
@@ -55,7 +59,7 @@ namespace Raccoon.Data.Parsers {
         }
 
         public override string ToString() {
-            return $"AnyValue {Value ?? "_"} ({Value?.GetType().Name ?? "?"})";
+            return $"AnyValue {Value ?? "_"} ({Value?.GetType().ToString() ?? "?"})";
         }
     }
 }

@@ -65,6 +65,11 @@ namespace Raccoon.Data.Parsers {
                             tokenStart = TokenKind.InlineListEntries;
                             break;
 
+                        case ')':
+                            // item inline list end
+                            tokenStart = TokenKind.InlineListEntriesClose;
+                            break;
+
                         case ':':
                             // value type declaration
                             tokenStart = TokenKind.Type;
@@ -75,14 +80,38 @@ namespace Raccoon.Data.Parsers {
                             tokenStart = TokenKind.Value;
                             break;
 
+                        case '/':
+                            {
+                                // check next symbol
+                                if (endIndex + 1 < line.Length) {
+                                    char nextSymbol = line[endIndex + 1];
+
+                                    if (nextSymbol == '/') {
+                                        tokenStart = TokenKind.Comment;
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+
+                        case ';':
+                            // end of entry (mandatory at inline list declarations)
+                            tokenStart = TokenKind.Identifier;
+                            break;
+
                         default:
                             break;
                     }
 
                     if (tokenStart.HasValue) {
                         if (startIndex == endIndex) {
-                            // parse of token just begun
                             kind = tokenStart.Value;
+
+                            if (tokenStart.Value == TokenKind.Comment) {
+                                break;
+                            }
+
+                            // parse of token just begun
                             endIndex += 1;
                             break;
                         } else if (kind == TokenKind.Identifier) {
@@ -90,7 +119,9 @@ namespace Raccoon.Data.Parsers {
                             // break here to resume later
                             break;
                         } else {
-                            // TODO  maybe we should push current token, in case of nested ones
+                            throw new System.NotImplementedException(
+                                $"Unhandled token start '{tokenStart.Value}' (current kind: {kind})"
+                            );
                         }
                     }
                 }
@@ -103,11 +134,17 @@ namespace Raccoon.Data.Parsers {
                         ));
                         break;
 
-                    /*
                     case TokenKind.InlineListEntries:
                         state.LineStack.Push(new InlineListEntriesToken());
                         break;
-                        */
+
+                    case TokenKind.InlineListEntriesClose:
+                        state.LineStack.Push(
+                            new MarkerToken(TokenKind.InlineListEntriesClose)
+                        );
+
+                        kind = TokenKind.Identifier; // reset to default type
+                        break;
 
                     case TokenKind.Type:
                         state.LineStack.Push(new TypeToken());
@@ -115,6 +152,11 @@ namespace Raccoon.Data.Parsers {
 
                     case TokenKind.Value:
                         state.LineStack.Push(new AnyValueToken());
+                        break;
+
+                    case TokenKind.Comment:
+                        // ignore the rest of line
+                        endIndex = line.Length;
                         break;
 
                     default:
@@ -135,16 +177,16 @@ namespace Raccoon.Data.Parsers {
         /// </summary>
         public static void ReduceLine(ParserState state) {
             // apply one of following reduces:
-            //  ident: (type ident) = (value ident) => ident: type = value
-            //  ident = (value ident) => ident = value
+            //  ident: type ident = value ident => ident: type = value
+            //  ident = value ident => ident = value
 
             while (state.LineStack.TryPop(out Token token)) {
-                // (value ident) => value
+                // value ident => value
                 if (ReduceOperations.Value(token, state)) {
                     continue;
                 }
 
-                // (type ident) => type
+                // type ident => type
                 if (ReduceOperations.Type(token, state)) {
                     continue;
                 }
@@ -169,7 +211,7 @@ namespace Raccoon.Data.Parsers {
 
                 if (!(valueToken is AnyValueToken anyValueToken)) {
                     throw new System.InvalidOperationException(
-                        $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueToken.GetType().Name}'."
+                        $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueToken.GetType().ToString()}'."
                     );
                 }
 

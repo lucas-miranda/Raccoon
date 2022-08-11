@@ -5,6 +5,18 @@ namespace Raccoon.Data.Parsers {
             TypeToken type,
             ValueToken value
         ) : base(TokenKind.ValueAssign) {
+            if (identifier == null) {
+                throw new System.ArgumentNullException(nameof(identifier));
+            }
+
+            if (type == null) {
+                throw new System.ArgumentNullException(nameof(type));
+            }
+
+            if (value == null) {
+                throw new System.ArgumentNullException(nameof(value));
+            }
+
             Identifier = identifier;
             Type = type;
             Value = value;
@@ -14,6 +26,14 @@ namespace Raccoon.Data.Parsers {
             IdentifierToken identifier,
             ValueToken value
         ) : base(TokenKind.ValueAssign) {
+            if (identifier == null) {
+                throw new System.ArgumentNullException(nameof(identifier));
+            }
+
+            if (value == null) {
+                throw new System.ArgumentNullException(nameof(value));
+            }
+
             Identifier = identifier;
             Type = null;
             Value = value;

@@ -70,11 +70,31 @@ namespace Raccoon.Data {
                 TypeDescriptorAttribute typeDescriptor = type.Type.Descriptor();
 
                 foreach (Property property in _properties) {
-                    if (property.HasName(name)
-                     && typeDescriptor.ValueType.IsAssignableFrom(property.Info.PropertyType)
-                    ) {
-                        return property;
+                    if (!property.HasName(name)) {
+                        continue;
                     }
+
+                    if (!typeDescriptor.ValueType.IsAssignableFrom(property.Info.PropertyType)) {
+                        // it's direct type evaluation has failed
+                        // but it can be a special case
+
+                        if (property.Info.PropertyType.IsGenericType
+                         && property.Info.PropertyType.GetGenericTypeDefinition() == typeof(System.Nullable<>)
+                        ) {
+                            // property type is System.Nullable<_>
+                            System.Type[] genericArgs = property.Info.PropertyType.GenericTypeArguments;
+
+                            if (genericArgs.Length != 1
+                             || !genericArgs[0].IsAssignableFrom(typeDescriptor.ValueType)
+                            ) {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    return property;
                 }
             }
 

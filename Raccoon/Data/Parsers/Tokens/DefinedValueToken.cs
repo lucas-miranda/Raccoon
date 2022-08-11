@@ -16,6 +16,10 @@ namespace Raccoon.Data.Parsers {
             return Value?.ToString() ?? string.Empty;
         }
 
+        public override object AsObject() {
+            return Value;
+        }
+
         public override void SetPropertyValue(object target, PropertyInfo info) {
             if (target == null) {
                 throw new System.NotSupportedException($"Target null isn't supported.");
@@ -25,9 +29,18 @@ namespace Raccoon.Data.Parsers {
                 throw new System.ArgumentNullException(nameof(info));
             }
 
-            if (!info.PropertyType.IsAssignableFrom(typeof(T))) {
+            System.Type propertyType = GetValueType(info.PropertyType);
+
+            if (!typeof(T).IsAssignableFrom(propertyType)) {
                 throw new System.ArgumentException(
-                    $"Property '{info.Name}' (from type {target.GetType().Name}) has type '{info.PropertyType.Name}', but '{Value.GetType().Name}' is provided.",
+                    $"Property '{info.Name}' (from type {target.GetType().ToString()}) has type '{info.PropertyType.ToString()}', but a type '{typeof(T).ToString()}' is expected.",
+                    nameof(info)
+                );
+            }
+
+            if (!propertyType.IsAssignableFrom(Value.GetType())) {
+                throw new System.ArgumentException(
+                    $"Property '{info.Name}' (from type {target.GetType().ToString()}) has type '{info.PropertyType.ToString()}'. It can't receive a value with type '{Value.GetType().ToString()}'.",
                     nameof(info)
                 );
             }
@@ -36,7 +49,7 @@ namespace Raccoon.Data.Parsers {
         }
 
         public override string ToString() {
-            return $"DefinedValue {Value} ({Value?.GetType().Name ?? "?"})";
+            return $"DefinedValue {Value} ({Value?.GetType().ToString() ?? "?"})";
         }
     }
 }

@@ -4,7 +4,17 @@ namespace Raccoon.Data.Parsers {
     public class TypeToken : Token {
         #region Private Members
 
-        private static readonly char[] CustomTrimChars = new char[] { ' ' };
+        private const char
+                NestedTypeOpenDelimiter = '<',
+                NestedTypeCloseDelimiter = '>',
+                NestedTypeSeparator = ',';
+
+        private static readonly char[]
+                CustomTrimChars = new char[] { ' ' },
+                NestedTypeDelimiters = new char[] {
+                    NestedTypeOpenDelimiter,
+                    NestedTypeCloseDelimiter
+                };
 
         private static Dictionary<string, TypeKind> TypeKindsNames
             = new Dictionary<string, TypeKind>();
@@ -57,7 +67,7 @@ namespace Raccoon.Data.Parsers {
             }
 
             if (!TypeKindsByValueType.TryGetValue(valueType, out TypeKind kind)) {
-                throw new System.ArgumentException($"Not found a {nameof(TypeKind)} which matches provided value type '{valueType.Name}'");
+                throw new System.ArgumentException($"Not found a {nameof(TypeKind)} which matches provided value type '{valueType.ToString()}'");
             }
 
             Set(kind);
@@ -69,6 +79,8 @@ namespace Raccoon.Data.Parsers {
 
         public TypeKind Type { get; private set; }
         public string Custom { get; private set; }
+        public TypeToken[] Nested { get; private set; }
+        public bool HasElementType { get; private set; }
 
         #endregion Public Properties
 
@@ -89,7 +101,114 @@ namespace Raccoon.Data.Parsers {
         public void Set(string custom) {
             custom = custom.Trim(CustomTrimChars);
 
-            if (TypeKindsNames.TryGetValue(custom.ToLower(), out TypeKind typeKind)) {
+            // try to identify provided "custom" value
+            if (custom.IndexOfAny(NestedTypeDelimiters) >= 0) {
+                // it should be handled as a generic type
+                int openIndex = custom.IndexOf(NestedTypeOpenDelimiter),
+                    closeIndex = custom.LastIndexOf(NestedTypeCloseDelimiter);
+
+                if (openIndex < 0) {
+                    throw new System.InvalidOperationException(
+                        $"Missing an open delimiter '{NestedTypeOpenDelimiter}' at nested types, at type '{custom}'."
+                    );
+                } else if (closeIndex < 0) {
+                    throw new System.InvalidOperationException(
+                        $"Missing a close delimiter '{NestedTypeCloseDelimiter}' at nested types, at type '{custom}'."
+                    );
+                }
+
+                // set current type as all the value before first open delimiter
+                string type = custom.Substring(0, openIndex);
+                Set(type);
+
+                // extract nested types
+                List<string> nestedTypes = new List<string>();
+                int open = 0,
+                    startIndex = openIndex + 1;
+
+                for (int i = startIndex; i < closeIndex; i++) {
+                    char c = custom[i];
+
+                    if (c == NestedTypeOpenDelimiter) {
+                        open += 1;
+                    } else if (c == NestedTypeCloseDelimiter) {
+                        open -= 1;
+                    } else if (c == NestedTypeSeparator) {
+                        // only register if there is no nested types opened
+                        if (open == 0) {
+                            nestedTypes.Add(custom.Substring(startIndex, i - startIndex));
+                            startIndex = i + 1;
+                        }
+                    }
+                }
+
+                if (open > 0 || open < 0) {
+                    throw new System.InvalidOperationException(
+                        $"Malformed nested types.\nComplete type: {custom}"
+                    );
+                } else if (startIndex < closeIndex) {
+                    nestedTypes.Add(custom.Substring(startIndex, closeIndex - startIndex));
+                }
+
+                if (Type != TypeKind.Custom) {
+                    // identify expected generic values
+                    TypeDescriptorAttribute descriptor = Type.Descriptor();
+                    System.Type valueType = descriptor.ValueType;
+
+                    int genericArgs;
+
+                    if (valueType == typeof(System.Array)) {
+                        genericArgs = 1;
+                    } else {
+                        if (!valueType.ContainsGenericParameters) {
+                            throw new System.InvalidOperationException(
+                                $"Type '{type}' ({valueType.Name}) don't have generic parameters. But {nestedTypes.Count} nested type{(nestedTypes.Count == 1 ? "" : "s")} was found."
+                            );
+                        }
+
+                        genericArgs = valueType.GetGenericArguments().Length;
+                    }
+
+                    if (genericArgs != nestedTypes.Count) {
+                        throw new System.InvalidOperationException(
+                            $"Base type '{valueType.Name}' expects {genericArgs} nested type{(genericArgs == 1 ? "" : "s")}, but {nestedTypes.Count} type{(nestedTypes.Count == 1 ? "" : "s")} was provided."
+                        );
+                    }
+
+                    // construct nested types array
+                    Nested = new TypeToken[genericArgs];
+
+                    for (int i = 0; i < Nested.Length; i++) {
+                        Nested[i] = new TypeToken(nestedTypes[i]);
+                    }
+
+                    //
+
+                    switch (Type) {
+                        case TypeKind.Vector:
+                            // Nested types represent element type
+                            HasElementType = true;
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    return;
+                }
+
+                // handling custom base type
+
+                // construct nested types array
+                Nested = new TypeToken[nestedTypes.Count];
+
+                for (int i = 0; i < Nested.Length; i++) {
+                    Nested[i] = new TypeToken(nestedTypes[i]);
+                }
+
+                return;
+            } else if (TypeKindsNames.TryGetValue(custom.ToLower(), out TypeKind typeKind)) {
+                // already exists a type with defined name, use it
                 Set(typeKind);
                 return;
             }
@@ -106,11 +225,22 @@ namespace Raccoon.Data.Parsers {
                 case TypeKind.Int32:
                     return Converter.Int32(value);
 
+                case TypeKind.UInt32:
+                    return Converter.UInt32(value);
+
                 case TypeKind.Boolean:
                     return Converter.Boolean(value);
 
                 case TypeKind.String:
                     return Converter.String(value);
+
+                case TypeKind.Vector2:
+                    return Converter.Vector2(value);
+
+                case TypeKind.Size:
+                    return Converter.Size(value);
+
+                // TODO handle types with Nested types
 
                 default:
                     throw new System.NotImplementedException(
@@ -137,10 +267,10 @@ namespace Raccoon.Data.Parsers {
             }
 
             public static ValueToken Int32(object value) {
-                int result;
+                System.Int32 result;
 
                 if (value == null) {
-                    result = default(int);
+                    result = default(System.Int32);
                 } else if (value is System.Int32 i) {
                     result = i;
                 } else if (value is string str) {
@@ -154,6 +284,26 @@ namespace Raccoon.Data.Parsers {
                 }
 
                 return new DefinedValueToken<System.Int32>(result);
+            }
+
+            public static ValueToken UInt32(object value) {
+                System.UInt32 result;
+
+                if (value == null) {
+                    result = default(System.UInt32);
+                } else if (value is System.UInt32 u) {
+                    result = u;
+                } else if (value is string str) {
+                    if (!System.UInt32.TryParse(str, out result)) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to parse from '{str}' to {nameof(System.UInt32)}."
+                        );
+                    }
+                } else {
+                    result = System.Convert.ToUInt32(value);
+                }
+
+                return new DefinedValueToken<System.UInt32>(result);
             }
 
             public static ValueToken Boolean(object value) {
@@ -188,6 +338,50 @@ namespace Raccoon.Data.Parsers {
                 }
 
                 return new DefinedValueToken<System.String>(result);
+            }
+
+            public static ValueToken Vector2(object value) {
+                Vector2 result;
+
+                if (value == null) {
+                    result = default(Vector2);
+                } else if (value is Vector2 vec2) {
+                    result = vec2;
+                } else if (value is string str) {
+                    if (!Raccoon.Vector2.TryParse(str, out result)) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to parse from '{str}' to {nameof(Raccoon.Vector2)}."
+                        );
+                    }
+                } else {
+                    throw new System.InvalidOperationException(
+                        $"Can't convert from {value.GetType().ToString()} ({value}) to {nameof(Raccoon.Vector2)}."
+                    );
+                }
+
+                return new DefinedValueToken<Vector2>(result);
+            }
+
+            public static ValueToken Size(object value) {
+                Size result;
+
+                if (value == null) {
+                    result = default(Size);
+                } else if (value is Size size) {
+                    result = size;
+                } else if (value is string str) {
+                    if (!Raccoon.Size.TryParse(str, out result)) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to parse from '{str}' to {nameof(Raccoon.Size)}."
+                        );
+                    }
+                } else {
+                    throw new System.InvalidOperationException(
+                        $"Can't convert from {value.GetType().ToString()} ({value}) to {nameof(Raccoon.Size)}."
+                    );
+                }
+
+                return new DefinedValueToken<Size>(result);
             }
         }
 

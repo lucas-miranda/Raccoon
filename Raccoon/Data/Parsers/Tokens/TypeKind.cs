@@ -5,11 +5,23 @@ namespace Raccoon.Data.Parsers {
         [TypeDescriptor(typeof(System.Int32), "int32", "i32", "int", "i")]
         Int32,
 
+        [TypeDescriptor(typeof(System.UInt32), "uint32", "u32", "uint", "u", "milli")]
+        UInt32,
+
         [TypeDescriptor(typeof(System.Boolean), "bool")]
         Boolean,
 
         [TypeDescriptor(typeof(System.String), "string", "str")]
         String,
+
+        [TypeDescriptor(typeof(Vector2), "vector2", "vec2", "position", "pos")]
+        Vector2,
+
+        [TypeDescriptor(typeof(Size), "size")]
+        Size,
+
+        [TypeDescriptor(typeof(System.Array), "vector", "vec")]
+        Vector,
     }
 
     public static class TypeKindExtensions {

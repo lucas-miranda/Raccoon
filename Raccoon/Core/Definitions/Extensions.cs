@@ -208,6 +208,26 @@ public static class Extensions {
         return result;
     }
 
+    public static IEnumerable<string> SplitYield(this string str, char split) {
+        int startIndex = 0;
+
+        for (int i = 0; i < str.Length; i++) {
+            char c = str[i];
+
+            if (c == split) {
+                if (i - startIndex > 0) {
+                    yield return str.Substring(startIndex, i - startIndex);
+                }
+
+                startIndex = i + 1;
+            }
+        }
+
+        if (startIndex < str.Length) {
+            yield return str.Substring(startIndex, str.Length - startIndex);
+        }
+    }
+
     #endregion String
 
     #region Linked List

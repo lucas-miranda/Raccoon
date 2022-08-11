@@ -41,15 +41,14 @@ namespace Raccoon.Data {
             }
 
             public string DisplayName { get; }
+            public string IdentifyName { get; }
             public PropertyInfo Info { get; }
             public DataFieldAttribute Attribute { get; }
             public DataContractAttribute SubDataContractDescriptor { get; }
             public DataContract SubDataContract { get; }
 
-            private string IdentifyName { get; }
-
             public bool HasName(string name) {
-                return IdentifyName.Equals(name, System.StringComparison.InvariantCulture);
+                return IdentifyName.Equals(name, System.StringComparison.InvariantCultureIgnoreCase);
             }
 
             public void SetValue(object target, ValueToken token) {

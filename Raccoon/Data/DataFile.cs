@@ -16,9 +16,9 @@ namespace Raccoon.Data {
         /// Parse a data file and inject values at provided target.
         /// </summary>
 #if DEBUG
-        public static void Parse<T>(PathBuf filepath, T target, bool debug = false) {
+        public static void Parse<T>(PathBuf filepath, T target, DataTokensConsumer consumer, bool debug = false) {
 #else
-        public static void Parse<T>(PathBuf filepath, T target) {
+        public static void Parse<T>(PathBuf filepath, T target, DataTokensConsumer consumer) {
 #endif
             if (filepath == null) {
                 throw new System.ArgumentNullException(nameof(filepath));
@@ -26,6 +26,10 @@ namespace Raccoon.Data {
 
             if (target == null) {
                 throw new System.ArgumentNullException(nameof(target));
+            }
+
+            if (consumer == null) {
+                throw new System.ArgumentNullException(nameof(consumer));
             }
 
             // parse file
@@ -51,13 +55,23 @@ namespace Raccoon.Data {
                 );
 
                 // inject data to target
-                SimpleDataTokensConsumer.Instance.Consume(target, contract, rootToken);
+                consumer.Consume(target, contract, rootToken);
             }
 
             //
 
             Parser.Reset();
         }
+
+#if DEBUG
+        public static void Parse<T>(PathBuf filepath, T target, bool debug = false) {
+            Parse<T>(filepath, target, SimpleDataTokensConsumer.Instance, debug);
+        }
+#else
+        public static void Parse<T>(PathBuf filepath, T target) {
+            Parse<T>(filepath, target, SimpleDataTokensConsumer.Instance);
+        }
+#endif
 
         public static void Save<T>(PathBuf filepath, T target, SaveSettings? settings = null) {
             if (filepath == null) {

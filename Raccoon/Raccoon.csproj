@@ -206,7 +206,7 @@
     <Compile Include="Data\Attributes\DataContractAttribute.cs" />
     <Compile Include="Data\Attributes\DataFieldAttribute.cs" />
     <Compile Include="Data\Consumers\DataTokensConsumer.cs" />
-    <Compile Include="Data\Consumers\SimpleTokensConsumer.cs" />
+    <Compile Include="Data\Consumers\SimpleDataTokensConsumer.cs" />
     <Compile Include="Data\Contract\DataContract.Property.cs" />
     <Compile Include="Data\Contract\DataContract.cs" />
     <Compile Include="Data\DataFile.cs" />
@@ -219,6 +219,7 @@
     <Compile Include="Data\Parsers\Tokens\IdentifierToken.cs" />
     <Compile Include="Data\Parsers\Tokens\InlineListEntriesToken.cs" />
     <Compile Include="Data\Parsers\Tokens\ListToken.cs" />
+    <Compile Include="Data\Parsers\Tokens\MarkerToken.cs" />
     <Compile Include="Data\Parsers\Tokens\Token.cs" />
     <Compile Include="Data\Parsers\Tokens\TokenKind.cs" />
     <Compile Include="Data\Parsers\Tokens\TypeKind.cs" />
@@ -226,8 +227,8 @@
     <Compile Include="Data\Parsers\Tokens\ValueAssignToken.cs" />
     <Compile Include="Data\Parsers\Tokens\ValueToken.cs" />
     <Compile Include="Data\Parsers\TokensParser.cs" />
-    <Compile Include="Data\Producers\DataTokenProducer.cs" />
-    <Compile Include="Data\Producers\SimpleDataTokenProducer.cs" />
+    <Compile Include="Data\Producers\DataTokensProducer.cs" />
+    <Compile Include="Data\Producers\SimpleDataTokensProducer.cs" />
     <Compile Include="Data\SaveSettings.cs" />
     <Compile Include="Data\Savers\Saver.cs" />
     <Compile Include="Data\Savers\SaverState.cs" />
