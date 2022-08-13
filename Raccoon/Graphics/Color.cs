@@ -251,6 +251,31 @@ namespace Raccoon.Graphics {
             return new Color(R, G, B, (byte) Math.Clamp(alpha * A, 0, 255));
         }
 
+        public void NormalizedRGBCopyTo(float[] target, int startIndex) {
+            if (startIndex + 3 > target.Length) {
+                throw new System.ArgumentException(
+                    $"There is no suitable space at target array (len: {target.Length}). Range [{startIndex}, {(startIndex + 3) - 1}] is out of bounds."
+                );
+            }
+
+            target[startIndex + 0] = R / 255f;
+            target[startIndex + 1] = G / 255f;
+            target[startIndex + 2] = B / 255f;
+        }
+
+        public void NormalizedRGBACopyTo(float[] target, int startIndex) {
+            if (startIndex + 4 > target.Length) {
+                throw new System.ArgumentException(
+                    $"There is no suitable space at target array (len: {target.Length}). Range [{startIndex}, {(startIndex + 4) - 1}] is out of bounds."
+                );
+            }
+
+            target[startIndex + 0] = R / 255f;
+            target[startIndex + 1] = G / 255f;
+            target[startIndex + 2] = B / 255f;
+            target[startIndex + 3] = A / 255f;
+        }
+
         public override bool Equals(object obj) {
             return obj is Color && Equals((Color) obj);
         }
