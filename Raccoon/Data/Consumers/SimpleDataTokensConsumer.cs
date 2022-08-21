@@ -80,7 +80,7 @@ namespace Raccoon.Data {
                         next = null;
                     }
 
-                    throw new System.InvalidOperationException($"Token '{current}' wasn't handled. (next: '{(next?.ToString() ?? "undefined")}')");
+                    throw new System.InvalidOperationException($"Token ({current}) wasn't handled. (next: '{(next?.ToString() ?? "undefined")}')");
                 }
             }
         }
@@ -118,10 +118,11 @@ namespace Raccoon.Data {
             return context;
         }
 
-        protected ArrayContext PushContext(ListToken<Token> list, System.Array target) {
+        protected ArrayContext PushContext(ListToken<Token> list, TypeToken typeToken, System.Array target) {
             ArrayContext context = new ArrayContext(
                 list.Entries.GetEnumerator(),
                 target,
+                typeToken,
                 new DataContract(target.GetType(), null)
             );
 
@@ -170,11 +171,18 @@ namespace Raccoon.Data {
         }
 
         protected virtual bool HandleCustomNamedListToken(
-            TypedIdentifierToken typedIdentToken,
+            IdentifierToken identToken,
+            TypeToken typeToken,
             NamedListToken<Token> namedListToken,
             out object value
         ) {
             throw new System.NotImplementedException($"Custom token isn't handled.");
+        }
+
+        protected IEnumerable<Context> Contexts() {
+            foreach (Context c in _stack) {
+                yield return c;
+            }
         }
 
         #endregion Protected Methods
@@ -248,7 +256,7 @@ namespace Raccoon.Data {
                 switch (typedIdentToken.Type.Type) {
                     case TypeKind.Vector:
                         {
-                            if (TryNamedListAsVector(target, namedListToken, contract)) {
+                            if (TryNamedListAsVector(target, typedIdentToken, namedListToken, contract)) {
                                 handled = true;
                             }
                         }
@@ -257,7 +265,9 @@ namespace Raccoon.Data {
                     case TypeKind.Custom:
                         {
                             if (!HandleCustomNamedListToken(
-                                typedIdentToken, namedListToken,
+                                typedIdentToken,
+                                typedIdentToken.Type,
+                                namedListToken,
                                 out object value
                             )) {
                                 throw new System.InvalidOperationException($"Failed to handle custom named list (name: '{namedListToken.Identifier.Name}', custom type: '{typedIdentToken.Type.Custom}')");
@@ -280,6 +290,28 @@ namespace Raccoon.Data {
                 }
 
                 return true;
+            }
+
+            if (target is ICollection) {
+                // handle as an entry at target collection
+                // identifier can be ignored at this case
+                Context context = CurrentContext;
+
+                if (context is ArrayContext arrayContext) {
+                    if (!HandleCustomNamedListToken(
+                        namedListToken.Identifier,
+                        arrayContext.ElementTypeToken,
+                        namedListToken,
+                        out object value
+                    )) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to handle custom named list (name: '{namedListToken.Identifier.Name}', type: '{arrayContext.ElementTypeToken}')"
+                        );
+                    }
+
+                    RegisterValue(namedListToken.Identifier, value);
+                    return true;
+                }
             }
 
             if (TrySimpleNamedList(target, namedListToken, contract)) {
@@ -353,14 +385,17 @@ namespace Raccoon.Data {
 
         private bool TryNamedListAsVector(
             object target,
-            NamedListToken<Token> namedListToken,
+            TypedIdentifierToken typedIdentToken,
+            ListToken<Token> listToken,
             DataContract contract
         ) {
-            DataContract.Property property = contract.Find(namedListToken.Identifier);
+            DataContract.Property property = contract.Find(typedIdentToken);
 
             if (property == null) {
                 if (contract.FailOnNotFound) {
-                    throw new System.InvalidOperationException($"Property, with name '{namedListToken.Identifier.Name}', was not found at target type '{target.GetType().ToString()}'.\nAvailable properties found: {CollectPropertiesNames(contract)}");
+                    throw new System.InvalidOperationException(
+                        $"Property, with name '{typedIdentToken.Name}', was not found at target type '{target.GetType().ToString()}'.\nAvailable properties found: {CollectPropertiesNames(contract)}"
+                    );
                 }
 
                 return false;
@@ -376,25 +411,27 @@ namespace Raccoon.Data {
                     // create a System.Array
                     arr = System.Array.CreateInstance(
                         vectorType.GetElementType(),
-                        namedListToken.Entries.Count
+                        listToken.Entries.Count
                     );
 
                     ApplyValue(
                         contract,
                         target,
-                        namedListToken.Identifier,
+                        typedIdentToken,
                         new DefinedValueToken<System.Array>(arr)
                     );
                 } else {
                     // ensure System.Array has enough space
                     arr = (System.Array) vectorTarget;
 
-                    if (arr.Length < namedListToken.Entries.Count) {
-                        throw new System.InvalidOperationException($"{TypeKind.Vector} value already is initialized with a {nameof(System.Array)}, but it's length isn't enough, there is {namedListToken.Entries.Count} entries to be registered, but length is {arr.Length}.");
+                    if (arr.Length < listToken.Entries.Count) {
+                        throw new System.InvalidOperationException(
+                            $"{TypeKind.Vector} value already is initialized with a {nameof(System.Array)}, but it's length isn't enough, there is {listToken.Entries.Count} entries to be registered, but length is {arr.Length}."
+                        );
                     }
                 }
 
-                PushContext(namedListToken, arr);
+                PushContext(listToken, typedIdentToken.Type, arr);
             } else if (vectorType.IsConstructedGenericType) {
                 System.Type genericType = vectorType.GetGenericTypeDefinition();
 
@@ -407,14 +444,14 @@ namespace Raccoon.Data {
                         ApplyValue(
                             contract,
                             target,
-                            namedListToken.Identifier,
+                            typedIdentToken,
                             new DefinedValueToken<IList>(list)
                         );
                     } else {
                         list = (IList) vectorTarget;
                     }
 
-                    PushContext(namedListToken, list, null);
+                    PushContext(listToken, list, null);
                 } else {
                     throw new System.NotImplementedException($"Generic type '{genericType}' isn't handled as a vector.");
                 }
@@ -583,10 +620,19 @@ namespace Raccoon.Data {
             public ArrayContext(
                 IEnumerator<Token> enumerator,
                 System.Array target,
+                TypeToken typeToken,
                 DataContract contract
             ) : base(enumerator, target, contract)
             {
+                System.Type arrayType = target.GetType();
+                ElementType = arrayType.GetElementType();
+                TypeToken = typeToken;
+                ElementTypeToken = TypeToken.Nested[0];
             }
+
+            public TypeToken TypeToken { get; }
+            public TypeToken ElementTypeToken { get; }
+            public System.Type ElementType { get; }
 
             /// <summary>
             /// Which index current value should apply to.

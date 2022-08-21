@@ -7,7 +7,7 @@ namespace Raccoon.Data.Parsers {
         public string Name { get; }
 
         public override string ToString() {
-            return $"Identifier {Name}";
+            return $"Identifier '{Name}'";
         }
     }
 

@@ -86,6 +86,22 @@ namespace Raccoon.Data.Parsers {
 
         #region Public Methods
 
+        /// <summary>
+        /// Try to identify if it's a registered type and use as it.
+        /// Otherwise, a TypeToken with a custom type is created.
+        /// </summary>
+        public static TypeToken CreateOrCustom(System.Type valueType) {
+            if (valueType == null) {
+                throw new System.ArgumentNullException(nameof(valueType));
+            }
+
+            if (TypeKindsByValueType.TryGetValue(valueType, out TypeKind kind)) {
+                return new TypeToken(kind);
+            }
+
+            return new TypeToken(valueType.Name.ToString());
+        }
+
         public void Set(TypeKind kind) {
             if (kind == TypeKind.Custom) {
                 throw new System.ArgumentException(
@@ -228,6 +244,12 @@ namespace Raccoon.Data.Parsers {
                 case TypeKind.UInt32:
                     return Converter.UInt32(value);
 
+                case TypeKind.Single:
+                    return Converter.Single(value);
+
+                case TypeKind.Double:
+                    return Converter.Double(value);
+
                 case TypeKind.Boolean:
                     return Converter.Boolean(value);
 
@@ -304,6 +326,46 @@ namespace Raccoon.Data.Parsers {
                 }
 
                 return new DefinedValueToken<System.UInt32>(result);
+            }
+
+            public static ValueToken Single(object value) {
+                System.Single result;
+
+                if (value == null) {
+                    result = default(System.Single);
+                } else if (value is System.Single u) {
+                    result = u;
+                } else if (value is string str) {
+                    if (!System.Single.TryParse(str, out result)) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to parse from '{str}' to {nameof(System.Single)}."
+                        );
+                    }
+                } else {
+                    result = System.Convert.ToSingle(value);
+                }
+
+                return new DefinedValueToken<System.Single>(result);
+            }
+
+            public static ValueToken Double(object value) {
+                System.Double result;
+
+                if (value == null) {
+                    result = default(System.Double);
+                } else if (value is System.Double u) {
+                    result = u;
+                } else if (value is string str) {
+                    if (!System.Double.TryParse(str, out result)) {
+                        throw new System.InvalidOperationException(
+                            $"Failed to parse from '{str}' to {nameof(System.Double)}."
+                        );
+                    }
+                } else {
+                    result = System.Convert.ToSingle(value);
+                }
+
+                return new DefinedValueToken<System.Double>(result);
             }
 
             public static ValueToken Boolean(object value) {

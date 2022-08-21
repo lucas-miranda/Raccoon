@@ -7,6 +7,7 @@ namespace Raccoon.Data.Parsers {
         List,
         InlineListEntries,
         InlineListEntriesClose,
+        InlineListEntryEnd,
         ValueAssign,
         Comment,
     }

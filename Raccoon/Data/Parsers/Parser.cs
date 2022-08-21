@@ -29,8 +29,8 @@ namespace Raccoon.Data.Parsers {
             ListToken<Token> root = new ListToken<Token>();
 
             // list context stack
-            Stack<ListToken<Token>> stack = new Stack<ListToken<Token>>();
-            stack.Push(root);
+            //Stack<ListToken<Token>> stack = new Stack<ListToken<Token>>();
+            _globalState.ContextStack.Push(root);
 
             int lineIndex = 0;
 
@@ -85,7 +85,7 @@ namespace Raccoon.Data.Parsers {
 
                     // retrieve result from every operation and insert at list token
                     // NOTE  tokens, at result stack, are ordered from left to right (at this step)
-                    HandleResult(stack, level, debug);
+                    HandleResult(_globalState.ContextStack, level, debug);
 
                     //
 
@@ -213,15 +213,18 @@ namespace Raccoon.Data.Parsers {
                         stack.Push(namedListToken);
                         context = namedListToken;
                         */
+                    } else if (lastToken is ListToken<Token> listToken) {
+                        stack.Push(listToken);
+                        context = listToken;
                     } else {
                         string tokens = string.Empty;
 
                         foreach (Token t in _globalState.ResultStack) {
-                            tokens += "[" + t.GetType().ToString() + "]";
+                            tokens += "[" + t.ToString() + "]";
                         }
 
                         throw new System.InvalidOperationException(
-                            $"Unexpected token '{tokens}', at new level, after token '{lastToken.GetType().ToString()}', at previous level."
+                            $"Unexpected token '{tokens}', at new level, after token '{lastToken}', at previous level."
                         );
                     }
                 }

@@ -96,7 +96,7 @@ namespace Raccoon.Data.Parsers {
 
                         case ';':
                             // end of entry (mandatory at inline list declarations)
-                            tokenStart = TokenKind.Identifier;
+                            tokenStart = TokenKind.InlineListEntryEnd;
                             break;
 
                         default:
@@ -144,6 +144,9 @@ namespace Raccoon.Data.Parsers {
                         );
 
                         kind = TokenKind.Identifier; // reset to default type
+                        break;
+
+                    case TokenKind.InlineListEntryEnd:
                         break;
 
                     case TokenKind.Type:

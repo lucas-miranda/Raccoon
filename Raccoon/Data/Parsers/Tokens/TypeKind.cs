@@ -8,6 +8,12 @@ namespace Raccoon.Data.Parsers {
         [TypeDescriptor(typeof(System.UInt32), "uint32", "u32", "uint", "u", "milli")]
         UInt32,
 
+        [TypeDescriptor(typeof(System.Single), "float", "f32", "single")]
+        Single,
+
+        [TypeDescriptor(typeof(System.Double), "double", "f64")]
+        Double,
+
         [TypeDescriptor(typeof(System.Boolean), "bool")]
         Boolean,
 

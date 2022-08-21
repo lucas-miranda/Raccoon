@@ -20,8 +20,13 @@ namespace Raccoon.Data.Parsers {
                     continue;
                 }
 
-                //  inline_list (ident[: type] = value);* inline_list_close => inline_list
+                // inline_list (ident[: type] = value);* inline_list_close => inline_list
                 if (TryInlineListEntriesReduce(token, state)) {
+                    continue;
+                }
+
+                // ident inline_list_entries => named_list
+                if (TryNamedListReduce(token, state)) {
                     continue;
                 }
 
@@ -169,23 +174,49 @@ namespace Raccoon.Data.Parsers {
         /// Every enclosed tokens which are of valid types: ValueAssignToken. Will be registered as an inline list entry.
         /// </summary>
         private static bool TryInlineListEntriesReduce(Token token, ParserState state) {
-                if (!(token is InlineListEntriesToken inlineListToken)) {
-                    return false;
-                }
+            if (!(token is InlineListEntriesToken inlineListToken)) {
+                return false;
+            }
 
-                while (state.ResultStack.TryPop(out Token resultToken)) {
-                    if (resultToken.Kind == TokenKind.InlineListEntriesClose) {
-                        // end of inline list entries
-                        break;
-                    } else if (resultToken is ValueAssignToken valueAssignToken) {
-                        inlineListToken.Entries.Add(valueAssignToken);
-                    } else {
-                        throw new System.InvalidOperationException($"Invalid inline list entry '{resultToken}'.\nPossible values are: {nameof(ValueAssignToken)} or list close.");
-                    }
+            while (state.ResultStack.TryPop(out Token resultToken)) {
+                if (resultToken.Kind == TokenKind.InlineListEntriesClose) {
+                    // end of inline list entries
+                    break;
+                } else if (resultToken is ValueAssignToken valueAssignToken) {
+                    inlineListToken.Entries.Add(valueAssignToken);
+                } else {
+                    throw new System.InvalidOperationException($"Invalid inline list entry '{resultToken}'.\nPossible values are: {nameof(ValueAssignToken)} or list close.");
                 }
+            }
 
-                state.ResultStack.Push(inlineListToken);
-                return true;
+            state.ResultStack.Push(inlineListToken);
+            return true;
+        }
+
+        /// <summary>
+        /// Try to reduce tokens from an expression: `ident inline_list_entries => named_list`
+        /// </summary>
+        private static bool TryNamedListReduce(Token token, ParserState state) {
+            if (!(token is IdentifierToken identToken)) {
+                return false;
+            }
+
+            if (!state.ResultStack.TryPeek(out Token nextToken)
+             || !(nextToken is InlineListEntriesToken inlineListEntriesNextToken)
+            ) {
+                // there is no next token available
+                // or it isn't a type token
+                return false;
+            }
+
+            state.ResultStack.Pop(); // pop peeked InlineListEntriesToken
+
+            NamedListToken<Token> namedListToken
+                = new NamedListToken<Token>(identToken);
+
+            namedListToken.Entries.AddRange(inlineListEntriesNextToken.Entries);
+            state.ResultStack.Push(namedListToken);
+            return true;
         }
     }
 }
