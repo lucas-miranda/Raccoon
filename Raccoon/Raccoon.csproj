@@ -212,6 +212,7 @@
     <Compile Include="Data\DataFile.cs" />
     <Compile Include="Data\FontCase.cs" />
     <Compile Include="Data\Parsers\ContextParser.cs" />
+    <Compile Include="Data\Parsers\Expressions.cs" />
     <Compile Include="Data\Parsers\Parser.cs" />
     <Compile Include="Data\Parsers\ParserState.cs" />
     <Compile Include="Data\Parsers\Tokens\AnyValueToken.cs" />

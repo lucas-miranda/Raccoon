@@ -30,33 +30,32 @@ namespace Raccoon.Data.Parsers {
                     continue;
                 }
 
+                //
+
                 state.ResultStack.Push(token);
             }
         }
+
+        #region Reduces
 
         /// <summary>
         /// Try to reduce tokens from an expression: `type = value`
         /// Try to turn AnyValueToken into DefinedValueToken.
         /// </summary>
         private static bool TryDefineValueTokenType(Token token, ParserState state) {
-            if (!(token is TypeToken typeToken)) {
+            if (!Expressions.Match<TypeToken, ValueToken>(
+                token,
+                state,
+                out TypeToken typeToken,
+                out ValueToken valueToken
+            )) {
                 return false;
             }
-
-            if (!state.ResultStack.TryPeek(out Token nextToken)
-             || !(nextToken is ValueToken valueNextToken)
-            ) {
-                // there is no next token available
-                // or it isn't a ValueToken
-                return false;
-            }
-
-            state.ResultStack.Pop(); // pop peeked ValueToken
 
             // adjust ValueToken to correct type DefinedValueToken<T>
-            if (!(valueNextToken is AnyValueToken anyValueToken)) {
+            if (!(valueToken is AnyValueToken anyValueToken)) {
                 throw new System.InvalidOperationException(
-                    $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueNextToken.GetType().ToString()}'."
+                    $"Expecting a value token to be an '{nameof(AnyValueToken)}', but it's '{valueToken.GetType().ToString()}'."
                 );
             }
 
@@ -70,99 +69,72 @@ namespace Raccoon.Data.Parsers {
         /// Try to reduce tokens from an expression: `ident: type = value`, `ident = value`
         /// </summary>
         private static bool TryTypeAssignReduce(Token token, ParserState state) {
-            if (!(token is IdentifierToken identToken)) {
-                return false;
+            if (Expressions.Match<TypedIdentifierToken, ValueToken>(
+                token,
+                state,
+                out TypedIdentifierToken typedIdentToken,
+                out ValueToken valueToken
+            )) {
+                // typed_ident = value
+
+                state.ResultStack.Push(new ValueAssignToken(
+                    new IdentifierToken(typedIdentToken.Name),
+                    typedIdentToken.Type,
+                    valueToken
+                ));
+
+                return true;
+            } else if (Expressions.Match<IdentifierToken, TypeToken, ValueToken>(
+                token,
+                state,
+                out IdentifierToken identToken,
+                out TypeToken typeToken,
+                out valueToken
+            )) {
+                // ident: type = value
+
+                state.ResultStack.Push(new ValueAssignToken(
+                    identToken,
+                    typeToken,
+                    valueToken
+                ));
+
+                return true;
+            } else if (Expressions.Match<IdentifierToken, ValueToken>(
+                token,
+                state,
+                out identToken,
+                out valueToken
+            )) {
+                // ident = value
+
+                state.ResultStack.Push(new ValueAssignToken(
+                    identToken,
+                    valueToken
+                ));
+
+                return true;
             }
 
-            if (!state.ResultStack.TryPeek(out Token nextToken)) {
-                // there is no next token available
-                return false;
-            }
-
-            if (identToken is TypedIdentifierToken typedIdentToken) {
-                if (nextToken is ValueToken valueNextToken) {
-                    // typed_ident = value
-
-                    state.ResultStack.Pop(); // pop peeked ValueToken
-
-                    ValueAssignToken valueAssignToken = new ValueAssignToken(
-                        new IdentifierToken(typedIdentToken.Name),
-                        typedIdentToken.Type,
-                        valueNextToken
-                    );
-
-                    state.ResultStack.Push(valueAssignToken);
-                } else {
-                    return false;
-                }
-            } else{
-                if (nextToken is TypeToken typeNextToken) {
-                    // ident: type = value
-
-                    state.ResultStack.Pop(); // pop peeked TypeToken
-
-                    if (!state.ResultStack.TryPeek(out Token next2Token)) {
-                        // it doesn't has more tokens
-                        // and we need at least 1 more to be the value
-                        state.ResultStack.Push(nextToken); // return poped TypeToken
-                        return false;
-                    }
-
-                    if (!(next2Token is ValueToken valueNext2Token)) {
-                        throw new System.InvalidOperationException(
-                            $"Expecting a value token, after an identifier and type, but found '{next2Token.GetType().ToString()}'."
-                        );
-                    }
-
-                    state.ResultStack.Pop(); // pop peeked ValueToken
-
-                    ValueAssignToken valueAssignToken = new ValueAssignToken(
-                        identToken,
-                        typeNextToken,
-                        valueNext2Token
-                    );
-
-                    state.ResultStack.Push(valueAssignToken);
-                } else if (nextToken is ValueToken valueNextToken) {
-                    // ident = value
-
-                    state.ResultStack.Pop(); // pop peeked ValueToken
-
-                    ValueAssignToken valueAssignToken = new ValueAssignToken(
-                        identToken,
-                        valueNextToken
-                    );
-
-                    state.ResultStack.Push(valueAssignToken);
-                } else {
-                    return false;
-                }
-            }
-
-            return true;
+            return false;
         }
 
         /// <summary>
         /// Try to reduce tokens from an expression: `ident: type`
         /// </summary>
         private static bool TryTypedIdentifierReduce(Token token, ParserState state) {
-            if (!(token is IdentifierToken identToken)) {
+            if (!Expressions.Match<IdentifierToken, TypeToken>(
+                token,
+                state,
+                out IdentifierToken identToken,
+                out TypeToken typeToken
+            )) {
                 return false;
             }
-
-            if (!state.ResultStack.TryPeek(out Token nextToken)
-             || !(nextToken is TypeToken typeNextToken)
-            ) {
-                // there is no next token available
-                // or it isn't a type token
-                return false;
-            }
-
-            state.ResultStack.Pop(); // pop peeked TypeToken
 
             TypedIdentifierToken typedIdentToken = new TypedIdentifierToken(
                 identToken.Name,
-                typeNextToken
+                typeToken
             );
 
             state.ResultStack.Push(typedIdentToken);
@@ -174,18 +146,24 @@ namespace Raccoon.Data.Parsers {
         /// Every enclosed tokens which are of valid types: ValueAssignToken. Will be registered as an inline list entry.
         /// </summary>
         private static bool TryInlineListEntriesReduce(Token token, ParserState state) {
-            if (!(token is InlineListEntriesToken inlineListToken)) {
+            if (!Expressions.Match<InlineListEntriesToken>(
+                token,
+                out InlineListEntriesToken inlineListToken
+            )) {
                 return false;
             }
 
-            while (state.ResultStack.TryPop(out Token resultToken)) {
-                if (resultToken.Kind == TokenKind.InlineListEntriesClose) {
-                    // end of inline list entries
-                    break;
-                } else if (resultToken is ValueAssignToken valueAssignToken) {
+            // register every valid token as an inline list entry
+            // until an entries close marker is found
+            while (state.ResultStack.TryPop(out Token resultToken)
+             && resultToken.Kind != TokenKind.InlineListEntriesClose
+            ) {
+                if (resultToken is ValueAssignToken valueAssignToken) {
                     inlineListToken.Entries.Add(valueAssignToken);
                 } else {
-                    throw new System.InvalidOperationException($"Invalid inline list entry '{resultToken}'.\nPossible values are: {nameof(ValueAssignToken)} or list close.");
+                    throw new System.InvalidOperationException(
+                        $"Invalid inline list entry '{resultToken}'.\nPossible values are: {nameof(ValueAssignToken)} or list close."
+                    );
                 }
             }
 
@@ -194,29 +172,26 @@ namespace Raccoon.Data.Parsers {
         }
 
         /// <summary>
-        /// Try to reduce tokens from an expression: `ident inline_list_entries => named_list`
+        /// Try to reduce tokens from an expression: `ident inline_list_entries`
         /// </summary>
         private static bool TryNamedListReduce(Token token, ParserState state) {
-            if (!(token is IdentifierToken identToken)) {
+            if (!Expressions.Match<IdentifierToken, InlineListEntriesToken>(
+                token,
+                state,
+                out IdentifierToken identToken,
+                out InlineListEntriesToken inlineListEntriesToken
+            )) {
                 return false;
             }
 
-            if (!state.ResultStack.TryPeek(out Token nextToken)
-             || !(nextToken is InlineListEntriesToken inlineListEntriesNextToken)
-            ) {
-                // there is no next token available
-                // or it isn't a type token
-                return false;
-            }
+            state.ResultStack.Push(new NamedListToken<Token>(
+                identToken,
+                inlineListEntriesToken.Entries
+            ));
 
-            state.ResultStack.Pop(); // pop peeked InlineListEntriesToken
-
-            NamedListToken<Token> namedListToken
-                = new NamedListToken<Token>(identToken);
-
-            namedListToken.Entries.AddRange(inlineListEntriesNextToken.Entries);
-            state.ResultStack.Push(namedListToken);
             return true;
         }
+
+        #endregion Reduces
     }
 }

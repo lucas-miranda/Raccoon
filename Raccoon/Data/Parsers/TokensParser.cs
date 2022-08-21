@@ -200,15 +200,12 @@ namespace Raccoon.Data.Parsers {
 
         private static class ReduceOperations {
             public static bool Value(Token token, ParserState state) {
-                if (!(token is ValueToken valueToken)) {
-                    return false;
-                }
-
-                if (!state.ResultStack.TryPeek(out Token nextToken)
-                 || !(nextToken is IdentifierToken identNextToken)
-                ) {
-                    // there is no next token available
-                    // or it isn't a IdentifierToken
+                if (!Expressions.Match<ValueToken, IdentifierToken>(
+                    token,
+                    state,
+                    out ValueToken valueToken,
+                    out IdentifierToken identToken
+                )) {
                     return false;
                 }
 
@@ -218,29 +215,22 @@ namespace Raccoon.Data.Parsers {
                     );
                 }
 
-                state.ResultStack.Pop(); // pop peeked IdentifierToken
-
-                anyValueToken.Value = identNextToken.Name;
+                anyValueToken.Value = identToken.Name;
                 state.ResultStack.Push(anyValueToken);
                 return true;
             }
 
             public static bool Type(Token token, ParserState state) {
-                if (!(token is TypeToken typeToken)) {
+                if (!Expressions.Match<TypeToken, IdentifierToken>(
+                    token,
+                    state,
+                    out TypeToken typeToken,
+                    out IdentifierToken identToken
+                )) {
                     return false;
                 }
 
-                if (!state.ResultStack.TryPeek(out Token nextToken)
-                 || !(nextToken is IdentifierToken identNextToken)
-                ) {
-                    // there is no next token available
-                    // or it isn't a IdentifierToken
-                    return false;
-                }
-
-                state.ResultStack.Pop(); // pop peeked IdentifierToken
-
-                typeToken.Set(identNextToken.Name);
+                typeToken.Set(identToken.Name);
                 state.ResultStack.Push(typeToken);
                 return true;
             }
