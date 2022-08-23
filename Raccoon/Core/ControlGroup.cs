@@ -20,9 +20,9 @@ namespace Raccoon {
             if (pausable.ControlGroup != null) {
                 if (pausable.ControlGroup == this && _registry.Contains(pausable)) {
                     return;
-                } else {
-                    pausable.ControlGroup.Unregister(pausable);
                 }
+
+                pausable.ControlGroup.Unregister(pausable);
             }
 
             if (!_registry.Add(pausable)) {
@@ -75,6 +75,12 @@ namespace Raccoon {
         }
 
         public void Clear() {
+            _entries.Lock();
+            foreach (IPausable pausable in _entries) {
+                pausable.ControlGroupUnregistered();
+            }
+            _entries.Unlock();
+
             _entries.Clear();
             _registry.Clear();
         }

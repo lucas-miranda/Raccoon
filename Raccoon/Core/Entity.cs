@@ -596,7 +596,7 @@ namespace Raccoon {
         public virtual void ControlGroupUnregistered() {
             Graphics.Lock();
             foreach (Graphic g in Graphics) {
-                if (g.ControlGroup != null) {
+                if (g.ControlGroup == null) {
                     continue;
                 }
 
