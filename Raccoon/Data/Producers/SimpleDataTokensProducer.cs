@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using Raccoon.Data.Parsers;
 
 namespace Raccoon.Data {
+    /// <summary>
+    /// Produce tokens from a given object, using it's DataContract.
+    /// Used when preparing an object to export as a data file.
+    /// </summary>
     public class SimpleDataTokensProducer : DataTokensProducer {
         #region Private Members
 

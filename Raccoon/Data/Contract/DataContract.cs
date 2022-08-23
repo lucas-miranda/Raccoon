@@ -105,6 +105,16 @@ namespace Raccoon.Data {
             return Find(identifier, null);
         }
 
+        public string PropertiesToString() {
+            string propertiesNames = "";
+
+            foreach (DataContract.Property p in Properties) {
+                propertiesNames += $"'{p.Info.Name}' ({p.Info?.PropertyType.ToString() ?? "undefined type"}); ";
+            }
+
+            return propertiesNames;
+        }
+
         #endregion Public Methods
     }
 }

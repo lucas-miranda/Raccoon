@@ -2,6 +2,7 @@ using System.IO;
 using System.Reflection;
 
 using Raccoon.FileSystem;
+using Raccoon.Data.Consumers;
 using Raccoon.Data.Parsers;
 
 namespace Raccoon.Data {

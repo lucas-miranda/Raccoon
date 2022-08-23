@@ -205,7 +205,14 @@
     <Compile Include="Core\XNAGameWrapper.cs" />
     <Compile Include="Data\Attributes\DataContractAttribute.cs" />
     <Compile Include="Data\Attributes\DataFieldAttribute.cs" />
+    <Compile Include="Data\Consumers\ConsumerContext.cs" />
     <Compile Include="Data\Consumers\DataTokensConsumer.cs" />
+    <Compile Include="Data\Consumers\Exceptions\DataEntryNotFoundException.cs" />
+    <Compile Include="Data\Consumers\Handlers\ConsumerHandler.cs" />
+    <Compile Include="Data\Consumers\Handlers\InlineListEntriesConsumerHandler.cs" />
+    <Compile Include="Data\Consumers\Handlers\NamedListConsumerHandler.cs" />
+    <Compile Include="Data\Consumers\Handlers\ValueAssignConsumerHandler.cs" />
+    <Compile Include="Data\Consumers\Handlers\ValueConsumerHandler.cs" />
     <Compile Include="Data\Consumers\SimpleDataTokensConsumer.cs" />
     <Compile Include="Data\Contract\DataContract.Property.cs" />
     <Compile Include="Data\Contract\DataContract.cs" />
