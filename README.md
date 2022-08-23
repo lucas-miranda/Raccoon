@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="/Raccoon/logo.png"/>
-</p>
-
 # About
 
 Raccoon is a framework focused in 2D game development, the idea is to provide tools to easily make games with minimal code.

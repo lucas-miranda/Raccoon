@@ -61,6 +61,12 @@ namespace Raccoon.Graphics {
         #region Public Properties
 
         public bool IsPlaying { get; private set; }
+
+        /// <summary>
+        /// Should Animation handle frame's destination positioning.
+        /// </summary>
+        public bool AutoHandleFramePositioning { get; set; } = true;
+
         public KeyType CurrentKey { get; private set; }
         public Track CurrentTrack { get; private set; }
         public int ElapsedTime { get; set; }
@@ -518,6 +524,64 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public void CalculateCurrentFrameOrigin(ImageFlip flip, ref Vector2 origin) {
+            if (CurrentTrack == null || CurrentTrack.Frames.Length <= 0) {
+                return;
+            }
+
+            // frame destination works like a guide to where render at local space
+            // 'frameDestination.position' should be interpreted as 'origin'
+            ref Track.Frame frame = ref CurrentTrack.CurrentFrame;
+
+            if (!frame.FrameDestination.HasValue || frame.FrameDestination.Value.Position == Vector2.Zero) {
+                return;
+            }
+
+            // frame region defines the crop rectangle at it's texture
+            //ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+
+            if (flip.IsHorizontal()) {
+                if (flip.IsVertical()) {
+                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X,
+                          bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
+
+                    origin = new Vector2(
+                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
+                        (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
+                    );
+                } else {
+                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X;
+
+                    origin = new Vector2(
+                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
+                        origin.Y + frame.FrameDestination.Value.Y
+                    );
+                }
+            } else if (flip.IsVertical()) {
+                float bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
+
+                origin = new Vector2(
+                    origin.X + frame.FrameDestination.Value.X,
+                    (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
+                );
+            } else {
+                origin += frame.FrameDestination.Value.Position;
+            }
+
+            // maybe we should make a careful check before modifying DestinationRegion here
+            // user could modify value globally to Animation and we'll be interfering
+            // making a change frame based here
+
+            /*
+            // there we give the power to frame regions deform animations
+            // I don't know if it will be usefull anywhere, but we can do this
+            ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
+            if (frameDestination.Size != frameRegion.Size) {
+                DestinationRegion = new Rectangle(frameDestination.Size);
+            }
+            */
+        }
+
         public override void Dispose() {
             if (IsDisposed) {
                 return;
@@ -578,7 +642,9 @@ namespace Raccoon.Graphics {
             Vector2 origin,
             float layerDepth
         ) {
-            CalculateFrameOrigin(flip, ref origin);
+            if (AutoHandleFramePositioning) {
+                CalculateCurrentFrameOrigin(flip, ref origin);
+            }
 
             base.Draw(
                 position,
@@ -599,64 +665,6 @@ namespace Raccoon.Graphics {
         /// </summary>
         protected virtual KeyType HandleKey(KeyType key) {
             return key;
-        }
-
-        protected void CalculateFrameOrigin(ImageFlip flip, ref Vector2 origin) {
-            if (CurrentTrack == null || CurrentTrack.Frames.Length <= 0) {
-                return;
-            }
-
-            // frame destination works like a guide to where render at local space
-            // 'frameDestination.position' should be interpreted as 'origin'
-            ref Track.Frame frame = ref CurrentTrack.CurrentFrame;
-
-            if (!frame.FrameDestination.HasValue || frame.FrameDestination.Value.Position == Vector2.Zero) {
-                return;
-            }
-
-            // frame region defines the crop rectangle at it's texture
-            //ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
-
-            if (flip.IsHorizontal()) {
-                if (flip.IsVertical()) {
-                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X,
-                          bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
-
-                    origin = new Vector2(
-                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
-                        (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
-                    );
-                } else {
-                    float rightSideSpacing = frame.FrameDestination.Value.Width - frame.FrameRegion.Width + frame.FrameDestination.Value.X;
-
-                    origin = new Vector2(
-                        (frame.FrameRegion.Width - origin.X) - rightSideSpacing,
-                        origin.Y + frame.FrameDestination.Value.Y
-                    );
-                }
-            } else if (flip.IsVertical()) {
-                float bottomSideSpacing = frame.FrameDestination.Value.Height - frame.FrameRegion.Height + frame.FrameDestination.Value.Y;
-
-                origin = new Vector2(
-                    origin.X + frame.FrameDestination.Value.X,
-                    (frame.FrameRegion.Height - origin.Y) - bottomSideSpacing
-                );
-            } else {
-                origin += frame.FrameDestination.Value.Position;
-            }
-
-            // maybe we should make a careful check before modifying DestinationRegion here
-            // user could modify value globally to Animation and we'll be interfering
-            // making a change frame based here
-
-            /*
-            // there we give the power to frame regions deform animations
-            // I don't know if it will be usefull anywhere, but we can do this
-            ref Rectangle frameRegion = ref CurrentTrack.CurrentFrameRegion;
-            if (frameDestination.Size != frameRegion.Size) {
-                DestinationRegion = new Rectangle(frameDestination.Size);
-            }
-            */
         }
 
         #endregion Protected Methods

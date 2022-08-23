@@ -314,6 +314,8 @@
     <Compile Include="Graphics\Shaders\IShaderTexture.cs" />
     <Compile Include="Graphics\Shaders\IShaderTransform.cs" />
     <Compile Include="Graphics\Shaders\IShaderVertexColor.cs" />
+    <Compile Include="Graphics\Shaders\RepeatShader.cs" />
+    <Compile Include="Graphics\Shaders\RepeatShaderParameters.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Logger\ILoggerListener.cs" />
     <Compile Include="Logger\Listeners\StdOutputLoggerListener.cs" />
@@ -392,6 +394,9 @@
   <ItemGroup>
     <EmbeddedResource Include="basicShader.fxc">
       <LogicalName>Raccoon.Resource.BasicShader</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="repeatShader.fxc">
+      <LogicalName>Raccoon.Resource.RepeatShader</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="04b03.ttf">
       <LogicalName>Raccoon.Resource._04b03</LogicalName>
