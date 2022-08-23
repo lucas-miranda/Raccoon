@@ -41,13 +41,21 @@ namespace Raccoon.Components {
 
         public override void OnSceneRemoved(bool wipe) {
             base.OnSceneRemoved(wipe);
+
             if (wipe) {
                 Clear();
-            } else {
-                foreach (Coroutine coroutine in _coroutines) {
-                    Coroutines.Instance.Remove(coroutine);
+                return;
+            }
+
+            _coroutines.Lock();
+            foreach (Coroutine coroutine in _coroutines) {
+                Coroutines.Instance.Remove(coroutine);
+
+                if (coroutine.IsRunning && coroutine.HasEnded) {
+                    _coroutines.Remove(coroutine);
                 }
             }
+            _coroutines.Unlock();
         }
 
         public override void Update(int delta) {
