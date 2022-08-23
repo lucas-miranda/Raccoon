@@ -7,7 +7,18 @@ namespace Raccoon.Graphics {
     /// Creates a special 3 by 3 squared area which can resize it's textures properly, by changing scale or repeating, it's squares as needed.
     /// </summary>
     public class NineSlice : Graphic {
+        #region Public Members
+
+        public enum DrawMode {
+            Stretch = 0,
+            Repeat,
+        }
+
+        #endregion Public Members
+
         #region Private Members
+
+        private static RepeatShader RepeatShader;
 
         private Patch[] _patches = new Patch[9];
         private VertexPositionColorTexture[] _vertices;
@@ -22,7 +33,7 @@ namespace Raccoon.Graphics {
 
         private NineSlice() {
             for (int i = 0; i < _patches.Length; i++) {
-                _patches[i] = new Patch();
+                _patches[i] = new Patch(this);
             }
         }
 
@@ -52,6 +63,7 @@ namespace Raccoon.Graphics {
         public Patch BottomLeftPatch { get { return _patches[6]; } }
         public Patch BottomCenterPatch { get { return _patches[7]; } }
         public Patch BottomRightPatch { get { return _patches[8]; } }
+        public bool IsSingleDraw { get; private set; }
 
         #endregion Public Properties
 
@@ -224,13 +236,27 @@ namespace Raccoon.Graphics {
         protected override void Load() {
             base.Load();
 
+            if (RepeatShader == null) {
+                RepeatShader = new RepeatShader(Resource.RepeatShader) {
+                    //DepthWriteEnabled = true,
+                };
+            }
+
             int requiredVertices = 0,
                 requiredIndices = 0;
 
             _triangleCount = 0;
+            IsSingleDraw = true;
 
             foreach (Patch patch in _patches) {
                 patch.Prepare(Texture);
+
+                if (patch.DrawMode == DrawMode.Repeat) {
+                    // repeat mode is rendered separated
+                    IsSingleDraw = false;
+                    continue;
+                }
+
                 requiredVertices += patch.VerticesCount;
                 requiredIndices += patch.IndicesCount;
                 _triangleCount += patch.TriangleCount;
@@ -262,6 +288,7 @@ namespace Raccoon.Graphics {
 
                 for (int column = 0; column < 3; column++) {
                     Patch patch = _patches[row * 3 + column];
+
                     patch.Flush(
                         _vertices,
                         verticesStartIndex,
@@ -276,8 +303,10 @@ namespace Raccoon.Graphics {
                         rowHeight = patch.Height;
                     }
 
-                    verticesStartIndex += patch.VerticesCount;
-                    indicesStartIndex += patch.IndicesCount;
+                    if (patch.DrawMode != DrawMode.Repeat) {
+                        verticesStartIndex += patch.VerticesCount;
+                        indicesStartIndex += patch.IndicesCount;
+                    }
                 }
 
                 if (x > w) {
@@ -314,6 +343,60 @@ namespace Raccoon.Graphics {
              || _indices == null
              || _indices.Length == 0
             ) {
+                return;
+            }
+
+            if (!IsSingleDraw) {
+                // draw only patches which isn't registered at NineSlice's vertices
+                float x,
+                      y = 0f;
+
+                for (int row = 0; row < 3; row++) {
+                    float rowHeight = 0f;
+                    x = 0f;
+
+                    for (int column = 0; column < 3; column++) {
+                        Patch patch = _patches[row * 3 + column];
+
+                        switch (patch.DrawMode) {
+                            case DrawMode.Stretch:
+                                break;
+
+                            case DrawMode.Repeat:
+                                patch.Draw(
+                                    Renderer,
+                                    Texture,
+                                    position + new Vector2(x, y) * scale,
+                                    rotation,
+                                    scale,
+                                    flip,
+                                    new Color(color, (color.A / 255f) * Opacity),
+                                    scroll,
+                                    shader,
+                                    shaderParameters,
+                                    origin,
+                                    layerDepth
+                                );
+                                break;
+
+                            default:
+                                throw new System.NotImplementedException(
+                                    $"{nameof(DrawMode)} '{patch.DrawMode}' isn't handled."
+                                );
+                        }
+
+                        x += patch.Width;
+
+                        if (patch.Height > rowHeight) {
+                            rowHeight = patch.Height;
+                        }
+                    }
+
+                    y += rowHeight;
+                }
+            }
+
+            if (_vertices.Length == 0) {
                 return;
             }
 
@@ -429,8 +512,13 @@ namespace Raccoon.Graphics {
             private int[] _indices;
             private Rectangle _sourceRegion, _clippingRegion;
             private Size? _size;
+            private DrawMode _drawMode;
+            private Vector2? _repeat;
+            private Shader _shader;
+            private IShaderParameters _shaderParameters;
 
-            public Patch() {
+            public Patch(NineSlice nineSlice) {
+                NineSlice = nineSlice;
                 _vertices = new VertexPositionColorTexture[4];
                 _indices = new int[6] {
                     0, 1, 2,
@@ -499,6 +587,89 @@ namespace Raccoon.Graphics {
                 }
             }
 
+            public DrawMode DrawMode {
+                get {
+                    return _drawMode;
+                }
+
+                set {
+                    if (value == _drawMode) {
+                        return;
+                    }
+
+                    _drawMode = value;
+
+                    switch (_drawMode) {
+                        case DrawMode.Stretch:
+                            NineSlice.NeedsReload = true;
+                            break;
+
+                        case DrawMode.Repeat:
+                            NineSlice.NeedsReload = true;
+                            break;
+
+                        default:
+                            throw new System.NotImplementedException(
+                                $"{nameof(DrawMode)} '{_drawMode}' isn't handled."
+                            );
+                    }
+                }
+            }
+
+            public Vector2? Repeat {
+                get {
+                    return _repeat;
+                }
+
+                set {
+                    if (value == _repeat) {
+                        return;
+                    }
+
+                    _repeat = value;
+
+                    if (HasOrCreateShaderParameters(out RepeatShaderParameters repeatShaderParameters)) {
+                        if (_repeat.HasValue) {
+                            repeatShaderParameters.Repeat = _repeat.Value;
+                        } else {
+                            repeatShaderParameters.Repeat = Vector2.One;
+                        }
+                    }
+                }
+            }
+
+            public Shader Shader {
+                get {
+                    return _shader;
+                }
+
+                set {
+                    if (value == _shader) {
+                        return;
+                    }
+
+                    _shader = value;
+                    NineSlice.NeedsReload = true;
+                }
+            }
+
+            public IShaderParameters ShaderParameters {
+                get {
+                    return _shaderParameters;
+                }
+
+                set {
+                    if (value == _shaderParameters) {
+                        return;
+                    }
+
+                    _shaderParameters = value;
+                    NineSlice.NeedsReload = true;
+                }
+            }
+
+            private NineSlice NineSlice { get; }
+
             internal bool HasUnflushedData { get; private set; }
             internal int VerticesCount { get { return _vertices == null ? 0 : _vertices.Length; } }
             internal int IndicesCount { get { return _indices == null ? 0 : _indices.Length; } }
@@ -555,6 +726,22 @@ namespace Raccoon.Graphics {
                     textCoord.TopRight
                 );
 
+                if (HasOrCreateShaderParameters(out RepeatShaderParameters repeatShaderParameters)) {
+                    if (!_repeat.HasValue) {
+                        // calculate repeat using available size
+                        if (!ClippingRegion.Size.IsEmpty) {
+                            repeatShaderParameters.Repeat = new Vector2(
+                                Math.Round(size.Width / ClippingRegion.Width),
+                                Math.Round(size.Height / ClippingRegion.Height)
+                            );
+                        } else {
+                            repeatShaderParameters.Repeat = Vector2.One;
+                        }
+                    }
+
+                    repeatShaderParameters.SetupTextureAreaClip(texture.Size, SourceRegion, ClippingRegion);
+                }
+
                 HasUnflushedData = true;
             }
 
@@ -565,7 +752,7 @@ namespace Raccoon.Graphics {
                 int indicesStartIndex,
                 Vector2 position
             ) {
-                if (!HasUnflushedData) {
+                if (!HasUnflushedData || DrawMode == DrawMode.Repeat) {
                     return;
                 }
 
@@ -588,6 +775,72 @@ namespace Raccoon.Graphics {
                 }
 
                 HasUnflushedData = false;
+            }
+
+            internal void Draw(
+                Renderer renderer,
+                Texture texture,
+                Vector2 position,
+                float rotation,
+                Vector2 scale,
+                ImageFlip flip,
+                Color color,
+                Vector2 scroll,
+                Shader shader,
+                IShaderParameters shaderParameters,
+                Vector2 origin,
+                float layerDepth
+            ) {
+                if (Shader != null) {
+                    shader = Shader;
+                } else if (shader == null) {
+                    shader = RepeatShader;
+                }
+
+                if (ShaderParameters != null) {
+                    shaderParameters = ShaderParameters;
+                }
+
+                renderer.DrawVertices(
+                    texture:            texture,
+                    vertexData:         _vertices,
+                    minVertexIndex:     0,
+                    verticesLength:     _vertices.Length,
+                    indices:            _indices,
+                    minIndex:           0,
+                    primitivesCount:    2,
+                    isHollow:           false,
+                    position:           position,
+                    rotation:           rotation,
+                    scale:              scale,
+                    color:              color,
+                    origin:             origin,
+                    scroll:             scroll,
+                    shader:             shader,
+                    shaderParameters:   shaderParameters,
+                    layerDepth:         layerDepth
+                );
+            }
+
+            private bool HasOrCreateShaderParameters(out RepeatShaderParameters repeatShaderParameters) {
+                if (!(Shader == null || Shader is RepeatShader)) {
+                    repeatShaderParameters = null;
+                    return false;
+                }
+
+                if (ShaderParameters != null) {
+                    if (!(ShaderParameters is RepeatShaderParameters parameters)) {
+                        repeatShaderParameters = null;
+                        return false;
+                    }
+
+                    repeatShaderParameters = parameters;
+                } else {
+                    repeatShaderParameters = new RepeatShaderParameters();
+                    ShaderParameters = repeatShaderParameters;
+                }
+
+                return true;
             }
         }
 

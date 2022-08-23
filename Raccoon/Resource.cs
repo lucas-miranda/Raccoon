@@ -4,6 +4,7 @@ namespace Raccoon {
     public class Resource {
         private static byte[] Cache_04b03,
                               CacheBasicShader,
+                              CacheRepeatShader,
                               CacheFontMTSDFShader;
 
         public static byte[] _04b03 {
@@ -23,6 +24,16 @@ namespace Raccoon {
 				}
 
 				return CacheBasicShader;
+            }
+        }
+
+        public static byte[] RepeatShader {
+            get {
+				if (CacheRepeatShader == null) {
+					CacheRepeatShader = GetResource("RepeatShader");
+				}
+
+				return CacheRepeatShader;
             }
         }
 

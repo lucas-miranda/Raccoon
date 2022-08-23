@@ -57,7 +57,7 @@ namespace Raccoon.Util.Graphics {
             }
 
             if (_isMovementEnabled) {
-                float dt = delta / 1000f; 
+                float dt = delta / 1000f;
                 Vector2 v = _velocity;
 
                 if (_maxVelocity.X <= 0f) {
