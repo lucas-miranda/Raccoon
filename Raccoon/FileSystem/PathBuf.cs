@@ -26,6 +26,60 @@ namespace Raccoon.FileSystem {
             Push(path);
         }
 
+        public PathBuf(string pathA, string pathB) : this() {
+            if (pathA == null) {
+                throw new System.ArgumentNullException(nameof(pathA));
+            }
+
+            if (pathB == null) {
+                throw new System.ArgumentNullException(nameof(pathB));
+            }
+
+            Push(pathA);
+            Push(pathB);
+        }
+
+        public PathBuf(string pathA, string pathB, string pathC) : this() {
+            if (pathA == null) {
+                throw new System.ArgumentNullException(nameof(pathA));
+            }
+
+            if (pathB == null) {
+                throw new System.ArgumentNullException(nameof(pathB));
+            }
+
+            if (pathC == null) {
+                throw new System.ArgumentNullException(nameof(pathC));
+            }
+
+            Push(pathA);
+            Push(pathB);
+            Push(pathC);
+        }
+
+        public PathBuf(string pathA, string pathB, string pathC, string pathD) : this() {
+            if (pathA == null) {
+                throw new System.ArgumentNullException(nameof(pathA));
+            }
+
+            if (pathB == null) {
+                throw new System.ArgumentNullException(nameof(pathB));
+            }
+
+            if (pathC == null) {
+                throw new System.ArgumentNullException(nameof(pathC));
+            }
+
+            if (pathD == null) {
+                throw new System.ArgumentNullException(nameof(pathD));
+            }
+
+            Push(pathA);
+            Push(pathB);
+            Push(pathC);
+            Push(pathD);
+        }
+
         public PathBuf(PathBuf path) {
             if (path == null) {
                 throw new System.ArgumentNullException(nameof(path));
