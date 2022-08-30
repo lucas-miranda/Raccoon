@@ -87,6 +87,7 @@
     <Compile Include="Core\Coroutines\Coroutines.cs" />
     <Compile Include="Core\Coroutines\Instructions\CoroutineInstruction.cs" />
     <Compile Include="Core\Coroutines\Instructions\ParallelizeCoroutine.cs" />
+    <Compile Include="Core\Crash\CrashHandler.cs" />
     <Compile Include="Core\Debug\Console.cs" />
     <Compile Include="Core\Debug\Debug.cs" />
     <Compile Include="Core\Debug\DebugDraw.cs" />

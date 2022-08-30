@@ -31,7 +31,7 @@ namespace Raccoon {
         public event GameTimedEventDelegate OnUpdate = delegate { };
 
         public delegate void GameLogEventWriter(StreamWriter logWriter);
-        public event GameLogEventWriter OnCrash;
+        //public event GameLogEventWriter OnCrash;
 
         #endregion Public Members
 
@@ -84,6 +84,9 @@ Scene:
         // scenes
         private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
         private bool _isUnloadingCurrentScene;
+
+        // crash
+        private CrashHandler _crashHandler;
 
         #endregion Private Members
 
@@ -224,6 +227,21 @@ Scene:
                 }
 
                 ToggleFullscreen();
+            }
+        }
+
+        public CrashHandler CrashHandler {
+            get {
+                return _crashHandler;
+            }
+
+            set {
+                if (_crashHandler != null) {
+                    _crashHandler.Deinitialize();
+                }
+
+                _crashHandler = value;
+                _crashHandler.Initialize();
             }
         }
 
@@ -666,47 +684,7 @@ Scene:
             }
 #endif
 
-            System.AppDomain.CurrentDomain.UnhandledException += (object sender, System.UnhandledExceptionEventArgs args) => {
-                Logger.ClearSubjects();
-                System.Exception e = (System.Exception) args.ExceptionObject;
-
-                using (StreamWriter logWriter = new StreamWriter($"crash-report.log", append: false)) {
-                    logWriter.WriteLine($"Operating System: {System.Environment.OSVersion} ({(System.Environment.Is64BitOperatingSystem ? "x64" : "x86")})");
-                    logWriter.WriteLine($"CLR Runtime Version: {System.Environment.Version}");
-                    logWriter.WriteLine($"Command Line: {System.Environment.CommandLine}\n\n");
-                    try {
-                        OnCrash?.Invoke(logWriter);
-                    } catch (System.Exception onCrashException) {
-                        logWriter.WriteLine($"Game.OnCrash raised an exception: {onCrashException.Message}\n{onCrashException.StackTrace}\n\n");
-                    }
-
-                    logWriter.WriteLine($"\n{System.DateTime.Now.ToString()}  {e.Message}\n{e.StackTrace}\n");
-
-                    while (e.InnerException != null) {
-                        e = e.InnerException;
-                        logWriter.WriteLine($"{System.DateTime.Now.ToString()}  InnerException: {e.Message}\n{e.StackTrace}\n");
-                    }
-
-                    // include report.log
-                    string reportLogFilepath = Path.Combine(System.Environment.CurrentDirectory, Debug.LogFileName);
-                    logWriter.WriteLine($"\n\nreport.log\n-------------\n{reportLogFilepath}\n-------------\n");
-
-                    if (File.Exists(reportLogFilepath)) {
-                        logWriter.WriteLine(File.ReadAllText(reportLogFilepath));
-                    } else {
-                        logWriter.WriteLine($"  No 'report.log' file found. (At: {reportLogFilepath})");
-                    }
-                }
-
-                switch (System.Environment.OSVersion.Platform) {
-                    case System.PlatformID.Win32NT:
-                        System.Diagnostics.Process.Start("notepad.exe", "crash-report.log");
-                        break;
-
-                    default:
-                        break;
-                }
-            };
+            _crashHandler = new CrashHandler();
 
             // fps
             TargetFramerate = targetFramerate;

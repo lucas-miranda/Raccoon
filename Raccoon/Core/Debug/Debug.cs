@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 using Raccoon.Graphics;
 using Raccoon.Components;
+using Raccoon.FileSystem;
 using Raccoon.Util.Tween;
 using Raccoon.Util.Collections;
 
@@ -28,6 +29,8 @@ namespace Raccoon {
         private const int MessagesSpacing = 5;
         private static readonly Vector2 ScreenMessageStartPosition = new Vector2(15, -30);
 
+        private static PathBuf _reportDirectoryPath;
+
         private List<Message> _messagesList = new List<Message>(),
                               _toRemoveMessages = new List<Message>();
 
@@ -36,13 +39,26 @@ namespace Raccoon {
         // compose message
         //private static StringBuilder _composeMessage = new StringBuilder();
 
+        private PathBuf _reportFilepath;
+
         #endregion Private Members
 
         #region Constructors
 
         private Debug() {
             Logger.RegisterListener(Console);
-            Logger.RegisterListener(new TextWriterLoggerListener(LogFileName));
+
+            if (ReportDirectoryPath != null) {
+                if (!ReportDirectoryPath.ExistsDirectory()) {
+                    System.IO.Directory.CreateDirectory(ReportDirectoryPath.ToString());
+                }
+
+                _reportFilepath = ReportDirectoryPath + LogFileName;
+            } else {
+                _reportFilepath = new PathBuf(Directories.Base, LogFileName);
+            }
+
+            Logger.RegisterListener(new TextWriterLoggerListener(_reportFilepath.ToString()));
 
             foreach (System.Enum kind in System.Enum.GetValues(typeof(LensKind))) {
                 DebugDrawLens lens = Draw.RegisterLens(kind);
@@ -57,8 +73,23 @@ namespace Raccoon {
         public static Debug Instance { get; private set; }
         public static bool ShowPerformanceDiagnostics { get; set; }
         public static bool AutoRaiseConsole { get; set; } = true;
+        public static PathBuf ReportFilepath { get { return Instance?._reportFilepath; } }
         public static Console Console { get; private set; } = new Console();
         public static DebugDraw Draw { get; } = new DebugDraw();
+
+        public static PathBuf ReportDirectoryPath {
+            get {
+                return _reportDirectoryPath;
+            }
+
+            set {
+                if (Instance != null) {
+                    throw new System.InvalidOperationException($"Report directory path should be changed before {nameof(Debug)} is initialized.");
+                }
+
+                _reportDirectoryPath = value;
+            }
+        }
 
         #endregion Public Static Properties
 
