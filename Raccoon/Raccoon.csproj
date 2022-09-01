@@ -217,7 +217,9 @@
     <Compile Include="Data\Consumers\SimpleDataTokensConsumer.cs" />
     <Compile Include="Data\Contract\DataContract.Property.cs" />
     <Compile Include="Data\Contract\DataContract.cs" />
+    <Compile Include="Data\Contract\Exceptions\DataVerificationFailedException.cs" />
     <Compile Include="Data\DataFile.cs" />
+    <Compile Include="Data\DataOperation.cs" />
     <Compile Include="Data\FontCase.cs" />
     <Compile Include="Data\Parsers\ContextParser.cs" />
     <Compile Include="Data\Parsers\Expressions.cs" />

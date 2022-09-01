@@ -57,6 +57,9 @@ namespace Raccoon.Data {
 
                 // inject data to target
                 consumer.Consume(target, contract, rootToken);
+
+                // verify contract
+                contract.Verify(target);
             }
 
             //

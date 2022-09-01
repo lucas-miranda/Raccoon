@@ -21,6 +21,8 @@ namespace Raccoon.Data {
                 throw new System.ArgumentNullException(nameof(targetType));
             }
 
+            TargetType = targetType;
+
             if (attribute != null) {
                 DefaultFieldNameCase = attribute.DefaultFieldNameCase;
                 FailOnNotFound = attribute.FailOnNotFound;
@@ -45,6 +47,7 @@ namespace Raccoon.Data {
 
         #region Public Properties
 
+        public System.Type TargetType { get; }
         public FontCase DefaultFieldNameCase { get; private set; } = FontCase.LowerCase;
         public bool FailOnNotFound { get; private set; } = true;
         public ReadOnlyList<Property> Properties { get; }
@@ -113,6 +116,19 @@ namespace Raccoon.Data {
             }
 
             return propertiesNames;
+        }
+
+        /// <summary>
+        /// Validate if contract requirements was completed after tokens were consumed.
+        /// </summary>
+        public void Verify(object target, DataOperation parentOperation = DataOperation.None) {
+            try {
+                foreach (Property property in _properties) {
+                    property.Verify(target, parentOperation);
+                }
+            } catch (DataVerificationFailedException ex) {
+                throw new DataVerificationFailedException($"At {nameof(DataContract)} from type {TargetType.ToString()}", ex);
+            }
         }
 
         #endregion Public Methods

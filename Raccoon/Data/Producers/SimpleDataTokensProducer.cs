@@ -52,6 +52,11 @@ namespace Raccoon.Data {
 
                 DataContract.Property property = context.Enumerator.Current;
 
+                if (!property.Attribute.Required.Has(DataOperation.Save)) {
+                    // save operation shouldn't handle this property
+                    continue;
+                }
+
                 if (property.SubDataContractDescriptor != null) {
                     // ident
                     //     ...

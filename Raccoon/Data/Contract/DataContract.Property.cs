@@ -42,6 +42,12 @@ namespace Raccoon.Data {
 
             public string DisplayName { get; }
             public string IdentifyName { get; }
+
+            /// <summary>
+            /// Property received a value.
+            /// </summary>
+            public bool ReceivedValue { get; private set; }
+
             public PropertyInfo Info { get; }
             public DataFieldAttribute Attribute { get; }
             public DataContractAttribute SubDataContractDescriptor { get; }
@@ -53,6 +59,32 @@ namespace Raccoon.Data {
 
             public void SetValue(object target, ValueToken token) {
                 token.SetPropertyValue(target, Info);
+                ReceivedValue = true;
+            }
+
+            public void MarkAsReceivedValue() {
+                ReceivedValue = true;
+            }
+
+            public void Verify(object target, DataOperation parentOperation = DataOperation.None) {
+                if ((Attribute.Required | parentOperation).Has(DataOperation.Load)
+                 && !ReceivedValue
+                ) {
+                    // a load operation was expected to succeed, no value was received
+
+                    throw DataVerificationFailedException.Property(this);
+                }
+
+                if (SubDataContract != null) {
+                    try {
+                        SubDataContract.Verify(
+                            Info.GetValue(target),
+                            Attribute.Required | parentOperation
+                        );
+                    } catch (DataVerificationFailedException ex) {
+                        throw new DataVerificationFailedException($"At {nameof(Property)} ({Info.PropertyType.ToString()})", ex);
+                    }
+                }
             }
         }
     }

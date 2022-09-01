@@ -164,6 +164,7 @@ namespace Raccoon.Data.Consumers {
                 property.SubDataContract
             );
 
+            property.MarkAsReceivedValue();
             return true;
         }
 

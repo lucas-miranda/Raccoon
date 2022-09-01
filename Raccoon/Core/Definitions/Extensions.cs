@@ -38,6 +38,14 @@ public static class Extensions {
         return fieldInfo.GetCustomAttribute<T>();
     }
 
+    public static bool Has(this System.Enum e, System.Enum tag) {
+        ulong t = System.Convert.ToUInt64(tag);
+        return (System.Convert.ToUInt64(e) & t) == t;
+    }
+
+    public static bool HasAny(this System.Enum e, System.Enum tag) {
+        return (System.Convert.ToUInt64(e) & System.Convert.ToUInt64(tag)) != 0UL;
+    }
 
     #endregion Enums
 
