@@ -100,7 +100,9 @@ namespace Raccoon.Data.Consumers {
                         next = null;
                     }
 
-                    throw new System.InvalidOperationException($"Token ({current}) wasn't handled. (next: '{(next?.ToString() ?? "undefined")}')");
+                    if (rootContract.FailOnNotFound) {
+                        throw new System.InvalidOperationException($"Token ({current}) wasn't handled. (next: '{(next?.ToString() ?? "undefined")}')");
+                    }
                 }
             }
         }
