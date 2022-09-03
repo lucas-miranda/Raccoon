@@ -96,7 +96,7 @@ namespace Raccoon.Graphics.Primitives {
             }
         }
 
-        public override void Dispose() { 
+        public override void Dispose() {
             base.Dispose();
         }
 
@@ -119,8 +119,8 @@ namespace Raccoon.Graphics.Primitives {
             // implemented using http://slabode.exofire.net/circle_draw.shtml (Just slightly reorganized and I decided to keep the comments)
             Vector2 center = Vector2.Zero;
             float theta = (float) (2.0 * Math.PI / segments),
-                  t, 
-                  c = (float) System.Math.Cos(theta), 
+                  t,
+                  c = (float) System.Math.Cos(theta),
                   s = (float) System.Math.Sin(theta), // precalculate the sine and cosine
                   innerX = InnerRadius * Math.Cos(0),
                   innerY = InnerRadius * Math.Sin(0),
@@ -131,7 +131,7 @@ namespace Raccoon.Graphics.Primitives {
             for (i = 0; i < segments; i++) {
                 _vertices[2 * i] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(
                     new Microsoft.Xna.Framework.Vector3(
-                        center.X + innerX, 
+                        center.X + innerX,
                         center.Y + innerY,
                         0f
                     ),
@@ -140,7 +140,7 @@ namespace Raccoon.Graphics.Primitives {
 
                 _vertices[2 * i + 1] = new Microsoft.Xna.Framework.Graphics.VertexPositionColor(
                     new Microsoft.Xna.Framework.Vector3(
-                        center.X + outerX, 
+                        center.X + outerX,
                         center.Y + outerY,
                         0f
                     ),
