@@ -245,6 +245,12 @@ Scene:
             }
         }
 
+        public Microsoft.Xna.Framework.Content.ContentManager ContentManager {
+            get {
+                return XNAGameWrapper.Content;
+            }
+        }
+
 #if DEBUG
         public bool DebugMode { get; set; }
         public List<int> FramerateValues { get; } = new List<int>();
