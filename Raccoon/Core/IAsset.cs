@@ -1,7 +1,7 @@
 using System.IO;
 
 namespace Raccoon {
-    public interface IAsset : System.IDisposable {
+    public interface IAsset {
         string Name { get; }
         //string Filename { get; }
         string[] Filenames { get; }
@@ -9,5 +9,6 @@ namespace Raccoon {
 
         void Reload();
         void Reload(Stream stream);
+        void Dispose();
     }
 }
