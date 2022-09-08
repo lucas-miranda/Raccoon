@@ -717,6 +717,8 @@ Scene:
             WindowSize = new Size(windowWidth, windowHeight);
             WindowCenter = new Vector2(windowWidth / 2f, windowHeight / 2f);
             Size = new Size(windowWidth, windowHeight) / PixelScale;
+            _nextInternalWidth = (int) Size.Width;
+            _nextInternalHeight = (int) Size.Height;
             Center = (Size / 2f).ToVector2();
 
             OnBeforeUpdate = () => {

@@ -94,6 +94,14 @@ namespace Raccoon.Graphics {
         }
 
         public void Resize(int width, int height, bool mipmap = false) {
+            if (width <= 0) {
+                throw new System.ArgumentException($"Invalid width value. ({width})", nameof(width));
+            }
+
+            if (height <= 0) {
+                throw new System.ArgumentException($"Invalid height value. ({height})", nameof(height));
+            }
+
             if (XNARenderTarget == null) {
                 throw new System.InvalidOperationException("Can't resize. Canvas internal state is invalid.");
             }

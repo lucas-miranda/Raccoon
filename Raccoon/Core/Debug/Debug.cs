@@ -51,6 +51,9 @@ namespace Raccoon {
             if (ReportDirectoryPath != null) {
                 if (!ReportDirectoryPath.ExistsDirectory()) {
                     System.IO.Directory.CreateDirectory(ReportDirectoryPath.ToString());
+                    Logger.Info("Creating report directory");
+                } else {
+                    Logger.Info("Report directory already exists");
                 }
 
                 _reportFilepath = ReportDirectoryPath + LogFileName;

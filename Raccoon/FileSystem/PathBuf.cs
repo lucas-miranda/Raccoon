@@ -294,7 +294,7 @@ namespace Raccoon.FileSystem {
 
         #region Private Methods
 
-        private IEnumerable<string> Split(string value) {
+        private static IEnumerable<string> Split(string value) {
             if (value == null) {
                 yield break;
             }
