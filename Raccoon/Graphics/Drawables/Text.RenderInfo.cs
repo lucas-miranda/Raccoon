@@ -70,7 +70,7 @@ namespace Raccoon.Graphics {
                 double x,
                 double y,
                 Rectangle sourceArea,
-                char representation,
+                uint representation,
                 Fonts.FontFaceRenderMap.Glyph data
             ) {
                 if (GlyphCount == _glyphs.Length) {
@@ -116,7 +116,7 @@ namespace Raccoon.Graphics {
             #region Glyph Struct
 
             public class Glyph {
-                public Glyph(double x, double y, Rectangle sourceArea, char representation, Fonts.FontFaceRenderMap.Glyph data) {
+                public Glyph(double x, double y, Rectangle sourceArea, uint representation, Fonts.FontFaceRenderMap.Glyph data) {
                     OriginalX = X = x;
                     OriginalY = Y = y;
                     SourceArea = sourceArea;
@@ -129,7 +129,7 @@ namespace Raccoon.Graphics {
                 public double OriginalX { get; }
                 public double OriginalY { get; }
                 public Rectangle SourceArea { get; set; }
-                public char Representation { get; set; }
+                public uint Representation { get; set; }
                 public Fonts.FontFaceRenderMap.Glyph Data { get; set; }
 
                 public Glyph Clone() {

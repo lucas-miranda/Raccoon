@@ -1,3 +1,4 @@
+using System.Text;
 using System.Collections.Generic;
 
 using Raccoon.Graphics;
@@ -144,9 +145,8 @@ namespace Raccoon.Fonts {
 
             int renderTimes;
 
-            // TODO: add support to unicode characters?
-            for (int i = 0; i < text.Length; i++) {
-                char charCode = text[i];
+            for (int i = 0; i < text.Length; i += char.IsSurrogatePair(text, i) ? 2 : 1) {
+                uint charCode = (uint) char.ConvertToUtf32(text, i);
 
                 if (charCode == '\n') { // new line
                     penY += LineHeight;
@@ -172,6 +172,7 @@ namespace Raccoon.Fonts {
 
                 if (!Glyphs.TryGetValue(charCode, out Glyph glyph)) {
                     // glyph not found, just render default symbol
+                    Logger.Info($"glyph ({charCode}) not found at '{text}' (pos: {i})");
                     glyph = Glyphs[DefaultErrorCharacter];
                 }
 
