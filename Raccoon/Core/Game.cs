@@ -17,7 +17,8 @@ namespace Raccoon {
                                        OnAfterMainCanvasRender,
                                        OnLateRender,
                                        OnDebugRender = delegate { },
-                                       OnBegin = delegate { },
+                                       OnPreBegin,
+                                       OnBegin,
                                        OnBeforeUpdate = delegate { },
                                        OnLateUpdate = delegate { },
                                        OnUnloadContent,
@@ -516,12 +517,21 @@ Scene:
 
         #region Protected Methods
 
-        protected virtual void Initialize() {
+        protected virtual void PreInitialize() {
             // systems initialization
             Debug.Console.Start();
 
-            OnBegin?.Invoke();
-            OnBegin = null;
+            if (OnPreBegin != null) {
+                OnPreBegin?.Invoke();
+                OnPreBegin = null;
+            }
+        }
+
+        protected virtual void Initialize() {
+            if (OnBegin != null) {
+                OnBegin?.Invoke();
+                OnBegin = null;
+            }
 
             SwitchScene(StartSceneName);
             UpdateCurrentScene();
@@ -699,7 +709,19 @@ Scene:
             _pixelScale = pixelScale < Math.Epsilon ? Math.Epsilon : pixelScale;
 
             // wrapper
-            XNAGameWrapper = new XNAGameWrapper(windowWidth, windowHeight, TargetFramerate, fullscreen, vsync, InternalLoadContent, InternalUnloadContent, InternalUpdate, InternalDraw);
+            XNAGameWrapper = new XNAGameWrapper(
+                windowWidth,
+                windowHeight,
+                TargetFramerate,
+                fullscreen,
+                vsync,
+                InternalPreLoadContent,
+                InternalPostLoadContent,
+                InternalUnloadContent,
+                InternalUpdate,
+                InternalDraw
+            );
+
             XNAGameWrapper.Content.RootDirectory = Path.Combine(System.Environment.CurrentDirectory, "Content/");
             Title = title;
 
@@ -751,7 +773,7 @@ Scene:
             }
         }
 
-        private void InternalLoadContent() {
+        private void InternalPreLoadContent() {
             // default content
             StdFont = new Font(Resource._04b03, 0, 16f);
             BasicShader = new BasicShader(Resource.BasicShader) {
@@ -821,11 +843,16 @@ Scene:
             DebugRenderer.RecalculateProjection();
             ScreenRenderer.RecalculateProjection();
 
+            PreInitialize();
+        }
+
+        private void InternalPostLoadContent() {
             Initialize();
         }
 
         private void InternalUnloadContent() {
-            Scene?.UnloadContent();
+            ClearScenes();
+
             OnUnloadContent?.Invoke();
             Graphics.Texture.White.Dispose();
             Graphics.Texture.Black.Dispose();

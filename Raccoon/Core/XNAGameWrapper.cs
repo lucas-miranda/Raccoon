@@ -4,15 +4,27 @@ namespace Raccoon {
     internal class XNAGameWrapper : Microsoft.Xna.Framework.Game {
         #region Private Members
 
-        private System.Action OnLoadContent, OnUnloadContent;
+        private System.Action OnPreLoadContent, OnPostLoadContent, OnUnloadContent;
         private readonly System.Action<GameTime> OnUpdate, OnDraw;
 
         #endregion Private Members
 
         #region Constructors
 
-        public XNAGameWrapper(int width, int height, int targetFramerate, bool fullscreen, bool vsync, System.Action onLoadContent, System.Action onUnloadContent, System.Action<GameTime> onUpdate, System.Action<GameTime> onDraw) {
-            OnLoadContent = onLoadContent;
+        public XNAGameWrapper(
+            int width,
+            int height,
+            int targetFramerate,
+            bool fullscreen,
+            bool vsync,
+            System.Action onPreLoadContent,
+            System.Action onPostLoadContent,
+            System.Action onUnloadContent,
+            System.Action<GameTime> onUpdate,
+            System.Action<GameTime> onDraw
+        ) {
+            OnPreLoadContent = onPreLoadContent;
+            OnPostLoadContent = onPostLoadContent;
             OnUnloadContent = onUnloadContent;
             OnUpdate = onUpdate;
             OnDraw = onDraw;
@@ -42,9 +54,17 @@ namespace Raccoon {
         }
 
         protected override void LoadContent() {
-            OnLoadContent();
-            OnLoadContent = null;
+            if (OnPreLoadContent != null) {
+                OnPreLoadContent();
+                OnPreLoadContent = null;
+            }
+
             base.LoadContent();
+
+            if (OnPostLoadContent != null) {
+                OnPostLoadContent();
+                OnPostLoadContent = null;
+            }
         }
 
         protected override void UnloadContent() {
@@ -52,6 +72,10 @@ namespace Raccoon {
             OnUnloadContent = null;
             Content.Unload();
             base.UnloadContent();
+        }
+
+        protected override void BeginRun() {
+            base.BeginRun();
         }
 
         protected override void Update(GameTime gameTime) {
