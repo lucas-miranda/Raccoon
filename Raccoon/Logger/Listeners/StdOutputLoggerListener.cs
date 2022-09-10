@@ -20,7 +20,11 @@ namespace Raccoon {
 
         public StdOutputLoggerListener() {
             _out = System.Console.Out;
-            System.Console.OutputEncoding = new UTF8Encoding();
+
+            try {
+                System.Console.OutputEncoding = new UTF8Encoding();
+            } catch (System.IO.IOException) {
+            }
 
             _contexts = new Dictionary<System.Type, TextFormatter> {
                 {
