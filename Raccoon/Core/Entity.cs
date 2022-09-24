@@ -89,6 +89,12 @@ namespace Raccoon {
                 if (value != null && GraphicAdded(value)) {
                     Graphics.Insert(0, value);
                     value.Renderer = Renderer;
+
+                    Components.Lock();
+                    foreach (Component c in Components) {
+                        c.GraphicAdded(value);
+                    }
+                    Components.Unlock();
                 }
             }
         }
@@ -624,6 +630,13 @@ namespace Raccoon {
 
             Graphics.Add(graphic);
             graphic.Renderer = Renderer;
+
+            Components.Lock();
+            foreach (Component c in Components) {
+                c.GraphicAdded(graphic);
+            }
+            Components.Unlock();
+
             return graphic;
         }
 
@@ -687,6 +700,13 @@ namespace Raccoon {
 
             if (Graphics.Remove(graphic)) {
                 GraphicRemoved(graphic);
+
+                Components.Lock();
+                foreach (Component c in Components) {
+                    c.GraphicRemoved(graphic);
+                }
+                Components.Unlock();
+
                 return true;
             }
 
@@ -948,6 +968,13 @@ namespace Raccoon {
             Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 GraphicRemoved(g);
+
+                Components.Lock();
+                foreach (Component c in Components) {
+                    c.GraphicRemoved(g);
+                }
+                Components.Unlock();
+
                 g.Dispose();
             }
             Graphics.Unlock();

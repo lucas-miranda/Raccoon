@@ -131,6 +131,11 @@ namespace Raccoon.Components {
         public virtual void ControlGroupUnregistered() {
         }
 
+        public virtual void GraphicAdded(Graphic g) {
+        }
+
+        public virtual void GraphicRemoved(Graphic g) {
+        }
 
         #endregion Public Methods
 
