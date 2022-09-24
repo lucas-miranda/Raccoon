@@ -125,7 +125,7 @@ namespace Raccoon.Components {
             // horizontal velocity
             //
 
-            if (axis.X == 0f) { // stopping from movement, drag force applies
+            if (axis.X == 0f || !CanAxisAccelerate) { // stopping from movement, drag force applies
                 currentAcceleration.X += CalculateAcceleration(
                     velocity.X,
                     0f,
@@ -161,7 +161,7 @@ namespace Raccoon.Components {
             // vertical velocity
             //
 
-            if (axis.Y == 0f) { // stopping from movement, drag force applies
+            if (axis.Y == 0f || !CanAxisAccelerate) { // stopping from movement, drag force applies
                 currentAcceleration.Y += CalculateAcceleration(
                     velocity.Y,
                     0f,

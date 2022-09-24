@@ -103,6 +103,14 @@ namespace Raccoon.Components {
         public Vector2? MoveTargetPosition { get; protected set; }
         public bool Enabled { get; set; } = true;
         public bool CanMove { get; set; } = true;
+
+        /// <summary>
+        /// Can use Acceleration and Axis to modify current Velocity.
+        /// If it's disabled, Axis will always be considered as zero, at Integrate step.
+        /// Other ways, such as impulse or force, will be applied normally.
+        /// <summary>
+        public bool CanAxisAccelerate { get; set; } = true;
+
         public bool IsMoving { get; private set; } = false;
         public bool IsDisposed { get; private set; }
         /*public bool TouchedTop { get; private set; }

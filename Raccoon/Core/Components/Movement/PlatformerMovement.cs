@@ -695,7 +695,7 @@ namespace Raccoon.Components {
             if (!Math.EqualsEstimate(ForceDuration, 0f) && ForcePerSec.X != 0f) {
                 // handling force
                 currentAcceleration.X += ForcePerSec.X;
-            } else if (Axis.X == 0f) {
+            } else if (Axis.X == 0f || !CanAxisAccelerate) {
                 // horizontal axis is resting
 
                 if (Math.EqualsEstimate(velocity.X, 0f)) {
