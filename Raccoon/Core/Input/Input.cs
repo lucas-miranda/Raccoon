@@ -366,7 +366,6 @@ namespace Raccoon.Input {
             }
 
             #region GamePad
-            Logger.PushSubject("Input");
 
             // gamepad states
             GamePadsConnected = 0;
@@ -396,7 +395,6 @@ namespace Raccoon.Input {
                 _gamepadsState[(int) gamepadIndex] = gamepadState;
                 GamePadsConnected++;
             }
-            Logger.PopSubject();
 
             #endregion GamePad
 
