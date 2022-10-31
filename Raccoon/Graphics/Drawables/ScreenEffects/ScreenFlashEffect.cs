@@ -33,13 +33,13 @@ namespace Raccoon.Graphics.ScreenEffects {
 
         protected override void Draw(Vector2 position, float rotation, Vector2 scale, ImageFlip flip, Color color, Vector2 scroll, Shader shader, IShaderParameters shaderParameters, Vector2 origin, float layerDepth) {
             _screenRectangleGraphic.Render(
-                _screenRectangleGraphic.Position + position, 
-                _screenRectangleGraphic.Rotation + rotation, 
-                _screenRectangleGraphic.Scale * scale, 
-                _screenRectangleGraphic.Flipped ^ flip, 
+                _screenRectangleGraphic.Position + position,
+                _screenRectangleGraphic.Rotation + rotation,
+                _screenRectangleGraphic.Scale * scale,
+                _screenRectangleGraphic.Flipped ^ flip,
                 _screenRectangleGraphic.Color * color * Opacity,
-                _screenRectangleGraphic.Scroll * scroll, 
-                shader, 
+                _screenRectangleGraphic.Scroll * scroll,
+                shader,
                 _screenRectangleGraphic.Layer + ConvertLayerDepthToLayer(layerDepth)
             );
         }
