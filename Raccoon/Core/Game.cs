@@ -780,7 +780,10 @@ Scene:
                 DepthWriteEnabled = true
             };
 
-            ScreenRenderer = new Renderer();
+            ScreenRenderer = new Renderer() {
+                SpriteBatchMode = BatchMode.Immediate,
+            };
+
             DebugRenderer = new Renderer(true) {
                 SpriteBatchMode = BatchMode.DepthBuffer,
                 DepthStencilState = DepthStencilState.Default,
