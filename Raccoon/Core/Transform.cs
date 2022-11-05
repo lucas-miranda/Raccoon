@@ -353,6 +353,20 @@ namespace Raccoon {
                 }
 
                 child.Entity.SceneAdded(scene);
+
+                if (scene.HasStarted
+                 && Entity.HasStarted
+                 && !child.Entity.HasStarted
+                ) {
+                    // start this child!
+                    // when scene is added and this transform's entity has started already
+                    //
+                    // this aids the problem when Entity.Start() is called without a Scene
+                    // and an Entity child is added at this phase, causing it to never
+                    // be able to Start() when parent is added to a Scene
+
+                    child.Entity.Start();
+                }
             }
             _children.Unlock();
         }
