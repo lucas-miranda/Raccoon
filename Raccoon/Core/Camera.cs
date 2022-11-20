@@ -110,6 +110,7 @@ namespace Raccoon {
                 }
 
                 float previousZoom = _zoom;
+
                 _zoom = Math.Max(value, Math.Epsilon);
                 _needViewRefresh = true;
                 OnZoom(previousZoom, _zoom);
@@ -257,6 +258,9 @@ namespace Raccoon {
 #endif
         }
 
+        protected virtual void Refreshed() {
+        }
+
         protected virtual void Disposed() {
         }
 
@@ -275,7 +279,14 @@ namespace Raccoon {
                     cameraTarget = cameraPos + Vector3.Forward;
 
             Matrix.CreateLookAt(ref cameraPos, ref cameraTarget, ref _cameraUpVector, out Matrix _view);
-            Game.Instance.MainRenderer.View = View = _view * Matrix.CreateScale(Zoom, Zoom, 1f);
+
+            if (Zoom < 1f) {
+                Game.Instance.MainRenderer.View = View = _view * Matrix.CreateScale(Zoom, Zoom, 1f);
+            } else {
+                Game.Instance.MainRenderer.View = View = _view;
+            }
+
+            Refreshed();
         }
 
         #endregion Private Members

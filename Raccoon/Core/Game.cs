@@ -908,19 +908,37 @@ Scene:
 
             ScreenRenderer.Begin();
 
-            ScreenRenderer.Draw(
-                MainCanvas,
-                MainCanvas.Position + _gameCanvasPosition,
-                null,
-                MainCanvas.Rotation,
-                MainCanvas.Scale * new Vector2(PixelScale * KeepProportionsScale),
-                MainCanvas.Flipped,
-                MainCanvas.Color,
-                MainCanvas.Origin,
-                MainCanvas.Scroll,
-                MainCanvas.Shader,
-                MainCanvas.ShaderParameters
-            );
+            float zoom = Camera.Current?.Zoom ?? 1f;
+
+            if (zoom < 1f) {
+                ScreenRenderer.Draw(
+                    MainCanvas,
+                    MainCanvas.Position + _gameCanvasPosition,
+                    null,
+                    MainCanvas.Rotation,
+                    MainCanvas.Scale * new Vector2(PixelScale * KeepProportionsScale),
+                    MainCanvas.Flipped,
+                    MainCanvas.Color,
+                    MainCanvas.Origin,
+                    MainCanvas.Scroll,
+                    MainCanvas.Shader,
+                    MainCanvas.ShaderParameters
+                );
+            } else {
+                ScreenRenderer.Draw(
+                    MainCanvas,
+                    MainCanvas.Position + _gameCanvasPosition,
+                    null,
+                    MainCanvas.Rotation,
+                    MainCanvas.Scale * new Vector2(zoom * PixelScale * KeepProportionsScale),
+                    MainCanvas.Flipped,
+                    MainCanvas.Color,
+                    MainCanvas.Origin,
+                    MainCanvas.Scroll,
+                    MainCanvas.Shader,
+                    MainCanvas.ShaderParameters
+                );
+            }
 
             OnAfterMainCanvasRender?.Invoke();
 
