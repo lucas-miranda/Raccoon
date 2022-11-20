@@ -123,7 +123,7 @@ namespace Raccoon.Util {
         /// <param name="min">Values range.</param>
         /// <returns>Number in range.</returns>
         public static int Integer(Range range) {
-            return BaseRandom.Next((int) range.Min, ((int) range.Max) + 1);
+            return Integer((int) range.Min, (int) range.Max);
         }
 
         /// <summary>
