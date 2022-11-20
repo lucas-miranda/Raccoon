@@ -333,6 +333,7 @@ namespace Raccoon {
             Graphics.Lock();
             foreach (Graphic g in Graphics) {
                 if (!g.Visible
+                 || !g.Active
                  || (g.ControlGroup != null && g.ControlGroup.IsPaused)
                 ) {
                     continue;
@@ -690,7 +691,11 @@ namespace Raccoon {
         }
 
         public T AddComponent<T>(T component) where T : Component {
-            return AddComponent(component as Component) as T;
+            return (T) AddComponent((Component) component);
+        }
+
+        public T AddComponent<T>() where T : Component, new() {
+            return (T) AddComponent((Component) new T());
         }
 
         public bool RemoveGraphic(Graphic graphic) {
@@ -771,6 +776,14 @@ namespace Raccoon {
             }
 
             return null;
+        }
+
+        public T GetAddComponent<T>() where T : Component, new() {
+            if (TryGetComponent<T>(out T component)) {
+                return component;
+            }
+
+            return AddComponent<T>();
         }
 
         public List<T> GetComponents<T>() where T : Component {
