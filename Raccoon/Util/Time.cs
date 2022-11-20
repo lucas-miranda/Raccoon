@@ -14,6 +14,12 @@ namespace Raccoon.Util {
         public static double Hours { get { return Game.Instance.Time.TotalHours; } }
         public static double Days { get { return Game.Instance.Time.TotalDays; } }
 
+        /// <summary>
+        /// Controls Game time scale.
+        /// It can make it slows down or speed up.
+        /// </summary>
+        public static float Scale { get; set; } = 1.0f;
+
         public static void StartStopwatch() {
             _stopWatch.Restart();
         }

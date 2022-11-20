@@ -576,18 +576,6 @@ Scene:
 #if DEBUG
             Debug.Instance.Update(delta);
 #endif
-
-            // fps
-            if (Time.Subtract(_lastFpsTime).Seconds >= 1) {
-                _lastFpsTime = Time;
-                _fps = _fpsCount;
-                _fpsCount = 0;
-#if DEBUG
-                FramerateValues.RemoveAt(0);
-                FramerateValues.Add(_fps);
-                Title = Title; // force update window title info
-#endif
-            }
         }
 
         protected virtual void Render() {
@@ -865,7 +853,19 @@ Scene:
             Time = gameTime.TotalGameTime;
             IsRunningSlowly = gameTime.IsRunningSlowly;
             UpdateDeltaTime = gameTime.ElapsedGameTime.Milliseconds;
-            Update(UpdateDeltaTime);
+            Update((int) Math.Ceiling(Util.Time.Scale * UpdateDeltaTime));
+
+            // fps
+            if (Time.Subtract(_lastFpsTime).Seconds >= 1) {
+                _lastFpsTime = Time;
+                _fps = _fpsCount;
+                _fpsCount = 0;
+#if DEBUG
+                FramerateValues.RemoveAt(0);
+                FramerateValues.Add(_fps);
+                Title = Title; // force update window title info
+#endif
+            }
         }
 
         private void InternalDraw(Microsoft.Xna.Framework.GameTime gameTime) {
