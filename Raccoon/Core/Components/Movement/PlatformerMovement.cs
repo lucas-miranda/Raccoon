@@ -649,6 +649,7 @@ namespace Raccoon.Components {
 
             if (!Math.EqualsEstimate(collisionAxes.Y, 0f) && collisionInfo.Subject.Tags.HasAny(Tags)) {
                 // verify if is below it
+                bool justTouchedTop = false;
 
                 foreach (Contact c in collisionInfo.Contacts) {
                     if (!_touchedBottom
@@ -663,12 +664,28 @@ namespace Raccoon.Components {
                         }
 
                         _touchedBottom = true;
-                    } else if (!_touchedTop
+                    } else if ((!justTouchedTop && !_touchedTop)
                      && Vector2.Up.Projection(c.Normal) >= .5f
                      && c.PenetrationDepth > Math.Epsilon && c.PenetrationDepth <= 1f + Math.Epsilon
                      && !collisionInfo.Subject.Tags.HasAny(FallThroughTags)
                     ) {
-                        _touchedTop = true;
+                        justTouchedTop = true;
+                    }
+                }
+
+                if (justTouchedTop) {
+                    _touchedTop = true;
+
+                    // we need to verify if isn't a diagonal contact to a wall
+                    // if so, touched top should be cancelled
+                    foreach (Contact c in collisionInfo.Contacts) {
+                        if (Math.Abs(Vector2.Right.Projection(c.Normal)) >= .5f
+                         && c.PenetrationDepth > Math.Epsilon && c.PenetrationDepth <= 1f + Math.Epsilon
+                         && !collisionInfo.Subject.Tags.HasAny(FallThroughTags)
+                        ) {
+                            _touchedTop = false;
+                            break;
+                        }
                     }
                 }
             }
