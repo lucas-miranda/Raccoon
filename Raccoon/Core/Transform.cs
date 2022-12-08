@@ -297,6 +297,10 @@ namespace Raccoon {
             }
         }
 
+        public static implicit operator Transform(Entity entity) {
+            return entity.Transform;
+        }
+
         #endregion Public Methods
 
         #region Private Methods
