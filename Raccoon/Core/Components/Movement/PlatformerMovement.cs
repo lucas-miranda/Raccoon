@@ -25,7 +25,8 @@ namespace Raccoon.Components {
         public delegate void PlatformerMovementAction();
         public event PlatformerMovementAction OnJumpBegin,
                                               OnTouchGround,
-                                              OnFallingBegin;
+                                              OnFallingBegin,
+                                              OnFallThroughBegin;
 
         public delegate void AxisMovementAction(float distance);
         public event AxisMovementAction OnHorizontalMove,
@@ -132,7 +133,7 @@ namespace Raccoon.Components {
 
         // fall through
         private BitTag _fallthroughTags;
-        private bool _isTryingToFallThrough;
+        private bool _isTryingToFallThrough, _justTriedToFallThrough;
 
         #endregion Private Members
 
@@ -591,7 +592,7 @@ namespace Raccoon.Components {
 
                         Jumps = MaxJumps;
                         _canPerformLedgeJump = true;
-                        _isTryingToFallThrough = false;
+                        _isTryingToFallThrough = _justTriedToFallThrough = false;
 
                         ReachedGround();
                         OnTouchGround?.Invoke();
@@ -637,6 +638,12 @@ namespace Raccoon.Components {
         public override bool CanCollideWith(Vector2 collisionAxes, CollisionInfo<Body> collisionInfo) {
             if (!CanCollideWithFallthrough(ref collisionAxes, collisionInfo)) {
                 // collision should be ignored
+
+                if (_justTriedToFallThrough) {
+                    OnFallThroughBegin?.Invoke();
+                    _justTriedToFallThrough = false;
+                }
+
                 return false;
             }
 
@@ -966,11 +973,16 @@ namespace Raccoon.Components {
         }
 
         public void FallThrough() {
-            CanFallThrough = true;
-
-            if (OnGround) {
-                Velocity = new Vector2(Velocity.X, FallthroughSpeed);
+            if (!OnGround || CanFallThrough) {
+                return;
             }
+
+            CanFallThrough = true;
+            _justTriedToFallThrough = false;
+
+            //if (OnGround) {
+                Velocity = new Vector2(Velocity.X, FallthroughSpeed);
+            //}
         }
 
         public override void MoveTo(Vector2 position, bool smoothStop = true) {
@@ -1161,6 +1173,7 @@ namespace Raccoon.Components {
                         _isTryingToFallThrough = true;
                     }
 
+                    _justTriedToFallThrough = true;
                     return false;
                 } else {
                     if (_isTryingToFallThrough) {
