@@ -214,6 +214,10 @@ namespace Raccoon.Components {
             }
         }
 
+        public bool Contains(Tween tween) {
+            return _tweens.Contains(tween);
+        }
+
         #endregion Public Methods
 
         #region Private Methods
