@@ -111,7 +111,7 @@ namespace Raccoon {
             //
 
             using (StreamWriter logWriter = new StreamWriter(crashLogFilepath.ToString(), false)) {
-                logWriter.WriteLine($"Operating System: {System.Environment.OSVersion} ({(System.Environment.Is64BitOperatingSystem ? "x64" : "x86")})");
+                logWriter.WriteLine($"Operating Platform: {System.Environment.OSVersion.Platform}  System: {System.Environment.OSVersion} ({(System.Environment.Is64BitOperatingSystem ? "x64" : "x86")})");
                 logWriter.WriteLine($"CLR Runtime Version: {System.Environment.Version}");
                 logWriter.WriteLine($"Command Line: {System.Environment.CommandLine}\n\n");
                 logWriter.Flush();
