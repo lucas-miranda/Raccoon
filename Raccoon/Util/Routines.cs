@@ -68,8 +68,12 @@ namespace Raccoon.Util {
         }
 
         public static IEnumerator WaitEndOf<T>(Animation<T> animation, T trackName, bool autoPlay = false) {
-            if (animation == null || !animation.ContainsTrack(trackName)) {
+            if (animation == null) {
                 yield break;
+            }
+
+            if (!animation.ContainsTrack(trackName)) {
+                throw new System.ArgumentException($"Track with name '{trackName}' doesn't exists.");
             }
 
             if (autoPlay) {
