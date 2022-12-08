@@ -654,6 +654,16 @@
             return origin + Rotate(point - origin, degrees);
         }
 
+        /// <summary>
+        /// Apply rotation matrix around origin with precalculated cosine and sine.
+        /// </summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void ApplyRotation(ref float x, ref float y, ref float cos, ref float sin) {
+            float t = x;
+            x = cos * x - sin * y;
+            y = sin * t + cos * y;
+        }
+
         public static float CatmullRom(float n1, float n2, float n3, float n4, float amount) {
             return Microsoft.Xna.Framework.MathHelper.CatmullRom(n1, n2, n3, n4, amount);
         }
