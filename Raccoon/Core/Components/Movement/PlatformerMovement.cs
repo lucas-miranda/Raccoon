@@ -189,6 +189,11 @@ namespace Raccoon.Components {
         public bool IsJumping { get; protected set; }
 
         /// <summary>
+        /// Current jump has started by calling Jump() first and not as result to any other side-effect.
+        /// </summary>
+        public bool IsIntentionalJumping { get; protected set; }
+
+        /// <summary>
         /// Means, even when is falling, that is at a jump sequence
         ///  and not just fall from somewhere.
         /// </summary>
@@ -451,7 +456,8 @@ namespace Raccoon.Components {
                 // user keeps one entire frame without calling Jump()
                 // we can do some unlocks now
 
-                if (!_stopKeepingCurrentJump && IsJumping) {
+                if (!_stopKeepingCurrentJump && IsJumping && IsIntentionalJumping) {
+                    // stopped to keep an intentional jump
                     StoppedKeepingJump();
                     _stopKeepingCurrentJump = true;
                 }
@@ -591,6 +597,7 @@ namespace Raccoon.Components {
                             HasJumped = false;
 
                         Jumps = MaxJumps;
+                        IsIntentionalJumping = false;
                         _canPerformLedgeJump = true;
                         _isTryingToFallThrough = _justTriedToFallThrough = false;
 
@@ -976,6 +983,7 @@ namespace Raccoon.Components {
             }
 
             BeforeJumpStarted();
+            IsIntentionalJumping = true;
             IsStillJumping = _jumpStart = _canKeepCurrentJump = true;
             _isAbleToJump = _stopKeepingCurrentJump = false;
 
