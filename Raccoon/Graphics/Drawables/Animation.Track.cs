@@ -1,7 +1,7 @@
 ﻿namespace Raccoon.Graphics {
     public partial class Animation<KeyType> : Image {
         public class Track {
-            private event System.Action _onEnd;
+            private event System.Action _onStart, _onEnd;
             private event System.Action<int> _onChangeFrame;
 
             private int _currentFrameIndex;
@@ -39,6 +39,10 @@
                 RepeatTimes = track.RepeatTimes;
                 IsPingPong = track.IsPingPong;
                 IsReverse = track.IsReverse;
+
+                if (track._onStart != null) {
+                    _onStart += track._onStart;
+                }
 
                 if (track._onEnd != null) {
                     _onEnd += track._onEnd;
@@ -110,6 +114,7 @@
                         CurrentFrameIndex = IsReverse ? LastFrameIndex : 0;
                         TimesPlayed++;
                         _onEnd?.Invoke();
+                        Started();
                     } else {
                         HasEnded = true;
                         TimesPlayed++;
@@ -161,6 +166,11 @@
                 return this;
             }
 
+            public Track OnStart(System.Action onStart) {
+                _onStart += onStart;
+                return this;
+            }
+
             public Track OnEnd(System.Action onEnd) {
                 _onEnd += onEnd;
                 return this;
@@ -176,10 +186,14 @@
                     return;
                 }
 
-                _onEnd = null;
+                _onStart = _onEnd = null;
                 _onChangeFrame = null;
 
                 IsDisposed = true;
+            }
+
+            internal void Started() {
+                _onStart?.Invoke();
             }
 
             #region Frame Struct

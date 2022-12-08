@@ -160,38 +160,30 @@ namespace Raccoon.Graphics {
                 ElapsedTime = 0;
                 CurrentTrack.Reset();
                 UpdateClippingRegion();
+                CurrentTrack.Started();
+            } else if (ElapsedTime == 0 && CurrentTrack.CurrentFrameIndex == 0) {
+                CurrentTrack.Started();
             }
         }
 
         public void Play(KeyType key, bool forceReset = true) {
-            if (IsDisposed) {
-                return;
-            }
+            bool started = (CurrentTrack == null || !CurrentKey.Equals(key)) || forceReset;
+            InternalPlay(key, forceReset);
 
-            key = HandleKey(key);
-            IsPlaying = true;
-
-            if (CurrentTrack == null || !CurrentKey.Equals(key)) {
-                CurrentKey = key;
-                CurrentTrack = Tracks[CurrentKey];
-                ElapsedTime = 0;
-
-                if (forceReset) {
-                    CurrentTrack.Reset();
-                }
-
-                UpdateClippingRegion();
-            } else if (forceReset) {
-                ElapsedTime = 0;
-                CurrentTrack.Reset();
-                UpdateClippingRegion();
+            if (started || (!forceReset && ElapsedTime == 0 && CurrentTrack.CurrentFrameIndex == 0)) {
+                CurrentTrack.Started();
+                CurrentTrack.Started();
             }
         }
 
         public void Play(KeyType key, int frameIndex) {
-            Play(key);
+            InternalPlay(key, true);
             Tracks[key].CurrentFrameIndex = frameIndex;
             UpdateClippingRegion();
+
+            if (frameIndex == 0) {
+                CurrentTrack.Started();
+            }
         }
 
         public void Prepare(KeyType key, bool forceReset = true) {
@@ -200,7 +192,7 @@ namespace Raccoon.Graphics {
         }
 
         public void Prepare(KeyType key, int frameIndex) {
-            Play(key);
+            InternalPlay(key, true);
 
             Track track = Tracks[key];
             if (frameIndex < 0) {
@@ -218,6 +210,11 @@ namespace Raccoon.Graphics {
             }
 
             UpdateClippingRegion();
+
+            if (track.CurrentFrameIndex == 0) {
+                CurrentTrack.Started();
+            }
+
             Pause();
         }
 
@@ -670,6 +667,31 @@ namespace Raccoon.Graphics {
         #endregion Protected Methods
 
         #region Private Methods
+
+        private void InternalPlay(KeyType key, bool forceReset) {
+            if (IsDisposed) {
+                return;
+            }
+
+            key = HandleKey(key);
+            IsPlaying = true;
+
+            if (CurrentTrack == null || !CurrentKey.Equals(key)) {
+                CurrentKey = key;
+                CurrentTrack = Tracks[CurrentKey];
+                ElapsedTime = 0;
+
+                if (forceReset) {
+                    CurrentTrack.Reset();
+                }
+
+                UpdateClippingRegion();
+            } else if (forceReset) {
+                ElapsedTime = 0;
+                CurrentTrack.Reset();
+                UpdateClippingRegion();
+            }
+        }
 
         private void UpdateClippingRegion() {
             if (CurrentTrack != null) {
