@@ -150,6 +150,10 @@ namespace Raccoon.FileSystem {
             return _parts.Count == 0 ? null : _parts[_parts.Count - 1];
         }
 
+        public string ParentName() {
+            return !HasParent() ? null : _parts[_parts.Count - 2];
+        }
+
         public PathBuf Parent() {
             if (!HasParent()) {
                 return null;
@@ -165,11 +169,11 @@ namespace Raccoon.FileSystem {
         }
 
         public bool ExistsFile() {
-            return System.IO.File.Exists(ToString());
+            return !IsEmpty() && System.IO.File.Exists(ToString());
         }
 
         public bool ExistsDirectory() {
-            return System.IO.Directory.Exists(ToString());
+            return !IsEmpty() && System.IO.Directory.Exists(ToString());
         }
 
         public bool IsEmpty() {
@@ -252,6 +256,14 @@ namespace Raccoon.FileSystem {
             return true;
         }
 
+        public System.IO.FileInfo FileInfo() {
+            return new System.IO.FileInfo(ToString());
+        }
+
+        public System.IO.DirectoryInfo DirectoryInfo() {
+            return new System.IO.DirectoryInfo(ToString());
+        }
+
         public override string ToString() {
             if (_parts.Count == 0) {
                 return string.Empty;
@@ -269,7 +281,6 @@ namespace Raccoon.FileSystem {
                 } catch (System.Exception e) {
                     throw new System.InvalidOperationException($"Path formation failed. (at part '{part}')", e);
                 }
-
 
                 Builder.Append(part);
                 Builder.Append(Path.Separator);

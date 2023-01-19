@@ -9,6 +9,10 @@ namespace Raccoon.FileSystem {
                            BackwardSlash = '\\';
 
         public static FileStream OpenRead(string filepath) {
+            if (filepath == null) {
+                throw new System.ArgumentNullException(nameof(filepath));
+            }
+
             filepath = NormalizePath(filepath);
 
             if (System.IO.Path.IsPathRooted(filepath)) {
@@ -18,7 +22,23 @@ namespace Raccoon.FileSystem {
             return File.OpenRead(System.IO.Path.Combine(Directories.Base, filepath));
         }
 
+        public static FileStream OpenRead(PathBuf filepath) {
+            if (filepath == null) {
+                throw new System.ArgumentNullException(nameof(filepath));
+            }
+
+            if (System.IO.Path.IsPathRooted(filepath.ToString())) {
+                return File.OpenRead(filepath.ToString());
+            }
+
+            return File.OpenRead(System.IO.Path.Combine(Directories.Base, filepath.ToString()));
+        }
+
         public static FileStream OpenWrite(string filepath) {
+            if (filepath == null) {
+                throw new System.ArgumentNullException(nameof(filepath));
+            }
+
             filepath = NormalizePath(filepath);
 
             if (System.IO.Path.IsPathRooted(filepath)) {
@@ -28,7 +48,23 @@ namespace Raccoon.FileSystem {
             return File.OpenWrite(System.IO.Path.Combine(Directories.Base, filepath));
         }
 
+        public static FileStream OpenWrite(PathBuf filepath) {
+            if (filepath == null) {
+                throw new System.ArgumentNullException(nameof(filepath));
+            }
+
+            if (System.IO.Path.IsPathRooted(filepath.ToString())) {
+                return File.OpenWrite(filepath.ToString());
+            }
+
+            return File.OpenWrite(System.IO.Path.Combine(Directories.Base, filepath.ToString()));
+        }
+
         public static string NormalizePath(string filepath) {
+            if (filepath == null) {
+                throw new System.ArgumentNullException(nameof(filepath));
+            }
+
             if (System.IO.Path.DirectorySeparatorChar == ForwardSlash) {
                 return filepath.Replace(BackwardSlash, ForwardSlash);
             }
