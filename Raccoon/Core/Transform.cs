@@ -110,6 +110,8 @@ namespace Raccoon {
                 return;
             }
 
+            bool needStart = false;
+
             if (changeScene) {
                 if (transform.Parent != null) {
                     if (transform.Entity.IsSceneFromTransformAncestor) {
@@ -134,7 +136,7 @@ namespace Raccoon {
                         transform.Entity.SceneAdded(Scene);
 
                         if (Scene.HasStarted && !transform.Entity.HasStarted) {
-                            transform.Entity.Start();
+                            needStart = true;
                         }
                     }
 
@@ -147,7 +149,7 @@ namespace Raccoon {
                             transform.Entity.SceneAdded(Scene);
 
                             if (Scene.HasStarted && !transform.Entity.HasStarted) {
-                                transform.Entity.Start();
+                                needStart = true;
                             }
                         }
                     }
@@ -172,6 +174,10 @@ namespace Raccoon {
 
             _children.Add(transform);
             OnChildAdded(transform);
+
+            if (needStart) {
+                transform.Entity.Start();
+            }
         }
 
         /// <summary>
