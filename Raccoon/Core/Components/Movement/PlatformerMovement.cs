@@ -705,6 +705,8 @@ namespace Raccoon.Components {
                     velocity = Velocity, // in pixels/second
                     currentAcceleration = Vector2.Zero; // in pixels/second²
 
+            TargetVelocity = Axis * MaxVelocity;
+
             /////////////////////////
             // Horizontal Velocity //
             /////////////////////////
