@@ -230,6 +230,14 @@ namespace Raccoon {
             }
         }
 
+        public void SetCollisions((System.Enum, System.Enum)[] collisions) {
+            ClearCollisions();
+
+            foreach ((System.Enum Tag, System.Enum With) collision in collisions) {
+                RegisterCollision(collision.Tag, collision.With);
+            }
+        }
+
         public void SetCollisions((BitTag, BitTag)[] collisions) {
             ClearCollisions();
 
