@@ -2,13 +2,14 @@ using System.Collections.Generic;
 using System.IO;
 
 using Raccoon.Log;
+using Raccoon.FileSystem;
 
 namespace Raccoon {
     public class TextWriterLoggerListener : ILoggerListener {
         private TextWriter _writer;
         private List<int> _sectionsTextLength = new List<int>();
 
-        public TextWriterLoggerListener(TextWriter writer) {
+        protected TextWriterLoggerListener(TextWriter writer) {
             if (writer == null) {
                 throw new System.ArgumentNullException(nameof(writer));
             }
@@ -17,10 +18,13 @@ namespace Raccoon {
         }
 
         public TextWriterLoggerListener(string filepath) : this(new StreamWriter(filepath, false, System.Text.Encoding.UTF8)) {
+            Filepath = new PathBuf(filepath);
         }
 
+        public string Name { get { return "text file"; } }
         public bool AutoFlush { get; set; } = true;
         public bool IsDisposed { get; private set; }
+        public PathBuf Filepath { get; }
 
         public void WriteTokens(MessageLoggerTokenTree tokens) {
             if (tokens == null) {

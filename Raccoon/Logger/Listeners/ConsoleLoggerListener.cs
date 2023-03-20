@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Raccoon.Log;
 
 namespace Raccoon {
-    public class StdOutputLoggerListener : ILoggerListener {
+    public class ConsoleLoggerListener : ILoggerListener {
         #region Private Members
 
         private TextWriter _out;
@@ -18,7 +18,7 @@ namespace Raccoon {
 
         #region Constructors
 
-        public StdOutputLoggerListener() {
+        public ConsoleLoggerListener() {
             _out = System.Console.Out;
 
             try {
@@ -86,6 +86,7 @@ namespace Raccoon {
 
         #region Public Properties
 
+        public string Name { get { return "console"; } }
         public bool IsDisposed { get; private set; }
 
         #endregion Public Properties

@@ -80,6 +80,7 @@ namespace Raccoon {
 
         #region Public Properties
 
+        public string Name { get { return "game console"; } }
         public Renderer Renderer { get; private set; }
         public Font Font { get; set; }
         public Rectangle Viewport { get; set; }

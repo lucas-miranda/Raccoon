@@ -13,8 +13,6 @@ namespace Raccoon {
     public sealed class Debug {
         #region Public Members
 
-        public static readonly string LogFileName = "report.log";
-
         public enum LensKind {
             Camera = 0,
             PhysicsBodies,
@@ -48,21 +46,6 @@ namespace Raccoon {
         private Debug() {
             Logger.RegisterListener(Console);
 
-            if (ReportDirectoryPath != null) {
-                if (!ReportDirectoryPath.ExistsDirectory()) {
-                    System.IO.Directory.CreateDirectory(ReportDirectoryPath.ToString());
-                    Logger.Info("Creating report directory");
-                } else {
-                    Logger.Info("Report directory already exists");
-                }
-
-                _reportFilepath = ReportDirectoryPath + LogFileName;
-            } else {
-                _reportFilepath = new PathBuf(Directories.Base, LogFileName);
-            }
-
-            Logger.RegisterListener(new TextWriterLoggerListener(_reportFilepath.ToString()));
-
             foreach (System.Enum kind in System.Enum.GetValues(typeof(LensKind))) {
                 DebugDrawLens lens = Draw.RegisterLens(kind);
                 lens.Enable();
@@ -76,29 +59,22 @@ namespace Raccoon {
         public static Debug Instance { get; private set; }
         public static bool ShowPerformanceDiagnostics { get; set; }
         public static bool AutoRaiseConsole { get; set; } = true;
-        public static PathBuf ReportFilepath { get { return Instance?._reportFilepath; } }
         public static Console Console { get; private set; } = new Console();
         public static DebugDraw Draw { get; } = new DebugDraw();
-
-        public static PathBuf ReportDirectoryPath {
-            get {
-                return _reportDirectoryPath;
-            }
-
-            set {
-                if (Instance != null) {
-                    throw new System.InvalidOperationException($"Report directory path should be changed before {nameof(Debug)} is initialized.");
-                }
-
-                _reportDirectoryPath = value;
-            }
-        }
 
         #endregion Public Static Properties
 
         #region Public Methods
 
         #region Messages
+
+        public static void Start() {
+            if (Instance != null) {
+                return;
+            }
+
+            Instance = new Debug();
+        }
 
         [Conditional("DEBUG")]
         public static void Write(string context, string message) {
@@ -362,15 +338,6 @@ namespace Raccoon {
         #endregion Public Methods
 
         #region Internal Methods
-
-        [Conditional("DEBUG")]
-        internal static void Start() {
-            if (Instance != null) {
-                return;
-            }
-
-            Instance = new Debug();
-        }
 
         [Conditional("DEBUG")]
         internal void Update(int delta) {

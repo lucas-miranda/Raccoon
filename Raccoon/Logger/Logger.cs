@@ -3,6 +3,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
+using Raccoon.FileSystem;
 using Raccoon.Log;
 
 namespace Raccoon {
@@ -51,21 +52,19 @@ namespace Raccoon {
         public static int SubjectCount { get { return Instance._subjects.Count; } }
         public static int IndentLevel { get; private set; }
         public static string IndentRepresentation { get; set; } = "  ";
+        public static PathBuf TextOutputDirectoryPath { get; set; }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        public static void Initialize(bool initializeStdOutput = true) {
+        public static Logger Initialize() {
             if (Instance != null) {
-                return;
+                return Instance;
             }
 
             Instance = new Logger();
-
-            if (initializeStdOutput) {
-                Instance._listeners.Add(new StdOutputLoggerListener());
-            }
+            return Instance;
         }
 
         public static void Deinitialize() {
@@ -81,9 +80,29 @@ namespace Raccoon {
             Instance = null;
         }
 
+        public static T FindListener<T>() where T : ILoggerListener {
+            CheckInitialization();
+            foreach (ILoggerListener listener in Instance._listeners) {
+                if (listener is T l) {
+                    return l;
+                }
+            }
+
+            return default;
+        }
+
         public static void RegisterListener(ILoggerListener listener) {
             CheckInitialization();
             Instance._listeners.Add(listener);
+
+#if DEBUG
+            bool pushedSubject = PushUniqueSubject("Logger");
+            Info($"-> Register listener: '{listener.Name}'");
+
+            if (pushedSubject) {
+                PopSubject();
+            }
+#endif
         }
 
         public static void RemoveListener(ILoggerListener listener) {
@@ -219,6 +238,23 @@ namespace Raccoon {
             }
         }
 
+        public static bool PushUniqueSubject(string subject) {
+            CheckInitialization();
+
+            if (subject == null) {
+                throw new System.ArgumentNullException(nameof(subject));
+            }
+
+            for (int i = Instance._subjects.Count - 1; i >= 0; i--) {
+                if (Instance._subjects[i] == subject) {
+                    return false;
+                }
+            }
+
+            Instance._subjects.Add(subject);
+            return true;
+        }
+
         public static void PopSubject(int amount = 1) {
             CheckInitialization();
 
@@ -293,6 +329,41 @@ namespace Raccoon {
             IndentLevel = 0;
         }
 
+        public Logger RegisterConsoleListener() {
+            CheckInitialization();
+            RegisterListener(new ConsoleLoggerListener());
+            return this;
+        }
+
+        public Logger RegisterTextListener(PathBuf outputFilepath) {
+#if DEBUG
+            PushSubject("Logger");
+#endif
+            CheckInitialization();
+
+            PathBuf output = outputFilepath.Parent();
+
+            if (!output.StartsWith(Directories.Base)) {
+                output = Directories.Base + output;
+            }
+
+            if (!output.ExistsDirectory() && !output.IsEmpty()) {
+#if DEBUG
+                Info($"Creating text listener's output directory '{outputFilepath - Directories.Base}'...");
+#endif
+                System.IO.Directory.CreateDirectory(output.ToString());
+            }
+
+            output.Push(outputFilepath.Name());
+
+            RegisterListener(new TextWriterLoggerListener(output.ToString()));
+#if DEBUG
+            PopSubject();
+#endif
+
+            return this;
+        }
+
         #endregion Public Methods
 
         #region Private Methods
@@ -356,13 +427,6 @@ namespace Raccoon {
                 while (e.InnerException != null) {
                     e = e.InnerException;
                     logWriter.WriteLine($"{System.DateTime.Now.ToString()}  InnerException: {e.Message}\n{e.StackTrace}\n");
-                }
-
-                logWriter.WriteLine("\n\nreport.log\n-------------\n");
-                if (File.Exists(Debug.LogFileName)) {
-                    logWriter.WriteLine(File.ReadAllText(Debug.LogFileName));
-                } else {
-                    logWriter.WriteLine("  No 'report.log' file");
                 }
             }
         }

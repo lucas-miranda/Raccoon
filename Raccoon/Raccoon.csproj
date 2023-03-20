@@ -321,7 +321,7 @@
     <Compile Include="Graphics\Shaders\RepeatShaderParameters.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Logger\ILoggerListener.cs" />
-    <Compile Include="Logger\Listeners\StdOutputLoggerListener.cs" />
+    <Compile Include="Logger\Listeners\ConsoleLoggerListener.cs" />
     <Compile Include="Logger\Listeners\TextWriterLoggerListener.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logger\Tokens\CategoryLoggerToken.cs" />

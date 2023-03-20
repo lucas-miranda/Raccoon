@@ -397,6 +397,18 @@ namespace Raccoon.FileSystem {
             return new PathBuf(l).Push(r);
         }
 
+        public static PathBuf operator -(PathBuf l, PathBuf r) {
+            PathBuf path = new PathBuf(l);
+            path.Remove(r);
+            return path;
+        }
+
+        public static PathBuf operator -(PathBuf l, string r) {
+            PathBuf path = new PathBuf(l);
+            path.Remove(r);
+            return path;
+        }
+
         #endregion Operators
     }
 }

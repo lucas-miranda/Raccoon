@@ -102,7 +102,17 @@ namespace Raccoon {
                 crashLogFilepath = FileSystem.Directories.Base;
             }
 
-            reportLogFilepath = Debug.ReportFilepath;
+            {
+                // get first text logger filepath
+                TextWriterLoggerListener textLogger = Logger.FindListener<TextWriterLoggerListener>();
+
+                if (textLogger != null) {
+                    reportLogFilepath = textLogger.Filepath;
+                } else {
+                    reportLogFilepath = Directories.Base;
+                }
+            }
+
             crashLogFilepath.Push(LogFilename);
 
             Logger.Info($"Report log path: {reportLogFilepath}");
