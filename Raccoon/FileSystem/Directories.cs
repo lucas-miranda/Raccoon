@@ -26,6 +26,7 @@ namespace Raccoon.FileSystem {
                           || platform.Equals("FreeBSD")
                           || platform.Equals("OpenBSD")
                           || platform.Equals("NetBSD")
+                          || platform.Equals("Unknown")
                         ) {
                             _base = System.AppDomain.CurrentDomain.BaseDirectory;
                             return _base;
