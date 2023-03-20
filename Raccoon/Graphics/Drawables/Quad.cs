@@ -202,7 +202,7 @@ namespace Raccoon.Graphics {
             NeedsReload = _needsSetup = true;
         }
 
-        public void Setup(Texture texture, (Vector2 Position, Color Color, Vector2 TextureCoordinate)[] vertexData) {
+        public void Setup(Texture texture, VertexData[] vertexData) {
             if (texture == null) {
                 throw new System.ArgumentNullException("Invalid texture.");
             }
@@ -218,7 +218,7 @@ namespace Raccoon.Graphics {
             }
 
             for (int i = 0; i < 4; i++) {
-                (Vector2 Position, Color Color, Vector2 TextureCoordinate) vertex = vertexData[i];
+                VertexData vertex = vertexData[i];
                 _vertexData[i] = new VertexPositionColorTexture(
                     new Microsoft.Xna.Framework.Vector3(vertex.Position, 0f),
                     vertex.Color,
@@ -281,6 +281,8 @@ namespace Raccoon.Graphics {
 
         #endregion Protected Methods
 
+        #region Private Methods
+
         private void Setup() {
             // preparing vertices
 
@@ -300,5 +302,17 @@ namespace Raccoon.Graphics {
 
             _needsSetup = false;
         }
+
+        #endregion Private Methods
+
+        #region VertexData Struct
+
+        public struct VertexData {
+            public Vector2 Position;
+            public Color Color;
+            public Vector2 TextureCoordinate;
+        }
+
+        #endregion VertexData Struct
     }
 }

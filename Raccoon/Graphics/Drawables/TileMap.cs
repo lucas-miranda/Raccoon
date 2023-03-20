@@ -71,6 +71,9 @@ namespace Raccoon.Graphics {
             }
         }
 
+        public int TileSetColumns { get { return _tileSetColumns; } }
+        public int TileSetRows { get { return _tileSetRows; } }
+
 #if DEBUG
         public Grid Grid { get; private set; }
 #endif
