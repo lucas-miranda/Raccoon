@@ -67,8 +67,10 @@ namespace Raccoon.Data.Parsers {
 #endif
 
                     // reallocate result tokens to line tokens stack
-                    while (_globalState.ResultStack.TryPop(out Token token)) {
-                        _globalState.LineStack.Push(token);
+                    {
+                        while (_globalState.ResultStack.TryPop(out Token token)) {
+                            _globalState.LineStack.Push(token);
+                        }
                     }
 
                     // try to reduce them by context
