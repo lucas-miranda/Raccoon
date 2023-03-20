@@ -11,7 +11,7 @@ NUGET_FOLDER := $(HOME)/.nuget/packages
 # dependencies
 FNA_OUTPUT_DIR := ../FNA/bin/Debug
 SHARPFONT_OUTPUT_DIR := ../SharpFont/Source/SharpFont/obj/Debug
-NEWTONSOFT_JSON_OUTPUT_DIR := $(NUGET_FOLDER)/newtonsoft.json/12.0.2/lib/net45
+NEWTONSOFT_JSON_OUTPUT_DIR := $(NUGET_FOLDER)/newtonsoft.json/13.0.1/lib/net45
 NUNIT_OUTPUT_DIR := $(NUGET_FOLDER)/nunit/3.12.0/lib/net45
 
 FILES := \
@@ -20,6 +20,7 @@ FILES := \
 	Core/Camera.cs \
 	Core/Components/Alarm.cs \
 	Core/Components/Component.cs \
+	Core/Components/ComponentUsageAttribute.cs \
 	Core/Components/CoroutineHandler.cs \
 	Core/Components/CoroutinesHandler.cs \
 	Core/Components/Movement/BasicMovement.cs \
@@ -28,12 +29,30 @@ FILES := \
 	Core/Components/Physics/Body.cs \
 	Core/Components/StateMachine/State.cs \
 	Core/Components/StateMachine/StateMachine.cs \
+	Core/Components/TweenHandler.cs \
+	Core/Components/TweensHandler.cs \
+	Core/ControlGroup.cs \
 	Core/Coroutines/Coroutine.cs \
 	Core/Coroutines/Coroutines.cs \
 	Core/Coroutines/Instructions/CoroutineInstruction.cs \
 	Core/Coroutines/Instructions/ParallelizeCoroutine.cs \
+	Core/Crash/CrashHandler.cs \
 	Core/Debug/Console.cs \
 	Core/Debug/Debug.cs \
+	Core/Debug/DebugDraw.cs \
+	Core/Debug/DebugDrawHelper.cs \
+	Core/Debug/DebugDrawLens.cs \
+	Core/Debug/Elements/DebugDrawArc.cs \
+	Core/Debug/Elements/DebugDrawBezierCurve.cs \
+	Core/Debug/Elements/DebugDrawCircle.cs \
+	Core/Debug/Elements/DebugDrawElement.cs \
+	Core/Debug/Elements/DebugDrawGrid.cs \
+	Core/Debug/Elements/DebugDrawLine.cs \
+	Core/Debug/Elements/DebugDrawLines.cs \
+	Core/Debug/Elements/DebugDrawPolygon.cs \
+	Core/Debug/Elements/DebugDrawRectangle.cs \
+	Core/Debug/Elements/DebugDrawString.cs \
+	Core/Debug/Elements/DebugDrawTriangle.cs \
 	Core/Definitions/Comparison.cs \
 	Core/Definitions/Direction.cs \
 	Core/Definitions/Extensions.cs \
@@ -45,19 +64,73 @@ FILES := \
 	Core/IDebugRenderable.cs \
 	Core/IExtendedRenderable.cs \
 	Core/IExtendedUpdatable.cs \
+	Core/IPausable.cs \
 	Core/IRenderable.cs \
 	Core/ISceneObject.cs \
 	Core/IUpdatable.cs \
-	Core/Input/Axis.cs \
-	Core/Input/Button.cs \
-	Core/Input/Controller.cs \
-	Core/Input/GamePadIndex.cs \
-	Core/Input/GamePadThumbStick.cs \
-	Core/Input/GamePadTriggerButton.cs \
+	Core/Input/ButtonState.cs \
+	Core/Input/Controller/Command.cs \
+	Core/Input/Controller/Controller.cs \
+	Core/Input/Controller/ControllerInputScheme.cs \
+	Core/Input/Controller/ControllersManager.cs \
+	Core/Input/Controller/Devices/GamepadCapabilities.cs \
+	Core/Input/Controller/Devices/GamepadDevice.cs \
+	Core/Input/Controller/Devices/GamepadFeature.cs \
+	Core/Input/Controller/Devices/GamepadKind.cs \
+	Core/Input/Controller/Devices/GenericGamepadDevice.cs \
+	Core/Input/Controller/Devices/InputDevice.cs \
+	Core/Input/Controller/Devices/InputDeviceController.cs \
+	Core/Input/Controller/Devices/Keyboard/KeyboardDevice.cs \
+	Core/Input/Controller/Devices/Keyboard/KeyboardDeviceController.cs \
+	Core/Input/Controller/Devices/Mouse/MouseDevice.cs \
+	Core/Input/Controller/Devices/Mouse/MouseDeviceController.cs \
+	Core/Input/Controller/Devices/Xbox/XboxGamepadButtons.cs \
+	Core/Input/Controller/Devices/Xbox/XboxGamepadDevice.cs \
+	Core/Input/Controller/Devices/Xbox/XboxGamepadDeviceController.cs \
+	Core/Input/Controller/Devices/Xbox/XboxGamepadThumbSticks.cs \
+	Core/Input/Controller/Devices/Xbox/XboxGamepadTriggers.cs \
+	Core/Input/Controller/Interfaces/Back/Axis/BackInterfaceAxis.cs \
+	Core/Input/Controller/Interfaces/Back/Axis/IBackInterfaceAxis.cs \
+	Core/Input/Controller/Interfaces/Back/Axis/KeyboardBackInterfaceAxis.cs \
+	Core/Input/Controller/Interfaces/Back/Axis/MouseButtonBackInterfaceAxis.cs \
+	Core/Input/Controller/Interfaces/Back/Axis/XboxGamepadBackInterfaceAxis.cs \
+	Core/Input/Controller/Interfaces/Back/Button/BackInterfaceButton.cs \
+	Core/Input/Controller/Interfaces/Back/Button/IBackInterfaceButton.cs \
+	Core/Input/Controller/Interfaces/Back/Button/KeyboardBackInterfaceButton.cs \
+	Core/Input/Controller/Interfaces/Back/Button/MouseBackInterfaceButton.cs \
+	Core/Input/Controller/Interfaces/Back/Button/XboxGamepadBackInterfaceButton.cs \
+	Core/Input/Controller/Interfaces/Back/InputBackInterface.cs \
+	Core/Input/Controller/Interfaces/Back/Trigger/BackInterfaceTrigger.cs \
+	Core/Input/Controller/Interfaces/Back/Trigger/IBackInterfaceTrigger.cs \
+	Core/Input/Controller/Interfaces/Back/Trigger/XboxGamepadBackInterfaceTrigger.cs \
+	Core/Input/Controller/Interfaces/Front/Axis.cs \
+	Core/Input/Controller/Interfaces/Front/Button.cs \
+	Core/Input/Controller/Interfaces/Front/IInputAxis.cs \
+	Core/Input/Controller/Interfaces/Front/IInputButton.cs \
+	Core/Input/Controller/Interfaces/Front/IInputTrigger.cs \
+	Core/Input/Controller/Interfaces/Front/InputInterface.cs \
+	Core/Input/Controller/Interfaces/Front/Trigger.cs \
+	Core/Input/Controller/Sources/Axis/AxisInputSource.cs \
+	Core/Input/Controller/Sources/Axis/ButtonAxisInputSource.cs \
+	Core/Input/Controller/Sources/Axis/GamepadThumbStickInputSource.cs \
+	Core/Input/Controller/Sources/Axis/XboxGamepadThumbStickInputSource.cs \
+	Core/Input/Controller/Sources/Button/ButtonInputSource.cs \
+	Core/Input/Controller/Sources/Button/GamepadButtonInputSource.cs \
+	Core/Input/Controller/Sources/Button/KeyboardButtonInputSource.cs \
+	Core/Input/Controller/Sources/Button/MouseButtonInputSource.cs \
+	Core/Input/Controller/Sources/Button/XboxGamepadButtonInputSource.cs \
+	Core/Input/Controller/Sources/IInputSource.cs \
+	Core/Input/Controller/Sources/Trigger/GamepadTriggerInputSource.cs \
+	Core/Input/Controller/Sources/Trigger/TriggerInputSource.cs \
+	Core/Input/Controller/Sources/Trigger/XboxGamepadTriggerInputSource.cs \
+	Core/Input/GamepadIndex.cs \
+	Core/Input/GamepadInputLabel.cs \
+	Core/Input/GamepadThumbStick.cs \
+	Core/Input/GamepadTriggerButton.cs \
 	Core/Input/Input.cs \
 	Core/Input/Key.cs \
-	Core/Input/Trigger.cs \
-	Core/Input/XboxController.cs \
+	Core/Input/MouseButton.cs \
+	Core/Input/XboxInputLabel.cs \
 	Core/Physics/CollisionInfo.cs \
 	Core/Physics/CollisionList.cs \
 	Core/Physics/Contact.cs \
@@ -80,6 +153,50 @@ FILES := \
 	Core/Scene.cs \
 	Core/Transform.cs \
 	Core/XNAGameWrapper.cs \
+	Data/Attributes/DataContractAttribute.cs \
+	Data/Attributes/DataFieldAttribute.cs \
+	Data/Consumers/ConsumerContext.cs \
+	Data/Consumers/DataTokensConsumer.cs \
+	Data/Consumers/Exceptions/DataEntryNotFoundException.cs \
+	Data/Consumers/Handlers/ConsumerHandler.cs \
+	Data/Consumers/Handlers/InlineListEntriesConsumerHandler.cs \
+	Data/Consumers/Handlers/NamedListConsumerHandler.cs \
+	Data/Consumers/Handlers/ValueAssignConsumerHandler.cs \
+	Data/Consumers/Handlers/ValueConsumerHandler.cs \
+	Data/Consumers/SimpleDataTokensConsumer.cs \
+	Data/Contract/DataContract.Property.cs \
+	Data/Contract/DataContract.cs \
+	Data/Contract/Exceptions/DataVerificationFailedException.cs \
+	Data/DataFile.cs \
+	Data/DataOperation.cs \
+	Data/FontCase.cs \
+	Data/Parsers/ContextParser.cs \
+	Data/Parsers/Expressions.cs \
+	Data/Parsers/Parser.cs \
+	Data/Parsers/ParserState.cs \
+	Data/Parsers/Tokens/AnyValueToken.cs \
+	Data/Parsers/Tokens/DefinedValueToken.cs \
+	Data/Parsers/Tokens/IdentifierToken.cs \
+	Data/Parsers/Tokens/InlineListEntriesToken.cs \
+	Data/Parsers/Tokens/ListToken.cs \
+	Data/Parsers/Tokens/MarkerToken.cs \
+	Data/Parsers/Tokens/Token.cs \
+	Data/Parsers/Tokens/TokenKind.cs \
+	Data/Parsers/Tokens/TypeKind.cs \
+	Data/Parsers/Tokens/TypeToken.cs \
+	Data/Parsers/Tokens/ValueAssignToken.cs \
+	Data/Parsers/Tokens/ValueToken.cs \
+	Data/Parsers/TokensParser.cs \
+	Data/Producers/DataTokensProducer.cs \
+	Data/Producers/SimpleDataTokensProducer.cs \
+	Data/SaveSettings.cs \
+	Data/Savers/Saver.cs \
+	Data/Savers/SaverState.cs \
+	Data/Savers/TokensSaver.cs \
+	FileSystem/Directories.cs \
+	FileSystem/Path.cs \
+	FileSystem/PathBuf.cs \
+	FileSystem/SafeFile.cs \
 	Graphics/Atlas/Atlas.cs \
 	Graphics/Atlas/AtlasAnimation.cs \
 	Graphics/Atlas/AtlasAnimationFrame.cs \
@@ -87,6 +204,7 @@ FILES := \
 	Graphics/Atlas/Exceptions/AtlasMismatchSubTextureTypeException.cs \
 	Graphics/Atlas/Exceptions/AtlasSubTextureNotFoundException.cs \
 	Graphics/Atlas/Processors/AsepriteAtlasProcessor.cs \
+	Graphics/Atlas/Processors/ClymeneAtlasProcessor.cs \
 	Graphics/Atlas/Processors/IAtlasProcessor.cs \
 	Graphics/Atlas/Processors/RavenAtlasProcessor.cs \
 	Graphics/Batches/BatchMode.cs \
@@ -105,6 +223,7 @@ FILES := \
 	Graphics/Drawables/Graphic.cs \
 	Graphics/Drawables/Grid.cs \
 	Graphics/Drawables/Image.cs \
+	Graphics/Drawables/NineSlice.cs \
 	Graphics/Drawables/PrimitiveGraphic.cs \
 	Graphics/Drawables/Primitives/AnnulusPrimitive.cs \
 	Graphics/Drawables/Primitives/CirclePrimitive.cs \
@@ -124,8 +243,20 @@ FILES := \
 	Graphics/Drawables/TileMap.cs \
 	Graphics/Font.cs \
 	Graphics/Fonts/FontFaceRenderMap.cs \
-	Graphics/Fonts/FontFormat.cs \
-	Graphics/Fonts/FontService.cs \
+	Graphics/Fonts/FontRenderMap.cs \
+	Graphics/Fonts/FontTexture/FontTextureAtlasKind.cs \
+	Graphics/Fonts/FontTexture/FontTextureData.cs \
+	Graphics/Fonts/FontTexture/FontTextureDataAtlas.cs \
+	Graphics/Fonts/FontTexture/FontTextureDataGlyph.cs \
+	Graphics/Fonts/FontTexture/FontTextureDataGlyphBounds.cs \
+	Graphics/Fonts/FontTexture/FontTextureDataMetrics.cs \
+	Graphics/Fonts/FontTexture/FontTextureYOriginKind.cs \
+	Graphics/Fonts/FontTextureRenderMap.cs \
+	Graphics/Fonts/Shaders/FontMTSDFShader.cs \
+	Graphics/Fonts/Shaders/FontMTSDFShaderParameters.cs \
+	Graphics/Fonts/Shaders/IFontShaderParameter.cs \
+	Graphics/Fonts/Shaders/IFontSizeShaderParameter.cs \
+	Graphics/Fonts/Shaders/TextShaderParameters.cs \
 	Graphics/Renderer.cs \
 	Graphics/Shader.cs \
 	Graphics/Shaders/Attributes/ShaderParameterAttribute.cs \
@@ -135,6 +266,8 @@ FILES := \
 	Graphics/Shaders/IShaderTexture.cs \
 	Graphics/Shaders/IShaderTransform.cs \
 	Graphics/Shaders/IShaderVertexColor.cs \
+	Graphics/Shaders/RepeatShader.cs \
+	Graphics/Shaders/RepeatShaderParameters.cs \
 	Graphics/Texture.cs \
 	Logger/ILoggerListener.cs \
 	Logger/Listeners/StdOutputLoggerListener.cs \
@@ -150,13 +283,14 @@ FILES := \
 	Math/BezierCurve.cs \
 	Math/Circle.cs \
 	Math/Line.cs \
+	Math/Location.cs \
 	Math/Polygon.cs \
 	Math/Rectangle.cs \
 	Math/Size.cs \
 	Math/Triangle.cs \
 	Math/Vector2.cs \
 	Properties/AssemblyInfo.cs \
-	Resource.Designer.cs \
+	Resource.cs \
 	Test/Extensions/EnumTest.cs \
 	Test/Math/CircleTest.cs \
 	Test/Util/HelperTest.cs \
@@ -195,7 +329,7 @@ FILES := \
 	Util/Tween/Ease.cs \
 	Util/Tween/Lerper.cs \
 	Util/Tween/Tween.cs \
-	Util/Tween/Tweener.cs
+	Util/Tween/Tweener.cs \
 
 RESOURCES_DIR := ./
 RESOURCES_NAMESPACE := Raccoon.Resource
